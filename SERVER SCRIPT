@@ -1,48 +1,66 @@
-// Widget: Job Code Authority Limits Viewer
-
-// ====== SERVER SCRIPT ======
+<!-- SERVER SCRIPT -->
 (function() {
-  data.job_code = input.job_code || '';
+  'use strict';
 
-  if (!data.job_code) {
-    data.message = "Please select a job code";
-    return;
-  }
-
-  // Query authority limits
-  var gr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
-  gr.addQuery('job_code', data.job_code);
-  gr.addQuery('active', true);
-  gr.query();
-
-  if (!gr.hasNext()) {
-    data.message = "Job code " + data.job_code + " does not have any existing authority limits";
-    return;
-  }
-
-  data.results = [];
-  while (gr.next()) {
-    data.results.push({
-      job_code: gr.getValue('job_code'),
-      job_description: gr.job_code.job_description + '',
-      credit_limits: {
-        overdraft_external_accounts: gr.getValue('overdraft_external_accounts'),
-        overdraft_internal_accounts: gr.getValue('overdraft_internal_accounts'),
-        unavailable_funds_external_accounts: gr.getValue('unavailable_funds_external_accounts'),
-        unavailable_funds_internal_accounts: gr.getValue('unavailable_funds_internal_accounts')
-      },
-      non_credit_limits: {
-        disbursement_ach: gr.getValue('disbursement_ach'),
-        disbursement_wire_transfer_external: gr.getValue('disbursement_wire_transfer_external'),
-        disbursement_wire_transfer_internal: gr.getValue('disbursement_wire_transfer_internal'),
-        disbursement_official_checks_external: gr.getValue('disbursement_official_checks_external'),
-        disbursement_official_checks_internal: gr.getValue('disbursement_official_checks_internal'),
-        check_cashing_on_us: gr.getValue('check_cashing_on_us'),
-        check_cashing_not_on_us: gr.getValue('check_cashing_not_on_us'),
-        remote_deposit: gr.getValue('remote_deposit'),
-        treasury_solutions_company_wire_limits: gr.getValue('treasury_solutions_company_wire_limits'),
-        fx_wire_limits: gr.getValue('fx_wire_limits')
+  if (input && input.action === 'getAuthorityLimits') {
+    var jobCode = input.job_code;
+    var limits = [];
+    
+    if (jobCode) {
+      // Query the authority limits table
+      var gr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
+      gr.addQuery('job_code', jobCode);
+      gr.addQuery('active', true);
+      gr.query();
+      
+      while (gr.next()) {
+        // Get the actual job code value (not sys_id)
+        var jobCodeRecord = gr.job_code.getRefRecord();
+        var jobCodeValue = '';
+        var jobDescription = '';
+        
+        if (jobCodeRecord && jobCodeRecord.isValidRecord()) {
+          // Try to get the job_code field value (adjust field name as needed)
+          jobCodeValue = jobCodeRecord.getValue('job_code') || 
+                        jobCodeRecord.getValue('code') || 
+                        jobCodeRecord.getValue('number') ||
+                        jobCodeRecord.getDisplayValue();
+          
+          // Get the description (adjust field name as needed)
+          jobDescription = jobCodeRecord.getValue('description') || 
+                          jobCodeRecord.getValue('name') ||
+                          jobCodeRecord.getDisplayValue();
+        }
+        
+        var limit = {
+          job_code: gr.getValue('job_code'), // Keep sys_id for reference
+          job_code_display: jobCodeValue || gr.job_code.getDisplayValue(), // Display value
+          job_description: jobDescription,
+          
+          // Credit limits
+          overdraft_external_accounts: gr.getValue('overdraft_external_accounts'),
+          overdraft_internal_accounts: gr.getValue('overdraft_internal_accounts'),
+          unavailable_funds_external_accounts: gr.getValue('unavailable_funds_external_accounts'),
+          unavailable_funds_internal_accounts: gr.getValue('unavailable_funds_internal_accounts'),
+          
+          // Non-credit limits
+          disbursement_ach: gr.getValue('disbursement_ach'),
+          disbursement_wire_transfer_external: gr.getValue('disbursement_wire_transfer_external'),
+          disbursement_wire_transfer_internal: gr.getValue('disbursement_wire_transfer_internal'),
+          disbursement_official_checks_external: gr.getValue('disbursement_official_checks_external'),
+          disbursement_official_checks_internal: gr.getValue('disbursement_official_checks_internal'),
+          check_cashing_on_us: gr.getValue('check_cashing_on_us'),
+          check_cashing_not_on_us: gr.getValue('check_cashing_not_on_us'),
+          remote_deposit: gr.getValue('remote_deposit'),
+          treasury_solutions_company_wire_limits: gr.getValue('treasury_solutions_company_wire_limits'),
+          fx_wire_limits: gr.getValue('fx_wire_limits')
+        };
+        
+        limits.push(limit);
       }
-    });
+    }
+    
+    data.limits = limits;
+    data.jobCodeDisplay = input.job_code_display; // Pass through display value
   }
 })();
