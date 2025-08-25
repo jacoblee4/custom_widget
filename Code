@@ -1,2046 +1,426 @@
-// HTML:
-
-<h1 class="header_text" ng-if="options.header && !options.inline_header">
-  <span>{{::options.header}}</span>
-  <div class="search_wrapper">
-    <ng-include src="options.search_input_template"></ng-include>
+<!-- HTML Template -->
+<div class="authority-limits-widget">
+  <div ng-if="!c.jobCode" class="alert alert-info">
+    <i class="fa fa-info-circle"></i>
+    Please select a job code to view authority limits
   </div>
-</h1>
-<wrapper class="APPOXIO_Employee_Hub"
-  ng-class="['list_style_{{c.list_view_style}}', {'min_height': !options.minimal_interface}]">
-  <div class="spinner_wrapper" ng-class="{'loading': c.loading}">
-    <ng-include src="options.spinner_template"></ng-include>
+  
+  <div ng-if="c.jobCode && c.loading" class="text-center">
+    <i class="fa fa-spinner fa-spin fa-2x"></i>
+    <p>Loading authority limits...</p>
   </div>
-  <header ng-if="!options.minimal_interface" ng-include="options.header_template"></header>
-
-  <div class="record_container">
-
-    <ng-include src="options.main_row_template" ng-if="c.list_view_style == 'list'"></ng-include>
-
-    <ng-include src="options.main_table_template" ng-if="c.list_view_style == 'table'"></ng-include>
-
-    <div class="side_preview_wrapper" ng-if="c.preview_style == 'side_preview'"
-      ng-class="{'side_opening': c.sidePreviewOpening, 'side_opened': c.sidePreviewOpened}">
-      <ng-include src="currentSidePreviewTemplate"></ng-include>
+  
+  <div ng-if="c.jobCode && !c.loading && c.authorityLimits.length === 0" class="alert alert-warning">
+    <i class="fa fa-exclamation-triangle"></i>
+    Job code <strong>{{c.jobCode}}</strong> does not have any existing authority limits
+  </div>
+  
+  <div ng-if="c.jobCode && !c.loading && c.authorityLimits.length > 0" class="authority-limits-container">
+    <h4 class="limits-header">
+      <i class="fa fa-shield"></i>
+      Authority Limits for Job Code: {{c.jobCode}}
+    </h4>
+    
+    <div ng-repeat="limit in c.authorityLimits" class="limit-record">
+      <div class="job-info">
+        <h5>{{limit.job_code}} - {{limit.job_description}}</h5>
+      </div>
+      
+      <div class="limits-grid">
+        <!-- Credit Limits Section -->
+        <div class="limits-section credit-limits">
+          <h6 class="section-title">
+            <i class="fa fa-credit-card"></i>
+            Credit Limits
+          </h6>
+          <div class="limits-table">
+            <div class="limit-row" ng-if="limit.overdraft_external_accounts">
+              <span class="limit-label">Overdraft External Accounts:</span>
+              <span class="limit-value">{{limit.overdraft_external_accounts | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.overdraft_internal_accounts">
+              <span class="limit-label">Overdraft Internal Accounts:</span>
+              <span class="limit-value">{{limit.overdraft_internal_accounts | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.unavailable_funds_external_accounts">
+              <span class="limit-label">Unavailable Funds External:</span>
+              <span class="limit-value">{{limit.unavailable_funds_external_accounts | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.unavailable_funds_internal_accounts">
+              <span class="limit-label">Unavailable Funds Internal:</span>
+              <span class="limit-value">{{limit.unavailable_funds_internal_accounts | currency}}</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Non-Credit Limits Section -->
+        <div class="limits-section non-credit-limits">
+          <h6 class="section-title">
+            <i class="fa fa-money"></i>
+            Non-Credit Limits
+          </h6>
+          <div class="limits-table">
+            <div class="limit-row" ng-if="limit.disbursement_ach">
+              <span class="limit-label">Disbursement ACH:</span>
+              <span class="limit-value">{{limit.disbursement_ach | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.disbursement_wire_transfer_external">
+              <span class="limit-label">Wire Transfer External:</span>
+              <span class="limit-value">{{limit.disbursement_wire_transfer_external | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.disbursement_wire_transfer_internal">
+              <span class="limit-label">Wire Transfer Internal:</span>
+              <span class="limit-value">{{limit.disbursement_wire_transfer_internal | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.disbursement_official_checks_external">
+              <span class="limit-label">Official Checks External:</span>
+              <span class="limit-value">{{limit.disbursement_official_checks_external | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.disbursement_official_checks_internal">
+              <span class="limit-label">Official Checks Internal:</span>
+              <span class="limit-value">{{limit.disbursement_official_checks_internal | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.check_cashing_on_us">
+              <span class="limit-label">Check Cashing On Us:</span>
+              <span class="limit-value">{{limit.check_cashing_on_us | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.check_cashing_not_on_us">
+              <span class="limit-label">Check Cashing Not On Us:</span>
+              <span class="limit-value">{{limit.check_cashing_not_on_us | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.remote_deposit">
+              <span class="limit-label">Remote Deposit:</span>
+              <span class="limit-value">{{limit.remote_deposit | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.treasury_solutions_company_wire_limits">
+              <span class="limit-label">Treasury Solutions Wire:</span>
+              <span class="limit-value">{{limit.treasury_solutions_company_wire_limits | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.fx_wire_limits">
+              <span class="limit-label">FX Wire Limits:</span>
+              <span class="limit-value">{{limit.fx_wire_limits | currency}}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <hr ng-if="!$last" class="record-separator">
     </div>
   </div>
-  <pagination ng-include="options.pagination_template"></pagination>
-</wrapper>
+</div>
 
-
-
-
-// CSS:
-$brand-primary: #428bca !default;
-$eh-black: $gray-base !default;
-$eh-white: #fff !default;
-$eh-grey: lighten($eh-black, 85%) !default;
-$eh-dark-gray: lighten($eh-black, 25%) !default;
-$eh-light-gray: lighten($eh-black, 92%) !default;
-
-$eh-slider-circle: $eh-white !default;
-$eh-slider-inactive: $eh-light-gray !default;
-$eh-slider-active: $brand-primary !default;
-
-$eh-wrapper-background: $eh-white !default;
-$eh-select-dropdown-background: $eh-light-gray !default;
-$eh-pagination-minimal-link: $eh-dark-gray !default;
-
-$eh-button-inactive-background: $eh-light-gray !default;
-$eh-button-inactive-text: lighten($eh-black, 55%) !default;
-
-$eh-tab-color: $brand-primary !default;
-$eh-tab-underline: $eh-black !default;
-$eh-tab-font-size: 2rem !default;
-$eh-advanced-filter-flag: $brand-primary !default;
-$eh-side-preview-background: $eh-light-gray !default;
-
-$eh-tab-label-background: $brand-primary !default;
-$eh-tab-label-font-size: 0.9rem !default;
-$eh-tab-label-font-weight: bold !default;
-$eh-tab-label-radius: 0.8rem !default;
-$eh-tab-label-shadow: none !default;
-$eh-tab-label-color: $eh-white !default;
-
-$eh-state-inactive: lighten($eh-black, 60%) !default;
-$eh-row-expansion-seperator: lighten($eh-black, 85%) !default;
-$eh-spinner: $brand-primary !default;
-$eh-header: lighten($eh-black, 30%) !default;
-
-$eh-search-background: $eh-light-gray !default;
-$eh-search-background-header: $eh-white !default;
-$eh-search-radius: $border-radius-base !default;
-$eh-search-icon: lighten($eh-black, 65%) !default;
-
-$eh_header_icon_color: $brand-primary !default;
-$eh-filter-icon: $brand-primary !default;
-$eh-settings-icon: $brand-primary !default;
-
-$wrapper-radius: $border-radius-large !default;
-$widget-shadow: 0 5px 16px lighten($eh-black, 73%) !default;
-
-@mixin spinner {
-  .spinner {
-    animation: 2s linear infinite rotate;
-    width: 50px;
-    height: 50px;
-    pointer-events: none;
-    .path {
-      stroke: $eh-spinner;
-      stroke-linecap: round;
-      animation: 1.5s ease-in-out infinite dash;
-    }
-  }
+<!-- CSS - This goes in the CSS section of the widget -->
+<style>
+.authority-limits-widget {
+  padding: 15px;
+  font-family: 'Source Sans Pro', Arial, sans-serif;
 }
 
-@mixin switch {
-  .switch {
-    margin-bottom: 0;
-    position: relative;
-    display: inline-block;
-    width: 46px;
-    height: 23px;
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: $eh-slider-inactive;
-      transition: 0.4s;
-      &:before {
-        position: absolute;
-        content: "";
-        height: 17px;
-        width: 17px;
-        left: 3px;
-        bottom: 3px;
-        background-color: $eh-slider-circle;
-        transition: 0.4s;
-      }
-      &.round {
-        border-radius: 25px;
-        &:before {
-          border-radius: 50%;
-        }
-      }
-    }
-    input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-      &:checked + .slider {
-        background-color: $eh-slider-active;
-        &:before {
-          transform: translateX(23px);
-        }
-      }
-      &:focus + .slider {
-        box-shadow: 0 0 1px $eh-slider-active;
-      }
-    }
-  }
-  .switch_label {
-    white-space: nowrap;
-  }
+.alert {
+  padding: 12px 15px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  border: 1px solid transparent;
 }
 
-.eh_modal {
-  .panel {
-    box-shadow: none;
-    border: none;
-  }
-  .value_wrapper {
-    .label_display {
-      display: none;
-    }
-  }
+.alert-info {
+  background-color: #d9edf7;
+  border-color: #bce8f1;
+  color: #31708f;
 }
 
-.graph_section {
-  padding: 3rem 0 1rem;
-  .state_wrapper {
-    display: flex;
-    justify-content: space-between;
-    font-size: 2em;
-    margin: 0 7rem;
-
-    .state {
-      padding: 1rem 0.45rem 1rem;
-      border-radius: 0;
-      font-size: 0.5em;
-      font-weight: bold;
-      background-color: transparent;
-      color: $eh-state-inactive;
-      display: flex;
-      justify-content: center;
-      align-items: flex-end;
-      text-align: center;
-      width: 0;
-      margin-left: -0.5rem;
-      span {
-        font-size: 1.5rem;
-        font-weight: bold;
-      }
-    }
-    &:not(.active) {
-      .state {
-        @media screen and (max-width: $screen-sm-min) {
-          display: none;
-        }
-        @media screen and (max-width: $screen-md-min) {
-          span {
-            font-size: 1rem;
-          }
-        }
-      }
-    }
-    &.active {
-      .state {
-        span {
-          text-transform: uppercase;
-          font-size: 3rem;
-          line-height: 2.8rem;
-        }
-      }
-    }
-  }
-  ul {
-    display: flex;
-    margin: 1rem 7rem;
-    padding: 0;
-    li {
-      display: flex;
-      flex-grow: 1;
-      height: 0.4rem;
-      position: relative;
-      &:last-child {
-        flex: 0 1 0;
-      }
-      &::before {
-        background: $eh-white;
-        border-radius: 50%;
-        content: " ";
-        height: 3rem;
-        left: -1.5rem;
-        position: absolute;
-        top: -1.3rem;
-        width: 3rem;
-      }
-      @media screen and (max-width: $screen-sm-min) {
-        &::before {
-          height: 2rem;
-          left: -0.5rem;
-          top: -0.8rem;
-          width: 2rem;
-        }
-      }
-    }
-  }
+.alert-warning {
+  background-color: #fcf8e3;
+  border-color: #faebcc;
+  color: #8a6d3b;
 }
 
-select.form-control {
-  background-color: $eh-select-dropdown-background;
-  border-color: transparent;
-  box-shadow: none;
+.authority-limits-container {
+  margin-top: 15px;
 }
 
-.btn_icon_right {
-  position: relative;
-  padding-right: 3.8rem;
-  i {
-    top: -1px;
-    position: absolute;
-    right: 7px;
-    font-size: 2.3rem;
-  }
+.limits-header {
+  color: #2c3e50;
+  border-bottom: 2px solid #3498db;
+  padding-bottom: 8px;
+  margin-bottom: 20px;
 }
 
-.search_wrapper {
-  .search {
-    margin: 0 0 0 1rem;
-    position: relative;
-    min-width: 20rem;
-    max-width: 28rem;
-    input {
-      border-radius: $eh-search-radius;
-      border: none;
-      padding: 0.8rem 5rem 0.8rem 0.8rem;
-      font-size: 1.8rem;
-      width: 100%;
-    }
-    .search_icon {
-      width: 5rem;
-      height: 4rem;
-      position: absolute;
-      right: 0;
-      top: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2rem;
-      cursor: default;
-      color: $eh-search-icon;
-    }
-  }
+.limit-record {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 20px;
+  margin-bottom: 15px;
 }
 
-.header_text {
+.job-info h5 {
+  color: #2c3e50;
+  margin: 0 0 15px 0;
+  font-weight: 600;
+}
+
+.limits-grid {
   display: flex;
-  color: $eh-header;
-  font-weight: bold;
-  margin-bottom: 3rem;
-  @media screen and (max-width: $screen-sm-min) {
-    font-size: 2.5rem;
-    flex-wrap: wrap;
-    justify-content: center;
-    text-align: center;
-  }
-  > span {
-    flex: 1;
-    align-self: center;
-    white-space: nowrap;
-  }
-  > .search_wrapper {
-    font-weight: normal;
-    .search {
-      display: flex;
-      input {
-        padding: 1rem 5rem 1rem 0.8rem;
-        background: $eh-search-background-header;
-      }
-    }
-  }
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
-wrapper {
-  content-visibility: auto;
-  contain-intrinsic-size: 100vh;
-  display: block;
-  position: relative;
-  padding: 2rem 3rem 1rem;
-  background: $eh-wrapper-background;
-  border-radius: $wrapper-radius;
-  width: 100%;
-  box-shadow: $widget-shadow;
-  &.min_height {
-    min-height: 47rem;
-  }
-  .flex_break {
-    display: block;
-    flex-basis: 100%;
-    height: 0;
-  }
-  .spinner_wrapper {
-    display: none;
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    align-items: center;
-    justify-content: center;
-    z-index: 1100;
-    &.loading {
-      display: flex;
-    }
-    @include spinner;
-  }
-  @media screen and (max-width: $screen-sm-max) {
-    padding: 3rem;
-  }
-  > header {
-    display: flex;
-    flex-wrap: wrap;
-    margin-bottom: 1rem;
-    position: relative;
-    align-items: stretch;
-    .icon_wrapper {
-      display: flex;
-      padding: 1rem 0;
-      .filter_icon {
-        font-size: 2.5rem;
-        cursor: pointer;
-        color: $eh-filter-icon;
-        align-self: center;
-      }
-      .settings_icon {
-        font-size: 2.5rem;
-        cursor: pointer;
-        color: $eh-settings-icon;
-        align-self: center;
-        padding-left: 1.5rem;
-      }
-    }
-    .popover {
-      margin-top: -1rem;
-      margin-left: 2rem;
-      border: none;
-      .arrow {
-        display: none;
-      }
-      .popover-content {
-        padding: 1.5rem 2rem 2rem;
-        .popover_wrapper {
-          h4 {
-            margin-top: 0;
-            font-weight: bold;
-          }
-          h5 {
-            margin: 2rem 0 0.8rem;
-            font-size: 1.3rem;
-          }
-          form {
-            margin-top: 1.7rem;
-            .form-group {
-              label {
-                font-size: 1.3rem;
-              }
-              &:last-of-type {
-                margin-bottom: 0;
-              }
-            }
-          }
-          .switch_wrapper {
-            display: flex;
-            align-items: center;
-            margin-top: 2rem;
-            @include switch;
-            .switch_label {
-              font-size: 1.3rem;
-            }
-            .switch {
-              margin: 0 0 0 3rem;
-            }
-          }
-          .btn_wrapper {
-            display: flex;
-            .btn {
-              flex: 1 0 0;
-              &:not(.focused) {
-                background: $eh-button-inactive-background;
-                color: $eh-button-inactive-text;
-                border-color: transparent;
-              }
-              &:not(:first-of-type) {
-                margin-left: 0.4rem;
-              }
-            }
-          }
-          &.settings_wrapper {
-            .form_wrapper {
-              label {
-                white-space: nowrap;
-              }
-            }
-          }
-          .checkbox {
-            margin: 0;
-            > label {
-              text-transform: capitalize;
-              display: block;
-              &:not(:first-of-type) {
-                margin-top: 1rem;
-              }
-            }
-          }
-        }
-      }
-      @media screen and (max-width: $screen-sm-min) {
-        right: 0.2rem;
-        margin-top: 0;
-        margin-left: 0;
-        .popover_wrapper {
-          &.settings_wrapper {
-            form {
-              min-width: auto;
-            }
-          }
-        }
-      }
-    }
-    .inline_header {
-      margin: 0.4rem 0 2rem;
-      align-self: center;
-      flex: 1;
-      font-weight: normal;
-      display: flex;
-      align-items: center;
-      .fa {
-        font-size: inherit;
-        margin-right: 2rem;
-        color: $eh_header_icon_color;
-      }
-    }
-    .filter_info_wrapper {
-      flex-grow: 1;
-      display: flex;
-      align-items: center;
-      .tab_filters {
-        list-style: none;
-        display: flex;
-        flex-wrap: wrap;
-        font-size: $eh-tab-font-size;
-        margin: 0;
-        padding: 0;
-        .tab_filter {
-          cursor: pointer;
-          position: relative;
-          display: flex;
-          align-items: center;
-          padding: 0.5rem 0;
-          > span.total_records {
-            position: relative;
-            &:after {
-              content: attr(data-count);
-              position: absolute;
-              padding: 0.2rem 0.5rem;
-              font-weight: $eh-tab-label-font-weight;
-              background: $eh-tab-label-background;
-              box-shadow: $eh-tab-label-shadow;
-              color: $eh-tab-label-color;
-              top: -1.1rem;
-              right: -2.5rem;
-              text-align: center;
-              font-size: $eh-tab-label-font-size;
-              border-radius: $eh-tab-label-radius;
-            }
-          }
-          &:after {
-            content: "";
-            height: 3px;
-            width: 0px;
-            background: $eh-tab-underline;
-            position: absolute;
-            bottom: -1px;
-            right: 0;
-            transition: width 250ms ease-in-out, opacity 250ms ease-in-out;
-          }
-
-          &:hover,
-          &.active {
-            &:after {
-              width: 100%;
-              opacity: 0.6;
-            }
-          }
-
-          &.active {
-            color: $eh-tab-color;
-            &:after {
-              background: $eh-tab-color;
-            }
-          }
-
-          &:not(:first-of-type) {
-            margin-left: 2rem;
-          }
-          &:not(:last-of-type) {
-            margin-right: 2rem;
-          }
-        }
-      }
-      .advanced_filter_wrapper {
-        padding: 0rem 1rem;
-        .advanced_filter_flag {
-          display: block;
-          color: $eh-advanced-filter-flag;
-          font-weight: bold;
-          margin-bottom: 0.5rem;
-        }
-        .advanced_filter_display {
-          padding: 0;
-          .advanced_filter {
-            display: inline-block;
-            &:first-of-type {
-              list-style: none;
-            }
-            > span {
-              padding: 0 0.5rem;
-            }
-          }
-        }
-      }
-    }
-    > .search_wrapper {
-      display: flex;
-      align-items: center;
-      .search {
-        input {
-          background: $eh-search-background;
-        }
-      }
-    }
-    @media screen and (max-width: $screen-sm-min) {
-      flex-direction: row;
-      flex-wrap: wrap;
-      justify-content: center;
-      align-items: center;
-      .inline_header {
-        order: 1;
-        margin-bottom: 2rem;
-        white-space: nowrap;
-        text-align: center;
-        justify-content: center;
-      }
-      .icon_wrapper {
-        order: 2;
-      }
-      .search_wrapper {
-        order: 3;
-        flex: 1;
-        flex-basis: 100%;
-        > ng-include {
-          width: 100%;
-        }
-        .search {
-          flex-basis: 0%;
-          flex: 1;
-          margin-left: 0;
-          max-width: 100%;
-        }
-      }
-      .flex_break {
-        order: 4;
-      }
-      .filter_info_wrapper {
-        order: 5;
-        flex-basis: 100%;
-        > ng-include {
-          width: 100%;
-        }
-        .tab_filters {
-          flex-direction: column;
-          align-items: center;
-          width: 100%;
-          .tab_filter {
-            margin: 0 !important;
-            text-align: center;
-            display: block;
-            padding: 0.3rem 0;
-            width: 100%;
-            > span.total_records {
-              &:after {
-                top: 0.3rem;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  .record_container {
-    display: flex;
-    > ng-include {
-      flex: 1 0 60%;
-      display: flex;
-      overflow-x: auto;
-    }
-    > * {
-      .list_wrapper {
-        flex-basis: 100%;
-        padding: 0;
-        list-style: none;
-        .row_expansion_wrapper.expanded {
-          display: block;
-        }
-        .list_item {
-          padding: 2rem 1rem;
-          &.bordered:not(:last-of-type) {
-            border-bottom: 1px solid rgba($eh-black, 0.25);
-          }
-          &.hover_items {
-            &:hover {
-              background: rgba($eh-black, 0.05);
-            }
-          }
-          &.active_item {
-            background: rgba($eh-black, 0.05);
-          }
-          .appoxio_row_wrapper {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-left: 0.4rem solid $eh-black;
-            padding: 0.7rem 0 0.7rem 1rem;
-            .title {
-              flex: 1;
-              .title_text {
-                display: block;
-                line-height: 1.7rem;
-                small {
-                  font-size: 1rem;
-                }
-              }
-              strong {
-                font-size: 1.9rem;
-              }
-              .value_wrapper {
-                display: inline-flex;
-                list-style: none;
-                padding-left: 0;
-                font-size: 1.1rem;
-                .value_item {
-                  &:not(:first-child) {
-                    border-left: 1px solid $gray;
-                    padding-left: 1rem;
-                    margin-left: 1rem;
-                  }
-                  > span {
-                    position: relative;
-                  }
-                }
-                @media screen and (max-width: $screen-sm-min) {
-                  display: block;
-                  text-indent: -1.7rem;
-                  padding-left: 2rem;
-                  .value_item {
-                    &:not(:first-child) {
-                      border-left: none;
-                      margin-left: 0;
-                      padding-left: 0;
-                    }
-                  }
-                }
-              }
-            }
-            .actions_wrapper {
-              button {
-                font-size: 1.3rem;
-                position: relative;
-                &:not(:last-of-type) {
-                  margin-right: 1rem;
-                }
-              }
-            }
-            .inline_text {
-              &.inline_state {
-                margin-left: 2rem;
-              }
-              .state_wrapper {
-                font-size: 1.5rem;
-              }
-            }
-            .direct_link {
-              margin-left: 1rem;
-              font-size: 1.5rem;
-              i {
-                padding-left: 0.3rem;
-              }
-            }
-            @media screen and (max-width: $screen-sm-min) {
-              flex-direction: column;
-              .title {
-                align-self: flex-start;
-              }
-              .state_wrapper {
-                align-self: flex-end;
-              }
-            }
-          }
-        }
-      }
-      > table {
-        flex-basis: 100%;
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0 0.7rem;
-        .defined_column.no_break {
-          white-space: nowrap;
-        }
-        .row_expansion_wrapper.expanded {
-          display: table-row;
-        }
-        @media screen and (max-width: $screen-sm-min) {
-          .defined_column:nth-child(n + 3),
-          .view_button {
-            display: none;
-          }
-        }
-        > thead {
-          > tr {
-            > th {
-              text-transform: uppercase;
-              padding: 0 1rem;
-              &.title_column {
-                @media screen and (min-width: $screen-md-min) {
-                  width: 23rem;
-                }
-              }
-              .table_label {
-                display: flex;
-                align-items: center;
-                flex: 1;
-                i {
-                  flex: 1;
-                  text-align: right;
-                }
-              }
-            }
-          }
-        }
-        > tbody {
-          > tr {
-            &.no_results {
-              > td {
-                padding: 3rem 1rem 1rem;
-              }
-            }
-            &.space_line {
-              outline: 1px solid $eh-grey;
-            }
-            &.hover_items {
-              &:hover {
-                background: rgba($eh-black, 0.05);
-              }
-            }
-            &.active_item {
-              background: rgba($eh-black, 0.05);
-            }
-            > td {
-              padding: 0 1rem;
-              line-height: 1.7rem;
-              height: 3.5rem;
-              &.title {
-                word-break: normal;
-              }
-              > small {
-                font-size: 1.1rem;
-                font-weight: 600;
-              }
-              &.left_border {
-                border-left: 0.8rem solid $eh-grey;
-              }
-              &.view_button {
-                display: inline-flex;
-                justify-content: flex-end;
-                gap: 1rem;
-                flex-wrap: wrap;
-                width: 100%;
-                height: 100%;
-                .btn {
-                  font-weight: 600;
-                  color: $eh-white;
-                }
-              }
-            }
-          }
-        }
-      }      
-      .row_expansion_wrapper {
-        display: none;
-        margin: 0 -1rem;
-        padding: 0 1rem;
-        cursor: default;
-        > td {
-          height: 0;
-        }
-        .appoxio_row_expansion {
-          .close {
-            line-height: 0.6;
-            float: none;
-            text-align: center;
-            border-top: 1px solid $eh-row-expansion-seperator;
-            padding-top: 1rem;
-            margin-top: 1rem;
-          }
-          .button_wrapper {
-            text-align: center;
-            padding: 0 0 2rem;
-          }
-          .conversation_wrapper {
-            .panel {
-              box-shadow: none;
-              border: none;
-            }
-          }
-          .record_variables {
-            @media screen and (min-width: $screen-sm-min) {
-              max-width: 50%;
-              margin: 0 auto;
-              > dl {
-                > dt {
-                  text-align: left;
-                }
-              }
-            }
-          }
-          .secondary_records {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            .record_wrapper {
-              .value_wrapper {
-                list-style: inside;
-                padding-left: 0;
-                .label_display {
-                  display: none;
-                }
-                .value_item {
-                  padding-left: 0.5rem;
-                  > span {
-                    position: relative;
-                    left: -0.5rem;
-                  }
-                }
-                @media screen and (max-width: $screen-sm-min) {
-                  display: block;
-                  text-indent: -1.7rem;
-                  padding-left: 1rem;
-                }
-              }
-            }
-          }
-        }
-      }
-      @media screen and (max-width: $screen-sm-min) {
-        flex-direction: column;
-        .record_wrapper {
-          order: 2;
-        }
-        .side_preview_wrapper {
-          max-height: initial;
-          order: 1;
-        }
-      }
-    }
-    .side_preview_wrapper {
-      flex-basis: 0%;
-      background: $eh-side-preview-background;
-      max-height: 70vh;
-      margin: 0 0 1rem;
-      @media screen and (min-width: $screen-sm-min) {
-        max-width: 300px;
-        transition: flex-basis 0.5s, margin-left 0.5s, margin-right 0.5s;
-      }
-      &.side_opening,
-      &.side_opened {
-        flex-basis: 45%;
-        margin: 0 0 1rem 1rem;
-      }
-      &.side_opened {
-        .appoxio_side_preview {
-          opacity: 1;
-          overflow: auto;
-        }
-      }
-      &:not(.side_opened) {
-        .appoxio_side_preview {
-          opacity: 0;
-          overflow: hidden;
-          width: 0;
-          padding: 0;
-          height: 0;
-        }
-      }
-      .appoxio_side_preview {
-        transition: opacity 0.1s;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        padding: 1rem;
-        position: relative;
-        .close {
-          position: absolute;
-          right: 1rem;
-          top: 0.4rem;
-        }
-        .title_wrapper {
-          display: flex;
-          justify-content: space-evenly;
-          align-items: center;
-          .icon {
-            font-size: 9rem;
-            margin-right: 1rem;
-          }
-          .title {
-            font-size: 2rem;
-            font-weight: bold;
-          }
-        }
-        .value_wrapper {
-          flex: 1;
-          .label_display {
-            display: none;
-          }
-          @media screen and (min-width: $screen-sm-min) {
-            dd {
-              margin-left: 47%;
-            }
-            dt {
-              width: 42%;
-            }
-          }
-        }
-        .state_wrapper {
-          text-align: center;
-          font-size: 2.5rem;
-          flex: 1;
-        }
-      }
-    }
-  }
-  pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-    nav {
-      &.pagination_minimal {
-        justify-content: space-between;
-        width: 100%;
-        .link_paging {
-          color: $eh-pagination-minimal-link;
-        }
-      }
-      .pagination {
-        margin: 1rem 0;
-        font-size: 1.2rem;
-        li {
-          &.inactive {
-            &.indicator {
-              a {
-                padding: 0.6rem 0.4rem;
-                font-size: 1rem;
-              }
-            }
-            &:hover {
-              a {
-                background: none;
-                cursor: default;
-              }
-            }
-          }
-          a {
-            padding: 0.4rem 0.9rem;
-            border: none;
-            border-radius: 2rem;
-            cursor: pointer;
-          }
-        }
-      }
-    }
-  }
-}
-.approval_modal {
-  .modal-dialog {
-    .modal-header {
-      border-bottom: transparent;
-      .modal-title {
-        font-size: 1.8rem;
-        font-weight: bold;
-      }
-    }
-    .modal-body {
-      padding: 0 1rem;
-      .text-danger,
-      .text-success {
-        font-weight: bold;
-      }
-      .form-group {
-        margin-bottom: 0;
-        textarea {
-          width: calc(100% - 2rem);
-          margin: 1rem 1rem 0;
-        }
-      }
-    }
-    .modal-footer {
-      border-top: transparent;
-      text-align: center;
-      .btn {
-        padding: 0.5rem 4.5rem;
-      }
-    }
-  }
+.limits-section {
+  flex: 1;
+  min-width: 300px;
+  background: white;
+  border-radius: 4px;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-@keyframes rotate {
-  100% {
-    transform: rotate(360deg);
-  }
-}
-@keyframes dash {
-  0% {
-    stroke-dasharray: 1, 150;
-    stroke-dashoffset: 0;
-  }
-  50% {
-    stroke-dasharray: 90, 150;
-    stroke-dashoffset: -35;
-  }
-  100% {
-    stroke-dasharray: 90, 150;
-    stroke-dashoffset: -124;
-  }
+.credit-limits {
+  border-left: 4px solid #e74c3c;
 }
 
+.non-credit-limits {
+  border-left: 4px solid #27ae60;
+}
 
-// Server Script:
-(function () {
+.section-title {
+  color: #2c3e50;
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
 
-	// Get the widget instance options. If none have been created, leave the params empty and use default values
-	var paramsString = $sp.getDisplayValue("widget_parameters");
-	var params = {};
-	if (paramsString) {
-		params = JSON.parse(paramsString);
-	}
+.credit-limits .section-title {
+  color: #e74c3c;
+}
 
-	// Get Widget Params and User
-	var instanceId = $sp.getDisplayValue("sys_id");
-	var user = gs.getUser();
+.non-credit-limits .section-title {
+  color: #27ae60;
+}
 
-	if (!input) {
-		var translate = new x_appte_emp_hub.APPOXIOTranslationService();
-		options = translate.Translate_Options(options, [
-			"header",
-			"search_placeholder"
-		]);
+.limits-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
-		// Get template display values from the reference fields to be used in angularjs
-		var getTemplateString = function (field) {
-			return params[field] ? (params[field].displayValue || options[field]) : options[field];
-		};
+.limit-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid #ecf0f1;
+}
 
-		if (params.header_template) {
-			options.main_row_template = getTemplateString('main_row_template');
-			options.main_table_template = getTemplateString('main_table_template');
-			options.header_template = getTemplateString('header_template');
-			options.spinner_template = getTemplateString('spinner_template');
-			options.filter_template = getTemplateString('filter_template');
-			options.settings_template = getTemplateString('settings_template');
-			options.search_input_template = getTemplateString('search_input_template');
-			options.advanced_filter_template = getTemplateString('advanced_filter_template');
-			options.action_template = getTemplateString('action_template');
-		}
-		options.tabs_template = getTemplateString('tabs_template');
-		options.pagination_template = getTemplateString('pagination_template');
+.limit-row:last-child {
+  border-bottom: none;
+}
 
-		var previewStyleGR = new GlideRecord('sp_widget');
-		if (previewStyleGR.get($sp.getValue("sp_widget"))) {
-			var option_schema = JSON.parse(previewStyleGR.getValue('option_schema'));
-			for (var i = 0; i < option_schema.length; i++) {
-				data[option_schema[i].name + 's'] = [];
-				switch (option_schema[i].name) {
-					case 'preview_style':
-					case 'list_view_style':
-						for (var s = 0; s < option_schema[i].choices.length; s++) {
-							var preview_label = option_schema[i].choices[s].label;
-							data[option_schema[i].name + 's'].push({
-								label: gs.getMessage('apx_emp_hub_settings_' + preview_label),
-								value: option_schema[i].choices[s].value
-							});
-						}
-						break;
-					default:
-						continue;
-				}
-			}
-		}
-	}
+.limit-label {
+  font-size: 13px;
+  color: #5a6c7d;
+  flex: 1;
+}
 
-	// Get user preferences
-	data.page_size = user.getPreference('apx.emp_hub.page_size.' + instanceId) || options.page_sizes.split(',')[0];
-	data.preview_style = user.getPreference('apx.emp_hub.preview_style.' + instanceId) || options.preview_style;
-	data.relative_dates = user.getPreference('apx.emp_hub.relative_dates.' + instanceId) || options.relative_dates;
-	data.list_view_style = user.getPreference('apx.emp_hub.list_view_style.' + instanceId) || options.list_view_style;
+.limit-value {
+  font-weight: 600;
+  color: #2c3e50;
+  text-align: right;
+}
 
-	// Get User Role settings
-	data.settings_role = options.settings_role ? user.hasRole(params.settings_role.displayValue) : true;
+.record-separator {
+  border: 0;
+  border-top: 2px solid #bdc3c7;
+  margin: 20px 0;
+}
 
-	// Set a user setting from the settings popover
-	if (input && input.action == 'update_user_setting' && input.setting_type) {
-		if (!data.settings_role) {
-			return;
-		}
-		data[input.setting_type] = input[input.setting_type];
-		user.savePreference('apx.emp_hub.' + input.setting_type + '.' + instanceId, input.setting_value);
-		return;
-	}
+.fa {
+  margin-right: 6px;
+}
 
-	// Execute a script from an action assigned to a row
-	if (input && input.action == 'execute_script' && input.sys_id && input.record) {
-		var evaluator = new GlideScopedEvaluator();
-		gr = new GlideRecord('x_appte_emp_hub_action');
-		if (gr.get(input.sys_id)) {
-			evaluator.evaluateScript(gr, 'server_script', { record: JSON.stringify(input.record), response: null, variables: input.variables });
-			data.script_response = evaluator.getVariable('response');
-		}
-		return;
-	}
+.text-center {
+  text-align: center;
+  padding: 30px;
+}
 
+.fa-spinner {
+  color: #3498db;
+}
+
+@media (max-width: 768px) {
+  .limits-grid {
+    flex-direction: column;
+  }
+  
+  .limits-section {
+    min-width: auto;
+  }
+  
+  .limit-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .limit-value {
+    text-align: left;
+  }
+}
+</style>
+
+<!-- SERVER SCRIPT -->
+(function() {
+  'use strict';
+
+  if (input && input.action === 'getAuthorityLimits') {
+    var jobCode = input.job_code;
+    var limits = [];
+    
+    if (jobCode) {
+      // Query the authority limits table
+      var gr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
+      gr.addQuery('job_code', jobCode);
+      gr.addQuery('active', true);
+      gr.query();
+      
+      while (gr.next()) {
+        var limit = {
+          job_code: gr.getValue('job_code'),
+          job_description: gr.job_code.getDisplayValue(), // Assuming job_code is a reference field
+          
+          // Credit limits
+          overdraft_external_accounts: gr.getValue('overdraft_external_accounts'),
+          overdraft_internal_accounts: gr.getValue('overdraft_internal_accounts'),
+          unavailable_funds_external_accounts: gr.getValue('unavailable_funds_external_accounts'),
+          unavailable_funds_internal_accounts: gr.getValue('unavailable_funds_internal_accounts'),
+          
+          // Non-credit limits
+          disbursement_ach: gr.getValue('disbursement_ach'),
+          disbursement_wire_transfer_external: gr.getValue('disbursement_wire_transfer_external'),
+          disbursement_wire_transfer_internal: gr.getValue('disbursement_wire_transfer_internal'),
+          disbursement_official_checks_external: gr.getValue('disbursement_official_checks_external'),
+          disbursement_official_checks_internal: gr.getValue('disbursement_official_checks_internal'),
+          check_cashing_on_us: gr.getValue('check_cashing_on_us'),
+          check_cashing_not_on_us: gr.getValue('check_cashing_not_on_us'),
+          remote_deposit: gr.getValue('remote_deposit'),
+          treasury_solutions_company_wire_limits: gr.getValue('treasury_solutions_company_wire_limits'),
+          fx_wire_limits: gr.getValue('fx_wire_limits')
+        };
+        
+        limits.push(limit);
+      }
+    }
+    
+    data.limits = limits;
+  }
 })();
 
-
-// Client controller:
-api.controller = function ($scope, $q, spUtil, $http, $filter, $element, $uibModal, $window, $location, $timeout, $interval, $injector, employeeHubFunctions) {
-	var c = this;
-
-	employeeHubFunctions.user_date_format = $scope.user.date_format;
-	employeeHubFunctions.user_time_zone = $scope.user.time_zone;
-	employeeHubFunctions.instance_date_format = c.options.date_format;
-
-	// Allow injected methods to be called in link script
-	$scope.uibModal = $uibModal;
-	$scope.location = $location;
-	$scope.window = $window;
-	$scope.timeout = $timeout;
-	$scope.interval = $interval;
-	$scope.spUtil = spUtil;
-	$scope.employeeHubFunctions = employeeHubFunctions;
-
-
-	// Set the page as a single page app to properly handle url changes and history
-	$location.search('spa', 1).replace();
-
-	// convert a string to a boolean
-	var checkBooleanString = function (string) {
-		return string === 'true';
-	};
-
-	c.filters = [];
-	c.columns = [];
-	c.all_table_columns = [];
-	c.active = $location.search()['active-' + $scope.widget.rectangle_id] === undefined ? true : checkBooleanString($location.search()['active-' + $scope.widget.rectangle_id]);
-	c.inactive = $location.search()['inactive-' + $scope.widget.rectangle_id] === undefined ? false : checkBooleanString($location.search()['inactive-' + $scope.widget.rectangle_id]);
-	c.active_filters = [];
-	c.advanced_filter_enabled = false;
-	c.desc = true;
-	c.searchString = $location.search()['search-' + $scope.widget.rectangle_id] || "";
-	c.currentPage = Number($location.search()['page-' + $scope.widget.rectangle_id]) || 1;
-	c.pageTotal = 1;
-	c.watcherApplied = false;
-	c.activeTab = $location.search()['activetab-' + $scope.widget.rectangle_id] || "";
-	c.sidePreviewOpening = false;
-	c.sidePreviewOpened = false;
-	c.orderColumn = 'sort_val';
-	c.orderDirection = false;
-	c.loading = true;
-	c.selectedRow = null;
-	c.selectedRowID = $location.search()['selectedrow-' + $scope.widget.rectangle_id] || null;
-	c.isMobile = detect.parse(navigator.userAgent).device.type == 'Mobile';
-
-	$scope.options.page_sizes = $scope.options.page_sizes.split(',');
-	$scope.preview_styles = c.data.preview_styles;
-	$scope.list_view_styles = c.data.list_view_styles;
-
-	c.page_size = $scope.data.page_size || $scope.options.page_sizes[0];
-	c.preview_style = $scope.data.preview_style || $scope.options.preview_style;
-	c.list_view_style = $scope.data.list_view_style || $scope.options.list_view_style;
-	c.relative_dates = checkBooleanString($scope.data.relative_dates);
-
-	$scope.options.inline_header = checkBooleanString($scope.options.inline_header);
-	$scope.options.inline_state = checkBooleanString($scope.options.inline_state);
-	$scope.options.minimal_interface = checkBooleanString($scope.options.minimal_interface);
-	$scope.options.settings_visible = checkBooleanString($scope.options.settings_visible);
-	$scope.options.hover_items = checkBooleanString($scope.options.hover_items);
-	$scope.options.line_between_items = checkBooleanString($scope.options.line_between_items);
-	$scope.options.main_body_shadow = checkBooleanString($scope.options.main_body_shadow);
-	$scope.options.show_tabs = checkBooleanString($scope.options.show_tabs);
-	$scope.options.show_unified_tab = checkBooleanString($scope.options.show_unified_tab);
-	$scope.options.total_records_display = checkBooleanString($scope.options.total_records_display);
-
-	// Watch and set URL parameters based on scoped variables on the controller
-	var watchUrl = function (watchVariable, urlParam) {
-		$scope.$watch(function () {
-			return c[watchVariable];
-		}, function (newValue, oldValue) {
-			$location.search(urlParam, newValue === null || newValue === undefined ? null : newValue.toString()).replace();
-		});
-	};
-
-	// Track the page the user is currently on
-	watchUrl('currentPage', 'page-' + $scope.widget.rectangle_id);
-	// Track the opened record
-	watchUrl('selectedRowID', 'selectedrow-' + $scope.widget.rectangle_id);
-	// Track the active filter
-	watchUrl('active', 'active-' + $scope.widget.rectangle_id);
-	// Track the inactive filter
-	watchUrl('inactive', 'inactive-' + $scope.widget.rectangle_id);
-	// Track the search string
-	watchUrl('searchString', 'search-' + $scope.widget.rectangle_id);
-	// Track the active tab
-	watchUrl('activeTab', 'activetab-' + $scope.widget.rectangle_id);
-
-	// Setup record watchers
-	$scope.setUpWatchers = function (watchers) {
-		watchers.forEach(function (watcher) {
-			spUtil.recordWatch($scope, watcher.table, watcher.watch_query, function () {
-				$scope.updateData(true, true);
-			});
-		});
-		c.watcherApplied = true;
-	};
-
-	// Get Pagination information
-	$scope.setPageTotal = function () {
-		c.pageTotal = Math.ceil($scope.filteredResults.length / c.page_size);
-	};
-
-	// Return the number of columns being displayed 
-	$scope.getColumnNumber = function () {
-		return c.columns.length + 2 +
-			((c.preview_style == 'modal' || c.preview_style == 'direct_link') ? 1 : 0) +
-			($scope.options.inline_state ? 1 : 0);
-	};
-
-	// Sort the list of records
-	$scope.sortBy = function (column) {
-		var columnArray = column.split('.');
-		c.orderDirection = (c.orderColumn === columnArray[0]) ? !c.orderDirection : false;
-		c.orderColumn = columnArray[0];
-		$scope.filteredResults = _.orderBy($scope.filteredResults, function (row) {
-			if (!c.orderColumn) {
-				return '';
-			}
-			var parentProperty = row[c.orderColumn];
-			if (parentProperty) {
-				if (_.isPlainObject(parentProperty)) {
-					for (var i = 1; i < columnArray.length; i++) {
-						parentProperty = parentProperty[columnArray[i]];
-					}
-					return parentProperty;
-				}
-				return parentProperty;
-			}
-
-			var subvalue = _.find(row.values, {
-				name: c.orderColumn
-			});
-			if (subvalue) {
-				return subvalue.value;
-			}
-			return !c.orderDirection && c.orderColumn != 'sort_val' ? null : '';
-		}, c.orderColumn == 'sort_val' ? 'desc' : (c.orderDirection ? 'desc' : 'asc'));
-	};
-
-	// Detect swipes and change pages
-	$scope.detectSwipe = function () {
-		var swipe = $interval(function () {
-			var record_wrapper = $element.find('.record_wrapper');
-			if (record_wrapper.length) {
-				employeeHubFunctions.detectSwipe(record_wrapper[0], function () {
-					if (c.currentPage < c.pageTotal) {
-						c.currentPage = c.currentPage + 1;
-						spUtil.update($scope);
-					}
-					return;
-				}, function () {
-					if (c.currentPage > 1) {
-						c.currentPage = c.currentPage - 1;
-						spUtil.update($scope);
-					}
-					return;
-				});
-
-				$interval.cancel(swipe);
-			}
-		}, 500, 10);
-	};
-
-	// Check user role restriction
-	$scope.checkRoleRestriction = function (role) {
-		if (role === "" || role === undefined) {
-			return true;
-		}
-
-		return $scope.data[role];
-	};
-
-	// Evaluate the action button visibilty check
-	$scope.actionVisibility = function (row, expression) {
-		var func = new Function("return " + expression);
-		return func.call(row);
-	};
-
-	// Execute button scripts
-	$scope.executeScript = function ($event, record, action) {
-		$event.stopPropagation();
-		$event.preventDefault();
-
-		var injectedDependencies = {};
-		_.forEach(action.dependencies ? action.dependencies.split(/\s*,\s*/) : [], function (dependency) {
-			injectedDependencies[dependency] = $injector.get(dependency);
-		});
-
-		var f = new Function('controller', '$scope', '$element', 'record', 'sysId', 'spUtil', '$uibModal', '$http', 'dependencies', action.client_script);
-		return f(c, $scope, $element, record, action.sys_id, spUtil, $uibModal, $http, injectedDependencies);
-	};
-
-	// Filter by the type of filter selecting in the Filter popover
-	$scope.filterByType = function (record) {
-		return _.find(c.filters, {
-			'name': record.tab_group || record.name
-		}).value;
-	};
-
-	// Get all the available columns, removing duplicates
-	$scope.getAllColumns = function (name) {
-		var columns = [];
-		_.forEach(c.all_table_columns, function (config) {
-			_.forEach(config.columns, function (column) {
-				if (name && !(config.id == name || config.group == name)) {
-					return;
-				}
-				if (columns.map(function (column) {
-						return column.name;
-					}).indexOf(column.name) < 0) {
-					columns.push({
-						name: column.name,
-						label: column.label
-					});
-				}
-			});
-		});
-		return columns;
-	};
-
-	// reset the filters to show all records
-	$scope.removeFilter = function () {
-		$location.search('activetab-' + $scope.widget.rectangle_id, null).replace();
-		for (var i = 0; i < c.filters.length; i++) {
-			c.filters[i].value = true;
-		}
-		$scope.filterData();
-	};
-
-	// Set Page size
-	$scope.setUserSetting = function (action) {
-		$scope.setPageTotal();
-		if (action == 'page_size') {
-			c.currentPage = 1;
-		}
-		c.server.get({
-			action: 'update_user_setting',
-			setting_type: action,
-			setting_value: c[action]
-		});
-	};
-
-	// Get the label number for each tab
-	$scope.getLabelNumber = function (tab) {
-		if (tab) {
-			return _.find(c.filters, {
-				name: tab
-			}).total_records;
-		}
-		return c.fullrecords.length;
-	};
-
-	// using the search and filters, narrow the original dataset
-	$scope.filterData = function (maintainPage, tab, dataUpdate) {
-		$scope.filteredResults = c.fullrecords;
-		c.activeTab = tab;
-		c.columns = $scope.getAllColumns(tab);
-		if (tab) {
-			_.forEach(c.filters, function (filter, index) {
-				filter.value = c.filters[index].name == tab;
-			});
-		}
-
-		// Check if all advanced filters are set to true
-		c.active_filters = _.filter(c.filters, function (filter) {
-			return filter.value === true;
-		});
-		if (c.active_filters.length === c.filters.length) {
-			c.advanced_filter_enabled = false;
-		} else if (c.active_filters.length === 0) {
-			c.advanced_filter_enabled = false;
-			_.forEach(c.filters, function (filter, index) {
-				filter.value = true;
-			});
-		} else {
-			c.advanced_filter_enabled = !c.activeTab;
-		}
-
-		// Check if any filters are set to true
-		if (_.some(c.filters, {
-				'value': true
-			})) {
-			$scope.filteredResults = $filter('filter')(c.fullrecords, $scope.filterByType);
-		}
-
-		// Check if there is a search string
-		if (c.searchString) {
-			$scope.filteredResults = $filter('filter')($scope.filteredResults, c.searchString);
-		}
-
-		if (c.orderColumn == 'sort_val') {
-			$scope.filteredResults = _.orderBy($scope.filteredResults, 'sort_val', 'desc');
-		}
-
-		_.forEach($scope.filteredResults, function (record) {
-			// Using the array of grouped values, create a grouping structure for the states
-			record.grouped_states = [];
-			if (!record.state_groupings) {
-				_.forEach(record.state_choices, function (state) {
-					record.grouped_states.push([state]);
-				});
-				return;
-			}
-			_.forEach(record.state_groupings, function (group) {
-				if (!_.isArray(group)) {
-					record.grouped_states.push([_.find(record.state_choices, {
-						value: group.toString()
-					})]);
-					return;
-				}
-
-				var newStateGroups = [];
-				_.forEach(group, function (value) {
-					newStateGroups.push(_.find(record.state_choices, {
-						value: value.toString()
-					}));
-				});
-				record.grouped_states.push(newStateGroups);
-			});
-		});
-
-		var selectedRowParam = $location.search()['selectedrow-' + $scope.widget.rectangle_id];
-		if (selectedRowParam && !dataUpdate) {
-			var record = _.find($scope.filteredResults, {
-				elementID: selectedRowParam
-			});
-			if (record && c.preview_style != 'direct_link') {
-				$scope.openRecord(record);
-			} else {
-				$location.search('selectedrow', null).replace();
-			}
-		}
-
-		if (!maintainPage) {
-			c.currentPage = 1;
-		}
-
-		$scope.setPageTotal();
-	};
-
-	// Check for an active state in a group of states
-	$scope.checkActiveState = function (group, record) {
-		return _.findIndex(group, {
-			value: record.state.value
-		}) > -1;
-	};
-
-	// Update the list of tickets
-	var canceller;
-	$scope.updateData = function (maintainPage, dataUpdate) {
-		if (!c.active && !c.inactive) {
-			c.active = true;
-		}
-
-		var rUrl = '/api/x_appte_emp_hub/apx_employee_hub/records?' +
-			'widgetInstance=' + $scope.widget.rectangle_id +
-			'&active=' + c.active +
-			'&inactive=' + c.inactive +
-			'&desc=' + c.desc;
-
-		c.loading = true;
-
-		// Cancel preexisting calls
-		if (canceller) {
-			canceller.resolve();
-		}
-		canceller = $q.defer();
-
-		var empHubPromise = $http.get(rUrl, {
-			timeout: canceller.promise
-		});
-		empHubPromise.success(function (response) {
-			c.fullrecords = response.result.records;
-			// Check if watchers have been applied, if not, apply them
-			if (!c.watcherApplied) {
-				$scope.setUpWatchers(response.result.watch_queries);
-			}
-			c.filters = response.result.filters;
-
-			c.all_table_columns = response.result.table_columns;
-			c.activeTab = $location.search()['activetab-' + $scope.widget.rectangle_id] || ($scope.options.show_unified_tab ? null : _.sortBy(c.filters, 'order')[0].name);
-			$scope.filterData(maintainPage, c.activeTab, dataUpdate);
-
-			c.loading = false;
-		}).error(function (error, status) {
-			// If the http call is cancelled, just return
-			if (status === -1) {
-				return;
-			}
-			c.fullrecords = [];
-			// if there is a legit error, log it and notify the user	
-			// eslint-disable-next-line no-console
-			console.warn(error);
-			if (error.result && error.result.message) {
-				spUtil.addErrorMessage(error.result.message);
-			} else {
-				spUtil.addErrorMessage('${apx_emp_hub_error_failed_records}');
-			}
-			c.loading = false;
-		});
-	};
-
-	// Check if a row is the currently selected row
-	$scope.isActiveRow = function (row) {
-		return row == c.selectedRow;
-	};
-
-	// Update the data on initial page load
-	$scope.updateData(true);
-
-	// setup swipe
-	if (c.isMobile) {
-		$scope.detectSwipe();
-	}
-};
-
-// Link:
-function link(scope, element, attrs, c) {
-
-	// Open Modal
-	var openModal = function (row) {
-		c.loading = true;
-
-		c.selectedRow.recordModalInstance = scope.uibModal.open({
-			scope: scope,
-			templateUrl: row.modal_template,
-			size: 'lg',
-			appendTo: element,
-			windowClass: 'eh_modal'
-		});
-
-		// Stop loader once the modal is open
-		c.selectedRow.recordModalInstance.rendered.then(function () {
-			c.loading = false;
-		});
-
-		// Null out selected row values on close
-		c.selectedRow.recordModalInstance.closed.then(function () {
-			c.selectedRowID = null;
-			c.selectedRow = null;
-		});
-
-		// Dismiss the record modal
-		c.selectedRow.dismissRecordModal = function () {
-			c.selectedRow.recordModalInstance.dismiss();
-		};
-	};
-
-	// Open Side Preview
-	var openSidePreview = function (row) {
-		c.sidePreviewOpening = true;
-		scope.currentSidePreviewTemplate = row.side_preview_template;
-		element.find('.side_preview_wrapper')[0].scrollIntoView({ behavior: "smooth" });
-		scope.timeout(function () {
-			c.sidePreviewOpened = true;
-			c.sidePreviewOpening = false;
-		}, c.isMobile ? 0 : 300);
-	};
-
-	// Expand Row
-	var expandRow = function (row) {
-		var scroll = scope.interval(function () {
-			var record_wrapper = element.find('#x' + row.elementID);
-			if (record_wrapper.length) {
-				record_wrapper[0].scrollIntoView({ behavior: "smooth" });
-
-				scope.interval.cancel(scroll);
-			}
-		}, 400, 10);
-	};
-
-	// Record Modal
-	scope.openRecord = function (row) {
-		if (c.preview_style == 'direct_link') {
-			if(c.list_view_style == 'table'){
-				window.location.href = row.url;
-			}
-			return;
-		}
-		if (row == c.selectedRow) {
-			c.selectedRow = null;
-			c.selectedRowID = null;
-			c.sidePreviewOpened = false;
-			return;
-		}
-
-		c.selectedRow = row;
-		c.selectedRowID = row.elementID;
-		switch (c.preview_style) {
-			case 'modal':
-				openModal(row);
-				break;
-			case 'side_preview':
-				openSidePreview(row);
-				break;
-			case 'row_expansion':
-				expandRow(row);
-				break;
-			default:
-				scope.location.url(scope.location.path() + row.url);
-				break;
-		}
-	};
+<!-- CLIENT CONTROLLER -->
+function($scope, spUtil) {
+  var c = this;
+  
+  // Initialize variables
+  c.jobCode = '';
+  c.authorityLimits = [];
+  c.loading = false;
+  
+  // Function to get job code value from the form
+  c.getJobCodeValue = function() {
+    // Try multiple ways to get the job_code field value
+    if (typeof g_form !== 'undefined' && g_form.getValue) {
+      return g_form.getValue('job_code');
+    }
+    
+    // Alternative method for record producer
+    var jobCodeField = document.querySelector('select[name="job_code"], input[name="job_code"]');
+    if (jobCodeField) {
+      return jobCodeField.value;
+    }
+    
+    return '';
+  };
+  
+  // Function to monitor job code changes
+  c.monitorJobCodeChanges = function() {
+    // Method 1: Using g_form if available
+    if (typeof g_form !== 'undefined' && g_form.addOnChangeCallback) {
+      g_form.addOnChangeCallback('job_code', function() {
+        c.jobCode = c.getJobCodeValue();
+        c.loadAuthorityLimits();
+        $scope.$apply();
+      });
+    } else {
+      // Method 2: DOM event listener as fallback
+      var jobCodeField = document.querySelector('select[name="job_code"], input[name="job_code"]');
+      if (jobCodeField) {
+        jobCodeField.addEventListener('change', function() {
+          c.jobCode = c.getJobCodeValue();
+          c.loadAuthorityLimits();
+          $scope.$apply();
+        });
+      }
+    }
+  };
+  
+  // Function to load authority limits
+  c.loadAuthorityLimits = function() {
+    if (!c.jobCode) {
+      c.authorityLimits = [];
+      return;
+    }
+    
+    c.loading = true;
+    
+    // Call server script to get authority limits
+    c.server.get({
+      action: 'getAuthorityLimits',
+      job_code: c.jobCode
+    }).then(function(response) {
+      c.authorityLimits = response.data.limits || [];
+      c.loading = false;
+    }).catch(function(error) {
+      console.error('Error loading authority limits:', error);
+      spUtil.addErrorMessage('Failed to load authority limits');
+      c.authorityLimits = [];
+      c.loading = false;
+    });
+  };
+  
+  // Initialize on load
+  c.jobCode = c.getJobCodeValue();
+  if (c.jobCode) {
+    c.loadAuthorityLimits();
+  }
+  
+  // Set up monitoring for job code changes
+  c.monitorJobCodeChanges();
 }
 
-// Options schema:
+<!-- OPTIONS SCHEMA -->
 [
-    {
-        "hint": "The optional header that will appear above the main widget. This value can be changed in the Message table",
-        "name": "header",
-        "section": "Presentation",
-        "default_value": "apx_emp_hub_header",
-        "label": "Header",
-        "type": "string"
-    },
-    {
-        "hint": "The icon to place next to the Header text",
-        "name": "header_icon",
-        "section": "Presentation",
-        "default_value": "",
-        "label": "Header Icon",
-        "type": "glyphicon"
-    },
-    {
-        "hint": "The search input placeholder text. This value can be changed in the Message table",
-        "name": "search_placeholder",
-        "section": "Presentation",
-        "default_value": "apx_emp_hub_search_placeholder",
-        "label": "Search Placeholder",
-        "type": "string"
-    },
-    {
-        "hint": "The momentjs Date format. See https://momentjs.com/docs/#/displaying/",
-        "name": "date_format",
-        "section": "Presentation",
-        "default_value": "",
-        "label": "Date Format",
-        "type": "string"
-    },
-    {
-        "hint": "Show the header in the main wrapper",
-        "name": "inline_header",
-        "section": "Presentation",
-        "default_value": "false",
-        "label": "Inline Header",
-        "type": "boolean"
-    },
-    {
-        "hint": "Place a line between each item in the list",
-        "name": "line_between_items",
-        "section": "Presentation",
-        "default_value": "true",
-        "label": "Line between items",
-        "type": "boolean"
-    },
-    {
-        "hint": "Change the background of an item when a user hovers over it",
-        "name": "hover_items",
-        "section": "Presentation",
-        "default_value": "true",
-        "label": "Hover items",
-        "type": "boolean"
-    },
-    {
-        "displayValue": "Angular ng-template",
-        "hint": "The template to use for the primary row view",
-        "name": "main_row_template",
-        "section": "Behavior",
-        "default_value": "appoxioMainRow",
-        "label": "Primary Row Template",
-        "type": "reference",
-        "value": "sp_ng_template",
-        "ed": {
-            "reference": "sp_ng_template"
-        }
-    },
-    {
-        "displayValue": "Angular ng-template",
-        "hint": "The template to use for the primary table view",
-        "name": "main_table_template",
-        "section": "Behavior",
-        "default_value": "appoxioMainTable",
-        "label": "Primary Table Template",
-        "type": "reference",
-        "value": "sp_ng_template",
-        "ed": {
-            "reference": "sp_ng_template"
-        }
-    },
-    {
-        "displayValue": "Angular ng-template",
-        "hint": "The template to use for the header",
-        "name": "header_template",
-        "section": "Behavior",
-        "default_value": "appoxioHeader",
-        "label": "Header Template",
-        "type": "reference",
-        "value": "sp_ng_template",
-        "ed": {
-            "reference": "sp_ng_template"
-        }
-    },
-    {
-        "displayValue": "Angular ng-template",
-        "hint": "The template to use for the pagination controls",
-        "name": "pagination_template",
-        "section": "Behavior",
-        "default_value": "appoxioPagination",
-        "label": "Pagination Template",
-        "type": "reference",
-        "value": "sp_ng_template",
-        "ed": {
-            "reference": "sp_ng_template"
-        }
-    },
-    {
-        "displayValue": "Angular ng-template",
-        "hint": "The template to use for the loading spinner",
-        "name": "spinner_template",
-        "section": "Behavior",
-        "default_value": "appoxioSpinner",
-        "label": "Spinner Template",
-        "type": "reference",
-        "value": "sp_ng_template",
-        "ed": {
-            "reference": "sp_ng_template"
-        }
-    },
-    {
-        "displayValue": "Angular ng-template",
-        "hint": "The name of the filter template that should be used",
-        "name": "filter_template",
-        "section": "Behavior",
-        "default_value": "appoxioFilterPopover",
-        "label": "Filter Template",
-        "type": "reference",
-        "value": "sp_ng_template",
-        "ed": {
-            "reference": "sp_ng_template"
-        }
-    },
-    {
-        "displayValue": "Angular ng-template",
-        "hint": "The name of the settings template that should be used",
-        "name": "settings_template",
-        "section": "Behavior",
-        "default_value": "appoxioSettingsPopover",
-        "label": "Settings Template",
-        "type": "reference",
-        "value": "sp_ng_template",
-        "ed": {
-            "reference": "sp_ng_template"
-        }
-    },
-    {
-        "displayValue": "Angular ng-template",
-        "hint": "The template to use for the Search input",
-        "name": "search_input_template",
-        "section": "Behavior",
-        "default_value": "appoxioSearchInput",
-        "label": "Search Input Template",
-        "type": "reference",
-        "value": "sp_ng_template",
-        "ed": {
-            "reference": "sp_ng_template"
-        }
-    },
-    {
-        "displayValue": "Angular ng-template",
-        "hint": "The template to use for the Tabs",
-        "name": "tabs_template",
-        "section": "Behavior",
-        "default_value": "appoxioTabs",
-        "label": "Tabs Template",
-        "type": "reference",
-        "value": "sp_ng_template",
-        "ed": {
-            "reference": "sp_ng_template"
-        }
-    },
-    {
-        "displayValue": "Angular ng-template",
-        "hint": "The template to use for the Advanced Filter",
-        "name": "advanced_filter_template",
-        "section": "Behavior",
-        "default_value": "appoxioAdvancedFilter",
-        "label": "Advanced Filter Template",
-        "type": "reference",
-        "value": "sp_ng_template",
-        "ed": {
-            "reference": "sp_ng_template"
-        }
-    },
-    {
-        "displayValue": "Angular ng-template",
-        "hint": "The template to use for action buttons",
-        "name": "action_template",
-        "section": "Behavior",
-        "default_value": "appoxioActionButton",
-        "label": "Primary Action Buttons Template",
-        "type": "reference",
-        "value": "sp_ng_template",
-        "ed": {
-            "reference": "sp_ng_template"
-        }
-    },
-    {
-        "hint": "The max character length of the Title cell before it's terminated to ellipsis",
-        "name": "title_table_cell_text_limit",
-        "section": "Behavior",
-        "default_value": "100",
-        "label": "Title table cell text limit",
-        "type": "integer"
-    },
-    {
-        "hint": "The max amount of characters to allow in each Table Cell.",
-        "name": "table_cell_text_limit",
-        "section": "Behavior",
-        "default_value": "250",
-        "label": "Table Cell Text Limit",
-        "type": "integer"
-    },
-    {
-        "hint": "A comma separated list of page numbers",
-        "name": "page_sizes",
-        "section": "Behavior",
-        "default_value": "5,10,20,50",
-        "label": "Page Sizes",
-        "type": "string"
-    },
-    {
-        "displayValue": "Role",
-        "hint": "Restrict the settings options to a specific role",
-        "name": "settings_role",
-        "section": "Behavior",
-        "default_value": "",
-        "label": "Settings Role",
-        "type": "reference",
-        "value": "sys_user_role",
-        "ed": {
-            "reference": "sys_user_role"
-        }
-    },
-    {
-        "hint": "Which preview style should be used",
-        "name": "preview_style",
-        "section": "Behavior",
-        "default_value": "modal",
-        "label": "Preview Style",
-        "type": "choice",
-        "choices": [
-            {
-                "label": "direct_link",
-                "value": "direct_link"
-            },
-            {
-                "label": "modal",
-                "value": "modal"
-            },
-            {
-                "label": "row_expansion",
-                "value": "row_expansion"
-            },
-            {
-                "label": "side_preview",
-                "value": "side_preview"
-            }
-        ]
-    },
-    {
-        "hint": "Which style to render the primary list of records in",
-        "name": "list_view_style",
-        "section": "Behavior",
-        "default_value": "list",
-        "label": "List View Style",
-        "type": "choice",
-        "choices": [
-            {
-                "label": "List",
-                "value": "list"
-            },
-            {
-                "label": "Table",
-                "value": "table"
-            }
-        ]
-    },
-    {
-        "hint": "Whether or not to show the Settings Icon",
-        "name": "settings_visible",
-        "section": "Behavior",
-        "default_value": "true",
-        "label": "Show Settings",
-        "type": "boolean"
-    },
-    {
-        "hint": "Whether to show a relative date or the actual date",
-        "name": "relative_dates",
-        "section": "Behavior",
-        "default_value": "true",
-        "label": "Relative Date",
-        "type": "boolean"
-    },
-    {
-        "hint": "Show the State on each row",
-        "name": "inline_state",
-        "section": "Behavior",
-        "default_value": "false",
-        "label": "Inline State",
-        "type": "boolean"
-    },
-    {
-        "hint": "Show the tabs in the header when no advanced filters are active",
-        "name": "show_tabs",
-        "section": "Behavior",
-        "default_value": "true",
-        "label": "Show Tab Filters",
-        "type": "boolean"
-    },
-    {
-        "hint": "Show a unified tab with all record types",
-        "name": "show_unified_tab",
-        "section": "Behavior",
-        "default_value": "true",
-        "label": "Show Unified Tab",
-        "type": "boolean"
-    },
-    {
-        "hint": "Remove the majority of elements leaving a minimal list of records",
-        "name": "minimal_interface",
-        "section": "Behavior",
-        "default_value": "false",
-        "label": "Minimal Interface",
-        "type": "boolean"
-    },
-    {
-        "hint": "Show the total number of records that are in each tab",
-        "name": "total_records_display",
-        "section": "Behavior",
-        "default_value": "false",
-        "label": "Show Record Totals",
-        "type": "boolean"
-    },
-    {
-        "hint": "The icon to use for the Advanced Filter option",
-        "name": "filter_icon",
-        "section": "Presentation",
-        "default_value": "filter",
-        "label": "Filter Icon",
-        "type": "glyphicon"
-    },
-    {
-        "hint": "The icon to use for the Search bar",
-        "name": "search_icon",
-        "section": "Presentation",
-        "default_value": "search",
-        "label": "Search Icon",
-        "type": "glyphicon"
-    },
-    {
-        "hint": "The icon to use for the Settings option",
-        "name": "settings_icon",
-        "section": "Presentation",
-        "default_value": "cog",
-        "label": "Settings Icon",
-        "type": "glyphicon"
-    }
+  {
+    "hint": "Title to display at the top of the widget",
+    "name": "title",
+    "section": "Presentation",
+    "default_value": "Authority Limits",
+    "label": "Widget Title",
+    "type": "string"
+  },
+  {
+    "hint": "Field name for the job code on the record producer",
+    "name": "job_code_field",
+    "section": "Behavior",
+    "default_value": "job_code",
+    "label": "Job Code Field Name",
+    "type": "string"
+  },
+  {
+    "hint": "Table name for authority limits lookup",
+    "name": "authority_table",
+    "section": "Behavior",
+    "default_value": "x_banun_bunow_si_0_authority_limits",
+    "label": "Authority Limits Table",
+    "type": "string"
+  }
 ]
