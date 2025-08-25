@@ -245,24 +245,34 @@
 </style>
 
 <!-- SERVER SCRIPT -->
+<!-- SERVER SCRIPT -->
 (function() {
   'use strict';
 
   if (input && input.action === 'getEmployees') {
-    var jobCode = input.job_code;
+    var jobCodeSysId = input.job_code; // This is the sys_id from the reference field
     var employees = [];
     var jobCodeDisplayValue = '';
+    var jobCodeValue = ''; // The actual job code string value
     
-    if (jobCode) {
-      // Get the display value of the job code
+    if (jobCodeSysId) {
+      // Get the actual job code value from the job code table
       var jobGr = new GlideRecord('x_banun_rbac_job_code');
-      if (jobGr.get(jobCode)) {
+      if (jobGr.get(jobCodeSysId)) {
+        // Get the display value (this is what we show in the UI)
         jobCodeDisplayValue = jobGr.getDisplayValue();
+        
+        // Get the actual job code value - this should match what's stored in u_job_code
+        // You may need to adjust the field name based on your job code table structure
+        jobCodeValue = jobGr.getValue('job_code') || 
+                      jobGr.getValue('u_job_code') || 
+                      jobGr.getValue('code') || 
+                      jobGr.getDisplayValue(); // fallback to display value
       }
       
-      // Query the sys_user table for active users with this job code
+      // Query the sys_user table for active users with this job code STRING value
       var userGr = new GlideRecord('sys_user');
-      userGr.addQuery('u_job_code', jobCode);
+      userGr.addQuery('u_job_code', jobCodeValue); // Compare string to string
       userGr.addQuery('active', true);
       userGr.orderBy('name');
       userGr.query();
@@ -278,6 +288,11 @@
         
         employees.push(employee);
       }
+      
+      // Debug logging
+      gs.info('Job Code Employees Widget - Job Code Sys ID: ' + jobCodeSysId);
+      gs.info('Job Code Employees Widget - Job Code Value: ' + jobCodeValue);
+      gs.info('Job Code Employees Widget - Found ' + employees.length + ' employees');
     }
     
     data.employees = employees;
