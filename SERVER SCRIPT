@@ -1,11 +1,20 @@
+<!-- SERVER SCRIPT -->
 (function() {
   'use strict';
 
   if (input && input.action === 'getAuthorityLimits') {
     var jobCode = input.job_code;
     var limits = [];
+    var jobCodeDisplayValue = '';
     
     if (jobCode) {
+      // First, get the display value of the job code from the form
+      // This is the actual job code value (like "JC001") not the sys_id
+      var jobGr = new GlideRecord('x_banun_bunow_si_0_job_codes'); // Update this to your job codes table name
+      if (jobGr.get(jobCode)) {
+        jobCodeDisplayValue = jobGr.getDisplayValue();
+      }
+      
       // Query the authority limits table
       var gr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
       gr.addQuery('job_code', jobCode);
@@ -13,33 +22,7 @@
       gr.query();
       
       while (gr.next()) {
-        // Get the actual job code value (not sys_id)
-        var jobCodeRecord = gr.job_code.getRefRecord();
-        var jobCodeValue = '';
-        var jobDescription = '';
-        
-        if (jobCodeRecord && jobCodeRecord.isValidRecord()) {
-          // Get the actual job_code value from the record
-          // The job_code field in the job table should contain the actual code
-          jobCodeValue = jobCodeRecord.getValue('u_job_code') || 
-                        jobCodeRecord.getValue('job_code') || 
-                        jobCodeRecord.getValue('code') || 
-                        jobCodeRecord.getValue('number') ||
-                        jobCodeRecord.getDisplayValue();
-          
-          // Get the description
-          jobDescription = jobCodeRecord.getValue('u_description') ||
-                          jobCodeRecord.getValue('description') || 
-                          jobCodeRecord.getValue('name') ||
-                          jobCodeRecord.getValue('short_description') ||
-                          jobCodeRecord.getDisplayValue();
-        }
-        
         var limit = {
-          job_code: gr.getValue('job_code'), // Keep sys_id for reference
-          job_code_display: jobCodeValue || gr.job_code.getDisplayValue(), // Display value
-          job_description: jobDescription,
-          
           // Credit limits
           overdraft_external_accounts: gr.getValue('overdraft_external_accounts'),
           overdraft_internal_accounts: gr.getValue('overdraft_internal_accounts'),
@@ -64,6 +47,6 @@
     }
     
     data.limits = limits;
-    data.jobCodeDisplay = input.job_code_display; // Pass through display value
+    data.jobCodeDisplay = jobCodeDisplayValue; // Send the display value to the client
   }
 })();
