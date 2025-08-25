@@ -262,17 +262,19 @@
 <!-- Place this in the "Client Controller" field -->
 <!-- ============================================ -->
 
-function($scope) {
+function($scope, $window) {
     var c = this;
     
     // Initialize after DOM is ready
     c.$onInit = function() {
         setTimeout(function() {
             initializeWidget();
-        }, 100);
+        }, 500);
     };
     
     function initializeWidget() {
+        console.log('=== Initializing Authority Limit Widget ===');
+        
         // Get references to elements
         const nonCreditCheckbox = document.getElementById('nonCreditAuth');
         const creditCheckbox = document.getElementById('creditAuth');
@@ -282,99 +284,101 @@ function($scope) {
         const creditSection = document.getElementById('creditSection');
         const justificationSection = document.getElementById('justificationSection');
         
-        // Format currency with commas
-        function formatCurrencyWithCommas(value) {
-            // Remove all non-numeric except decimal
-            value = value.replace(/[^0-9.]/g, '');
+        // Format number with commas
+        function addCommas(value) {
+            // Remove existing commas and non-numeric chars except decimal
+            value = value.toString().replace(/[^0-9.]/g, '');
             
-            // Handle decimal places
+            // Split into integer and decimal parts
             const parts = value.split('.');
-            if (parts.length > 2) {
-                value = parts[0] + '.' + parts.slice(1).join('');
+            
+            // Add commas to integer part
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            
+            // Limit decimal to 2 places
+            if (parts[1]) {
+                parts[1] = parts[1].substring(0, 2);
             }
             
-            // Format the integer part with commas
-            let integerPart = parts[0];
-            integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-            
-            // Combine with decimal part if exists
-            if (parts[1] !== undefined) {
-                // Limit to 2 decimal places
-                let decimalPart = parts[1].substring(0, 2);
-                return integerPart + '.' + decimalPart;
+            return parts.join('.');
+        }
+        
+        // Get value without commas
+        function removeCommas(value) {
+            return value.toString().replace(/,/g, '');
+        }
+        
+        // Setup currency field
+        function setupCurrencyField(fieldId, targetFieldName) {
+            const field = document.getElementById(fieldId);
+            if (!field) {
+                console.log('Field not found:', fieldId);
+                return;
             }
             
-            return integerPart;
+            console.log('Setting up currency field:', fieldId, '→', targetFieldName);
+            
+            // Format on input
+            field.addEventListener('input', function(e) {
+                const cursorPos = e.target.selectionStart;
+                const oldLength = e.target.value.length;
+                
+                // Format with commas
+                const formatted = addCommas(e.target.value);
+                e.target.value = formatted;
+                
+                // Adjust cursor position
+                const newLength = formatted.length;
+                const diff = newLength - oldLength;
+                e.target.setSelectionRange(cursorPos + diff, cursorPos + diff);
+                
+                // Get raw value without commas
+                const rawValue = removeCommas(formatted);
+                
+                console.log(fieldId + ' - Formatted:', formatted, 'Raw:', rawValue);
+                
+                // Update the record producer field
+                updateRecordProducerField(targetFieldName, rawValue);
+            });
+            
+            // Also update on blur
+            field.addEventListener('blur', function(e) {
+                const rawValue = removeCommas(e.target.value);
+                updateRecordProducerField(targetFieldName, rawValue);
+            });
         }
         
-        // Get raw value without commas for saving
-        function getRawValue(value) {
-            return value.replace(/,/g, '');
+        // Setup text area field
+        function setupTextAreaField(fieldId, targetFieldName) {
+            const field = document.getElementById(fieldId);
+            if (!field) {
+                console.log('Field not found:', fieldId);
+                return;
+            }
+            
+            console.log('Setting up text area field:', fieldId, '→', targetFieldName);
+            
+            field.addEventListener('input', function(e) {
+                console.log(fieldId + ' updated:', e.target.value);
+                updateRecordProducerField(targetFieldName, e.target.value);
+            });
+            
+            field.addEventListener('blur', function(e) {
+                updateRecordProducerField(targetFieldName, e.target.value);
+            });
         }
         
-        // Add event listeners for currency fields
-        const disbursementField = document.getElementById('disbursement');
-        const overdraftField = document.getElementById('overdraft');
-        const businessNeedField = document.getElementById('businessNeed');
-        
-        if (disbursementField) {
-            console.log('Disbursement field found, adding listeners');
-            
-            disbursementField.addEventListener('input', function(e) {
-                const formattedValue = formatCurrencyWithCommas(e.target.value);
-                e.target.value = formattedValue;
-                const rawValue = getRawValue(formattedValue);
-                updateRecordProducerField('disbursement', rawValue);
-                console.log('Disbursement formatted:', formattedValue, 'Raw:', rawValue);
-            });
-            
-            disbursementField.addEventListener('blur', function(e) {
-                const rawValue = getRawValue(e.target.value);
-                updateRecordProducerField('disbursement', rawValue);
-            });
-        } else {
-            console.log('Disbursement field NOT found');
-        }
-        
-        if (overdraftField) {
-            console.log('Overdraft field found, adding listeners');
-            
-            overdraftField.addEventListener('input', function(e) {
-                const formattedValue = formatCurrencyWithCommas(e.target.value);
-                e.target.value = formattedValue;
-                const rawValue = getRawValue(formattedValue);
-                updateRecordProducerField('overdraft', rawValue);
-                console.log('Overdraft formatted:', formattedValue, 'Raw:', rawValue);
-            });
-            
-            overdraftField.addEventListener('blur', function(e) {
-                const rawValue = getRawValue(e.target.value);
-                updateRecordProducerField('overdraft', rawValue);
-            });
-        } else {
-            console.log('Overdraft field NOT found');
-        }
-        
-        // Handle business need textarea
-        if (businessNeedField) {
-            console.log('Business need field found, adding listeners');
-            
-            businessNeedField.addEventListener('input', function(e) {
-                updateRecordProducerField('overall_business_need', e.target.value);
-                console.log('Business need updated:', e.target.value);
-            });
-            
-            businessNeedField.addEventListener('blur', function(e) {
-                updateRecordProducerField('overall_business_need', e.target.value);
-            });
-        } else {
-            console.log('Business need field NOT found');
-        }
+        // Setup the currency fields
+        setupCurrencyField('disbursement', 'disbursement');
+        setupCurrencyField('overdraft', 'overdraft');
+        setupTextAreaField('businessNeed', 'overall_business_need');
         
         // Handle checkbox changes
         function handleAuthoritySelection() {
             const nonCreditChecked = nonCreditCheckbox.checked;
             const creditChecked = creditCheckbox.checked;
+            
+            console.log('Checkbox state - Non-Credit:', nonCreditChecked, 'Credit:', creditChecked);
             
             // Update visual states
             nonCreditGroup.classList.toggle('active', nonCreditChecked);
@@ -422,118 +426,140 @@ function($scope) {
         
         // Function to update ServiceNow record producer fields
         function updateRecordProducerField(fieldName, value) {
-            console.log('Attempting to update field:', fieldName, 'with value:', value);
+            console.log('>>> Updating field:', fieldName, 'with value:', value);
             
-            // Method 1: Try g_form (standard ServiceNow form)
-            if (typeof g_form !== 'undefined' && g_form) {
-                g_form.setValue(fieldName, value);
-                console.log('Updated via g_form:', fieldName, '=', value);
-                return;
-            } 
-            
-            // Method 2: Try parent window g_form (for embedded widgets)
-            if (window.parent && window.parent.g_form) {
-                window.parent.g_form.setValue(fieldName, value);
-                console.log('Updated via parent.g_form:', fieldName, '=', value);
-                return;
-            }
-            
-            // Method 3: Try top window g_form
-            if (window.top && window.top.g_form) {
-                window.top.g_form.setValue(fieldName, value);
-                console.log('Updated via top.g_form:', fieldName, '=', value);
-                return;
-            }
-            
-            // Method 4: Try to find the actual input field in the DOM
-            var field = document.querySelector('input[name="' + fieldName + '"], textarea[name="' + fieldName + '"]');
-            if (!field && window.parent) {
-                field = window.parent.document.querySelector('input[name="' + fieldName + '"], textarea[name="' + fieldName + '"]');
-            }
-            if (!field && window.top) {
-                field = window.top.document.querySelector('input[name="' + fieldName + '"], textarea[name="' + fieldName + '"]');
-            }
-            
-            if (field) {
-                if (field.type === 'checkbox') {
-                    field.checked = (value === true || value === 'true');
-                    // Trigger change event
-                    var event = new Event('change', { bubbles: true });
-                    field.dispatchEvent(event);
-                } else {
-                    field.value = value;
-                    // Trigger input and change events
-                    var inputEvent = new Event('input', { bubbles: true });
-                    var changeEvent = new Event('change', { bubbles: true });
-                    field.dispatchEvent(inputEvent);
-                    field.dispatchEvent(changeEvent);
+            try {
+                // Method 1: Direct g_form access
+                if ($window.g_form) {
+                    $window.g_form.setValue(fieldName, value);
+                    console.log('✓ Updated via $window.g_form');
+                    return;
                 }
-                console.log('Updated via DOM:', fieldName, '=', value);
-            } else {
-                console.log('WARNING: Field not found:', fieldName);
-                console.log('Attempting to search in all iframes...');
                 
-                // Try to find field in any iframe
-                var iframes = document.querySelectorAll('iframe');
-                for (var i = 0; i < iframes.length; i++) {
+                // Method 2: Parent window g_form
+                if ($window.parent && $window.parent.g_form) {
+                    $window.parent.g_form.setValue(fieldName, value);
+                    console.log('✓ Updated via parent.g_form');
+                    return;
+                }
+                
+                // Method 3: Top window g_form
+                if ($window.top && $window.top.g_form) {
+                    $window.top.g_form.setValue(fieldName, value);
+                    console.log('✓ Updated via top.g_form');
+                    return;
+                }
+                
+                // Method 4: Search for the field in the DOM
+                let field = null;
+                
+                // Search in current document
+                field = document.querySelector('input[name="' + fieldName + '"], textarea[name="' + fieldName + '"]');
+                
+                // Search in parent document
+                if (!field && $window.parent) {
                     try {
-                        var iframeDoc = iframes[i].contentDocument || iframes[i].contentWindow.document;
-                        field = iframeDoc.querySelector('input[name="' + fieldName + '"], textarea[name="' + fieldName + '"]');
-                        if (field) {
-                            if (field.type === 'checkbox') {
-                                field.checked = (value === true || value === 'true');
-                                var event = new Event('change', { bubbles: true });
-                                field.dispatchEvent(event);
-                            } else {
-                                field.value = value;
-                                var inputEvent = new Event('input', { bubbles: true });
-                                var changeEvent = new Event('change', { bubbles: true });
-                                field.dispatchEvent(inputEvent);
-                                field.dispatchEvent(changeEvent);
-                            }
-                            console.log('Updated via iframe DOM:', fieldName, '=', value);
-                            break;
-                        }
-                    } catch(e) {
-                        console.log('Could not access iframe:', e);
+                        field = $window.parent.document.querySelector('input[name="' + fieldName + '"], textarea[name="' + fieldName + '"]');
+                    } catch(e) {}
+                }
+                
+                // Search in top document
+                if (!field && $window.top) {
+                    try {
+                        field = $window.top.document.querySelector('input[name="' + fieldName + '"], textarea[name="' + fieldName + '"]');
+                    } catch(e) {}
+                }
+                
+                // Search for field with id
+                if (!field) {
+                    field = document.getElementById(fieldName);
+                    if (!field && $window.parent) {
+                        try {
+                            field = $window.parent.document.getElementById(fieldName);
+                        } catch(e) {}
+                    }
+                    if (!field && $window.top) {
+                        try {
+                            field = $window.top.document.getElementById(fieldName);
+                        } catch(e) {}
                     }
                 }
+                
+                if (field) {
+                    if (field.type === 'checkbox') {
+                        field.checked = (value === true || value === 'true');
+                    } else {
+                        field.value = value;
+                    }
+                    
+                    // Fire events to notify ServiceNow
+                    const inputEvent = new Event('input', { bubbles: true });
+                    const changeEvent = new Event('change', { bubbles: true });
+                    field.dispatchEvent(inputEvent);
+                    field.dispatchEvent(changeEvent);
+                    
+                    // Also try Angular digest if available
+                    if ($window.angular) {
+                        try {
+                            const scope = $window.angular.element(field).scope();
+                            if (scope) {
+                                scope.$apply();
+                            }
+                        } catch(e) {}
+                    }
+                    
+                    console.log('✓ Updated via DOM manipulation');
+                    return;
+                }
+                
+                console.log('✗ Could not find field or g_form. Field name:', fieldName);
+                
+            } catch(error) {
+                console.error('Error updating field:', error);
             }
         }
         
-        // Check if we're in ServiceNow and if fields have existing values
-        if (typeof g_form !== 'undefined' || (window.parent && window.parent.g_form) || (window.top && window.top.g_form)) {
-            var gformRef = g_form || (window.parent && window.parent.g_form) || (window.top && window.top.g_form);
+        // Try to get initial values if available
+        try {
+            let gformRef = $window.g_form || ($window.parent && $window.parent.g_form) || ($window.top && $window.top.g_form);
             
-            // Get existing values from record producer
-            const nonCreditValue = gformRef.getValue('non_credit_authority_check');
-            const creditValue = gformRef.getValue('credit_authority_check');
-            const disbursementValue = gformRef.getValue('disbursement');
-            const overdraftValue = gformRef.getValue('overdraft');
-            const businessNeedValue = gformRef.getValue('overall_business_need');
-            
-            // Set checkbox states
-            if (nonCreditValue === 'true' || nonCreditValue === true) {
-                nonCreditCheckbox.checked = true;
+            if (gformRef) {
+                console.log('Found g_form, loading initial values...');
+                
+                // Get existing values from record producer
+                const nonCreditValue = gformRef.getValue('non_credit_authority_check');
+                const creditValue = gformRef.getValue('credit_authority_check');
+                const disbursementValue = gformRef.getValue('disbursement');
+                const overdraftValue = gformRef.getValue('overdraft');
+                const businessNeedValue = gformRef.getValue('overall_business_need');
+                
+                // Set checkbox states
+                if (nonCreditValue === 'true' || nonCreditValue === true) {
+                    nonCreditCheckbox.checked = true;
+                }
+                if (creditValue === 'true' || creditValue === true) {
+                    creditCheckbox.checked = true;
+                }
+                
+                // Set field values with formatting
+                if (disbursementValue) {
+                    document.getElementById('disbursement').value = addCommas(disbursementValue);
+                }
+                if (overdraftValue) {
+                    document.getElementById('overdraft').value = addCommas(overdraftValue);
+                }
+                if (businessNeedValue) {
+                    document.getElementById('businessNeed').value = businessNeedValue;
+                }
+                
+                // Update display
+                handleAuthoritySelection();
             }
-            if (creditValue === 'true' || creditValue === true) {
-                creditCheckbox.checked = true;
-            }
-            
-            // Set field values with formatting
-            if (disbursementValue && disbursementField) {
-                disbursementField.value = formatCurrencyWithCommas(disbursementValue);
-            }
-            if (overdraftValue && overdraftField) {
-                overdraftField.value = formatCurrencyWithCommas(overdraftValue);
-            }
-            if (businessNeedValue && businessNeedField) {
-                businessNeedField.value = businessNeedValue;
-            }
-            
-            // Update display
-            handleAuthoritySelection();
+        } catch(e) {
+            console.log('Could not load initial values:', e);
         }
+        
+        console.log('=== Widget initialization complete ===');
     }
 }
 
