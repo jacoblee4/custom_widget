@@ -1,0 +1,48 @@
+// Widget: Job Code Authority Limits Viewer
+
+// ====== SERVER SCRIPT ======
+(function() {
+  data.job_code = input.job_code || '';
+
+  if (!data.job_code) {
+    data.message = "Please select a job code";
+    return;
+  }
+
+  // Query authority limits
+  var gr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
+  gr.addQuery('job_code', data.job_code);
+  gr.addQuery('active', true);
+  gr.query();
+
+  if (!gr.hasNext()) {
+    data.message = "Job code " + data.job_code + " does not have any existing authority limits";
+    return;
+  }
+
+  data.results = [];
+  while (gr.next()) {
+    data.results.push({
+      job_code: gr.getValue('job_code'),
+      job_description: gr.job_code.job_description + '',
+      credit_limits: {
+        overdraft_external_accounts: gr.getValue('overdraft_external_accounts'),
+        overdraft_internal_accounts: gr.getValue('overdraft_internal_accounts'),
+        unavailable_funds_external_accounts: gr.getValue('unavailable_funds_external_accounts'),
+        unavailable_funds_internal_accounts: gr.getValue('unavailable_funds_internal_accounts')
+      },
+      non_credit_limits: {
+        disbursement_ach: gr.getValue('disbursement_ach'),
+        disbursement_wire_transfer_external: gr.getValue('disbursement_wire_transfer_external'),
+        disbursement_wire_transfer_internal: gr.getValue('disbursement_wire_transfer_internal'),
+        disbursement_official_checks_external: gr.getValue('disbursement_official_checks_external'),
+        disbursement_official_checks_internal: gr.getValue('disbursement_official_checks_internal'),
+        check_cashing_on_us: gr.getValue('check_cashing_on_us'),
+        check_cashing_not_on_us: gr.getValue('check_cashing_not_on_us'),
+        remote_deposit: gr.getValue('remote_deposit'),
+        treasury_solutions_company_wire_limits: gr.getValue('treasury_solutions_company_wire_limits'),
+        fx_wire_limits: gr.getValue('fx_wire_limits')
+      }
+    });
+  }
+})();
