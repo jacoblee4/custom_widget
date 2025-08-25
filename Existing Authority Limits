@@ -1,0 +1,603 @@
+// HTML
+
+<div class="authority-limits-widget">
+  <div ng-if="!c.jobCode" class="alert alert-info">
+    <i class="fa fa-info-circle"></i>
+    Please select a job code to view authority limits
+  </div>
+  
+  <div ng-if="c.jobCode && c.loading" class="text-center">
+    <i class="fa fa-spinner fa-spin fa-2x"></i>
+    <p>Loading authority limits...</p>
+  </div>
+  
+  <div ng-if="c.jobCode && !c.loading && c.authorityLimits.length === 0" class="alert alert-warning">
+    <i class="fa fa-exclamation-triangle"></i>
+    No authority limits found for job code <strong>{{c.jobCodeDisplay || 'Unknown'}}</strong>
+  </div>
+  
+  <div ng-if="c.jobCode && !c.loading && c.authorityLimits.length > 0" class="authority-limits-container">
+    <h4 class="limits-header">
+      <i class="fa fa-shield"></i>
+      Existing Authority Limits For Job Code: <strong>{{c.jobCodeDisplay || 'Unknown'}}</strong>
+    </h4>
+    
+    <div ng-repeat="limit in c.authorityLimits" class="limit-record">
+      
+      <div class="limits-grid">
+        <!-- Credit Limits Section -->
+        <div class="limits-section credit-limits">
+          <h6 class="section-title">
+            <i class="fa fa-credit-card"></i>
+            Credit Limits
+          </h6>
+          <div class="limits-table">
+            <div class="limit-row" ng-if="limit.overdraft_external_accounts">
+              <span class="limit-label">Overdraft External Accounts:</span>
+              <span class="limit-value">{{limit.overdraft_external_accounts | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.overdraft_internal_accounts">
+              <span class="limit-label">Overdraft Internal Accounts:</span>
+              <span class="limit-value">{{limit.overdraft_internal_accounts | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.unavailable_funds_external_accounts">
+              <span class="limit-label">Unavailable Funds External:</span>
+              <span class="limit-value">{{limit.unavailable_funds_external_accounts | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.unavailable_funds_internal_accounts">
+              <span class="limit-label">Unavailable Funds Internal:</span>
+              <span class="limit-value">{{limit.unavailable_funds_internal_accounts | currency}}</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Non-Credit Limits Section -->
+        <div class="limits-section non-credit-limits">
+          <h6 class="section-title">
+            <i class="fa fa-money"></i>
+            Non-Credit Limits
+          </h6>
+          <div class="limits-table">
+            <div class="limit-row" ng-if="limit.disbursement_ach">
+              <span class="limit-label">Disbursement ACH:</span>
+              <span class="limit-value">{{limit.disbursement_ach | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.disbursement_wire_transfer_external">
+              <span class="limit-label">Wire Transfer External:</span>
+              <span class="limit-value">{{limit.disbursement_wire_transfer_external | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.disbursement_wire_transfer_internal">
+              <span class="limit-label">Wire Transfer Internal:</span>
+              <span class="limit-value">{{limit.disbursement_wire_transfer_internal | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.disbursement_official_checks_external">
+              <span class="limit-label">Official Checks External:</span>
+              <span class="limit-value">{{limit.disbursement_official_checks_external | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.disbursement_official_checks_internal">
+              <span class="limit-label">Official Checks Internal:</span>
+              <span class="limit-value">{{limit.disbursement_official_checks_internal | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.check_cashing_on_us">
+              <span class="limit-label">Check Cashing On Us:</span>
+              <span class="limit-value">{{limit.check_cashing_on_us | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.check_cashing_not_on_us">
+              <span class="limit-label">Check Cashing Not On Us:</span>
+              <span class="limit-value">{{limit.check_cashing_not_on_us | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.remote_deposit">
+              <span class="limit-label">Remote Deposit:</span>
+              <span class="limit-value">{{limit.remote_deposit | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.treasury_solutions_company_wire_limits">
+              <span class="limit-label">Treasury Solutions Wire:</span>
+              <span class="limit-value">{{limit.treasury_solutions_company_wire_limits | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.fx_wire_limits">
+              <span class="limit-label">FX Wire Limits:</span>
+              <span class="limit-value">{{limit.fx_wire_limits | currency}}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <hr ng-if="!$last" class="record-separator">
+    </div>
+  </div>
+</div>
+
+
+
+// CSS
+
+<style>
+.job-code-employees-widget {
+  padding: 15px;
+  font-family: 'Source Sans Pro', Arial, sans-serif;
+}
+
+.alert {
+  padding: 12px 15px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  border: 1px solid transparent;
+}
+
+.alert-info {
+  background-color: #d9edf7;
+  border-color: #bce8f1;
+  color: #31708f;
+}
+
+.alert-warning {
+  background-color: #fcf8e3;
+  border-color: #faebcc;
+  color: #8a6d3b;
+}
+
+.employees-container {
+  margin-top: 15px;
+}
+
+.employees-header {
+  color: #2c3e50;
+  border-bottom: 2px solid #3498db;
+  padding-bottom: 8px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.employee-count {
+  font-size: 14px;
+  color: #7f8c8d;
+  font-weight: normal;
+  margin-left: auto;
+}
+
+.table-responsive {
+  overflow-x: auto;
+  margin-bottom: 20px;
+}
+
+.table {
+  width: 100%;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+}
+
+.table thead th {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+  color: #495057;
+  font-weight: 600;
+  padding: 12px;
+  text-align: left;
+}
+
+.table tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #dee2e6;
+  vertical-align: middle;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.pagination-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.pagination {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  gap: 5px;
+}
+
+.page-item {
+  display: inline-block;
+}
+
+.page-link {
+  display: block;
+  padding: 6px 12px;
+  color: #3498db;
+  text-decoration: none;
+  background-color: white;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.page-link:hover {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.page-item.active .page-link {
+  background-color: #3498db;
+  border-color: #3498db;
+  color: white;
+}
+
+.page-item.disabled .page-link {
+  color: #6c757d;
+  pointer-events: none;
+  cursor: not-allowed;
+  background-color: #fff;
+  border-color: #dee2e6;
+  opacity: 0.5;
+}
+
+.pagination-info {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.fa {
+  margin-right: 6px;
+}
+
+.text-center {
+  text-align: center;
+  padding: 30px;
+}
+
+.fa-spinner {
+  color: #3498db;
+}
+
+@media (max-width: 768px) {
+  .employees-header {
+    flex-wrap: wrap;
+  }
+  
+  .employee-count {
+    margin-left: 0;
+    width: 100%;
+  }
+  
+  .pagination-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .pagination {
+    justify-content: center;
+  }
+  
+  .pagination-info {
+    text-align: center;
+  }
+}
+</style>
+
+
+
+
+// Server Script
+
+(function() {
+  'use strict';
+
+  if (input && input.action === 'getEmployees') {
+    var jobCodeSysId = input.job_code; // This is the sys_id from the reference field
+    var employees = [];
+    var jobCodeDisplayValue = '';
+    var jobCodeValue = ''; // The actual job code string value
+    
+    if (jobCodeSysId) {
+      // Get the actual job code value from the job code table
+      var jobGr = new GlideRecord('x_banun_rbac_job_code');
+      if (jobGr.get(jobCodeSysId)) {
+        // Get the display value (this is what we show in the UI)
+        jobCodeDisplayValue = jobGr.getDisplayValue();
+        
+        // Get the actual job code value - this should match what's stored in u_job_code
+        // You may need to adjust the field name based on your job code table structure
+        jobCodeValue = jobGr.getValue('job_code') || 
+                      jobGr.getValue('u_job_code') || 
+                      jobGr.getValue('code') || 
+                      jobGr.getDisplayValue(); // fallback to display value
+      }
+      
+      // Query the sys_user table for active users with this job code STRING value
+      var userGr = new GlideRecord('sys_user');
+      userGr.addQuery('u_job_code', jobCodeValue); // Compare string to string
+      userGr.addQuery('active', true);
+      userGr.orderBy('name');
+      userGr.query();
+      
+      while (userGr.next()) {
+        var employee = {
+          sys_id: userGr.getValue('sys_id'),
+          name: userGr.getValue('name'),
+          title: userGr.getValue('title') || '',
+          manager: userGr.getValue('manager'),
+          manager_display: userGr.manager.getDisplayValue() || ''
+        };
+        
+        employees.push(employee);
+      }
+      
+      // Debug logging
+      gs.info('Job Code Employees Widget - Job Code Sys ID: ' + jobCodeSysId);
+      gs.info('Job Code Employees Widget - Job Code Value: ' + jobCodeValue);
+      gs.info('Job Code Employees Widget - Found ' + employees.length + ' employees');
+    }
+    
+    data.employees = employees;
+    data.jobCodeDisplay = jobCodeDisplayValue;
+  }
+})();
+
+
+
+
+// Clinet Controller
+
+api.controller = function($scope, spUtil, $timeout) {
+  var c = this;
+  
+  // Initialize variables
+  c.jobCode = '';
+  c.jobCodeDisplay = '';
+  c.employees = [];
+  c.loading = false;
+  
+  // Pagination variables
+  c.currentPage = 1;
+  c.pageSize = 10;
+  c.totalPages = 1;
+  
+  // Function to get job code value from the form
+  c.getJobCodeValue = function() {
+    try {
+      // Method 1: Direct g_form access
+      if (typeof g_form !== 'undefined' && g_form.getValue) {
+        return g_form.getValue('job_code');
+      }
+      
+      // Method 2: Check if we're in a Service Portal form
+      if (window.parent && window.parent.g_form) {
+        return window.parent.g_form.getValue('job_code');
+      }
+      
+      // Method 3: DOM query for record producer fields
+      var jobCodeField = document.querySelector('select[name="job_code"], input[name="job_code"], [data-name="job_code"] select, [data-name="job_code"] input');
+      if (jobCodeField) {
+        return jobCodeField.value || jobCodeField.selectedOptions?.[0]?.value || '';
+      }
+      
+      // Method 4: Angular form scope (for Service Portal)
+      if ($scope.data && $scope.data.job_code) {
+        return $scope.data.job_code;
+      }
+      
+    } catch (e) {
+      console.log('Error getting job code value:', e);
+    }
+    
+    return '';
+  };
+  
+  // Function to set up polling to monitor job code changes
+  c.setupJobCodeMonitoring = function() {
+    var lastJobCode = '';
+    
+    // Poll for changes every 500ms
+    var checkInterval = setInterval(function() {
+      var currentJobCode = c.getJobCodeValue();
+      
+      if (currentJobCode !== lastJobCode) {
+        console.log('Job code changed from', lastJobCode, 'to', currentJobCode);
+        lastJobCode = currentJobCode;
+        c.jobCode = currentJobCode;
+        
+        $timeout(function() {
+          c.loadEmployees();
+        });
+      }
+    }, 500);
+    
+    // Clean up interval when scope is destroyed
+    $scope.$on('$destroy', function() {
+      clearInterval(checkInterval);
+    });
+    
+    // Also try to set up direct event listeners
+    $timeout(function() {
+      c.setupDirectListeners();
+    }, 1000);
+  };
+  
+  // Function to set up direct event listeners
+  c.setupDirectListeners = function() {
+    // Try to add change listeners to job code fields
+    var selectors = [
+      'select[name="job_code"]',
+      'input[name="job_code"]', 
+      '[data-name="job_code"] select',
+      '[data-name="job_code"] input',
+      '#job_code'
+    ];
+    
+    selectors.forEach(function(selector) {
+      var elements = document.querySelectorAll(selector);
+      elements.forEach(function(element) {
+        element.addEventListener('change', function() {
+          console.log('Direct change event detected');
+          $timeout(function() {
+            c.jobCode = c.getJobCodeValue();
+            c.loadEmployees();
+          });
+        });
+      });
+    });
+    
+    // Try g_form callback if available
+    try {
+      if (typeof g_form !== 'undefined' && g_form.addOnChangeCallback) {
+        g_form.addOnChangeCallback('job_code', function() {
+          console.log('g_form change callback triggered');
+          $timeout(function() {
+            c.jobCode = c.getJobCodeValue();
+            c.loadEmployees();
+          });
+        });
+      }
+    } catch (e) {
+      console.log('Could not set up g_form callback:', e);
+    }
+  };
+  
+  // Function to load employees
+  c.loadEmployees = function() {
+    console.log('Loading employees for job code:', c.jobCode);
+    
+    if (!c.jobCode) {
+      c.employees = [];
+      c.currentPage = 1;
+      c.totalPages = 1;
+      return;
+    }
+    
+    c.loading = true;
+    
+    // Call server script to get employees
+    c.server.get({
+      action: 'getEmployees',
+      job_code: c.jobCode
+    }).then(function(response) {
+      console.log('Server response:', response);
+      c.employees = response.data.employees || [];
+      c.jobCodeDisplay = response.data.jobCodeDisplay || '';
+      c.currentPage = 1;
+      c.totalPages = Math.ceil(c.employees.length / c.pageSize);
+      c.loading = false;
+    }).catch(function(error) {
+      console.error('Error loading employees:', error);
+      spUtil.addErrorMessage('Failed to load employees');
+      c.employees = [];
+      c.loading = false;
+    });
+  };
+  
+  // Pagination functions
+  c.getCurrentPageEmployees = function() {
+    var start = (c.currentPage - 1) * c.pageSize;
+    var end = start + c.pageSize;
+    return c.employees.slice(start, end);
+  };
+  
+  c.getStartIndex = function() {
+    return (c.currentPage - 1) * c.pageSize;
+  };
+  
+  c.getEndIndex = function() {
+    var end = c.currentPage * c.pageSize;
+    return end > c.employees.length ? c.employees.length : end;
+  };
+  
+  c.previousPage = function() {
+    if (c.currentPage > 1) {
+      c.currentPage--;
+    }
+  };
+  
+  c.nextPage = function() {
+    if (c.currentPage < c.totalPages) {
+      c.currentPage++;
+    }
+  };
+  
+  c.goToPage = function(page) {
+    if (page >= 1 && page <= c.totalPages) {
+      c.currentPage = page;
+    }
+  };
+  
+  c.getPageNumbers = function() {
+    var pages = [];
+    var maxPagesToShow = 5;
+    var startPage = 1;
+    var endPage = c.totalPages;
+    
+    if (c.totalPages > maxPagesToShow) {
+      var middlePage = Math.floor(maxPagesToShow / 2);
+      if (c.currentPage <= middlePage) {
+        endPage = maxPagesToShow;
+      } else if (c.currentPage >= c.totalPages - middlePage) {
+        startPage = c.totalPages - maxPagesToShow + 1;
+      } else {
+        startPage = c.currentPage - middlePage;
+        endPage = c.currentPage + middlePage;
+      }
+    }
+    
+    for (var i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    
+    return pages;
+  };
+  
+  // Initialize on load
+  $timeout(function() {
+    c.jobCode = c.getJobCodeValue();
+    console.log('Initial job code:', c.jobCode);
+    
+    if (c.jobCode) {
+      c.loadEmployees();
+    }
+    
+    // Set up monitoring for job code changes
+    c.setupJobCodeMonitoring();
+  }, 500);
+};
+
+
+
+
+// Option Shcema
+
+[
+  {
+    "hint": "Title to display at the top of the widget",
+    "name": "title",
+    "section": "Presentation",
+    "default_value": "Job Code Employees",
+    "label": "Widget Title",
+    "type": "string"
+  },
+  {
+    "hint": "Field name for the job code on the record producer",
+    "name": "job_code_field",
+    "section": "Behavior",
+    "default_value": "job_code",
+    "label": "Job Code Field Name",
+    "type": "string"
+  },
+  {
+    "hint": "Number of employees to show per page",
+    "name": "page_size",
+    "section": "Behavior",
+    "default_value": "10",
+    "label": "Page Size",
+    "type": "integer"
+  }
+]
