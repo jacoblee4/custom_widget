@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authority Limit Details Widget</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .widget-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+        }
+
+        .widget-header {
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #e8e8e8;
+        }
+
+        .widget-header h2 {
+            color: #333;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 24px;
+        }
+
+        .left-column, .right-column {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .checkbox-group:hover {
+            background: #e9ecef;
+            border-color: #adb5bd;
+        }
+
+        .checkbox-group.active {
+            background: #e7f5ff;
+            border-color: #339af0;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            cursor: pointer;
+            font-size: 15px;
+            color: #333;
+            font-weight: 500;
+            user-select: none;
+        }
+
+        .section {
+            display: none;
+            padding: 20px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .section h3 {
+            color: #495057;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #495057;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.15s ease-in-out;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #339af0;
+            box-shadow: 0 0 0 2px rgba(51, 154, 240, 0.1);
+        }
+
+        .currency-wrapper {
+            position: relative;
+        }
+
+        .currency-symbol {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .currency-wrapper .form-control {
+            padding-left: 28px;
+        }
+
+        .justification-section {
+            display: none;
+            padding: 20px;
+            background: #fff4e6;
+            border: 1px solid #ffd93d;
+            border-radius: 6px;
+        }
+
+        .justification-section.active {
+            display: block;
+        }
+
+        .justification-section h3 {
+            color: #495057;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .info-message {
+            background: white;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            color: #6c757d;
+            line-height: 1.5;
+            border-left: 3px solid #ffd93d;
+        }
+
+        .form-control.textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="widget-container">
+        <div class="widget-header">
+            <h2>Authority Limit Details</h2>
+        </div>
+        
+        <div class="main-content">
+            <div class="left-column">
+                <div class="checkbox-group" id="nonCreditGroup">
+                    <input type="checkbox" id="nonCreditAuth" name="non_credit_authority_check">
+                    <label for="nonCreditAuth">Non-Credit Authority</label>
+                </div>
+                
+                <div id="nonCreditSection" class="section">
+                    <h3>Non-Credit Authority Limits</h3>
+                    <div class="form-group">
+                        <label for="disbursement">Disbursement</label>
+                        <div class="currency-wrapper">
+                            <span class="currency-symbol">$</span>
+                            <input type="text" 
+                                   id="disbursement" 
+                                   name="disbursement" 
+                                   class="form-control" 
+                                   placeholder="0.00">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-column">
+                <div class="checkbox-group" id="creditGroup">
+                    <input type="checkbox" id="creditAuth" name="credit_authority_check">
+                    <label for="creditAuth">Credit Authority</label>
+                </div>
+                
+                <div id="creditSection" class="section">
+                    <h3>Credit Authority Limits</h3>
+                    <div class="form-group">
+                        <label for="overdraft">Overdraft</label>
+                        <div class="currency-wrapper">
+                            <span class="currency-symbol">$</span>
+                            <input type="text" 
+                                   id="overdraft" 
+                                   name="overdraft" 
+                                   class="form-control" 
+                                   placeholder="0.00">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="justificationSection" class="justification-section">
+            <h3>Justification</h3>
+            <div class="info-message">
+                Please complete the following fields to provide justification for this request. If you have attachments, please click attach to the record by going to the attachment section on the far right and look for the paper clip.
+            </div>
+            <div class="form-group">
+                <label for="businessNeed">Overall Business Need</label>
+                <textarea id="businessNeed" 
+                          name="overall_business_need" 
+                          class="form-control textarea"
+                          placeholder="Please provide a detailed explanation of the business need for this authority request..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get references to elements
+        const nonCreditCheckbox = document.getElementById('nonCreditAuth');
+        const creditCheckbox = document.getElementById('creditAuth');
+        const nonCreditGroup = document.getElementById('nonCreditGroup');
+        const creditGroup = document.getElementById('creditGroup');
+        const nonCreditSection = document.getElementById('nonCreditSection');
+        const creditSection = document.getElementById('creditSection');
+        const justificationSection = document.getElementById('justificationSection');
+
+        // Format currency inputs
+        function formatCurrency(input) {
+            let value = input.value.replace(/[^0-9.]/g, '');
+            const parts = value.split('.');
+            if (parts.length > 2) {
+                value = parts[0] + '.' + parts.slice(1).join('');
+            }
+            if (parts[1] && parts[1].length > 2) {
+                value = parts[0] + '.' + parts[1].substring(0, 2);
+            }
+            input.value = value;
+        }
+
+        // Add event listeners for currency formatting
+        document.getElementById('disbursement').addEventListener('input', function(e) {
+            formatCurrency(e.target);
+            updateRecordProducerField('disbursement', e.target.value);
+        });
+
+        document.getElementById('overdraft').addEventListener('input', function(e) {
+            formatCurrency(e.target);
+            updateRecordProducerField('overdraft', e.target.value);
+        });
+
+        // Handle checkbox changes
+        function handleAuthoritySelection() {
+            const nonCreditChecked = nonCreditCheckbox.checked;
+            const creditChecked = creditCheckbox.checked;
+            
+            // Update visual states
+            nonCreditGroup.classList.toggle('active', nonCreditChecked);
+            creditGroup.classList.toggle('active', creditChecked);
+            
+            // Update record producer checkbox fields
+            updateRecordProducerField('non_credit_authority_check', nonCreditChecked);
+            updateRecordProducerField('credit_authority_check', creditChecked);
+            
+            // Show/hide sections
+            nonCreditSection.classList.toggle('active', nonCreditChecked);
+            creditSection.classList.toggle('active', creditChecked);
+            
+            // Show justification if either is checked
+            justificationSection.classList.toggle('active', nonCreditChecked || creditChecked);
+        }
+
+        // Add checkbox event listeners
+        nonCreditCheckbox.addEventListener('change', handleAuthoritySelection);
+        creditCheckbox.addEventListener('change', handleAuthoritySelection);
+
+        // Make entire checkbox group clickable
+        nonCreditGroup.addEventListener('click', function(e) {
+            if (e.target.tagName !== 'INPUT') {
+                nonCreditCheckbox.checked = !nonCreditCheckbox.checked;
+                handleAuthoritySelection();
+            }
+        });
+
+        creditGroup.addEventListener('click', function(e) {
+            if (e.target.tagName !== 'INPUT') {
+                creditCheckbox.checked = !creditCheckbox.checked;
+                handleAuthoritySelection();
+            }
+        });
+
+        // Handle business need textarea
+        document.getElementById('businessNeed').addEventListener('input', function(e) {
+            updateRecordProducerField('overall_business_need', e.target.value);
+        });
+
+        // Function to update ServiceNow record producer fields
+        function updateRecordProducerField(fieldName, value) {
+            // This function will update the hidden fields in the ServiceNow record producer
+            if (typeof g_form !== 'undefined') {
+                g_form.setValue(fieldName, value);
+            } else {
+                // For testing outside ServiceNow
+                console.log(`Update field: ${fieldName} = ${value}`);
+            }
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if we're in ServiceNow and if fields have existing values
+            if (typeof g_form !== 'undefined') {
+                // Get existing values from record producer
+                const nonCreditValue = g_form.getValue('non_credit_authority_check');
+                const creditValue = g_form.getValue('credit_authority_check');
+                const disbursementValue = g_form.getValue('disbursement');
+                const overdraftValue = g_form.getValue('overdraft');
+                const businessNeedValue = g_form.getValue('overall_business_need');
+                
+                // Set checkbox states
+                if (nonCreditValue === 'true') nonCreditCheckbox.checked = true;
+                if (creditValue === 'true') creditCheckbox.checked = true;
+                
+                // Set field values
+                if (disbursementValue) document.getElementById('disbursement').value = disbursementValue;
+                if (overdraftValue) document.getElementById('overdraft').value = overdraftValue;
+                if (businessNeedValue) document.getElementById('businessNeed').value = businessNeedValue;
+                
+                // Update display
+                handleAuthoritySelection();
+            }
+        });
+    </script>
+</body>
+</html>
