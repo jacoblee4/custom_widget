@@ -1,4 +1,3 @@
-<!-- SERVER SCRIPT -->
 (function() {
   'use strict';
 
@@ -20,15 +19,19 @@
         var jobDescription = '';
         
         if (jobCodeRecord && jobCodeRecord.isValidRecord()) {
-          // Try to get the job_code field value (adjust field name as needed)
-          jobCodeValue = jobCodeRecord.getValue('job_code') || 
+          // Get the actual job_code value from the record
+          // The job_code field in the job table should contain the actual code
+          jobCodeValue = jobCodeRecord.getValue('u_job_code') || 
+                        jobCodeRecord.getValue('job_code') || 
                         jobCodeRecord.getValue('code') || 
                         jobCodeRecord.getValue('number') ||
                         jobCodeRecord.getDisplayValue();
           
-          // Get the description (adjust field name as needed)
-          jobDescription = jobCodeRecord.getValue('description') || 
+          // Get the description
+          jobDescription = jobCodeRecord.getValue('u_description') ||
+                          jobCodeRecord.getValue('description') || 
                           jobCodeRecord.getValue('name') ||
+                          jobCodeRecord.getValue('short_description') ||
                           jobCodeRecord.getDisplayValue();
         }
         
