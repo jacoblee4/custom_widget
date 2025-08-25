@@ -12,18 +12,18 @@
   
   <div ng-if="c.jobCode && !c.loading && c.authorityLimits.length === 0" class="alert alert-warning">
     <i class="fa fa-exclamation-triangle"></i>
-    Job code <strong>{{c.jobCode}}</strong> does not have any existing authority limits
+    Job code <strong>{{c.jobCodeDisplay || c.jobCode}}</strong> does not have any existing authority limits
   </div>
   
   <div ng-if="c.jobCode && !c.loading && c.authorityLimits.length > 0" class="authority-limits-container">
     <h4 class="limits-header">
       <i class="fa fa-shield"></i>
-      Authority Limits for Job Code: {{c.jobCode}}
+      Authority Limits for Job Code: {{c.jobCodeDisplay || c.jobCode}}
     </h4>
     
     <div ng-repeat="limit in c.authorityLimits" class="limit-record">
       <div class="job-info">
-        <h5>{{limit.job_code}} - {{limit.job_description}}</h5>
+        <h5>{{limit.job_code_display}} - {{limit.job_description}}</h5>
       </div>
       
       <div class="limits-grid">
@@ -161,14 +161,12 @@
 }
 
 .limits-grid {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 20px;
-  flex-wrap: wrap;
 }
 
 .limits-section {
-  flex: 1;
-  min-width: 300px;
   background: white;
   border-radius: 4px;
   padding: 15px;
@@ -250,11 +248,7 @@
 
 @media (max-width: 768px) {
   .limits-grid {
-    flex-direction: column;
-  }
-  
-  .limits-section {
-    min-width: auto;
+    grid-template-columns: 1fr;
   }
   
   .limit-row {
@@ -285,9 +279,28 @@
       gr.query();
       
       while (gr.next()) {
+        // Get the actual job code value (not sys_id)
+        var jobCodeRecord = gr.job_code.getRefRecord();
+        var jobCodeValue = '';
+        var jobDescription = '';
+        
+        if (jobCodeRecord && jobCodeRecord.isValidRecord()) {
+          // Try to get the job_code field value (adjust field name as needed)
+          jobCodeValue = jobCodeRecord.getValue('job_code') || 
+                        jobCodeRecord.getValue('code') || 
+                        jobCodeRecord.getValue('number') ||
+                        jobCodeRecord.getDisplayValue();
+          
+          // Get the description (adjust field name as needed)
+          jobDescription = jobCodeRecord.getValue('description') || 
+                          jobCodeRecord.getValue('name') ||
+                          jobCodeRecord.getDisplayValue();
+        }
+        
         var limit = {
-          job_code: gr.getValue('job_code'),
-          job_description: gr.job_code.getDisplayValue(), // Assuming job_code is a reference field
+          job_code: gr.getValue('job_code'), // Keep sys_id for reference
+          job_code_display: jobCodeValue || gr.job_code.getDisplayValue(), // Display value
+          job_description: jobDescription,
           
           // Credit limits
           overdraft_external_accounts: gr.getValue('overdraft_external_accounts'),
@@ -313,6 +326,7 @@
     }
     
     data.limits = limits;
+    data.jobCodeDisplay = input.job_code_display; // Pass through display value
   }
 })();
 
@@ -322,6 +336,7 @@ api.controller = function($scope, spUtil, $timeout) {
   
   // Initialize variables
   c.jobCode = '';
+  c.jobCodeDisplay = '';
   c.authorityLimits = [];
   c.loading = false;
   
@@ -357,6 +372,36 @@ api.controller = function($scope, spUtil, $timeout) {
     return '';
   };
   
+  // Function to get job code display value
+  c.getJobCodeDisplayValue = function() {
+    try {
+      // Method 1: g_form display value
+      if (typeof g_form !== 'undefined' && g_form.getDisplayBox) {
+        var displayBox = g_form.getDisplayBox('job_code');
+        if (displayBox && displayBox.value) {
+          return displayBox.value;
+        }
+      }
+      
+      // Method 2: Get text from selected option
+      var jobCodeField = document.querySelector('select[name="job_code"], [data-name="job_code"] select');
+      if (jobCodeField && jobCodeField.selectedOptions && jobCodeField.selectedOptions[0]) {
+        return jobCodeField.selectedOptions[0].text;
+      }
+      
+      // Method 3: For reference fields in Service Portal
+      var displayField = document.querySelector('input[name="job_code_display"], [data-name="job_code"] input[type="text"]');
+      if (displayField) {
+        return displayField.value;
+      }
+      
+    } catch (e) {
+      console.log('Error getting job code display value:', e);
+    }
+    
+    return '';
+  };
+  
   // Function to set up polling to monitor job code changes
   c.setupJobCodeMonitoring = function() {
     var lastJobCode = '';
@@ -369,6 +414,7 @@ api.controller = function($scope, spUtil, $timeout) {
         console.log('Job code changed from', lastJobCode, 'to', currentJobCode);
         lastJobCode = currentJobCode;
         c.jobCode = currentJobCode;
+        c.jobCodeDisplay = c.getJobCodeDisplayValue();
         
         $timeout(function() {
           c.loadAuthorityLimits();
@@ -405,6 +451,7 @@ api.controller = function($scope, spUtil, $timeout) {
           console.log('Direct change event detected');
           $timeout(function() {
             c.jobCode = c.getJobCodeValue();
+            c.jobCodeDisplay = c.getJobCodeDisplayValue();
             c.loadAuthorityLimits();
           });
         });
@@ -418,6 +465,7 @@ api.controller = function($scope, spUtil, $timeout) {
           console.log('g_form change callback triggered');
           $timeout(function() {
             c.jobCode = c.getJobCodeValue();
+            c.jobCodeDisplay = c.getJobCodeDisplayValue();
             c.loadAuthorityLimits();
           });
         });
@@ -441,10 +489,14 @@ api.controller = function($scope, spUtil, $timeout) {
     // Call server script to get authority limits
     c.server.get({
       action: 'getAuthorityLimits',
-      job_code: c.jobCode
+      job_code: c.jobCode,
+      job_code_display: c.jobCodeDisplay
     }).then(function(response) {
       console.log('Server response:', response);
       c.authorityLimits = response.data.limits || [];
+      if (response.data.jobCodeDisplay) {
+        c.jobCodeDisplay = response.data.jobCodeDisplay;
+      }
       c.loading = false;
     }).catch(function(error) {
       console.error('Error loading authority limits:', error);
@@ -457,7 +509,8 @@ api.controller = function($scope, spUtil, $timeout) {
   // Initialize on load
   $timeout(function() {
     c.jobCode = c.getJobCodeValue();
-    console.log('Initial job code:', c.jobCode);
+    c.jobCodeDisplay = c.getJobCodeDisplayValue();
+    console.log('Initial job code:', c.jobCode, 'Display:', c.jobCodeDisplay);
     
     if (c.jobCode) {
       c.loadAuthorityLimits();
