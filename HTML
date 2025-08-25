@@ -11,13 +11,13 @@
   
   <div ng-if="c.jobCode && !c.loading && c.authorityLimits.length === 0" class="alert alert-warning">
     <i class="fa fa-exclamation-triangle"></i>
-    No authority limits found for the selected job code
+    No authority limits found for job code <strong>{{c.jobCodeDisplay || 'Unknown'}}</strong>
   </div>
   
   <div ng-if="c.jobCode && !c.loading && c.authorityLimits.length > 0" class="authority-limits-container">
     <h4 class="limits-header">
       <i class="fa fa-shield"></i>
-      Authority Limits
+      Authority Limits for job code: <strong>{{c.jobCodeDisplay || 'Unknown'}}</strong>
     </h4>
     
     <div ng-repeat="limit in c.authorityLimits" class="limit-record">
