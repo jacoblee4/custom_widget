@@ -1,4 +1,3 @@
-<!-- SERVER SCRIPT -->
 (function() {
   'use strict';
 
@@ -10,7 +9,7 @@
     if (jobCode) {
       // First, get the display value of the job code from the form
       // This is the actual job code value (like "JC001") not the sys_id
-      var jobGr = new GlideRecord('x_banun_bunow_si_0_job_codes'); // Update this to your job codes table name
+      var jobGr = new GlideRecord('x_banun_rbac_job_code');
       if (jobGr.get(jobCode)) {
         jobCodeDisplayValue = jobGr.getDisplayValue();
       }
