@@ -1,21 +1,26 @@
 // HTML
 
+<!-- HTML Template -->
 <div class="authority-limits-widget">
+  <!-- No job code selected message -->
   <div ng-if="!c.jobCode" class="alert alert-info">
     <i class="fa fa-info-circle"></i>
     Please select a job code to view authority limits
   </div>
   
+  <!-- Loading spinner -->
   <div ng-if="c.jobCode && c.loading" class="text-center">
     <i class="fa fa-spinner fa-spin fa-2x"></i>
     <p>Loading authority limits...</p>
   </div>
   
+  <!-- No limits found message -->
   <div ng-if="c.jobCode && !c.loading && c.authorityLimits.length === 0" class="alert alert-warning">
     <i class="fa fa-exclamation-triangle"></i>
     No authority limits found for job code <strong>{{c.jobCodeDisplay || 'Unknown'}}</strong>
   </div>
   
+  <!-- Authority limits display -->
   <div ng-if="c.jobCode && !c.loading && c.authorityLimits.length > 0" class="authority-limits-container">
     <h4 class="limits-header">
       <i class="fa fa-shield"></i>
@@ -25,67 +30,53 @@
     <div ng-repeat="limit in c.authorityLimits" class="limit-record">
       
       <div class="limits-grid">
-        <!-- Credit Limits Section -->
-        <div class="limits-section credit-limits">
-          <h6 class="section-title">
-            <i class="fa fa-credit-card"></i>
-            Credit Limits
-          </h6>
-          <div class="limits-table">
-            <div class="limit-row" ng-if="limit.overdraft_external_accounts">
-              <span class="limit-label">Overdraft External Accounts:</span>
-              <span class="limit-value">{{limit.overdraft_external_accounts | currency}}</span>
-            </div>
-            <div class="limit-row" ng-if="limit.overdraft_internal_accounts">
-              <span class="limit-label">Overdraft Internal Accounts:</span>
-              <span class="limit-value">{{limit.overdraft_internal_accounts | currency}}</span>
-            </div>
-            <div class="limit-row" ng-if="limit.unavailable_funds_external_accounts">
-              <span class="limit-label">Unavailable Funds External:</span>
-              <span class="limit-value">{{limit.unavailable_funds_external_accounts | currency}}</span>
-            </div>
-            <div class="limit-row" ng-if="limit.unavailable_funds_internal_accounts">
-              <span class="limit-label">Unavailable Funds Internal:</span>
-              <span class="limit-value">{{limit.unavailable_funds_internal_accounts | currency}}</span>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Non-Credit Limits Section -->
+        <!-- Non-Credit Limits Section (Left) -->
         <div class="limits-section non-credit-limits">
           <h6 class="section-title">
             <i class="fa fa-money"></i>
             Non-Credit Limits
           </h6>
           <div class="limits-table">
-            <div class="limit-row" ng-if="limit.disbursement_ach">
-              <span class="limit-label">Disbursement ACH:</span>
-              <span class="limit-value">{{limit.disbursement_ach | currency}}</span>
+            
+            <!-- Disbursements Group -->
+            <div class="limit-group" ng-if="limit.disbursement_ach || limit.disbursement_wire_transfer_external || limit.disbursement_wire_transfer_internal || limit.disbursement_official_checks_external || limit.disbursement_official_checks_internal">
+              <div class="group-header">Disbursements</div>
+              <div class="limit-row indented" ng-if="limit.disbursement_ach">
+                <span class="limit-label">ACH:</span>
+                <span class="limit-value">{{limit.disbursement_ach | currency}}</span>
+              </div>
+              <div class="limit-row indented" ng-if="limit.disbursement_wire_transfer_external">
+                <span class="limit-label">Wire Transfer External:</span>
+                <span class="limit-value">{{limit.disbursement_wire_transfer_external | currency}}</span>
+              </div>
+              <div class="limit-row indented" ng-if="limit.disbursement_wire_transfer_internal">
+                <span class="limit-label">Wire Transfer Internal:</span>
+                <span class="limit-value">{{limit.disbursement_wire_transfer_internal | currency}}</span>
+              </div>
+              <div class="limit-row indented" ng-if="limit.disbursement_official_checks_external">
+                <span class="limit-label">Official Checks External:</span>
+                <span class="limit-value">{{limit.disbursement_official_checks_external | currency}}</span>
+              </div>
+              <div class="limit-row indented" ng-if="limit.disbursement_official_checks_internal">
+                <span class="limit-label">Official Checks Internal:</span>
+                <span class="limit-value">{{limit.disbursement_official_checks_internal | currency}}</span>
+              </div>
             </div>
-            <div class="limit-row" ng-if="limit.disbursement_wire_transfer_external">
-              <span class="limit-label">Wire Transfer External:</span>
-              <span class="limit-value">{{limit.disbursement_wire_transfer_external | currency}}</span>
+            
+            <!-- Check Cashing Group -->
+            <div class="limit-group" ng-if="limit.check_cashing_on_us || limit.check_cashing_not_on_us">
+              <div class="group-header">Check Cashing</div>
+              <div class="limit-row indented" ng-if="limit.check_cashing_on_us">
+                <span class="limit-label">On Us:</span>
+                <span class="limit-value">{{limit.check_cashing_on_us | currency}}</span>
+              </div>
+              <div class="limit-row indented" ng-if="limit.check_cashing_not_on_us">
+                <span class="limit-label">Not On Us:</span>
+                <span class="limit-value">{{limit.check_cashing_not_on_us | currency}}</span>
+              </div>
             </div>
-            <div class="limit-row" ng-if="limit.disbursement_wire_transfer_internal">
-              <span class="limit-label">Wire Transfer Internal:</span>
-              <span class="limit-value">{{limit.disbursement_wire_transfer_internal | currency}}</span>
-            </div>
-            <div class="limit-row" ng-if="limit.disbursement_official_checks_external">
-              <span class="limit-label">Official Checks External:</span>
-              <span class="limit-value">{{limit.disbursement_official_checks_external | currency}}</span>
-            </div>
-            <div class="limit-row" ng-if="limit.disbursement_official_checks_internal">
-              <span class="limit-label">Official Checks Internal:</span>
-              <span class="limit-value">{{limit.disbursement_official_checks_internal | currency}}</span>
-            </div>
-            <div class="limit-row" ng-if="limit.check_cashing_on_us">
-              <span class="limit-label">Check Cashing On Us:</span>
-              <span class="limit-value">{{limit.check_cashing_on_us | currency}}</span>
-            </div>
-            <div class="limit-row" ng-if="limit.check_cashing_not_on_us">
-              <span class="limit-label">Check Cashing Not On Us:</span>
-              <span class="limit-value">{{limit.check_cashing_not_on_us | currency}}</span>
-            </div>
+            
+            <!-- Other Non-Credit Limits -->
             <div class="limit-row" ng-if="limit.remote_deposit">
               <span class="limit-label">Remote Deposit:</span>
               <span class="limit-value">{{limit.remote_deposit | currency}}</span>
@@ -98,6 +89,43 @@
               <span class="limit-label">FX Wire Limits:</span>
               <span class="limit-value">{{limit.fx_wire_limits | currency}}</span>
             </div>
+          </div>
+        </div>
+        
+        <!-- Credit Limits Section (Right) -->
+        <div class="limits-section credit-limits">
+          <h6 class="section-title">
+            <i class="fa fa-credit-card"></i>
+            Credit Limits
+          </h6>
+          <div class="limits-table">
+            
+            <!-- Overdraft Group -->
+            <div class="limit-group" ng-if="limit.overdraft_external_accounts || limit.overdraft_internal_accounts">
+              <div class="group-header">Overdraft</div>
+              <div class="limit-row indented" ng-if="limit.overdraft_external_accounts">
+                <span class="limit-label">External Accounts:</span>
+                <span class="limit-value">{{limit.overdraft_external_accounts | currency}}</span>
+              </div>
+              <div class="limit-row indented" ng-if="limit.overdraft_internal_accounts">
+                <span class="limit-label">Internal Accounts:</span>
+                <span class="limit-value">{{limit.overdraft_internal_accounts | currency}}</span>
+              </div>
+            </div>
+            
+            <!-- Unavailable Funds Group -->
+            <div class="limit-group" ng-if="limit.unavailable_funds_external_accounts || limit.unavailable_funds_internal_accounts">
+              <div class="group-header">Unavailable Funds</div>
+              <div class="limit-row indented" ng-if="limit.unavailable_funds_external_accounts">
+                <span class="limit-label">External Accounts:</span>
+                <span class="limit-value">{{limit.unavailable_funds_external_accounts | currency}}</span>
+              </div>
+              <div class="limit-row indented" ng-if="limit.unavailable_funds_internal_accounts">
+                <span class="limit-label">Internal Accounts:</span>
+                <span class="limit-value">{{limit.unavailable_funds_internal_accounts | currency}}</span>
+              </div>
+            </div>
+            
           </div>
         </div>
       </div>
@@ -118,11 +146,13 @@
 // CSS 
 
 <style>
+/* Main widget container */
 .authority-limits-widget {
   padding: 15px;
   font-family: 'Source Sans Pro', Arial, sans-serif;
 }
 
+/* Alert messages styling */
 .alert {
   padding: 12px 15px;
   border-radius: 4px;
@@ -142,10 +172,12 @@
   color: #8a6d3b;
 }
 
+/* Main container for authority limits */
 .authority-limits-container {
   margin-top: 15px;
 }
 
+/* Header styling */
 .limits-header {
   color: #2c3e50;
   border-bottom: 2px solid #3498db;
@@ -153,6 +185,7 @@
   margin-bottom: 20px;
 }
 
+/* Individual limit record container */
 .limit-record {
   background: #f8f9fa;
   border: 1px solid #e9ecef;
@@ -161,18 +194,14 @@
   margin-bottom: 15px;
 }
 
-.job-info h5 {
-  color: #2c3e50;
-  margin: 0 0 15px 0;
-  font-weight: 600;
-}
-
+/* Grid layout for credit/non-credit sections */
 .limits-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
 }
 
+/* Section container styling */
 .limits-section {
   background: white;
   border-radius: 4px;
@@ -180,14 +209,17 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.credit-limits {
-  border-left: 4px solid #e74c3c;
-}
-
+/* Non-credit section (now on left) with green accent */
 .non-credit-limits {
   border-left: 4px solid #27ae60;
 }
 
+/* Credit section (now on right) with red accent */
+.credit-limits {
+  border-left: 4px solid #e74c3c;
+}
+
+/* Section title styling */
 .section-title {
   color: #2c3e50;
   margin: 0 0 12px 0;
@@ -196,20 +228,41 @@
   text-transform: uppercase;
 }
 
-.credit-limits .section-title {
-  color: #e74c3c;
-}
-
 .non-credit-limits .section-title {
   color: #27ae60;
 }
 
+.credit-limits .section-title {
+  color: #e74c3c;
+}
+
+/* Container for limit rows */
 .limits-table {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
+/* Grouping styles */
+.limit-group {
+  margin-bottom: 12px;
+}
+
+.limit-group:last-child {
+  margin-bottom: 0;
+}
+
+/* Group header for disbursements, check cashing, etc. */
+.group-header {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 13px;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+/* Individual limit row */
 .limit-row {
   display: flex;
   justify-content: space-between;
@@ -218,10 +271,16 @@
   border-bottom: 1px solid #ecf0f1;
 }
 
+/* Indented rows for grouped items */
+.limit-row.indented {
+  padding-left: 15px;
+}
+
 .limit-row:last-child {
   border-bottom: none;
 }
 
+/* Label and value styling */
 .limit-label {
   font-size: 13px;
   color: #5a6c7d;
@@ -234,16 +293,19 @@
   text-align: right;
 }
 
+/* Separator between multiple records */
 .record-separator {
   border: 0;
   border-top: 2px solid #bdc3c7;
   margin: 20px 0;
 }
 
+/* Font Awesome icon spacing */
 .fa {
   margin-right: 6px;
 }
 
+/* Loading spinner container */
 .text-center {
   text-align: center;
   padding: 30px;
@@ -253,11 +315,14 @@
   color: #3498db;
 }
 
+/* Mobile responsive design */
 @media (max-width: 768px) {
+  /* Stack sections vertically on mobile */
   .limits-grid {
     grid-template-columns: 1fr;
   }
   
+  /* Stack label and value on mobile */
   .limit-row {
     flex-direction: column;
     align-items: flex-start;
@@ -266,6 +331,11 @@
   
   .limit-value {
     text-align: left;
+  }
+  
+  /* Maintain indentation on mobile */
+  .limit-row.indented {
+    padding-left: 10px;
   }
 }
 </style>
@@ -279,37 +349,42 @@
 
 // Server Script
 
+<!-- SERVER SCRIPT -->
 (function() {
   'use strict';
 
+  // Check if the request is for getting authority limits
   if (input && input.action === 'getAuthorityLimits') {
+    // Extract job code sys_id from the input
     var jobCode = input.job_code;
     var limits = [];
     var jobCodeDisplayValue = '';
     
     if (jobCode) {
-      // First, get the display value of the job code from the form
-      // This is the actual job code value (like "JC001") not the sys_id
+      // Retrieve the display value of the job code for UI display
+      // This converts the sys_id to the actual job code value (e.g., "JC001")
       var jobGr = new GlideRecord('x_banun_rbac_job_code');
       if (jobGr.get(jobCode)) {
         jobCodeDisplayValue = jobGr.getDisplayValue();
       }
       
-      // Query the authority limits table
+      // Query the authority limits table for active limits matching this job code
       var gr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
-      gr.addQuery('job_code', jobCode);
-      gr.addQuery('active', true);
+      gr.addQuery('job_code', jobCode); // Match by job code sys_id
+      gr.addQuery('active', true); // Only get active records
       gr.query();
       
+      // Process each authority limit record found
       while (gr.next()) {
+        // Build the limit object with all authority limit fields
         var limit = {
-          // Credit limits
+          // Credit limits - Grouped into Overdraft and Unavailable Funds
           overdraft_external_accounts: gr.getValue('overdraft_external_accounts'),
           overdraft_internal_accounts: gr.getValue('overdraft_internal_accounts'),
           unavailable_funds_external_accounts: gr.getValue('unavailable_funds_external_accounts'),
           unavailable_funds_internal_accounts: gr.getValue('unavailable_funds_internal_accounts'),
           
-          // Non-credit limits
+          // Non-credit limits - Grouped into Disbursements, Check Cashing, and others
           disbursement_ach: gr.getValue('disbursement_ach'),
           disbursement_wire_transfer_external: gr.getValue('disbursement_wire_transfer_external'),
           disbursement_wire_transfer_internal: gr.getValue('disbursement_wire_transfer_internal'),
@@ -322,12 +397,14 @@
           fx_wire_limits: gr.getValue('fx_wire_limits')
         };
         
+        // Add the limit to the array
         limits.push(limit);
       }
     }
     
+    // Return the limits array and job code display value to the client
     data.limits = limits;
-    data.jobCodeDisplay = jobCodeDisplayValue; // Send the display value to the client
+    data.jobCodeDisplay = jobCodeDisplayValue;
   }
 })();
 
@@ -341,51 +418,58 @@
 
 // client controller
 
+<!-- CLIENT CONTROLLER -->
 api.controller = function($scope, spUtil, $timeout) {
   var c = this;
   
-  // Initialize variables
-  c.jobCode = '';
-  c.jobCodeDisplay = '';
-  c.authorityLimits = [];
-  c.loading = false;
+  // Initialize controller variables
+  c.jobCode = '';          // Stores the job code sys_id
+  c.jobCodeDisplay = '';    // Stores the job code display value
+  c.authorityLimits = [];   // Array to hold authority limit records
+  c.loading = false;        // Loading state indicator
   
-  // Function to get job code value from the form
+  /**
+   * Retrieves the job code value from various possible sources
+   * Tries multiple methods to ensure compatibility across different ServiceNow interfaces
+   * @returns {string} The job code sys_id or empty string if not found
+   */
   c.getJobCodeValue = function() {
-    // For record producers, try different methods to get the field value
     try {
-      // Method 1: Direct g_form access
+      // Method 1: Direct g_form access (standard ServiceNow forms)
       if (typeof g_form !== 'undefined' && g_form.getValue) {
         return g_form.getValue('job_code');
       }
       
-      // Method 2: Check if we're in a Service Portal form
+      // Method 2: Parent frame g_form (Service Portal embedded forms)
       if (window.parent && window.parent.g_form) {
         return window.parent.g_form.getValue('job_code');
       }
       
-      // Method 3: DOM query for record producer fields
+      // Method 3: DOM query for form fields
       var jobCodeField = document.querySelector('select[name="job_code"], input[name="job_code"], [data-name="job_code"] select, [data-name="job_code"] input');
       if (jobCodeField) {
         return jobCodeField.value || jobCodeField.selectedOptions?.[0]?.value || '';
       }
       
-      // Method 4: Angular form scope (for Service Portal)
+      // Method 4: Angular scope data (Service Portal)
       if ($scope.data && $scope.data.job_code) {
         return $scope.data.job_code;
       }
       
     } catch (e) {
-      console.log('Error getting job code value:', e);
+      // Silently handle errors - field may not exist yet
     }
     
     return '';
   };
   
-  // Function to get job code display value
+  /**
+   * Retrieves the display value of the selected job code
+   * @returns {string} The job code display value or empty string
+   */
   c.getJobCodeDisplayValue = function() {
     try {
-      // Method 1: g_form display value
+      // Method 1: g_form display box
       if (typeof g_form !== 'undefined' && g_form.getDisplayBox) {
         var displayBox = g_form.getDisplayBox('job_code');
         if (displayBox && displayBox.value) {
@@ -393,59 +477,66 @@ api.controller = function($scope, spUtil, $timeout) {
         }
       }
       
-      // Method 2: Get text from selected option
+      // Method 2: Selected option text from dropdown
       var jobCodeField = document.querySelector('select[name="job_code"], [data-name="job_code"] select');
       if (jobCodeField && jobCodeField.selectedOptions && jobCodeField.selectedOptions[0]) {
         return jobCodeField.selectedOptions[0].text;
       }
       
-      // Method 3: For reference fields in Service Portal
+      // Method 3: Reference field display input
       var displayField = document.querySelector('input[name="job_code_display"], [data-name="job_code"] input[type="text"]');
       if (displayField) {
         return displayField.value;
       }
       
     } catch (e) {
-      console.log('Error getting job code display value:', e);
+      // Silently handle errors
     }
     
     return '';
   };
   
-  // Function to set up polling to monitor job code changes
+  /**
+   * Sets up polling mechanism to detect job code changes
+   * Polls every 500ms to check for changes in the job code field
+   */
   c.setupJobCodeMonitoring = function() {
     var lastJobCode = '';
     
-    // Poll for changes every 500ms
+    // Create polling interval
     var checkInterval = setInterval(function() {
       var currentJobCode = c.getJobCodeValue();
       
+      // Check if job code has changed
       if (currentJobCode !== lastJobCode) {
-        console.log('Job code changed from', lastJobCode, 'to', currentJobCode);
         lastJobCode = currentJobCode;
         c.jobCode = currentJobCode;
         c.jobCodeDisplay = c.getJobCodeDisplayValue();
         
+        // Use $timeout to ensure Angular digest cycle
         $timeout(function() {
           c.loadAuthorityLimits();
         });
       }
     }, 500);
     
-    // Clean up interval when scope is destroyed
+    // Clean up interval when widget is destroyed
     $scope.$on('$destroy', function() {
       clearInterval(checkInterval);
     });
     
-    // Also try to set up direct event listeners
+    // Set up direct event listeners after a delay
     $timeout(function() {
       c.setupDirectListeners();
     }, 1000);
   };
   
-  // Function to set up direct event listeners
+  /**
+   * Sets up direct event listeners on job code fields
+   * Provides immediate response to changes when possible
+   */
   c.setupDirectListeners = function() {
-    // Try to add change listeners to job code fields
+    // Define selectors for job code fields
     var selectors = [
       'select[name="job_code"]',
       'input[name="job_code"]', 
@@ -454,11 +545,11 @@ api.controller = function($scope, spUtil, $timeout) {
       '#job_code'
     ];
     
+    // Add change event listeners to all matching elements
     selectors.forEach(function(selector) {
       var elements = document.querySelectorAll(selector);
       elements.forEach(function(element) {
         element.addEventListener('change', function() {
-          console.log('Direct change event detected');
           $timeout(function() {
             c.jobCode = c.getJobCodeValue();
             c.jobCodeDisplay = c.getJobCodeDisplayValue();
@@ -468,11 +559,10 @@ api.controller = function($scope, spUtil, $timeout) {
       });
     });
     
-    // Try g_form callback if available
+    // Try to set up g_form callback for native ServiceNow change detection
     try {
       if (typeof g_form !== 'undefined' && g_form.addOnChangeCallback) {
         g_form.addOnChangeCallback('job_code', function() {
-          console.log('g_form change callback triggered');
           $timeout(function() {
             c.jobCode = c.getJobCodeValue();
             c.jobCodeDisplay = c.getJobCodeDisplayValue();
@@ -481,56 +571,62 @@ api.controller = function($scope, spUtil, $timeout) {
         });
       }
     } catch (e) {
-      console.log('Could not set up g_form callback:', e);
+      // g_form may not be available in all contexts
     }
   };
   
-  // Function to load authority limits
+  /**
+   * Loads authority limits from the server for the selected job code
+   * Makes a server call to retrieve limit data
+   */
   c.loadAuthorityLimits = function() {
-    console.log('Loading authority limits for job code:', c.jobCode);
-    
+    // Clear limits if no job code selected
     if (!c.jobCode) {
       c.authorityLimits = [];
       return;
     }
     
+    // Set loading state
     c.loading = true;
     
-    // Call server script to get authority limits
+    // Make server call to get authority limits
     c.server.get({
       action: 'getAuthorityLimits',
       job_code: c.jobCode,
       job_code_display: c.jobCodeDisplay
     }).then(function(response) {
-      console.log('Server response:', response);
+      // Success - update limits and display value
       c.authorityLimits = response.data.limits || [];
       if (response.data.jobCodeDisplay) {
         c.jobCodeDisplay = response.data.jobCodeDisplay;
       }
       c.loading = false;
     }).catch(function(error) {
-      console.error('Error loading authority limits:', error);
+      // Error - show message and clear limits
       spUtil.addErrorMessage('Failed to load authority limits');
       c.authorityLimits = [];
       c.loading = false;
     });
   };
   
-  // Initialize on load
+  /**
+   * Initialize widget on load
+   * Sets up initial values and monitoring
+   */
   $timeout(function() {
+    // Get initial job code value
     c.jobCode = c.getJobCodeValue();
     c.jobCodeDisplay = c.getJobCodeDisplayValue();
-    console.log('Initial job code:', c.jobCode, 'Display:', c.jobCodeDisplay);
     
+    // Load limits if job code already selected
     if (c.jobCode) {
       c.loadAuthorityLimits();
     }
     
-    // Set up monitoring for job code changes
+    // Start monitoring for changes
     c.setupJobCodeMonitoring();
   }, 500);
 };
-
 
 
 
