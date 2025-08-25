@@ -317,7 +317,7 @@
 })();
 
 <!-- CLIENT CONTROLLER -->
-function($scope, spUtil) {
+api.controller = function($scope, spUtil, $timeout) {
   var c = this;
   
   // Initialize variables
@@ -327,44 +327,110 @@ function($scope, spUtil) {
   
   // Function to get job code value from the form
   c.getJobCodeValue = function() {
-    // Try multiple ways to get the job_code field value
-    if (typeof g_form !== 'undefined' && g_form.getValue) {
-      return g_form.getValue('job_code');
-    }
-    
-    // Alternative method for record producer
-    var jobCodeField = document.querySelector('select[name="job_code"], input[name="job_code"]');
-    if (jobCodeField) {
-      return jobCodeField.value;
+    // For record producers, try different methods to get the field value
+    try {
+      // Method 1: Direct g_form access
+      if (typeof g_form !== 'undefined' && g_form.getValue) {
+        return g_form.getValue('job_code');
+      }
+      
+      // Method 2: Check if we're in a Service Portal form
+      if (window.parent && window.parent.g_form) {
+        return window.parent.g_form.getValue('job_code');
+      }
+      
+      // Method 3: DOM query for record producer fields
+      var jobCodeField = document.querySelector('select[name="job_code"], input[name="job_code"], [data-name="job_code"] select, [data-name="job_code"] input');
+      if (jobCodeField) {
+        return jobCodeField.value || jobCodeField.selectedOptions?.[0]?.value || '';
+      }
+      
+      // Method 4: Angular form scope (for Service Portal)
+      if ($scope.data && $scope.data.job_code) {
+        return $scope.data.job_code;
+      }
+      
+    } catch (e) {
+      console.log('Error getting job code value:', e);
     }
     
     return '';
   };
   
-  // Function to monitor job code changes
-  c.monitorJobCodeChanges = function() {
-    // Method 1: Using g_form if available
-    if (typeof g_form !== 'undefined' && g_form.addOnChangeCallback) {
-      g_form.addOnChangeCallback('job_code', function() {
-        c.jobCode = c.getJobCodeValue();
-        c.loadAuthorityLimits();
-        $scope.$apply();
-      });
-    } else {
-      // Method 2: DOM event listener as fallback
-      var jobCodeField = document.querySelector('select[name="job_code"], input[name="job_code"]');
-      if (jobCodeField) {
-        jobCodeField.addEventListener('change', function() {
-          c.jobCode = c.getJobCodeValue();
+  // Function to set up polling to monitor job code changes
+  c.setupJobCodeMonitoring = function() {
+    var lastJobCode = '';
+    
+    // Poll for changes every 500ms
+    var checkInterval = setInterval(function() {
+      var currentJobCode = c.getJobCodeValue();
+      
+      if (currentJobCode !== lastJobCode) {
+        console.log('Job code changed from', lastJobCode, 'to', currentJobCode);
+        lastJobCode = currentJobCode;
+        c.jobCode = currentJobCode;
+        
+        $timeout(function() {
           c.loadAuthorityLimits();
-          $scope.$apply();
         });
       }
+    }, 500);
+    
+    // Clean up interval when scope is destroyed
+    $scope.$on('$destroy', function() {
+      clearInterval(checkInterval);
+    });
+    
+    // Also try to set up direct event listeners
+    $timeout(function() {
+      c.setupDirectListeners();
+    }, 1000);
+  };
+  
+  // Function to set up direct event listeners
+  c.setupDirectListeners = function() {
+    // Try to add change listeners to job code fields
+    var selectors = [
+      'select[name="job_code"]',
+      'input[name="job_code"]', 
+      '[data-name="job_code"] select',
+      '[data-name="job_code"] input',
+      '#job_code'
+    ];
+    
+    selectors.forEach(function(selector) {
+      var elements = document.querySelectorAll(selector);
+      elements.forEach(function(element) {
+        element.addEventListener('change', function() {
+          console.log('Direct change event detected');
+          $timeout(function() {
+            c.jobCode = c.getJobCodeValue();
+            c.loadAuthorityLimits();
+          });
+        });
+      });
+    });
+    
+    // Try g_form callback if available
+    try {
+      if (typeof g_form !== 'undefined' && g_form.addOnChangeCallback) {
+        g_form.addOnChangeCallback('job_code', function() {
+          console.log('g_form change callback triggered');
+          $timeout(function() {
+            c.jobCode = c.getJobCodeValue();
+            c.loadAuthorityLimits();
+          });
+        });
+      }
+    } catch (e) {
+      console.log('Could not set up g_form callback:', e);
     }
   };
   
   // Function to load authority limits
   c.loadAuthorityLimits = function() {
+    console.log('Loading authority limits for job code:', c.jobCode);
+    
     if (!c.jobCode) {
       c.authorityLimits = [];
       return;
@@ -377,6 +443,7 @@ function($scope, spUtil) {
       action: 'getAuthorityLimits',
       job_code: c.jobCode
     }).then(function(response) {
+      console.log('Server response:', response);
       c.authorityLimits = response.data.limits || [];
       c.loading = false;
     }).catch(function(error) {
@@ -388,14 +455,18 @@ function($scope, spUtil) {
   };
   
   // Initialize on load
-  c.jobCode = c.getJobCodeValue();
-  if (c.jobCode) {
-    c.loadAuthorityLimits();
-  }
-  
-  // Set up monitoring for job code changes
-  c.monitorJobCodeChanges();
-}
+  $timeout(function() {
+    c.jobCode = c.getJobCodeValue();
+    console.log('Initial job code:', c.jobCode);
+    
+    if (c.jobCode) {
+      c.loadAuthorityLimits();
+    }
+    
+    // Set up monitoring for job code changes
+    c.setupJobCodeMonitoring();
+  }, 500);
+};
 
 <!-- OPTIONS SCHEMA -->
 [
