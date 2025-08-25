@@ -1,0 +1,375 @@
+<!-- HTML Template -->
+<div class="authority-limits-widget">
+  <div ng-if="!c.jobCode" class="alert alert-info">
+    <i class="fa fa-info-circle"></i>
+    Please select a job code to view authority limits
+  </div>
+  
+  <div ng-if="c.jobCode && c.loading" class="text-center">
+    <i class="fa fa-spinner fa-spin fa-2x"></i>
+    <p>Loading authority limits...</p>
+  </div>
+  
+  <div ng-if="c.jobCode && !c.loading && c.authorityLimits.length === 0" class="alert alert-warning">
+    <i class="fa fa-exclamation-triangle"></i>
+    Job code <strong>{{c.jobCode}}</strong> does not have any existing authority limits
+  </div>
+  
+  <div ng-if="c.jobCode && !c.loading && c.authorityLimits.length > 0" class="authority-limits-container">
+    <h4 class="limits-header">
+      <i class="fa fa-shield"></i>
+      Authority Limits for Job Code: {{c.jobCode}}
+    </h4>
+    
+    <div ng-repeat="limit in c.authorityLimits" class="limit-record">
+      <div class="job-info">
+        <h5>{{limit.job_code}} - {{limit.job_description}}</h5>
+      </div>
+      
+      <div class="limits-grid">
+        <!-- Credit Limits Section -->
+        <div class="limits-section credit-limits">
+          <h6 class="section-title">
+            <i class="fa fa-credit-card"></i>
+            Credit Limits
+          </h6>
+          <div class="limits-table">
+            <div class="limit-row" ng-if="limit.overdraft_external_accounts">
+              <span class="limit-label">Overdraft External Accounts:</span>
+              <span class="limit-value">{{limit.overdraft_external_accounts | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.overdraft_internal_accounts">
+              <span class="limit-label">Overdraft Internal Accounts:</span>
+              <span class="limit-value">{{limit.overdraft_internal_accounts | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.unavailable_funds_external_accounts">
+              <span class="limit-label">Unavailable Funds External:</span>
+              <span class="limit-value">{{limit.unavailable_funds_external_accounts | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.unavailable_funds_internal_accounts">
+              <span class="limit-label">Unavailable Funds Internal:</span>
+              <span class="limit-value">{{limit.unavailable_funds_internal_accounts | currency}}</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Non-Credit Limits Section -->
+        <div class="limits-section non-credit-limits">
+          <h6 class="section-title">
+            <i class="fa fa-money"></i>
+            Non-Credit Limits
+          </h6>
+          <div class="limits-table">
+            <div class="limit-row" ng-if="limit.disbursement_ach">
+              <span class="limit-label">Disbursement ACH:</span>
+              <span class="limit-value">{{limit.disbursement_ach | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.disbursement_wire_transfer_external">
+              <span class="limit-label">Wire Transfer External:</span>
+              <span class="limit-value">{{limit.disbursement_wire_transfer_external | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.disbursement_wire_transfer_internal">
+              <span class="limit-label">Wire Transfer Internal:</span>
+              <span class="limit-value">{{limit.disbursement_wire_transfer_internal | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.disbursement_official_checks_external">
+              <span class="limit-label">Official Checks External:</span>
+              <span class="limit-value">{{limit.disbursement_official_checks_external | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.disbursement_official_checks_internal">
+              <span class="limit-label">Official Checks Internal:</span>
+              <span class="limit-value">{{limit.disbursement_official_checks_internal | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.check_cashing_on_us">
+              <span class="limit-label">Check Cashing On Us:</span>
+              <span class="limit-value">{{limit.check_cashing_on_us | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.check_cashing_not_on_us">
+              <span class="limit-label">Check Cashing Not On Us:</span>
+              <span class="limit-value">{{limit.check_cashing_not_on_us | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.remote_deposit">
+              <span class="limit-label">Remote Deposit:</span>
+              <span class="limit-value">{{limit.remote_deposit | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.treasury_solutions_company_wire_limits">
+              <span class="limit-label">Treasury Solutions Wire:</span>
+              <span class="limit-value">{{limit.treasury_solutions_company_wire_limits | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.fx_wire_limits">
+              <span class="limit-label">FX Wire Limits:</span>
+              <span class="limit-value">{{limit.fx_wire_limits | currency}}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <hr ng-if="!$last" class="record-separator">
+    </div>
+  </div>
+</div>
+
+<style>
+.authority-limits-widget {
+  padding: 15px;
+  font-family: 'Source Sans Pro', Arial, sans-serif;
+}
+
+.alert {
+  padding: 12px 15px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  border: 1px solid transparent;
+}
+
+.alert-info {
+  background-color: #d9edf7;
+  border-color: #bce8f1;
+  color: #31708f;
+}
+
+.alert-warning {
+  background-color: #fcf8e3;
+  border-color: #faebcc;
+  color: #8a6d3b;
+}
+
+.authority-limits-container {
+  margin-top: 15px;
+}
+
+.limits-header {
+  color: #2c3e50;
+  border-bottom: 2px solid #3498db;
+  padding-bottom: 8px;
+  margin-bottom: 20px;
+}
+
+.limit-record {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 20px;
+  margin-bottom: 15px;
+}
+
+.job-info h5 {
+  color: #2c3e50;
+  margin: 0 0 15px 0;
+  font-weight: 600;
+}
+
+.limits-grid {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.limits-section {
+  flex: 1;
+  min-width: 300px;
+  background: white;
+  border-radius: 4px;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.credit-limits {
+  border-left: 4px solid #e74c3c;
+}
+
+.non-credit-limits {
+  border-left: 4px solid #27ae60;
+}
+
+.section-title {
+  color: #2c3e50;
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.credit-limits .section-title {
+  color: #e74c3c;
+}
+
+.non-credit-limits .section-title {
+  color: #27ae60;
+}
+
+.limits-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.limit-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid #ecf0f1;
+}
+
+.limit-row:last-child {
+  border-bottom: none;
+}
+
+.limit-label {
+  font-size: 13px;
+  color: #5a6c7d;
+  flex: 1;
+}
+
+.limit-value {
+  font-weight: 600;
+  color: #2c3e50;
+  text-align: right;
+}
+
+.record-separator {
+  border: 0;
+  border-top: 2px solid #bdc3c7;
+  margin: 20px 0;
+}
+
+.fa {
+  margin-right: 6px;
+}
+
+.text-center {
+  text-align: center;
+  padding: 30px;
+}
+
+.fa-spinner {
+  color: #3498db;
+}
+
+@media (max-width: 768px) {
+  .limits-grid {
+    flex-direction: column;
+  }
+  
+  .limits-section {
+    min-width: auto;
+  }
+  
+  .limit-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .limit-value {
+    text-align: left;
+  }
+}
+</style>
+
+<script>
+(function() {
+  'use strict';
+
+  // Client Controller
+  function AuthorityLimitsController($scope, $timeout) {
+    var c = this;
+    
+    // Initialize variables
+    c.jobCode = '';
+    c.authorityLimits = [];
+    c.loading = false;
+    
+    // Watch for changes in the job_code field
+    $scope.$on('field.job_code.change', function(evt, newValue) {
+      c.jobCode = newValue;
+      c.loadAuthorityLimits();
+    });
+    
+    // Initial load if job_code already has a value
+    $timeout(function() {
+      var jobCodeField = $scope.page.g_form.getValue('job_code');
+      if (jobCodeField) {
+        c.jobCode = jobCodeField;
+        c.loadAuthorityLimits();
+      }
+    }, 100);
+    
+    // Function to load authority limits
+    c.loadAuthorityLimits = function() {
+      if (!c.jobCode) {
+        c.authorityLimits = [];
+        return;
+      }
+      
+      c.loading = true;
+      
+      // Call server script to get authority limits
+      c.server.get({
+        action: 'getAuthorityLimits',
+        job_code: c.jobCode
+      }).then(function(response) {
+        c.authorityLimits = response.data.limits || [];
+        c.loading = false;
+      }).catch(function(error) {
+        console.error('Error loading authority limits:', error);
+        c.authorityLimits = [];
+        c.loading = false;
+      });
+    };
+  }
+
+  // Register the controller
+  angular.module('sn.$rootScope').controller('AuthorityLimitsController', AuthorityLimitsController);
+})();
+</script>
+
+<!-- Server Script -->
+<script>
+(function() {
+  'use strict';
+
+  if (input && input.action === 'getAuthorityLimits') {
+    var jobCode = input.job_code;
+    var limits = [];
+    
+    if (jobCode) {
+      // Query the authority limits table
+      var gr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
+      gr.addQuery('job_code', jobCode);
+      gr.addQuery('active', true);
+      gr.query();
+      
+      while (gr.next()) {
+        var limit = {
+          job_code: gr.getValue('job_code'),
+          job_description: gr.job_code.getDisplayValue(), // Assuming job_code is a reference field
+          
+          // Credit limits
+          overdraft_external_accounts: gr.getValue('overdraft_external_accounts'),
+          overdraft_internal_accounts: gr.getValue('overdraft_internal_accounts'),
+          unavailable_funds_external_accounts: gr.getValue('unavailable_funds_external_accounts'),
+          unavailable_funds_internal_accounts: gr.getValue('unavailable_funds_internal_accounts'),
+          
+          // Non-credit limits
+          disbursement_ach: gr.getValue('disbursement_ach'),
+          disbursement_wire_transfer_external: gr.getValue('disbursement_wire_transfer_external'),
+          disbursement_wire_transfer_internal: gr.getValue('disbursement_wire_transfer_internal'),
+          disbursement_official_checks_external: gr.getValue('disbursement_official_checks_external'),
+          disbursement_official_checks_internal: gr.getValue('disbursement_official_checks_internal'),
+          check_cashing_on_us: gr.getValue('check_cashing_on_us'),
+          check_cashing_not_on_us: gr.getValue('check_cashing_not_on_us'),
+          remote_deposit: gr.getValue('remote_deposit'),
+          treasury_solutions_company_wire_limits: gr.getValue('treasury_solutions_company_wire_limits'),
+          fx_wire_limits: gr.getValue('fx_wire_limits')
+        };
+        
+        limits.push(limit);
+      }
+    }
+    
+    data.limits = limits;
+  }
+})();
+</script>
