@@ -1,0 +1,44 @@
+<div class="authority-widget">
+  <div ng-if="data.message" class="alert alert-warning text-center">
+    {{data.message}}
+  </div>
+
+  <div ng-if="data.results && data.results.length">
+    <div ng-repeat="row in data.results" class="authority-card">
+      <h5 class="job-header">
+        Job Code: <span class="job-code">{{row.job_code}}</span> – 
+        <span class="job-desc">{{row.job_description}}</span>
+      </h5>
+      
+      <div class="row">
+        <!-- Credit Limits -->
+        <div class="col-md-6 limits-block">
+          <h6 class="limits-title">Credit Limits</h6>
+          <table class="table table-bordered table-sm">
+            <tr><td>Overdraft External Accounts</td><td class="text-end">{{row.credit_limits.overdraft_external_accounts}}</td></tr>
+            <tr><td>Overdraft Internal Accounts</td><td class="text-end">{{row.credit_limits.overdraft_internal_accounts}}</td></tr>
+            <tr><td>Unavailable Funds External Accounts</td><td class="text-end">{{row.credit_limits.unavailable_funds_external_accounts}}</td></tr>
+            <tr><td>Unavailable Funds Internal Accounts</td><td class="text-end">{{row.credit_limits.unavailable_funds_internal_accounts}}</td></tr>
+          </table>
+        </div>
+
+        <!-- Non-Credit Limits -->
+        <div class="col-md-6 limits-block">
+          <h6 class="limits-title">Non-Credit Limits</h6>
+          <table class="table table-bordered table-sm">
+            <tr><td>Disbursement ACH</td><td class="text-end">{{row.non_credit_limits.disbursement_ach}}</td></tr>
+            <tr><td>Wire Transfer External</td><td class="text-end">{{row.non_credit_limits.disbursement_wire_transfer_external}}</td></tr>
+            <tr><td>Wire Transfer Internal</td><td class="text-end">{{row.non_credit_limits.disbursement_wire_transfer_internal}}</td></tr>
+            <tr><td>Official Checks External</td><td class="text-end">{{row.non_credit_limits.disbursement_official_checks_external}}</td></tr>
+            <tr><td>Official Checks Internal</td><td class="text-end">{{row.non_credit_limits.disbursement_official_checks_internal}}</td></tr>
+            <tr><td>Check Cashing On Us</td><td class="text-end">{{row.non_credit_limits.check_cashing_on_us}}</td></tr>
+            <tr><td>Check Cashing Not On Us</td><td class="text-end">{{row.non_credit_limits.check_cashing_not_on_us}}</td></tr>
+            <tr><td>Remote Deposit</td><td class="text-end">{{row.non_credit_limits.remote_deposit}}</td></tr>
+            <tr><td>Treasury Solutions Company Wire Limits</td><td class="text-end">{{row.non_credit_limits.treasury_solutions_company_wire_limits}}</td></tr>
+            <tr><td>FX Wire Limits</td><td class="text-end">{{row.non_credit_limits.fx_wire_limits}}</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
