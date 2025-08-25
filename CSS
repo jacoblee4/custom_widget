@@ -1,46 +1,153 @@
-.authority-widget {
+<!-- CSS - This goes in the CSS section of the widget -->
+<style>
+.authority-limits-widget {
+  padding: 15px;
+  font-family: 'Source Sans Pro', Arial, sans-serif;
+}
+
+.alert {
+  padding: 12px 15px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  border: 1px solid transparent;
+}
+
+.alert-info {
+  background-color: #d9edf7;
+  border-color: #bce8f1;
+  color: #31708f;
+}
+
+.alert-warning {
+  background-color: #fcf8e3;
+  border-color: #faebcc;
+  color: #8a6d3b;
+}
+
+.authority-limits-container {
   margin-top: 15px;
 }
 
-.authority-card {
-  background: #fff;
-  border-radius: 8px;
-  padding: 15px 20px;
+.limits-header {
+  color: #2c3e50;
+  border-bottom: 2px solid #3498db;
+  padding-bottom: 8px;
   margin-bottom: 20px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-.job-header {
-  font-weight: 600;
+.limit-record {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 20px;
   margin-bottom: 15px;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 5px;
 }
 
-.job-code {
-  color: #0072c6; /* ServiceNow blue */
-  font-weight: 700;
-}
-
-.job-desc {
-  color: #555;
-  font-style: italic;
-}
-
-.limits-block {
-  margin-top: 10px;
-}
-
-.limits-title {
+.job-info h5 {
+  color: #2c3e50;
+  margin: 0 0 15px 0;
   font-weight: 600;
-  margin-bottom: 8px;
-  color: #444;
 }
 
-.table-sm td {
-  padding: 6px 10px !important;
+.limits-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
 }
 
-.table td.text-end {
+.limits-section {
+  background: white;
+  border-radius: 4px;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.credit-limits {
+  border-left: 4px solid #e74c3c;
+}
+
+.non-credit-limits {
+  border-left: 4px solid #27ae60;
+}
+
+.section-title {
+  color: #2c3e50;
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.credit-limits .section-title {
+  color: #e74c3c;
+}
+
+.non-credit-limits .section-title {
+  color: #27ae60;
+}
+
+.limits-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.limit-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid #ecf0f1;
+}
+
+.limit-row:last-child {
+  border-bottom: none;
+}
+
+.limit-label {
+  font-size: 13px;
+  color: #5a6c7d;
+  flex: 1;
+}
+
+.limit-value {
+  font-weight: 600;
+  color: #2c3e50;
   text-align: right;
 }
+
+.record-separator {
+  border: 0;
+  border-top: 2px solid #bdc3c7;
+  margin: 20px 0;
+}
+
+.fa {
+  margin-right: 6px;
+}
+
+.text-center {
+  text-align: center;
+  padding: 30px;
+}
+
+.fa-spinner {
+  color: #3498db;
+}
+
+@media (max-width: 768px) {
+  .limits-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .limit-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .limit-value {
+    text-align: left;
+  }
+}
+</style>
