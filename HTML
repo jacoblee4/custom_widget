@@ -1,4 +1,3 @@
-<!-- HTML Template -->
 <div class="authority-limits-widget">
   <div ng-if="!c.jobCode" class="alert alert-info">
     <i class="fa fa-info-circle"></i>
@@ -12,19 +11,16 @@
   
   <div ng-if="c.jobCode && !c.loading && c.authorityLimits.length === 0" class="alert alert-warning">
     <i class="fa fa-exclamation-triangle"></i>
-    Job code <strong>{{c.jobCodeDisplay || c.jobCode}}</strong> does not have any existing authority limits
+    No authority limits found for the selected job code
   </div>
   
   <div ng-if="c.jobCode && !c.loading && c.authorityLimits.length > 0" class="authority-limits-container">
     <h4 class="limits-header">
       <i class="fa fa-shield"></i>
-      Authority Limits for Job Code: {{c.jobCodeDisplay || c.jobCode}}
+      Authority Limits
     </h4>
     
     <div ng-repeat="limit in c.authorityLimits" class="limit-record">
-      <div class="job-info">
-        <h5>{{limit.job_code_display}} - {{limit.job_description}}</h5>
-      </div>
       
       <div class="limits-grid">
         <!-- Credit Limits Section -->
