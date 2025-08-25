@@ -296,15 +296,34 @@ function($scope) {
         }
         
         // Add event listeners for currency formatting
-        document.getElementById('disbursement').addEventListener('input', function(e) {
-            formatCurrency(e.target);
-            updateRecordProducerField('disbursement', e.target.value);
-        });
+        const disbursementField = document.getElementById('disbursement');
+        const overdraftField = document.getElementById('overdraft');
         
-        document.getElementById('overdraft').addEventListener('input', function(e) {
-            formatCurrency(e.target);
-            updateRecordProducerField('overdraft', e.target.value);
-        });
+        if (disbursementField) {
+            disbursementField.addEventListener('input', function(e) {
+                formatCurrency(e.target);
+                updateRecordProducerField('disbursement', e.target.value);
+                console.log('Disbursement updated:', e.target.value);
+            });
+            
+            // Also listen for change event
+            disbursementField.addEventListener('change', function(e) {
+                updateRecordProducerField('disbursement', e.target.value);
+            });
+        }
+        
+        if (overdraftField) {
+            overdraftField.addEventListener('input', function(e) {
+                formatCurrency(e.target);
+                updateRecordProducerField('overdraft', e.target.value);
+                console.log('Overdraft updated:', e.target.value);
+            });
+            
+            // Also listen for change event
+            overdraftField.addEventListener('change', function(e) {
+                updateRecordProducerField('overdraft', e.target.value);
+            });
+        }
         
         // Handle checkbox changes
         function handleAuthoritySelection() {
