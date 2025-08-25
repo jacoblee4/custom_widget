@@ -1,44 +1,110 @@
-<div class="authority-widget">
-  <div ng-if="data.message" class="alert alert-warning text-center">
-    {{data.message}}
+<!-- HTML Template -->
+<div class="authority-limits-widget">
+  <div ng-if="!c.jobCode" class="alert alert-info">
+    <i class="fa fa-info-circle"></i>
+    Please select a job code to view authority limits
   </div>
-
-  <div ng-if="data.results && data.results.length">
-    <div ng-repeat="row in data.results" class="authority-card">
-      <h5 class="job-header">
-        Job Code: <span class="job-code">{{row.job_code}}</span> – 
-        <span class="job-desc">{{row.job_description}}</span>
-      </h5>
+  
+  <div ng-if="c.jobCode && c.loading" class="text-center">
+    <i class="fa fa-spinner fa-spin fa-2x"></i>
+    <p>Loading authority limits...</p>
+  </div>
+  
+  <div ng-if="c.jobCode && !c.loading && c.authorityLimits.length === 0" class="alert alert-warning">
+    <i class="fa fa-exclamation-triangle"></i>
+    Job code <strong>{{c.jobCodeDisplay || c.jobCode}}</strong> does not have any existing authority limits
+  </div>
+  
+  <div ng-if="c.jobCode && !c.loading && c.authorityLimits.length > 0" class="authority-limits-container">
+    <h4 class="limits-header">
+      <i class="fa fa-shield"></i>
+      Authority Limits for Job Code: {{c.jobCodeDisplay || c.jobCode}}
+    </h4>
+    
+    <div ng-repeat="limit in c.authorityLimits" class="limit-record">
+      <div class="job-info">
+        <h5>{{limit.job_code_display}} - {{limit.job_description}}</h5>
+      </div>
       
-      <div class="row">
-        <!-- Credit Limits -->
-        <div class="col-md-6 limits-block">
-          <h6 class="limits-title">Credit Limits</h6>
-          <table class="table table-bordered table-sm">
-            <tr><td>Overdraft External Accounts</td><td class="text-end">{{row.credit_limits.overdraft_external_accounts}}</td></tr>
-            <tr><td>Overdraft Internal Accounts</td><td class="text-end">{{row.credit_limits.overdraft_internal_accounts}}</td></tr>
-            <tr><td>Unavailable Funds External Accounts</td><td class="text-end">{{row.credit_limits.unavailable_funds_external_accounts}}</td></tr>
-            <tr><td>Unavailable Funds Internal Accounts</td><td class="text-end">{{row.credit_limits.unavailable_funds_internal_accounts}}</td></tr>
-          </table>
+      <div class="limits-grid">
+        <!-- Credit Limits Section -->
+        <div class="limits-section credit-limits">
+          <h6 class="section-title">
+            <i class="fa fa-credit-card"></i>
+            Credit Limits
+          </h6>
+          <div class="limits-table">
+            <div class="limit-row" ng-if="limit.overdraft_external_accounts">
+              <span class="limit-label">Overdraft External Accounts:</span>
+              <span class="limit-value">{{limit.overdraft_external_accounts | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.overdraft_internal_accounts">
+              <span class="limit-label">Overdraft Internal Accounts:</span>
+              <span class="limit-value">{{limit.overdraft_internal_accounts | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.unavailable_funds_external_accounts">
+              <span class="limit-label">Unavailable Funds External:</span>
+              <span class="limit-value">{{limit.unavailable_funds_external_accounts | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.unavailable_funds_internal_accounts">
+              <span class="limit-label">Unavailable Funds Internal:</span>
+              <span class="limit-value">{{limit.unavailable_funds_internal_accounts | currency}}</span>
+            </div>
+          </div>
         </div>
-
-        <!-- Non-Credit Limits -->
-        <div class="col-md-6 limits-block">
-          <h6 class="limits-title">Non-Credit Limits</h6>
-          <table class="table table-bordered table-sm">
-            <tr><td>Disbursement ACH</td><td class="text-end">{{row.non_credit_limits.disbursement_ach}}</td></tr>
-            <tr><td>Wire Transfer External</td><td class="text-end">{{row.non_credit_limits.disbursement_wire_transfer_external}}</td></tr>
-            <tr><td>Wire Transfer Internal</td><td class="text-end">{{row.non_credit_limits.disbursement_wire_transfer_internal}}</td></tr>
-            <tr><td>Official Checks External</td><td class="text-end">{{row.non_credit_limits.disbursement_official_checks_external}}</td></tr>
-            <tr><td>Official Checks Internal</td><td class="text-end">{{row.non_credit_limits.disbursement_official_checks_internal}}</td></tr>
-            <tr><td>Check Cashing On Us</td><td class="text-end">{{row.non_credit_limits.check_cashing_on_us}}</td></tr>
-            <tr><td>Check Cashing Not On Us</td><td class="text-end">{{row.non_credit_limits.check_cashing_not_on_us}}</td></tr>
-            <tr><td>Remote Deposit</td><td class="text-end">{{row.non_credit_limits.remote_deposit}}</td></tr>
-            <tr><td>Treasury Solutions Company Wire Limits</td><td class="text-end">{{row.non_credit_limits.treasury_solutions_company_wire_limits}}</td></tr>
-            <tr><td>FX Wire Limits</td><td class="text-end">{{row.non_credit_limits.fx_wire_limits}}</td></tr>
-          </table>
+        
+        <!-- Non-Credit Limits Section -->
+        <div class="limits-section non-credit-limits">
+          <h6 class="section-title">
+            <i class="fa fa-money"></i>
+            Non-Credit Limits
+          </h6>
+          <div class="limits-table">
+            <div class="limit-row" ng-if="limit.disbursement_ach">
+              <span class="limit-label">Disbursement ACH:</span>
+              <span class="limit-value">{{limit.disbursement_ach | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.disbursement_wire_transfer_external">
+              <span class="limit-label">Wire Transfer External:</span>
+              <span class="limit-value">{{limit.disbursement_wire_transfer_external | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.disbursement_wire_transfer_internal">
+              <span class="limit-label">Wire Transfer Internal:</span>
+              <span class="limit-value">{{limit.disbursement_wire_transfer_internal | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.disbursement_official_checks_external">
+              <span class="limit-label">Official Checks External:</span>
+              <span class="limit-value">{{limit.disbursement_official_checks_external | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.disbursement_official_checks_internal">
+              <span class="limit-label">Official Checks Internal:</span>
+              <span class="limit-value">{{limit.disbursement_official_checks_internal | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.check_cashing_on_us">
+              <span class="limit-label">Check Cashing On Us:</span>
+              <span class="limit-value">{{limit.check_cashing_on_us | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.check_cashing_not_on_us">
+              <span class="limit-label">Check Cashing Not On Us:</span>
+              <span class="limit-value">{{limit.check_cashing_not_on_us | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.remote_deposit">
+              <span class="limit-label">Remote Deposit:</span>
+              <span class="limit-value">{{limit.remote_deposit | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.treasury_solutions_company_wire_limits">
+              <span class="limit-label">Treasury Solutions Wire:</span>
+              <span class="limit-value">{{limit.treasury_solutions_company_wire_limits | currency}}</span>
+            </div>
+            <div class="limit-row" ng-if="limit.fx_wire_limits">
+              <span class="limit-label">FX Wire Limits:</span>
+              <span class="limit-value">{{limit.fx_wire_limits | currency}}</span>
+            </div>
+          </div>
         </div>
       </div>
+      
+      <hr ng-if="!$last" class="record-separator">
     </div>
   </div>
 </div>
