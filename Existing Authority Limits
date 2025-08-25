@@ -109,10 +109,16 @@
 
 
 
-// CSS
+
+
+
+
+
+
+// CSS 
 
 <style>
-.job-code-employees-widget {
+.authority-limits-widget {
   padding: 15px;
   font-family: 'Source Sans Pro', Arial, sans-serif;
 }
@@ -136,116 +142,102 @@
   color: #8a6d3b;
 }
 
-.employees-container {
+.authority-limits-container {
   margin-top: 15px;
 }
 
-.employees-header {
+.limits-header {
   color: #2c3e50;
   border-bottom: 2px solid #3498db;
   padding-bottom: 8px;
   margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
 
-.employee-count {
-  font-size: 14px;
-  color: #7f8c8d;
-  font-weight: normal;
-  margin-left: auto;
-}
-
-.table-responsive {
-  overflow-x: auto;
-  margin-bottom: 20px;
-}
-
-.table {
-  width: 100%;
-  background: white;
+.limit-record {
+  background: #f8f9fa;
   border: 1px solid #e9ecef;
-  border-radius: 4px;
+  border-radius: 6px;
+  padding: 20px;
+  margin-bottom: 15px;
 }
 
-.table thead th {
-  background-color: #f8f9fa;
-  border-bottom: 2px solid #dee2e6;
-  color: #495057;
+.job-info h5 {
+  color: #2c3e50;
+  margin: 0 0 15px 0;
   font-weight: 600;
-  padding: 12px;
-  text-align: left;
 }
 
-.table tbody td {
-  padding: 10px 12px;
-  border-bottom: 1px solid #dee2e6;
-  vertical-align: middle;
+.limits-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
 }
 
-.table tbody tr:last-child td {
-  border-bottom: none;
+.limits-section {
+  background: white;
+  border-radius: 4px;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.table tbody tr:hover {
-  background-color: #f8f9fa;
+.credit-limits {
+  border-left: 4px solid #e74c3c;
 }
 
-.pagination-controls {
+.non-credit-limits {
+  border-left: 4px solid #27ae60;
+}
+
+.section-title {
+  color: #2c3e50;
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.credit-limits .section-title {
+  color: #e74c3c;
+}
+
+.non-credit-limits .section-title {
+  color: #27ae60;
+}
+
+.limits-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.limit-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 15px;
+  padding: 6px 0;
+  border-bottom: 1px solid #ecf0f1;
 }
 
-.pagination {
-  display: flex;
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  gap: 5px;
+.limit-row:last-child {
+  border-bottom: none;
 }
 
-.page-item {
-  display: inline-block;
+.limit-label {
+  font-size: 13px;
+  color: #5a6c7d;
+  flex: 1;
 }
 
-.page-link {
-  display: block;
-  padding: 6px 12px;
-  color: #3498db;
-  text-decoration: none;
-  background-color: white;
-  border: 1px solid #dee2e6;
-  border-radius: 4px;
-  transition: all 0.3s;
+.limit-value {
+  font-weight: 600;
+  color: #2c3e50;
+  text-align: right;
 }
 
-.page-link:hover {
-  background-color: #e9ecef;
-  border-color: #adb5bd;
-}
-
-.page-item.active .page-link {
-  background-color: #3498db;
-  border-color: #3498db;
-  color: white;
-}
-
-.page-item.disabled .page-link {
-  color: #6c757d;
-  pointer-events: none;
-  cursor: not-allowed;
-  background-color: #fff;
-  border-color: #dee2e6;
-  opacity: 0.5;
-}
-
-.pagination-info {
-  color: #6c757d;
-  font-size: 14px;
+.record-separator {
+  border: 0;
+  border-top: 2px solid #bdc3c7;
+  margin: 20px 0;
 }
 
 .fa {
@@ -262,29 +254,25 @@
 }
 
 @media (max-width: 768px) {
-  .employees-header {
-    flex-wrap: wrap;
+  .limits-grid {
+    grid-template-columns: 1fr;
   }
   
-  .employee-count {
-    margin-left: 0;
-    width: 100%;
-  }
-  
-  .pagination-controls {
+  .limit-row {
     flex-direction: column;
-    align-items: stretch;
+    align-items: flex-start;
+    gap: 4px;
   }
   
-  .pagination {
-    justify-content: center;
-  }
-  
-  .pagination-info {
-    text-align: center;
+  .limit-value {
+    text-align: left;
   }
 }
 </style>
+
+
+
+
 
 
 
@@ -294,61 +282,64 @@
 (function() {
   'use strict';
 
-  if (input && input.action === 'getEmployees') {
-    var jobCodeSysId = input.job_code; // This is the sys_id from the reference field
-    var employees = [];
+  if (input && input.action === 'getAuthorityLimits') {
+    var jobCode = input.job_code;
+    var limits = [];
     var jobCodeDisplayValue = '';
-    var jobCodeValue = ''; // The actual job code string value
     
-    if (jobCodeSysId) {
-      // Get the actual job code value from the job code table
+    if (jobCode) {
+      // First, get the display value of the job code from the form
+      // This is the actual job code value (like "JC001") not the sys_id
       var jobGr = new GlideRecord('x_banun_rbac_job_code');
-      if (jobGr.get(jobCodeSysId)) {
-        // Get the display value (this is what we show in the UI)
+      if (jobGr.get(jobCode)) {
         jobCodeDisplayValue = jobGr.getDisplayValue();
-        
-        // Get the actual job code value - this should match what's stored in u_job_code
-        // You may need to adjust the field name based on your job code table structure
-        jobCodeValue = jobGr.getValue('job_code') || 
-                      jobGr.getValue('u_job_code') || 
-                      jobGr.getValue('code') || 
-                      jobGr.getDisplayValue(); // fallback to display value
       }
       
-      // Query the sys_user table for active users with this job code STRING value
-      var userGr = new GlideRecord('sys_user');
-      userGr.addQuery('u_job_code', jobCodeValue); // Compare string to string
-      userGr.addQuery('active', true);
-      userGr.orderBy('name');
-      userGr.query();
+      // Query the authority limits table
+      var gr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
+      gr.addQuery('job_code', jobCode);
+      gr.addQuery('active', true);
+      gr.query();
       
-      while (userGr.next()) {
-        var employee = {
-          sys_id: userGr.getValue('sys_id'),
-          name: userGr.getValue('name'),
-          title: userGr.getValue('title') || '',
-          manager: userGr.getValue('manager'),
-          manager_display: userGr.manager.getDisplayValue() || ''
+      while (gr.next()) {
+        var limit = {
+          // Credit limits
+          overdraft_external_accounts: gr.getValue('overdraft_external_accounts'),
+          overdraft_internal_accounts: gr.getValue('overdraft_internal_accounts'),
+          unavailable_funds_external_accounts: gr.getValue('unavailable_funds_external_accounts'),
+          unavailable_funds_internal_accounts: gr.getValue('unavailable_funds_internal_accounts'),
+          
+          // Non-credit limits
+          disbursement_ach: gr.getValue('disbursement_ach'),
+          disbursement_wire_transfer_external: gr.getValue('disbursement_wire_transfer_external'),
+          disbursement_wire_transfer_internal: gr.getValue('disbursement_wire_transfer_internal'),
+          disbursement_official_checks_external: gr.getValue('disbursement_official_checks_external'),
+          disbursement_official_checks_internal: gr.getValue('disbursement_official_checks_internal'),
+          check_cashing_on_us: gr.getValue('check_cashing_on_us'),
+          check_cashing_not_on_us: gr.getValue('check_cashing_not_on_us'),
+          remote_deposit: gr.getValue('remote_deposit'),
+          treasury_solutions_company_wire_limits: gr.getValue('treasury_solutions_company_wire_limits'),
+          fx_wire_limits: gr.getValue('fx_wire_limits')
         };
         
-        employees.push(employee);
+        limits.push(limit);
       }
-      
-      // Debug logging
-      gs.info('Job Code Employees Widget - Job Code Sys ID: ' + jobCodeSysId);
-      gs.info('Job Code Employees Widget - Job Code Value: ' + jobCodeValue);
-      gs.info('Job Code Employees Widget - Found ' + employees.length + ' employees');
     }
     
-    data.employees = employees;
-    data.jobCodeDisplay = jobCodeDisplayValue;
+    data.limits = limits;
+    data.jobCodeDisplay = jobCodeDisplayValue; // Send the display value to the client
   }
 })();
 
 
 
 
-// Clinet Controller
+
+
+
+
+
+// client controller
 
 api.controller = function($scope, spUtil, $timeout) {
   var c = this;
@@ -356,16 +347,12 @@ api.controller = function($scope, spUtil, $timeout) {
   // Initialize variables
   c.jobCode = '';
   c.jobCodeDisplay = '';
-  c.employees = [];
+  c.authorityLimits = [];
   c.loading = false;
-  
-  // Pagination variables
-  c.currentPage = 1;
-  c.pageSize = 10;
-  c.totalPages = 1;
   
   // Function to get job code value from the form
   c.getJobCodeValue = function() {
+    // For record producers, try different methods to get the field value
     try {
       // Method 1: Direct g_form access
       if (typeof g_form !== 'undefined' && g_form.getValue) {
@@ -395,6 +382,36 @@ api.controller = function($scope, spUtil, $timeout) {
     return '';
   };
   
+  // Function to get job code display value
+  c.getJobCodeDisplayValue = function() {
+    try {
+      // Method 1: g_form display value
+      if (typeof g_form !== 'undefined' && g_form.getDisplayBox) {
+        var displayBox = g_form.getDisplayBox('job_code');
+        if (displayBox && displayBox.value) {
+          return displayBox.value;
+        }
+      }
+      
+      // Method 2: Get text from selected option
+      var jobCodeField = document.querySelector('select[name="job_code"], [data-name="job_code"] select');
+      if (jobCodeField && jobCodeField.selectedOptions && jobCodeField.selectedOptions[0]) {
+        return jobCodeField.selectedOptions[0].text;
+      }
+      
+      // Method 3: For reference fields in Service Portal
+      var displayField = document.querySelector('input[name="job_code_display"], [data-name="job_code"] input[type="text"]');
+      if (displayField) {
+        return displayField.value;
+      }
+      
+    } catch (e) {
+      console.log('Error getting job code display value:', e);
+    }
+    
+    return '';
+  };
+  
   // Function to set up polling to monitor job code changes
   c.setupJobCodeMonitoring = function() {
     var lastJobCode = '';
@@ -407,9 +424,10 @@ api.controller = function($scope, spUtil, $timeout) {
         console.log('Job code changed from', lastJobCode, 'to', currentJobCode);
         lastJobCode = currentJobCode;
         c.jobCode = currentJobCode;
+        c.jobCodeDisplay = c.getJobCodeDisplayValue();
         
         $timeout(function() {
-          c.loadEmployees();
+          c.loadAuthorityLimits();
         });
       }
     }, 500);
@@ -443,7 +461,8 @@ api.controller = function($scope, spUtil, $timeout) {
           console.log('Direct change event detected');
           $timeout(function() {
             c.jobCode = c.getJobCodeValue();
-            c.loadEmployees();
+            c.jobCodeDisplay = c.getJobCodeDisplayValue();
+            c.loadAuthorityLimits();
           });
         });
       });
@@ -456,7 +475,8 @@ api.controller = function($scope, spUtil, $timeout) {
           console.log('g_form change callback triggered');
           $timeout(function() {
             c.jobCode = c.getJobCodeValue();
-            c.loadEmployees();
+            c.jobCodeDisplay = c.getJobCodeDisplayValue();
+            c.loadAuthorityLimits();
           });
         });
       }
@@ -465,104 +485,45 @@ api.controller = function($scope, spUtil, $timeout) {
     }
   };
   
-  // Function to load employees
-  c.loadEmployees = function() {
-    console.log('Loading employees for job code:', c.jobCode);
+  // Function to load authority limits
+  c.loadAuthorityLimits = function() {
+    console.log('Loading authority limits for job code:', c.jobCode);
     
     if (!c.jobCode) {
-      c.employees = [];
-      c.currentPage = 1;
-      c.totalPages = 1;
+      c.authorityLimits = [];
       return;
     }
     
     c.loading = true;
     
-    // Call server script to get employees
+    // Call server script to get authority limits
     c.server.get({
-      action: 'getEmployees',
-      job_code: c.jobCode
+      action: 'getAuthorityLimits',
+      job_code: c.jobCode,
+      job_code_display: c.jobCodeDisplay
     }).then(function(response) {
       console.log('Server response:', response);
-      c.employees = response.data.employees || [];
-      c.jobCodeDisplay = response.data.jobCodeDisplay || '';
-      c.currentPage = 1;
-      c.totalPages = Math.ceil(c.employees.length / c.pageSize);
+      c.authorityLimits = response.data.limits || [];
+      if (response.data.jobCodeDisplay) {
+        c.jobCodeDisplay = response.data.jobCodeDisplay;
+      }
       c.loading = false;
     }).catch(function(error) {
-      console.error('Error loading employees:', error);
-      spUtil.addErrorMessage('Failed to load employees');
-      c.employees = [];
+      console.error('Error loading authority limits:', error);
+      spUtil.addErrorMessage('Failed to load authority limits');
+      c.authorityLimits = [];
       c.loading = false;
     });
-  };
-  
-  // Pagination functions
-  c.getCurrentPageEmployees = function() {
-    var start = (c.currentPage - 1) * c.pageSize;
-    var end = start + c.pageSize;
-    return c.employees.slice(start, end);
-  };
-  
-  c.getStartIndex = function() {
-    return (c.currentPage - 1) * c.pageSize;
-  };
-  
-  c.getEndIndex = function() {
-    var end = c.currentPage * c.pageSize;
-    return end > c.employees.length ? c.employees.length : end;
-  };
-  
-  c.previousPage = function() {
-    if (c.currentPage > 1) {
-      c.currentPage--;
-    }
-  };
-  
-  c.nextPage = function() {
-    if (c.currentPage < c.totalPages) {
-      c.currentPage++;
-    }
-  };
-  
-  c.goToPage = function(page) {
-    if (page >= 1 && page <= c.totalPages) {
-      c.currentPage = page;
-    }
-  };
-  
-  c.getPageNumbers = function() {
-    var pages = [];
-    var maxPagesToShow = 5;
-    var startPage = 1;
-    var endPage = c.totalPages;
-    
-    if (c.totalPages > maxPagesToShow) {
-      var middlePage = Math.floor(maxPagesToShow / 2);
-      if (c.currentPage <= middlePage) {
-        endPage = maxPagesToShow;
-      } else if (c.currentPage >= c.totalPages - middlePage) {
-        startPage = c.totalPages - maxPagesToShow + 1;
-      } else {
-        startPage = c.currentPage - middlePage;
-        endPage = c.currentPage + middlePage;
-      }
-    }
-    
-    for (var i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-    
-    return pages;
   };
   
   // Initialize on load
   $timeout(function() {
     c.jobCode = c.getJobCodeValue();
-    console.log('Initial job code:', c.jobCode);
+    c.jobCodeDisplay = c.getJobCodeDisplayValue();
+    console.log('Initial job code:', c.jobCode, 'Display:', c.jobCodeDisplay);
     
     if (c.jobCode) {
-      c.loadEmployees();
+      c.loadAuthorityLimits();
     }
     
     // Set up monitoring for job code changes
@@ -573,14 +534,19 @@ api.controller = function($scope, spUtil, $timeout) {
 
 
 
-// Option Shcema
+
+
+
+
+
+// Options schema
 
 [
   {
     "hint": "Title to display at the top of the widget",
     "name": "title",
     "section": "Presentation",
-    "default_value": "Job Code Employees",
+    "default_value": "Authority Limits",
     "label": "Widget Title",
     "type": "string"
   },
@@ -593,11 +559,11 @@ api.controller = function($scope, spUtil, $timeout) {
     "type": "string"
   },
   {
-    "hint": "Number of employees to show per page",
-    "name": "page_size",
+    "hint": "Table name for authority limits lookup",
+    "name": "authority_table",
     "section": "Behavior",
-    "default_value": "10",
-    "label": "Page Size",
-    "type": "integer"
+    "default_value": "x_banun_bunow_si_0_authority_limits",
+    "label": "Authority Limits Table",
+    "type": "string"
   }
 ]
