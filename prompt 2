@@ -1,1 +1,16 @@
 
+Let's create another beautiful widget similar to the 2 you already created for me.
+This widget will be used to gather authority limit details.
+It should have 2 checkboxes that ask the user "Non-Credit Authority" or "Credit Authority". these 2 fields will map to existing fields on the record producer "credit_authority_check" and "non_credit_authority_check"
+Either of these fields being checked will show either the non-credit authority section or the credit authority section (left and right)
+The non-credit authority section will be broken out as follows (we are just going to map 1 field for each section at first to test if this works)
+field with currency input "Disbursement" that maps to string field 'disbursement'
+
+credit authority section with field overdraft that maps to string field overdraft
+
+At the bottom there should be a Justification section that appears no matter if you select credit or non-credit or both
+the section will have a message "Please complete the following fields to provide justification for this request. If you have attachments, please click attach to the record by going to the attachment section on the far right and look for the paper clip"
+it will also have 1 field "Overall Business Need" that is a multi line big box free text field that maps back to overall_business_need
+
+so the way I'm thinking about this is this widget works directly to the pre-created fields on the record producer. If you sleect a value or change a value it will update the record producer values that re hidden so I can map them when submitted
+let me know if you needs any more infmoation to create this widget, after you create the shell we can add the reminaing fields.
