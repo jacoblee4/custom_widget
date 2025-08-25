@@ -353,12 +353,42 @@ function($scope) {
         
         // Function to update ServiceNow record producer fields
         function updateRecordProducerField(fieldName, value) {
-            // This function will update the hidden fields in the ServiceNow record producer
-            if (typeof g_form !== 'undefined') {
+            // Try multiple methods to update the field
+            
+            // Method 1: Try g_form (standard ServiceNow form)
+            if (typeof g_form !== 'undefined' && g_form) {
                 g_form.setValue(fieldName, value);
-            } else {
-                // For testing outside ServiceNow
-                console.log('Update field:', fieldName, '=', value);
+                console.log('Updated via g_form:', fieldName, '=', value);
+            } 
+            // Method 2: Try parent window g_form (for embedded widgets)
+            else if (window.parent && window.parent.g_form) {
+                window.parent.g_form.setValue(fieldName, value);
+                console.log('Updated via parent.g_form:', fieldName, '=', value);
+            }
+            // Method 3: Try to find the actual input field in the DOM
+            else {
+                // Look for the hidden field by name in the parent document
+                var field = document.querySelector('input[name="' + fieldName + '"]');
+                if (!field && window.parent) {
+                    field = window.parent.document.querySelector('input[name="' + fieldName + '"]');
+                }
+                
+                if (field) {
+                    if (field.type === 'checkbox') {
+                        field.checked = (value === true || value === 'true');
+                        // Trigger change event
+                        var event = new Event('change', { bubbles: true });
+                        field.dispatchEvent(event);
+                    } else {
+                        field.value = value;
+                        // Trigger input event
+                        var event = new Event('input', { bubbles: true });
+                        field.dispatchEvent(event);
+                    }
+                    console.log('Updated via DOM:', fieldName, '=', value);
+                } else {
+                    console.log('Field not found, logging:', fieldName, '=', value);
+                }
             }
         }
         
