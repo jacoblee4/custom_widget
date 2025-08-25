@@ -1,0 +1,11 @@
+// ====== CLIENT CONTROLLER ======
+function($scope, spUtil, $rootScope) {
+  $scope.data.message = $scope.data.message || "";
+
+  // Watch for changes in record producer's job_code
+  $scope.$watch("page.g_form.getValue('job_code')", function(newVal, oldVal) {
+    if (newVal !== oldVal) {
+      $scope.server.update({ job_code: newVal });
+    }
+  });
+}
