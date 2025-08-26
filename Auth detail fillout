@@ -284,16 +284,14 @@ api.controller = function($scope, $window) {
         const creditSection = document.getElementById('creditSection');
         const justificationSection = document.getElementById('justificationSection');
         
-        // Initialize data structure
-        if (!$scope.data.authority_widget_data) {
-            $scope.data.authority_widget_data = {
-                non_credit_checked: false,
-                credit_checked: false,
-                disbursement_ach: '',
-                overdraft_external_accounts: '',
-                overall_business_need: ''
-            };
-        }
+        // Initialize widget data
+        c.widgetData = {
+            non_credit_checked: false,
+            credit_checked: false,
+            disbursement_ach: '',
+            overdraft_external_accounts: '',
+            overall_business_need: ''
+        };
         
         // Currency formatting functions
         function formatCurrency(value) {
@@ -321,18 +319,70 @@ api.controller = function($scope, $window) {
             return formattedValue.replace(/[^\d.]/g, '');
         }
         
-        // Update widget data and trigger server call
+        // Update hidden fields in the record producer
+        function updateRecordProducerFields() {
+            console.log('Updating RP fields with widget data:', c.widgetData);
+            
+            // Update the business need field directly
+            updateHiddenField('overall_business_need', c.widgetData.overall_business_need);
+            
+            // Store all widget data as JSON in the hidden field
+            updateHiddenField('authority_widget_json', JSON.stringify(c.widgetData));
+        }
+        
+        // Find and update hidden field
+        function updateHiddenField(fieldName, value) {
+            // Try multiple approaches to find the field
+            const selectors = [
+                `input[name="${fieldName}"]`,
+                `textarea[name="${fieldName}"]`,
+                `#${fieldName}`,
+                `input[name="IO:${fieldName}"]`,
+                `textarea[name="IO:${fieldName}"]`
+            ];
+            
+            let field = null;
+            const documents = [document];
+            
+            // Add parent documents
+            try {
+                if (window.parent && window.parent.document) {
+                    documents.push(window.parent.document);
+                }
+                if (window.top && window.top.document) {
+                    documents.push(window.top.document);
+                }
+            } catch(e) {}
+            
+            // Search for field
+            for (let doc of documents) {
+                for (let selector of selectors) {
+                    try {
+                        field = doc.querySelector(selector);
+                        if (field) break;
+                    } catch(e) {}
+                }
+                if (field) break;
+            }
+            
+            if (field) {
+                field.value = value;
+                // Trigger events
+                ['input', 'change'].forEach(eventType => {
+                    const event = new Event(eventType, { bubbles: true });
+                    field.dispatchEvent(event);
+                });
+                console.log('✓ Updated field:', fieldName, '=', value);
+            } else {
+                console.warn('Could not find field:', fieldName);
+            }
+        }
+        
+        // Update widget data
         function updateWidgetData(fieldName, value) {
-            console.log('Updating widget data:', fieldName, '=', value);
-            
-            $scope.data.authority_widget_data[fieldName] = value;
-            
-            // Trigger server update to process the data
-            $scope.server.update().then(function() {
-                console.log('✓ Server update completed for:', fieldName);
-            }).catch(function(error) {
-                console.error('Server update failed:', error);
-            });
+            console.log('Widget data update:', fieldName, '=', value);
+            c.widgetData[fieldName] = value;
+            updateRecordProducerFields();
         }
         
         // Handle authority selection
@@ -449,73 +499,8 @@ api.controller = function($scope, $window) {
 <!-- ============================================ -->
 
 (function() {
-    // Initialize widget data
     data.user = gs.getUser().getName();
     data.userId = gs.getUserID();
-    
-    // Log when server script runs
-    gs.log('Authority Widget Server Script - Input received: ' + JSON.stringify(input));
-    
-    // Check if we have authority widget data to process
-    if (input && input.authority_widget_data) {
-        var widgetData = input.authority_widget_data;
-        
-        gs.log('Processing authority widget data: ' + JSON.stringify(widgetData));
-        
-        // Set the overall_business_need on the parent record (this will be handled by the RP)
-        if (widgetData.overall_business_need) {
-            // The RP will handle creating the parent record, but we need to ensure this field gets set
-            data.overall_business_need = widgetData.overall_business_need;
-        }
-        
-        // Store the widget data for use in the record producer's completion script
-        data.authority_widget_data = widgetData;
-    }
-    
-    // This function will be called by the record producer after it creates the parent record
-    if (typeof processAuthorityWidgetData === 'undefined') {
-        global.processAuthorityWidgetData = function(parentRecordId, widgetData) {
-            gs.log('Processing authority widget data for parent record: ' + parentRecordId);
-            
-            try {
-                // Create non-credit authority record if checked and has value
-                if (widgetData.non_credit_checked === true && widgetData.disbursement_ach) {
-                    var nonCreditGR = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
-                    nonCreditGR.initialize();
-                    nonCreditGR.setValue('signature_request', parentRecordId); // Link to parent
-                    nonCreditGR.setValue('disbursement_ach', widgetData.disbursement_ach);
-                    
-                    var nonCreditId = nonCreditGR.insert();
-                    if (nonCreditId) {
-                        gs.log('Non-credit authority record created: ' + nonCreditId);
-                    } else {
-                        gs.log('Failed to create non-credit authority record');
-                    }
-                }
-                
-                // Create credit authority record if checked and has value
-                if (widgetData.credit_checked === true && widgetData.overdraft_external_accounts) {
-                    var creditGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
-                    creditGR.initialize();
-                    creditGR.setValue('signature_request', parentRecordId); // Link to parent
-                    creditGR.setValue('overdraft_external_accounts', widgetData.overdraft_external_accounts);
-                    
-                    var creditId = creditGR.insert();
-                    if (creditId) {
-                        gs.log('Credit authority record created: ' + creditId);
-                    } else {
-                        gs.log('Failed to create credit authority record');
-                    }
-                }
-                
-                return true;
-            } catch (e) {
-                gs.log('Error in processAuthorityWidgetData: ' + e.message);
-                return false;
-            }
-        };
-    }
-    
 })();
 
 
@@ -523,18 +508,54 @@ api.controller = function($scope, $window) {
 <!-- ============================================ -->
 <!-- RP SCRIPT -->
 <!-- ============================================ -->
-// Record Producer completion script
-// This runs after the parent record is created
-
-// Check if we have authority widget data to process
-if (producer.authority_widget_data) {
-    // Get the sys_id of the record that was just created
-    var parentRecordId = current.getUniqueValue(); // 'current' is the parent record that was just created
+// Record Producer Script - runs after parent record is created
+try {
+    gs.info('Authority RP Script - Processing record: ' + current.getUniqueValue());
     
-    gs.log('Record Producer created parent record: ' + parentRecordId);
+    // Get the JSON data from the hidden field
+    var widgetDataJson = producer.authority_widget_json;
     
-    // Process the authority widget data to create child records
-    if (typeof global.processAuthorityWidgetData === 'function') {
-        global.processAuthorityWidgetData(parentRecordId, producer.authority_widget_data);
+    if (widgetDataJson) {
+        gs.info('Widget data received: ' + widgetDataJson);
+        
+        // Parse the JSON
+        var widgetData = JSON.parse(widgetDataJson);
+        var parentId = current.getUniqueValue();
+        
+        // Create non-credit authority record if checked and has value
+        if (widgetData.non_credit_checked === true && widgetData.disbursement_ach) {
+            var nonCreditGR = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
+            nonCreditGR.initialize();
+            nonCreditGR.setValue('signature_request', parentId);
+            nonCreditGR.setValue('disbursement_ach', widgetData.disbursement_ach);
+            
+            var nonCreditId = nonCreditGR.insert();
+            if (nonCreditId) {
+                gs.info('Non-credit authority record created: ' + nonCreditId);
+            } else {
+                gs.info('Failed to create non-credit authority record');
+            }
+        }
+        
+        // Create credit authority record if checked and has value
+        if (widgetData.credit_checked === true && widgetData.overdraft_external_accounts) {
+            var creditGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
+            creditGR.initialize();
+            creditGR.setValue('signature_request', parentId);
+            creditGR.setValue('overdraft_external_accounts', widgetData.overdraft_external_accounts);
+            
+            var creditId = creditGR.insert();
+            if (creditId) {
+                gs.info('Credit authority record created: ' + creditId);
+            } else {
+                gs.info('Failed to create credit authority record');
+            }
+        }
+        
+    } else {
+        gs.info('No widget data found in authority_widget_json field');
     }
+    
+} catch (e) {
+    gs.info('Error in Authority RP Script: ' + e.message);
 }
