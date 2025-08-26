@@ -266,10 +266,19 @@
 api.controller = function($scope, $window) {
     var c = this;
     
+    // Initialize widget data
+    c.widgetData = {
+        non_credit_authority_check: false,
+        credit_authority_check: false,
+        disbursement: '',
+        overdraft: '',
+        overall_business_need: ''
+    };
+    
     c.$onInit = function() {
         setTimeout(function() {
             initializeWidget();
-        }, 1000);
+        }, 500);
     };
     
     function initializeWidget() {
@@ -283,11 +292,6 @@ api.controller = function($scope, $window) {
         const nonCreditSection = document.getElementById('nonCreditSection');
         const creditSection = document.getElementById('creditSection');
         const justificationSection = document.getElementById('justificationSection');
-        
-        // Initialize scope data if not exists
-        if (!$scope.data) {
-            $scope.data = {};
-        }
         
         // Currency formatting functions
         function formatCurrency(value) {
@@ -315,24 +319,23 @@ api.controller = function($scope, $window) {
             return formattedValue.replace(/[^\d.]/g, '');
         }
         
-        // Service Portal field update function
-        function updateServiceNowField(fieldName, value) {
-            console.log('Updating ServiceNow field:', fieldName, '=', value);
+        // Store widget data in scope for server access
+        function updateWidgetData(fieldName, value) {
+            console.log('Updating widget data:', fieldName, '=', value);
+            c.widgetData[fieldName] = value;
             
-            try {
-                // Update the scope data
-                $scope.data[fieldName] = value;
-                
-                // Trigger Angular change detection
-                if (!$scope.$$phase) {
-                    $scope.$digest();
-                }
-                
-                console.log('✓ Updated field:', fieldName, '=', value);
-                
-            } catch(e) {
-                console.error('Failed to update field:', fieldName, e);
+            // Store in scope data for server access
+            if (!$scope.data.widget_authority_data) {
+                $scope.data.widget_authority_data = {};
             }
+            $scope.data.widget_authority_data[fieldName] = value;
+            
+            // Trigger digest
+            if (!$scope.$$phase) {
+                $scope.$digest();
+            }
+            
+            console.log('✓ Widget data updated:', fieldName, '=', value);
         }
         
         // Handle authority selection
@@ -351,9 +354,9 @@ api.controller = function($scope, $window) {
             creditSection.classList.toggle('active', creditChecked);
             justificationSection.classList.toggle('active', nonCreditChecked || creditChecked);
             
-            // Update ServiceNow fields
-            updateServiceNowField('non_credit_authority_check', nonCreditChecked);
-            updateServiceNowField('credit_authority_check', creditChecked);
+            // Update widget data
+            updateWidgetData('non_credit_authority_check', nonCreditChecked);
+            updateWidgetData('credit_authority_check', creditChecked);
         }
         
         // Setup currency field
@@ -383,7 +386,7 @@ api.controller = function($scope, $window) {
                 }, 0);
                 
                 const rawValue = getCurrencyValue(formattedValue);
-                updateServiceNowField(fieldName, rawValue);
+                updateWidgetData(fieldName, rawValue);
                 
                 isUpdating = false;
             }
@@ -400,7 +403,7 @@ api.controller = function($scope, $window) {
             if (!input) return;
             
             function handleTextChange(event) {
-                updateServiceNowField(fieldName, event.target.value);
+                updateWidgetData(fieldName, event.target.value);
             }
             
             input.addEventListener('input', handleTextChange);
@@ -439,35 +442,41 @@ api.controller = function($scope, $window) {
         setupCurrencyField('overdraft', 'overdraft');
         setupTextAreaField('businessNeed', 'overall_business_need');
         
-        // Load initial values from scope data
+        // Load initial values if editing
         setTimeout(function() {
             try {
-                if ($scope.data.non_credit_authority_check === 'true' || $scope.data.non_credit_authority_check === true) {
-                    nonCreditCheckbox.checked = true;
-                }
-                if ($scope.data.credit_authority_check === 'true' || $scope.data.credit_authority_check === true) {
-                    creditCheckbox.checked = true;
-                }
-                
-                if ($scope.data.disbursement) {
-                    document.getElementById('disbursement').value = formatCurrency($scope.data.disbursement);
-                }
-                if ($scope.data.overdraft) {
-                    document.getElementById('overdraft').value = formatCurrency($scope.data.overdraft);
-                }
-                if ($scope.data.overall_business_need) {
-                    document.getElementById('businessNeed').value = $scope.data.overall_business_need;
+                if ($scope.data.widget_authority_data) {
+                    const data = $scope.data.widget_authority_data;
+                    
+                    if (data.non_credit_authority_check === true) {
+                        nonCreditCheckbox.checked = true;
+                    }
+                    if (data.credit_authority_check === true) {
+                        creditCheckbox.checked = true;
+                    }
+                    
+                    if (data.disbursement) {
+                        document.getElementById('disbursement').value = formatCurrency(data.disbursement);
+                    }
+                    if (data.overdraft) {
+                        document.getElementById('overdraft').value = formatCurrency(data.overdraft);
+                    }
+                    if (data.overall_business_need) {
+                        document.getElementById('businessNeed').value = data.overall_business_need;
+                    }
+                    
+                    // Copy to widget data
+                    c.widgetData = Object.assign({}, data);
                 }
                 
                 handleAuthoritySelection();
-                console.log('✓ Initial values loaded from $scope.data');
+                console.log('✓ Initial values loaded');
             } catch(e) {
                 console.log('Could not load initial values:', e);
             }
         }, 500);
         
         console.log('=== Widget initialization complete ===');
-        console.log('$scope.data:', $scope.data);
     }
 }
 
@@ -481,8 +490,78 @@ api.controller = function($scope, $window) {
     data.user = gs.getUser().getName();
     data.userId = gs.getUserID();
     
-    // Add any additional server-side initialization here
-    // For example:
-    // data.defaultDisbursementLimit = gs.getProperty('authority.default.disbursement', '0');
-    // data.defaultOverdraftLimit = gs.getProperty('authority.default.overdraft', '0');
+    // Handle form submission - this runs when the record producer is submitted
+    if (input && input.widget_authority_data) {
+        
+        var authorityData = input.widget_authority_data;
+        gs.log('Authority widget data received: ' + JSON.stringify(authorityData));
+        
+        try {
+            // Create the parent authority request record
+            var parentGR = new GlideRecord('your_parent_table'); // Replace with your actual table name
+            parentGR.initialize();
+            parentGR.setValue('opened_by', gs.getUserID());
+            parentGR.setValue('overall_business_need', authorityData.overall_business_need || '');
+            parentGR.setValue('state', 'submitted'); // or whatever your initial state should be
+            // Add any other parent record fields here
+            
+            var parentSysId = parentGR.insert();
+            
+            if (parentSysId) {
+                gs.log('Parent authority record created: ' + parentSysId);
+                
+                // Create non-credit authority record if checked
+                if (authorityData.non_credit_authority_check === true && authorityData.disbursement) {
+                    var nonCreditGR = new GlideRecord('your_non_credit_table'); // Replace with your actual table name
+                    nonCreditGR.initialize();
+                    nonCreditGR.setValue('parent_request', parentSysId);
+                    nonCreditGR.setValue('disbursement_amount', authorityData.disbursement);
+                    nonCreditGR.setValue('requested_by', gs.getUserID());
+                    // Add any other non-credit specific fields here
+                    
+                    var nonCreditSysId = nonCreditGR.insert();
+                    if (nonCreditSysId) {
+                        gs.log('Non-credit authority record created: ' + nonCreditSysId);
+                    }
+                }
+                
+                // Create credit authority record if checked
+                if (authorityData.credit_authority_check === true && authorityData.overdraft) {
+                    var creditGR = new GlideRecord('your_credit_table'); // Replace with your actual table name
+                    creditGR.initialize();
+                    creditGR.setValue('parent_request', parentSysId);
+                    creditGR.setValue('overdraft_amount', authorityData.overdraft);
+                    creditGR.setValue('requested_by', gs.getUserID());
+                    // Add any other credit specific fields here
+                    
+                    var creditSysId = creditGR.insert();
+                    if (creditSysId) {
+                        gs.log('Credit authority record created: ' + creditSysId);
+                    }
+                }
+                
+                // Set success message
+                data.submission_result = {
+                    success: true,
+                    parent_record_id: parentSysId,
+                    message: 'Authority request submitted successfully'
+                };
+                
+            } else {
+                gs.log('Failed to create parent authority record');
+                data.submission_result = {
+                    success: false,
+                    message: 'Failed to create authority request'
+                };
+            }
+            
+        } catch (e) {
+            gs.log('Error processing authority request: ' + e.message);
+            data.submission_result = {
+                success: false,
+                message: 'Error processing request: ' + e.message
+            };
+        }
+    }
+    
 })();
