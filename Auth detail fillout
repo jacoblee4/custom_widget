@@ -323,18 +323,12 @@ api.controller = function($scope, $window) {
                 // Update the scope data
                 $scope.data[fieldName] = value;
                 
-                // Force Angular to detect the change
+                // Trigger Angular change detection
                 if (!$scope.$$phase) {
-                    $scope.$apply();
+                    $scope.$digest();
                 }
                 
-                console.log('✓ Updated field via $scope.data:', fieldName, '=', value);
-                
-                // Also trigger server update for immediate persistence
-                if ($scope.server && $scope.server.update) {
-                    $scope.server.update();
-                    console.log('✓ Triggered server update');
-                }
+                console.log('✓ Updated field:', fieldName, '=', value);
                 
             } catch(e) {
                 console.error('Failed to update field:', fieldName, e);
