@@ -757,9 +757,19 @@ api.controller = function($scope, $window) {
     }
     
     // 🔑 Only validate on submit
-    c.onSubmit = function() {
-        return validateForm();
-    };
+c.onSubmit = function() {
+    var isValid = validateForm();
+    if (!isValid) {
+        // force error box to show and scroll into view
+        var errorBox = document.getElementById('validationErrors');
+        if (errorBox) {
+            errorBox.style.display = 'block';
+            errorBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        return false; // block submission
+    }
+    return true; // allow submission
+};
 };
 
 
@@ -877,8 +887,7 @@ if (validationPassed) {
     }
     
 } else {
-    // Form validation failed - show errors and prevent submission
-    var errors = producer.form_validation_errors ? producer.form_validation_errors.toString().split('|') : ['Form validation failed'];
-    gs.addErrorMessage('Please correct the following errors: ' + errors.join('; '));
+    // Form validation failed - block submission only
+    // Widget handles showing errors to the user
     current.setAbortAction(true);
 }
