@@ -284,6 +284,11 @@ api.controller = function($scope, $window) {
         const creditSection = document.getElementById('creditSection');
         const justificationSection = document.getElementById('justificationSection');
         
+        // Initialize scope data if not exists
+        if (!$scope.data) {
+            $scope.data = {};
+        }
+        
         // Currency formatting functions
         function formatCurrency(value) {
             if (!value) return '';
@@ -310,107 +315,30 @@ api.controller = function($scope, $window) {
             return formattedValue.replace(/[^\d.]/g, '');
         }
         
-        // Simplified field update function
+        // Service Portal field update function
         function updateServiceNowField(fieldName, value) {
             console.log('Updating ServiceNow field:', fieldName, '=', value);
             
-            // Try to get g_form from different contexts
-            let gform = null;
-            
-            // Check if we're in a Service Portal context
-            if (typeof spUtil !== 'undefined' && spUtil.get) {
-                try {
-                    // Service Portal approach
-                    $scope.server.update().then(function() {
-                        $scope.data[fieldName] = value;
-                        $scope.$apply();
-                    });
-                    console.log('✓ Updated via Service Portal:', fieldName);
-                    return;
-                } catch(e) {
-                    console.log('Service Portal update failed:', e);
-                }
-            }
-            
-            // Traditional g_form approaches
-            if (typeof g_form !== 'undefined' && g_form) {
-                gform = g_form;
-            } else if ($window.parent && typeof $window.parent.g_form !== 'undefined' && $window.parent.g_form) {
-                gform = $window.parent.g_form;
-            } else if ($window.top && typeof $window.top.g_form !== 'undefined' && $window.top.g_form) {
-                gform = $window.top.g_form;
-            }
-            
-            if (gform) {
-                try {
-                    gform.setValue(fieldName, value);
-                    console.log('✓ Updated via g_form:', fieldName);
-                    return;
-                } catch(e) {
-                    console.log('g_form setValue failed:', e);
-                }
-            }
-            
-            // Fallback: Try to find and update the actual form field
-            const selectors = [
-                `input[name="${fieldName}"]`,
-                `textarea[name="${fieldName}"]`,
-                `select[name="${fieldName}"]`,
-                `input[name="IO:${fieldName}"]`,
-                `textarea[name="IO:${fieldName}"]`,
-                `#${fieldName}`,
-                `[data-name="${fieldName}"] input`,
-                `[data-name="${fieldName}"] textarea`
-            ];
-            
-            let field = null;
-            const documents = [document];
-            
             try {
-                if ($window.parent && $window.parent.document) {
-                    documents.push($window.parent.document);
+                // Update the scope data
+                $scope.data[fieldName] = value;
+                
+                // Force Angular to detect the change
+                if (!$scope.$$phase) {
+                    $scope.$apply();
                 }
-            } catch(e) {}
-            
-            try {
-                if ($window.top && $window.top.document) {
-                    documents.push($window.top.document);
+                
+                console.log('✓ Updated field via $scope.data:', fieldName, '=', value);
+                
+                // Also trigger server update for immediate persistence
+                if ($scope.server && $scope.server.update) {
+                    $scope.server.update();
+                    console.log('✓ Triggered server update');
                 }
-            } catch(e) {}
-            
-            for (let doc of documents) {
-                for (let selector of selectors) {
-                    try {
-                        field = doc.querySelector(selector);
-                        if (field) break;
-                    } catch(e) {}
-                }
-                if (field) break;
+                
+            } catch(e) {
+                console.error('Failed to update field:', fieldName, e);
             }
-            
-            if (field) {
-                try {
-                    if (field.type === 'checkbox') {
-                        field.checked = (value === true || value === 'true' || value === '1');
-                    } else {
-                        field.value = value;
-                    }
-                    
-                    // Fire events
-                    const events = ['input', 'change'];
-                    events.forEach(eventType => {
-                        const event = new Event(eventType, { bubbles: true });
-                        field.dispatchEvent(event);
-                    });
-                    
-                    console.log('✓ Updated via DOM:', fieldName);
-                    return;
-                } catch(e) {
-                    console.log('DOM update failed:', e);
-                }
-            }
-            
-            console.warn('⚠ Could not update field:', fieldName);
         }
         
         // Handle authority selection
@@ -517,14 +445,35 @@ api.controller = function($scope, $window) {
         setupCurrencyField('overdraft', 'overdraft');
         setupTextAreaField('businessNeed', 'overall_business_need');
         
-        console.log('=== Widget initialization complete ===');
+        // Load initial values from scope data
+        setTimeout(function() {
+            try {
+                if ($scope.data.non_credit_authority_check === 'true' || $scope.data.non_credit_authority_check === true) {
+                    nonCreditCheckbox.checked = true;
+                }
+                if ($scope.data.credit_authority_check === 'true' || $scope.data.credit_authority_check === true) {
+                    creditCheckbox.checked = true;
+                }
+                
+                if ($scope.data.disbursement) {
+                    document.getElementById('disbursement').value = formatCurrency($scope.data.disbursement);
+                }
+                if ($scope.data.overdraft) {
+                    document.getElementById('overdraft').value = formatCurrency($scope.data.overdraft);
+                }
+                if ($scope.data.overall_business_need) {
+                    document.getElementById('businessNeed').value = $scope.data.overall_business_need;
+                }
+                
+                handleAuthoritySelection();
+                console.log('✓ Initial values loaded from $scope.data');
+            } catch(e) {
+                console.log('Could not load initial values:', e);
+            }
+        }, 500);
         
-        // Debug: Print available objects to console
-        console.log('Available objects:');
-        console.log('- g_form:', typeof g_form !== 'undefined' ? 'Found' : 'Not found');
-        console.log('- parent.g_form:', $window.parent && typeof $window.parent.g_form !== 'undefined' ? 'Found' : 'Not found');
-        console.log('- spUtil:', typeof spUtil !== 'undefined' ? 'Found' : 'Not found');
-        console.log('- $scope.data:', $scope.data ? 'Found' : 'Not found');
+        console.log('=== Widget initialization complete ===');
+        console.log('$scope.data:', $scope.data);
     }
 }
 
