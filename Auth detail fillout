@@ -812,14 +812,71 @@ gs.info('Authority RP Script - Processing record: ' + current.getUniqueValue());
 
 // Check form validation first
 if (producer.form_is_valid === 'true') {
-    // Only process if form is valid - wrap the rest of the code in this if block
-    
+    // Only process if form is valid
     var parentId = current.getUniqueValue();
     gs.info('Parent record sys_id: ' + parentId);
 
     // Process authority data if available
     if (producer.authority_types && producer.authority_data) {
-        // ... rest of your existing processing code goes here
+        var authority_types = producer.authority_types.toString().split('|');
+        var authority_data_strings = producer.authority_data.toString().split('|');
+        
+        gs.info('Authority types: ' + authority_types.join(','));
+        
+        for (var i = 0; i < authority_types.length; i++) {
+            var authorityType = authority_types[i];
+            var authorityDataStr = authority_data_strings[i];
+            var authorityData = JSON.parse(authorityDataStr);
+            
+            gs.info('Processing ' + authorityType + ' with data: ' + authorityDataStr);
+            
+            if (authorityType === 'non_credit') {
+                // Create non-credit authority record
+                var nonCreditGR = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
+                nonCreditGR.initialize();
+                nonCreditGR.setValue('signature_request', parentId);
+                
+                // Set all the non-credit fields (only if they have values)
+                if (authorityData.disbursement_ach) nonCreditGR.setValue('disbursement_ach', authorityData.disbursement_ach);
+                if (authorityData.disbursement_wire_transfer_external) nonCreditGR.setValue('disbursement_wire_transfer_external', authorityData.disbursement_wire_transfer_external);
+                if (authorityData.disbursement_wire_transfer_internal) nonCreditGR.setValue('disbursement_wire_transfer_internal', authorityData.disbursement_wire_transfer_internal);
+                if (authorityData.disbursement_official_checks_external) nonCreditGR.setValue('disbursement_official_checks_external', authorityData.disbursement_official_checks_external);
+                if (authorityData.disbursement_official_checks_internal) nonCreditGR.setValue('disbursement_official_checks_internal', authorityData.disbursement_official_checks_internal);
+                if (authorityData.check_cashing_on_us) nonCreditGR.setValue('check_cashing_on_us', authorityData.check_cashing_on_us);
+                if (authorityData.check_cashing_not_on_us) nonCreditGR.setValue('check_cashing_not_on_us', authorityData.check_cashing_not_on_us);
+                if (authorityData.remote_deposit) nonCreditGR.setValue('remote_deposit', authorityData.remote_deposit);
+                if (authorityData.treasury_solutions_company_wire_limits) nonCreditGR.setValue('treasury_solutions_company_wire_limits', authorityData.treasury_solutions_company_wire_limits);
+                if (authorityData.fx_wire_limits) nonCreditGR.setValue('fx_wire_limits', authorityData.fx_wire_limits);
+                
+                var nonCreditId = nonCreditGR.insert();
+                if (nonCreditId) {
+                    gs.info('Non-credit authority record created: ' + nonCreditId + ' linked to parent: ' + parentId);
+                } else {
+                    gs.info('Failed to create non-credit authority record');
+                }
+            }
+            else if (authorityType === 'credit') {
+                // Create credit authority record
+                var creditGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
+                creditGR.initialize();
+                creditGR.setValue('signature_request', parentId);
+                
+                // Set all the credit fields (only if they have values)
+                if (authorityData.overdraft_internal_accounts) creditGR.setValue('overdraft_internal_accounts', authorityData.overdraft_internal_accounts);
+                if (authorityData.overdraft_external_accounts) creditGR.setValue('overdraft_external_accounts', authorityData.overdraft_external_accounts);
+                if (authorityData.unavailable_funds_internal_accounts) creditGR.setValue('unavailable_funds_internal_accounts', authorityData.unavailable_funds_internal_accounts);
+                if (authorityData.unavailable_funds_external_accounts) creditGR.setValue('unavailable_funds_external_accounts', authorityData.unavailable_funds_external_accounts);
+                
+                var creditId = creditGR.insert();
+                if (creditId) {
+                    gs.info('Credit authority record created: ' + creditId + ' linked to parent: ' + parentId);
+                } else {
+                    gs.info('Failed to create credit authority record');
+                }
+            }
+        }
+    } else {
+        gs.info('No authority data found to process');
     }
     
 } else {
@@ -827,70 +884,4 @@ if (producer.form_is_valid === 'true') {
     var errors = producer.form_validation_errors ? producer.form_validation_errors.toString().split('|') : ['Form validation failed'];
     gs.addErrorMessage('Please correct the following errors: ' + errors.join('; '));
     current.setAbortAction(true);
-}
-
-var parentId = current.getUniqueValue();
-gs.info('Parent record sys_id: ' + parentId);
-
-// Process authority data if available
-if (producer.authority_types && producer.authority_data) {
-    var authority_types = producer.authority_types.toString().split('|');
-    var authority_data_strings = producer.authority_data.toString().split('|');
-    
-    gs.info('Authority types: ' + authority_types.join(','));
-    
-    for (var i = 0; i < authority_types.length; i++) {
-        var authorityType = authority_types[i];
-        var authorityDataStr = authority_data_strings[i];
-        var authorityData = JSON.parse(authorityDataStr);
-        
-        gs.info('Processing ' + authorityType + ' with data: ' + authorityDataStr);
-        
-        if (authorityType === 'non_credit') {
-            // Create non-credit authority record
-            var nonCreditGR = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
-            nonCreditGR.initialize();
-            nonCreditGR.setValue('signature_request', parentId); // FIXED: Set parent relationship
-            
-            // Set all the non-credit fields (only if they have values)
-            if (authorityData.disbursement_ach) nonCreditGR.setValue('disbursement_ach', authorityData.disbursement_ach);
-            if (authorityData.disbursement_wire_transfer_external) nonCreditGR.setValue('disbursement_wire_transfer_external', authorityData.disbursement_wire_transfer_external);
-            if (authorityData.disbursement_wire_transfer_internal) nonCreditGR.setValue('disbursement_wire_transfer_internal', authorityData.disbursement_wire_transfer_internal);
-            if (authorityData.disbursement_official_checks_external) nonCreditGR.setValue('disbursement_official_checks_external', authorityData.disbursement_official_checks_external);
-            if (authorityData.disbursement_official_checks_internal) nonCreditGR.setValue('disbursement_official_checks_internal', authorityData.disbursement_official_checks_internal);
-            if (authorityData.check_cashing_on_us) nonCreditGR.setValue('check_cashing_on_us', authorityData.check_cashing_on_us);
-            if (authorityData.check_cashing_not_on_us) nonCreditGR.setValue('check_cashing_not_on_us', authorityData.check_cashing_not_on_us);
-            if (authorityData.remote_deposit) nonCreditGR.setValue('remote_deposit', authorityData.remote_deposit);
-            if (authorityData.treasury_solutions_company_wire_limits) nonCreditGR.setValue('treasury_solutions_company_wire_limits', authorityData.treasury_solutions_company_wire_limits);
-            if (authorityData.fx_wire_limits) nonCreditGR.setValue('fx_wire_limits', authorityData.fx_wire_limits);
-            
-            var nonCreditId = nonCreditGR.insert();
-            if (nonCreditId) {
-                gs.info('Non-credit authority record created: ' + nonCreditId + ' linked to parent: ' + parentId);
-            } else {
-                gs.info('Failed to create non-credit authority record');
-            }
-        }
-        else if (authorityType === 'credit') {
-            // Create credit authority record
-            var creditGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
-            creditGR.initialize();
-            creditGR.setValue('signature_request', parentId); // FIXED: Set parent relationship
-            
-            // Set all the credit fields (only if they have values)
-            if (authorityData.overdraft_internal_accounts) creditGR.setValue('overdraft_internal_accounts', authorityData.overdraft_internal_accounts);
-            if (authorityData.overdraft_external_accounts) creditGR.setValue('overdraft_external_accounts', authorityData.overdraft_external_accounts);
-            if (authorityData.unavailable_funds_internal_accounts) creditGR.setValue('unavailable_funds_internal_accounts', authorityData.unavailable_funds_internal_accounts);
-            if (authorityData.unavailable_funds_external_accounts) creditGR.setValue('unavailable_funds_external_accounts', authorityData.unavailable_funds_external_accounts);
-            
-            var creditId = creditGR.insert();
-            if (creditId) {
-                gs.info('Credit authority record created: ' + creditId + ' linked to parent: ' + parentId);
-            } else {
-                gs.info('Failed to create credit authority record');
-            }
-        }
-    }
-} else {
-    gs.info('No authority data found to process');
 }
