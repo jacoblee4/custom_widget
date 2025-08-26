@@ -22,7 +22,8 @@
                 <div class="form-group">
                     <label for="disbursement">
                         Disbursement 
-                        <span class="info-icon" title="Enter the disbursement amount for this authority request">ⓘ</span>
+                        <span class="info-icon" title="Disbursements – This authority provides approval limits for the disbursement of ACH, Wire Transfers, and/or Official Check transaction types based on the requested and approved selections. Internal Accounts are defined as BankUnited owned and controlled accounts.
+If applicable: Choose the appropriate transaction type(s) and enter the requested disbursement amount. If the transaction type(s) should be restricted to internal accounts, select the Internal Accounts Only option.">ⓘ</span>
                     </label>
                     <div class="currency-wrapper">
                         <span class="currency-symbol">$</span>
@@ -61,7 +62,8 @@
                 <div class="subsection">
                     <h4>
                         Check Cashing & Cash Withdrawal 
-                        <span class="info-icon" title="Enter amounts for check cashing and cash withdrawal limits">ⓘ</span>
+                        <span class="info-icon" title="Check Cashing – This authority provides the ability to approve cash withdrawals, the cashing of checks drawn on BankUnited (On-Us), and checks drawn on another institution (not On-Us) that are being cashed by BankUnited. Approval limit is based on the selected options and amounts.
+If applicable: Choose the appropriate option(s) and enter the requested approval limit amount.">ⓘ</span>
                     </h4>
                     <div class="form-group">
                         <label for="checkCashingOnUs">On-Us (Checks & Cash Withdrawals)</label>
@@ -84,7 +86,8 @@
                     <div class="form-group">
                         <label for="remoteDeposit">
                             Remote Deposit 
-                            <span class="info-icon" title="Enter the remote deposit limit for this authority">ⓘ</span>
+                            <span class="info-icon" title="Remote Deposit – This authority provides the ability to approve external client Remote Deposit limits, utilizing the TS Daily Remote Deposit Capture Limit Approval Form.
+If applicable: Enter the requested Remote Deposit Capture limit amount.">ⓘ</span>
                         </label>
                         <div class="currency-wrapper">
                             <span class="currency-symbol">$</span>
@@ -94,7 +97,8 @@
                     <div class="form-group">
                         <label for="treasurySolutions">
                             Treasury Solutions Company Wire Limits 
-                            <span class="info-icon" title="Enter the treasury solutions company wire limits">ⓘ</span>
+                            <span class="info-icon" title="Treasury Solutions Company Wire Limits – This authority provides the ability to approve external client wire limits, utilizing the TS Daily Wire Limit Approval Form. This external client limit applies to the Treasury Solution systems (i.e. BFS/Lynx, OBS).
+If applicable: Enter the requested wire limit amount.">ⓘ</span>
                         </label>
                         <div class="currency-wrapper">
                             <span class="currency-symbol">$</span>
@@ -104,7 +108,8 @@
                     <div class="form-group">
                         <label for="fxWireLimits">
                             FX Wire Limits 
-                            <span class="info-icon" title="Enter the foreign exchange wire limits">ⓘ</span>
+                            <span class="info-icon" title="FX Wire Limits – This authority provides the ability to approve external client wire limits, utilizing the BankUnitedFX Wire Limit Approval Form. This external client limit applies to the Treasury Solution system BankUnitedFX.
+If applicable: Enter the requested wire limit amount.">ⓘ</span>
                         </label>
                         <div class="currency-wrapper">
                             <span class="currency-symbol">$</span>
@@ -162,11 +167,11 @@
     <div id="justificationSection" class="justification-section">
         <h3>Justification</h3>
         <div class="info-message">
-            Please complete the following fields to provide justification for this request. If you have attachments, please click attach to the record by going to the attachment section on the far right and look for the paper clip.
+            Request Justification Information Icon - Using the text box below, please provide a detailed justification for this request.
         </div>
         <div class="form-group">
             <label for="businessNeed">Overall Business Need <span class="required-asterisk">*</span></label>
-            <textarea id="businessNeed" class="form-control textarea" placeholder="Please provide a detailed explanation of the business need for this authority request..."></textarea>
+            <textarea id="businessNeed" class="form-control textarea"></textarea>
         </div>
     </div>
 </div>
