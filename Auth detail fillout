@@ -284,14 +284,16 @@ api.controller = function($scope, $window) {
         const creditSection = document.getElementById('creditSection');
         const justificationSection = document.getElementById('justificationSection');
         
-        // Initialize widget data
-        c.widgetData = {
-            non_credit_checked: false,
-            credit_checked: false,
-            disbursement_ach: '',
-            overdraft_external_accounts: '',
-            overall_business_need: ''
-        };
+        // Initialize widget data in scope
+        if (!$scope.data.authority_data) {
+            $scope.data.authority_data = {
+                non_credit_checked: false,
+                credit_checked: false,
+                disbursement_ach: '',
+                overdraft_external_accounts: '',
+                overall_business_need: ''
+            };
+        }
         
         // Currency formatting functions
         function formatCurrency(value) {
@@ -319,70 +321,11 @@ api.controller = function($scope, $window) {
             return formattedValue.replace(/[^\d.]/g, '');
         }
         
-        // Update hidden fields in the record producer
-        function updateRecordProducerFields() {
-            console.log('Updating RP fields with widget data:', c.widgetData);
-            
-            // Update the business need field directly
-            updateHiddenField('overall_business_need', c.widgetData.overall_business_need);
-            
-            // Store all widget data as JSON in the hidden field
-            updateHiddenField('authority_widget_json', JSON.stringify(c.widgetData));
-        }
-        
-        // Find and update hidden field
-        function updateHiddenField(fieldName, value) {
-            // Try multiple approaches to find the field
-            const selectors = [
-                `input[name="${fieldName}"]`,
-                `textarea[name="${fieldName}"]`,
-                `#${fieldName}`,
-                `input[name="IO:${fieldName}"]`,
-                `textarea[name="IO:${fieldName}"]`
-            ];
-            
-            let field = null;
-            const documents = [document];
-            
-            // Add parent documents
-            try {
-                if (window.parent && window.parent.document) {
-                    documents.push(window.parent.document);
-                }
-                if (window.top && window.top.document) {
-                    documents.push(window.top.document);
-                }
-            } catch(e) {}
-            
-            // Search for field
-            for (let doc of documents) {
-                for (let selector of selectors) {
-                    try {
-                        field = doc.querySelector(selector);
-                        if (field) break;
-                    } catch(e) {}
-                }
-                if (field) break;
-            }
-            
-            if (field) {
-                field.value = value;
-                // Trigger events
-                ['input', 'change'].forEach(eventType => {
-                    const event = new Event(eventType, { bubbles: true });
-                    field.dispatchEvent(event);
-                });
-                console.log('✓ Updated field:', fieldName, '=', value);
-            } else {
-                console.warn('Could not find field:', fieldName);
-            }
-        }
-        
-        // Update widget data
+        // Update widget data in scope
         function updateWidgetData(fieldName, value) {
-            console.log('Widget data update:', fieldName, '=', value);
-            c.widgetData[fieldName] = value;
-            updateRecordProducerFields();
+            console.log('Updating widget data:', fieldName, '=', value);
+            $scope.data.authority_data[fieldName] = value;
+            console.log('Current authority data:', $scope.data.authority_data);
         }
         
         // Handle authority selection
@@ -439,9 +382,6 @@ api.controller = function($scope, $window) {
             }
             
             input.addEventListener('input', handleCurrencyInput);
-            input.addEventListener('paste', function(e) {
-                setTimeout(() => handleCurrencyInput(e), 0);
-            });
         }
         
         // Setup text area field
@@ -456,7 +396,7 @@ api.controller = function($scope, $window) {
             input.addEventListener('input', handleTextChange);
         }
         
-        // Add checkbox event listeners
+        // Event listeners
         if (nonCreditCheckbox) {
             nonCreditCheckbox.addEventListener('change', handleAuthoritySelection);
         }
@@ -465,7 +405,7 @@ api.controller = function($scope, $window) {
             creditCheckbox.addEventListener('change', handleAuthoritySelection);
         }
         
-        // Make checkbox groups clickable
+        // Clickable groups
         if (nonCreditGroup) {
             nonCreditGroup.addEventListener('click', function(e) {
                 if (e.target.tagName !== 'INPUT') {
@@ -484,7 +424,7 @@ api.controller = function($scope, $window) {
             });
         }
         
-        // Setup all fields
+        // Setup fields
         setupCurrencyField('disbursement', 'disbursement_ach');
         setupCurrencyField('overdraft', 'overdraft_external_accounts');
         setupTextAreaField('businessNeed', 'overall_business_need');
@@ -501,6 +441,25 @@ api.controller = function($scope, $window) {
 (function() {
     data.user = gs.getUser().getName();
     data.userId = gs.getUserID();
+    
+    gs.info('Authority Widget Server Script running');
+    gs.info('Input data: ' + JSON.stringify(input));
+    
+    // Check if we have authority data and this is a form submission
+    if (input && input.authority_data) {
+        var authData = input.authority_data;
+        gs.info('Processing authority data: ' + JSON.stringify(authData));
+        
+        // Set the overall_business_need for the record producer to pick up
+        if (authData.overall_business_need) {
+            data.overall_business_need = authData.overall_business_need;
+            gs.info('Set overall_business_need: ' + authData.overall_business_need);
+        }
+        
+        // Store authority data for the completion script
+        data.authority_widget_data = authData;
+    }
+    
 })();
 
 
