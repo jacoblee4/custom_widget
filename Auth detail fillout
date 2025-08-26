@@ -17,15 +17,82 @@
             
             <div id="nonCreditSection" class="section">
                 <h3>Non-Credit Authority Limits</h3>
+                
+                <!-- Disbursement Section -->
                 <div class="form-group">
                     <label for="disbursement">Disbursement</label>
                     <div class="currency-wrapper">
                         <span class="currency-symbol">$</span>
-                        <input type="text" 
-                               id="disbursement" 
-                               name="disbursement" 
-                               class="form-control currency-input" 
-                               placeholder="0.00">
+                        <input type="text" id="disbursement" class="form-control" placeholder="0.00">
+                    </div>
+                </div>
+                
+                <div class="disbursement-options">
+                    <div class="checkbox-group-small">
+                        <input type="checkbox" id="achCheck">
+                        <label for="achCheck">ACH</label>
+                    </div>
+                    
+                    <div class="checkbox-group-small">
+                        <input type="checkbox" id="wireTransferCheck">
+                        <label for="wireTransferCheck">Wire Transfer</label>
+                        <div class="indented-checkbox">
+                            <input type="checkbox" id="wireInternalOnly">
+                            <label for="wireInternalOnly">Internal Accounts Only</label>
+                        </div>
+                    </div>
+                    
+                    <div class="checkbox-group-small">
+                        <input type="checkbox" id="officialChecksCheck">
+                        <label for="officialChecksCheck">Official Checks</label>
+                        <div class="indented-checkbox">
+                            <input type="checkbox" id="checksInternalOnly">
+                            <label for="checksInternalOnly">Internal Accounts Only</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Check Cashing Section -->
+                <div class="subsection">
+                    <h4>Check Cashing & Cash Withdrawal</h4>
+                    <div class="form-group">
+                        <label for="checkCashingOnUs">On-Us (Checks & Cash Withdrawals)</label>
+                        <div class="currency-wrapper">
+                            <span class="currency-symbol">$</span>
+                            <input type="text" id="checkCashingOnUs" class="form-control" placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="checkCashingNotOnUs">Not On-Us (Checks)</label>
+                        <div class="currency-wrapper">
+                            <span class="currency-symbol">$</span>
+                            <input type="text" id="checkCashingNotOnUs" class="form-control" placeholder="0.00">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Other Fields Section -->
+                <div class="subsection">
+                    <div class="form-group">
+                        <label for="remoteDeposit">Remote Deposit</label>
+                        <div class="currency-wrapper">
+                            <span class="currency-symbol">$</span>
+                            <input type="text" id="remoteDeposit" class="form-control" placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="treasurySolutions">Treasury Solutions Company Wire Limits</label>
+                        <div class="currency-wrapper">
+                            <span class="currency-symbol">$</span>
+                            <input type="text" id="treasurySolutions" class="form-control" placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="fxWireLimits">FX Wire Limits</label>
+                        <div class="currency-wrapper">
+                            <span class="currency-symbol">$</span>
+                            <input type="text" id="fxWireLimits" class="form-control" placeholder="0.00">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -39,15 +106,30 @@
             
             <div id="creditSection" class="section">
                 <h3>Credit Authority Limits</h3>
+                
+                <!-- Overdraft Section -->
                 <div class="form-group">
                     <label for="overdraft">Overdraft</label>
                     <div class="currency-wrapper">
                         <span class="currency-symbol">$</span>
-                        <input type="text" 
-                               id="overdraft" 
-                               name="overdraft" 
-                               class="form-control currency-input" 
-                               placeholder="0.00">
+                        <input type="text" id="overdraft" class="form-control" placeholder="0.00">
+                    </div>
+                    <div class="indented-checkbox">
+                        <input type="checkbox" id="overdraftInternalOnly">
+                        <label for="overdraftInternalOnly">Internal Accounts Only</label>
+                    </div>
+                </div>
+                
+                <!-- Unavailable Funds Section -->
+                <div class="form-group">
+                    <label for="unavailableFunds">Unavailable Funds</label>
+                    <div class="currency-wrapper">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="unavailableFunds" class="form-control" placeholder="0.00">
+                    </div>
+                    <div class="indented-checkbox">
+                        <input type="checkbox" id="unavailableInternalOnly">
+                        <label for="unavailableInternalOnly">Internal Accounts Only</label>
                     </div>
                 </div>
             </div>
@@ -61,10 +143,7 @@
         </div>
         <div class="form-group">
             <label for="businessNeed">Overall Business Need</label>
-            <textarea id="businessNeed" 
-                      name="overall_business_need" 
-                      class="form-control textarea"
-                      placeholder="Please provide a detailed explanation of the business need for this authority request..."></textarea>
+            <textarea id="businessNeed" class="form-control textarea" placeholder="Please provide a detailed explanation of the business need for this authority request..."></textarea>
         </div>
     </div>
 </div>
@@ -258,6 +337,63 @@
     }
 }
 
+.disbursement-options {
+    margin-top: 15px;
+    padding-left: 15px;
+}
+
+.checkbox-group-small {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    
+    input[type="checkbox"] {
+        margin-right: 8px;
+        width: 16px;
+        height: 16px;
+    }
+    
+    label {
+        font-size: 14px;
+        color: #495057;
+        margin: 0;
+        cursor: pointer;
+    }
+}
+
+.indented-checkbox {
+    margin-left: 25px;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    
+    input[type="checkbox"] {
+        margin-right: 8px;
+        width: 14px;
+        height: 14px;
+    }
+    
+    label {
+        font-size: 13px;
+        color: #6c757d;
+        margin: 0;
+        cursor: pointer;
+    }
+}
+
+.subsection {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #dee2e6;
+    
+    h4 {
+        color: #495057;
+        font-size: 15px;
+        font-weight: 600;
+        margin: 0 0 15px 0;
+    }
+}
+
 <!-- ============================================ -->
 <!-- CLIENT CONTROLLER -->
 <!-- Place this in the "Client Controller" field -->
@@ -285,12 +421,32 @@ api.controller = function($scope, $window) {
         const creditSection = document.getElementById('creditSection');
         const justificationSection = document.getElementById('justificationSection');
         
-        // Initialize widget data
+        // Initialize comprehensive widget data
         c.authorityData = {
+            // Main checkboxes
             non_credit_checked: false,
             credit_checked: false,
-            disbursement_ach: '',
-            overdraft_external_accounts: '',
+            
+            // Non-credit fields
+            disbursement: '',
+            ach_checked: false,
+            wire_transfer_checked: false,
+            wire_internal_only: false,
+            official_checks_checked: false,
+            checks_internal_only: false,
+            check_cashing_on_us: '',
+            check_cashing_not_on_us: '',
+            remote_deposit: '',
+            treasury_solutions_company_wire_limits: '',
+            fx_wire_limits: '',
+            
+            // Credit fields
+            overdraft: '',
+            overdraft_internal_only: false,
+            unavailable_funds: '',
+            unavailable_internal_only: false,
+            
+            // Justification
             overall_business_need: ''
         };
         
@@ -320,35 +476,59 @@ api.controller = function($scope, $window) {
             return formattedValue.replace(/[^\d.]/g, '');
         }
         
-        // Update record producer variables (like the working widget does)
+        // Update record producer variables
         function updateRecordProducerVariables() {
             console.log('Updating RP variables with authority data:', c.authorityData);
             
             // Set the business need field
             g_form.setValue('overall_business_need', c.authorityData.overall_business_need);
             
-            // Create arrays for authority data (similar to invoice widget pattern)
+            // Create arrays for authority data
             var authority_types = [];
-            var authority_amounts = [];
+            var authority_data = [];
             
-            // Add non-credit data if checked and has value
-            if (c.authorityData.non_credit_checked && c.authorityData.disbursement_ach) {
+            // Process non-credit data if checked
+            if (c.authorityData.non_credit_checked) {
                 authority_types.push('non_credit');
-                authority_amounts.push(c.authorityData.disbursement_ach);
+                
+                // Build non-credit data object
+                var nonCreditData = {
+                    disbursement_ach: (c.authorityData.ach_checked && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
+                    disbursement_wire_transfer_external: (c.authorityData.wire_transfer_checked && !c.authorityData.wire_internal_only && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
+                    disbursement_wire_transfer_internal: (c.authorityData.wire_transfer_checked && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
+                    disbursement_official_checks_external: (c.authorityData.official_checks_checked && !c.authorityData.checks_internal_only && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
+                    disbursement_official_checks_internal: (c.authorityData.official_checks_checked && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
+                    check_cashing_on_us: c.authorityData.check_cashing_on_us,
+                    check_cashing_not_on_us: c.authorityData.check_cashing_not_on_us,
+                    remote_deposit: c.authorityData.remote_deposit,
+                    treasury_solutions_company_wire_limits: c.authorityData.treasury_solutions_company_wire_limits,
+                    fx_wire_limits: c.authorityData.fx_wire_limits
+                };
+                
+                authority_data.push(JSON.stringify(nonCreditData));
             }
             
-            // Add credit data if checked and has value
-            if (c.authorityData.credit_checked && c.authorityData.overdraft_external_accounts) {
+            // Process credit data if checked
+            if (c.authorityData.credit_checked) {
                 authority_types.push('credit');
-                authority_amounts.push(c.authorityData.overdraft_external_accounts);
+                
+                // Build credit data object
+                var creditData = {
+                    overdraft_internal_accounts: (c.authorityData.overdraft_internal_only && c.authorityData.overdraft) ? c.authorityData.overdraft : '',
+                    overdraft_external_accounts: (!c.authorityData.overdraft_internal_only && c.authorityData.overdraft) ? c.authorityData.overdraft : '',
+                    unavailable_funds_internal_accounts: (c.authorityData.unavailable_internal_only && c.authorityData.unavailable_funds) ? c.authorityData.unavailable_funds : '',
+                    unavailable_funds_external_accounts: (!c.authorityData.unavailable_internal_only && c.authorityData.unavailable_funds) ? c.authorityData.unavailable_funds : ''
+                };
+                
+                authority_data.push(JSON.stringify(creditData));
             }
             
             // Set the array variables in the record producer
-            g_form.setValue('authority_types', authority_types.join(','));
-            g_form.setValue('authority_amounts', authority_amounts.join(','));
+            g_form.setValue('authority_types', authority_types.join('|'));
+            g_form.setValue('authority_data', authority_data.join('|'));
             
-            console.log('Set authority_types:', authority_types.join(','));
-            console.log('Set authority_amounts:', authority_amounts.join(','));
+            console.log('Set authority_types:', authority_types.join('|'));
+            console.log('Set authority_data:', authority_data.join('|'));
         }
         
         // Update widget data
@@ -358,7 +538,7 @@ api.controller = function($scope, $window) {
             updateRecordProducerVariables();
         }
         
-        // Handle authority selection
+        // Handle main authority selection
         function handleAuthoritySelection() {
             const nonCreditChecked = nonCreditCheckbox.checked;
             const creditChecked = creditCheckbox.checked;
@@ -414,6 +594,16 @@ api.controller = function($scope, $window) {
             input.addEventListener('input', handleCurrencyInput);
         }
         
+        // Setup checkbox field
+        function setupCheckboxField(inputId, fieldName) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            
+            input.addEventListener('change', function(event) {
+                updateWidgetData(fieldName, event.target.checked);
+            });
+        }
+        
         // Setup text area field
         function setupTextAreaField(inputId, fieldName) {
             const input = document.getElementById(inputId);
@@ -426,7 +616,9 @@ api.controller = function($scope, $window) {
             input.addEventListener('input', handleTextChange);
         }
         
-        // Event listeners
+        // Setup all field event listeners
+        
+        // Main authority checkboxes
         if (nonCreditCheckbox) {
             nonCreditCheckbox.addEventListener('change', handleAuthoritySelection);
         }
@@ -454,9 +646,26 @@ api.controller = function($scope, $window) {
             });
         }
         
-        // Setup fields
-        setupCurrencyField('disbursement', 'disbursement_ach');
-        setupCurrencyField('overdraft', 'overdraft_external_accounts');
+        // Setup all currency fields
+        setupCurrencyField('disbursement', 'disbursement');
+        setupCurrencyField('checkCashingOnUs', 'check_cashing_on_us');
+        setupCurrencyField('checkCashingNotOnUs', 'check_cashing_not_on_us');
+        setupCurrencyField('remoteDeposit', 'remote_deposit');
+        setupCurrencyField('treasurySolutions', 'treasury_solutions_company_wire_limits');
+        setupCurrencyField('fxWireLimits', 'fx_wire_limits');
+        setupCurrencyField('overdraft', 'overdraft');
+        setupCurrencyField('unavailableFunds', 'unavailable_funds');
+        
+        // Setup all checkbox fields
+        setupCheckboxField('achCheck', 'ach_checked');
+        setupCheckboxField('wireTransferCheck', 'wire_transfer_checked');
+        setupCheckboxField('wireInternalOnly', 'wire_internal_only');
+        setupCheckboxField('officialChecksCheck', 'official_checks_checked');
+        setupCheckboxField('checksInternalOnly', 'checks_internal_only');
+        setupCheckboxField('overdraftInternalOnly', 'overdraft_internal_only');
+        setupCheckboxField('unavailableInternalOnly', 'unavailable_internal_only');
+        
+        // Setup text area
         setupTextAreaField('businessNeed', 'overall_business_need');
         
         console.log('=== Widget initialization complete ===');
@@ -484,20 +693,36 @@ gs.info('Authority RP Script - Processing record: ' + current.getUniqueValue());
 var parentId = current.getUniqueValue();
 
 // Process authority data if available
-if (producer.authority_types && producer.authority_amounts) {
-    var authority_types = producer.authority_types.toString().split(',');
-    var authority_amounts = producer.authority_amounts.toString().split(',');
+if (producer.authority_types && producer.authority_data) {
+    var authority_types = producer.authority_types.toString().split('|');
+    var authority_data_strings = producer.authority_data.toString().split('|');
     
-    gs.info('Authority types: ' + authority_types.join('|'));
-    gs.info('Authority amounts: ' + authority_amounts.join('|'));
+    gs.info('Authority types: ' + authority_types.join(','));
     
     for (var i = 0; i < authority_types.length; i++) {
-        if (authority_types[i] === 'non_credit') {
+        var authorityType = authority_types[i];
+        var authorityDataStr = authority_data_strings[i];
+        var authorityData = JSON.parse(authorityDataStr);
+        
+        gs.info('Processing ' + authorityType + ' with data: ' + authorityDataStr);
+        
+        if (authorityType === 'non_credit') {
             // Create non-credit authority record
             var nonCreditGR = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
             nonCreditGR.initialize();
-            nonCreditGR.setValue('signature_request', parentId);
-            nonCreditGR.setValue('disbursement_ach', authority_amounts[i]);
+            nonCreditGR.setValue('signature_request', parentId); // Set parent relationship
+            
+            // Set all the non-credit fields
+            if (authorityData.disbursement_ach) nonCreditGR.setValue('disbursement_ach', authorityData.disbursement_ach);
+            if (authorityData.disbursement_wire_transfer_external) nonCreditGR.setValue('disbursement_wire_transfer_external', authorityData.disbursement_wire_transfer_external);
+            if (authorityData.disbursement_wire_transfer_internal) nonCreditGR.setValue('disbursement_wire_transfer_internal', authorityData.disbursement_wire_transfer_internal);
+            if (authorityData.disbursement_official_checks_external) nonCreditGR.setValue('disbursement_official_checks_external', authorityData.disbursement_official_checks_external);
+            if (authorityData.disbursement_official_checks_internal) nonCreditGR.setValue('disbursement_official_checks_internal', authorityData.disbursement_official_checks_internal);
+            if (authorityData.check_cashing_on_us) nonCreditGR.setValue('check_cashing_on_us', authorityData.check_cashing_on_us);
+            if (authorityData.check_cashing_not_on_us) nonCreditGR.setValue('check_cashing_not_on_us', authorityData.check_cashing_not_on_us);
+            if (authorityData.remote_deposit) nonCreditGR.setValue('remote_deposit', authorityData.remote_deposit);
+            if (authorityData.treasury_solutions_company_wire_limits) nonCreditGR.setValue('treasury_solutions_company_wire_limits', authorityData.treasury_solutions_company_wire_limits);
+            if (authorityData.fx_wire_limits) nonCreditGR.setValue('fx_wire_limits', authorityData.fx_wire_limits);
             
             var nonCreditId = nonCreditGR.insert();
             if (nonCreditId) {
@@ -506,12 +731,17 @@ if (producer.authority_types && producer.authority_amounts) {
                 gs.info('Failed to create non-credit authority record');
             }
         }
-        else if (authority_types[i] === 'credit') {
+        else if (authorityType === 'credit') {
             // Create credit authority record
             var creditGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
             creditGR.initialize();
-            creditGR.setValue('signature_request', parentId);
-            creditGR.setValue('overdraft_external_accounts', authority_amounts[i]);
+            creditGR.setValue('signature_request', parentId); // Set parent relationship
+            
+            // Set all the credit fields
+            if (authorityData.overdraft_internal_accounts) creditGR.setValue('overdraft_internal_accounts', authorityData.overdraft_internal_accounts);
+            if (authorityData.overdraft_external_accounts) creditGR.setValue('overdraft_external_accounts', authorityData.overdraft_external_accounts);
+            if (authorityData.unavailable_funds_internal_accounts) creditGR.setValue('unavailable_funds_internal_accounts', authorityData.unavailable_funds_internal_accounts);
+            if (authorityData.unavailable_funds_external_accounts) creditGR.setValue('unavailable_funds_external_accounts', authorityData.unavailable_funds_external_accounts);
             
             var creditId = creditGR.insert();
             if (creditId) {
