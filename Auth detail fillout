@@ -629,44 +629,19 @@ api.controller = function($scope, $window) {
                 authority_data.push(JSON.stringify(nonCreditData));
             }
             
-            // Process credit data if checked - FIXED LOGIC
+            // Process credit data if checked - FIXED LOGIC FOR BOTH FIELDS
             if (c.authorityData.credit_checked) {
                 authority_types.push('credit');
                 
-                // Build credit data object
-                var creditData = {};
-                
-                // Overdraft logic: if value exists, set both unless "internal only" is checked
-                if (c.authorityData.overdraft) {
-                    if (c.authorityData.overdraft_internal_only) {
-                        // Internal only checked - set only internal
-                        creditData.overdraft_internal_accounts = c.authorityData.overdraft;
-                        creditData.overdraft_external_accounts = '';
-                    } else {
-                        // Internal only NOT checked - set both
-                        creditData.overdraft_internal_accounts = c.authorityData.overdraft;
-                        creditData.overdraft_external_accounts = c.authorityData.overdraft;
-                    }
-                } else {
-                    creditData.overdraft_internal_accounts = '';
-                    creditData.overdraft_external_accounts = '';
-                }
-                
-                // Unavailable funds logic: same as overdraft
-                if (c.authorityData.unavailable_funds) {
-                    if (c.authorityData.unavailable_internal_only) {
-                        // Internal only checked - set only internal
-                        creditData.unavailable_funds_internal_accounts = c.authorityData.unavailable_funds;
-                        creditData.unavailable_funds_external_accounts = '';
-                    } else {
-                        // Internal only NOT checked - set both
-                        creditData.unavailable_funds_internal_accounts = c.authorityData.unavailable_funds;
-                        creditData.unavailable_funds_external_accounts = c.authorityData.unavailable_funds;
-                    }
-                } else {
-                    creditData.unavailable_funds_internal_accounts = '';
-                    creditData.unavailable_funds_external_accounts = '';
-                }
+                // Build credit data object with corrected logic
+                var creditData = {
+                    // Overdraft: Set both internal and external UNLESS "internal only" is checked
+                    overdraft_internal_accounts: c.authorityData.overdraft ? c.authorityData.overdraft : '',
+                    overdraft_external_accounts: (c.authorityData.overdraft && !c.authorityData.overdraft_internal_only) ? c.authorityData.overdraft : '',
+                    // Unavailable funds: Set both internal and external UNLESS "internal only" is checked  
+                    unavailable_funds_internal_accounts: c.authorityData.unavailable_funds ? c.authorityData.unavailable_funds : '',
+                    unavailable_funds_external_accounts: (c.authorityData.unavailable_funds && !c.authorityData.unavailable_internal_only) ? c.authorityData.unavailable_funds : ''
+                };
                 
                 authority_data.push(JSON.stringify(creditData));
             }
@@ -878,24 +853,24 @@ gs.info('=== Authority RP Script Starting ===');
 var parentId = current.getUniqueValue();
 gs.info('Parent record sys_id: ' + parentId);
 
-// Set job code string fields on parent record
-if (producer.job_code) {
-    var jobCodeGR = new GlideRecord('x_banun_bunow_si_0_job_codes'); // Replace with your actual job codes table name
-    if (jobCodeGR.get(producer.job_code)) {
-        current.setValue('job_code_string', jobCodeGR.getValue('job_code'));
-        current.setValue('job_function_description', jobCodeGR.getValue('job_function_description'));
-        current.update();
-        gs.info('Set job_code_string: ' + jobCodeGR.getValue('job_code'));
-        gs.info('Set job_function_description: ' + jobCodeGR.getValue('job_function_description'));
-    }
-}
-
 // Convert form_is_valid and check validation
 var formIsValid = producer.form_is_valid ? producer.form_is_valid.toString().trim() : 'false';
 var validationPassed = (formIsValid === 'true' || formIsValid === true || producer.form_is_valid === true);
 
 if (validationPassed) {
     gs.info('Form validation passed, processing records...');
+
+    // Set job code string fields on parent record AFTER it's created
+    if (producer.job_code) {
+        var jobCodeGR = new GlideRecord('x_banun_bunow_si_0_job_codes'); // Replace with your actual job codes table name
+        if (jobCodeGR.get(producer.job_code)) {
+            current.setValue('job_code_string', jobCodeGR.getValue('job_code'));
+            current.setValue('job_function_description', jobCodeGR.getValue('job_function_description'));
+            current.update();
+            gs.info('Set job_code_string: ' + jobCodeGR.getValue('job_code'));
+            gs.info('Set job_function_description: ' + jobCodeGR.getValue('job_function_description'));
+        }
+    }
 
     // Process authority data if available
     if (producer.authority_types && producer.authority_data) {
