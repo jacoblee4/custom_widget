@@ -811,11 +811,22 @@ api.controller = function($scope, $window) {
 gs.info('Authority RP Script - Processing record: ' + current.getUniqueValue());
 
 // Check form validation first
-if (producer.form_is_valid !== 'true') {
+if (producer.form_is_valid === 'true') {
+    // Only process if form is valid - wrap the rest of the code in this if block
+    
+    var parentId = current.getUniqueValue();
+    gs.info('Parent record sys_id: ' + parentId);
+
+    // Process authority data if available
+    if (producer.authority_types && producer.authority_data) {
+        // ... rest of your existing processing code goes here
+    }
+    
+} else {
+    // Form validation failed
     var errors = producer.form_validation_errors ? producer.form_validation_errors.toString().split('|') : ['Form validation failed'];
     gs.addErrorMessage('Please correct the following errors: ' + errors.join('; '));
     current.setAbortAction(true);
-    return;
 }
 
 var parentId = current.getUniqueValue();
