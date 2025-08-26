@@ -865,7 +865,7 @@ var validationPassed = (formIsValid === 'true' || formIsValid === true || produc
 if (validationPassed) {
     gs.info('Form validation passed, processing records...');
 
-    // Set job code string fields on parent record FIRST
+    // Set job code string fields on parent record - DO NOT CALL UPDATE()
     if (producer.job_code) {
         gs.info('Setting job code fields on parent record...');
         
@@ -874,10 +874,10 @@ if (validationPassed) {
         if (jobCodeGR.get(producer.job_code)) {
             gs.info('Found job code record: ' + producer.job_code);
             
-            // Update the current parent record
+            // Set the fields on current record but DON'T update
             current.setValue('job_code_string', jobCodeGR.getValue('job_code'));
             current.setValue('job_function_description', jobCodeGR.getValue('job_function_description'));
-            current.update();
+            // REMOVED: current.update(); - This was creating duplicate records
             
             gs.info('Set job_code_string: ' + jobCodeGR.getValue('job_code'));
             gs.info('Set job_function_description: ' + jobCodeGR.getValue('job_function_description'));
@@ -906,7 +906,7 @@ if (validationPassed) {
                     var nonCreditGR = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
                     nonCreditGR.initialize();
                     
-                    // Set the parent relationship - try different field names
+                    // Set the parent relationship
                     nonCreditGR.setValue('parent', parentId);
                     gs.info('Set parent relationship (parent): ' + parentId);
                     
@@ -940,7 +940,7 @@ if (validationPassed) {
                     var creditGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
                     creditGR.initialize();
                     
-                    // Set the parent relationship - try different field names
+                    // Set the parent relationship
                     creditGR.setValue('parent', parentId);
                     gs.info('Set parent relationship (parent): ' + parentId);
                     
