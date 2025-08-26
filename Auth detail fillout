@@ -807,28 +807,23 @@ api.controller = function($scope, $window) {
 <!-- ============================================ -->
 <!-- RP SCRIPT -->
 <!-- ============================================ -->
-// Authority Widget Record Producer Script - DEBUG VERSION
-gs.info('=== DEBUG: Authority RP Script Starting ===');
+// Authority Widget Record Producer Script - FIXED VERSION
+gs.info('=== Authority RP Script Starting ===');
 gs.info('Current record sys_id: ' + current.getUniqueValue());
 
-// Debug all producer values
-gs.info('DEBUG: form_is_valid = ' + producer.form_is_valid);
-gs.info('DEBUG: form_validation_errors = ' + producer.form_validation_errors);
-gs.info('DEBUG: authority_types = ' + producer.authority_types);
-gs.info('DEBUG: authority_data = ' + producer.authority_data);
-gs.info('DEBUG: overall_business_need = ' + producer.overall_business_need);
+// Debug producer values
+gs.info('DEBUG: form_is_valid = "' + producer.form_is_valid + '"');
+gs.info('DEBUG: form_is_valid type = ' + typeof producer.form_is_valid);
 
-// Check if validation variables exist
-if (typeof producer.form_is_valid === 'undefined') {
-    gs.info('ERROR: form_is_valid variable is undefined - check if variable exists in RP');
-}
+// Convert form_is_valid to string and trim any whitespace
+var formIsValid = producer.form_is_valid ? producer.form_is_valid.toString().trim() : 'false';
+gs.info('DEBUG: formIsValid after conversion = "' + formIsValid + '"');
 
-if (typeof producer.form_validation_errors === 'undefined') {
-    gs.info('ERROR: form_validation_errors variable is undefined - check if variable exists in RP');
-}
+// Check form validation - try multiple comparison methods
+var validationPassed = (formIsValid === 'true' || formIsValid === true || producer.form_is_valid === true);
+gs.info('DEBUG: validationPassed = ' + validationPassed);
 
-// Check form validation first
-if (producer.form_is_valid === 'true') {
+if (validationPassed) {
     gs.info('DEBUG: Form validation passed, processing records...');
     
     var parentId = current.getUniqueValue();
@@ -849,7 +844,32 @@ if (producer.form_is_valid === 'true') {
                 var authorityData = JSON.parse(authorityDataStr);
                 gs.info('Processing ' + authorityType + ' with data: ' + authorityDataStr);
                 
-                if (authorityType === 'credit') {
+                if (authorityType === 'non_credit') {
+                    // Create non-credit authority record
+                    var nonCreditGR = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
+                    nonCreditGR.initialize();
+                    nonCreditGR.setValue('signature_request', parentId);
+                    
+                    // Set all the non-credit fields (only if they have values)
+                    if (authorityData.disbursement_ach) nonCreditGR.setValue('disbursement_ach', authorityData.disbursement_ach);
+                    if (authorityData.disbursement_wire_transfer_external) nonCreditGR.setValue('disbursement_wire_transfer_external', authorityData.disbursement_wire_transfer_external);
+                    if (authorityData.disbursement_wire_transfer_internal) nonCreditGR.setValue('disbursement_wire_transfer_internal', authorityData.disbursement_wire_transfer_internal);
+                    if (authorityData.disbursement_official_checks_external) nonCreditGR.setValue('disbursement_official_checks_external', authorityData.disbursement_official_checks_external);
+                    if (authorityData.disbursement_official_checks_internal) nonCreditGR.setValue('disbursement_official_checks_internal', authorityData.disbursement_official_checks_internal);
+                    if (authorityData.check_cashing_on_us) nonCreditGR.setValue('check_cashing_on_us', authorityData.check_cashing_on_us);
+                    if (authorityData.check_cashing_not_on_us) nonCreditGR.setValue('check_cashing_not_on_us', authorityData.check_cashing_not_on_us);
+                    if (authorityData.remote_deposit) nonCreditGR.setValue('remote_deposit', authorityData.remote_deposit);
+                    if (authorityData.treasury_solutions_company_wire_limits) nonCreditGR.setValue('treasury_solutions_company_wire_limits', authorityData.treasury_solutions_company_wire_limits);
+                    if (authorityData.fx_wire_limits) nonCreditGR.setValue('fx_wire_limits', authorityData.fx_wire_limits);
+                    
+                    var nonCreditId = nonCreditGR.insert();
+                    if (nonCreditId) {
+                        gs.info('SUCCESS: Non-credit authority record created: ' + nonCreditId + ' linked to parent: ' + parentId);
+                    } else {
+                        gs.info('ERROR: Failed to create non-credit authority record');
+                    }
+                }
+                else if (authorityType === 'credit') {
                     // Create credit authority record
                     var creditGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
                     creditGR.initialize();
@@ -887,8 +907,6 @@ if (producer.form_is_valid === 'true') {
         }
     } else {
         gs.info('DEBUG: No authority data found to process');
-        gs.info('authority_types exists: ' + (producer.authority_types ? 'YES' : 'NO'));
-        gs.info('authority_data exists: ' + (producer.authority_data ? 'YES' : 'NO'));
     }
     
 } else {
@@ -900,4 +918,4 @@ if (producer.form_is_valid === 'true') {
     current.setAbortAction(true);
 }
 
-gs.info('=== DEBUG: Authority RP Script Complete ===');
+gs.info('=== Authority RP Script Complete ===');
