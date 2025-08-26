@@ -307,7 +307,6 @@ api.controller = function($scope, $window) {
         // === Textarea sync ===
         function setupTextArea(field, targetName) {
             if (!field) return;
-
             field.addEventListener("input", function(e) {
                 updateRecordProducerField(targetName, e.target.value);
             });
@@ -356,7 +355,11 @@ api.controller = function($scope, $window) {
             console.log(">>> Updating RP field:", fieldName, value);
 
             try {
-                let gformRef = $window.g_form || ($window.parent && $window.parent.g_form);
+                let gformRef =
+                    $window.g_form ||
+                    ($window.parent && $window.parent.g_form) ||
+                    ($window.top && $window.top.g_form);
+
                 if (gformRef) {
                     gformRef.setValue(fieldName, value);
                     return;
@@ -378,7 +381,11 @@ api.controller = function($scope, $window) {
 
         // === Preload existing values from RP ===
         try {
-            let gformRef = $window.g_form || ($window.parent && $window.parent.g_form);
+            let gformRef =
+                $window.g_form ||
+                ($window.parent && $window.parent.g_form) ||
+                ($window.top && $window.top.g_form);
+
             if (gformRef) {
                 // Currency
                 let d = gformRef.getValue("disbursement");
@@ -390,8 +397,10 @@ api.controller = function($scope, $window) {
                 businessNeed.value = gformRef.getValue("overall_business_need") || "";
 
                 // Checkboxes
-                if (gformRef.getValue("non_credit_authority_check") === "true") nonCreditCheckbox.checked = true;
-                if (gformRef.getValue("credit_authority_check") === "true") creditCheckbox.checked = true;
+                if (gformRef.getValue("non_credit_authority_check") === "true")
+                    nonCreditCheckbox.checked = true;
+                if (gformRef.getValue("credit_authority_check") === "true")
+                    creditCheckbox.checked = true;
 
                 handleAuthoritySelection();
             }
@@ -400,6 +409,7 @@ api.controller = function($scope, $window) {
         }
     }
 }
+
 
 
 <!-- ============================================ -->
