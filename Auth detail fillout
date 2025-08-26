@@ -24,7 +24,7 @@
                         <input type="text" 
                                id="disbursement" 
                                name="disbursement" 
-                               class="form-control" 
+                               class="form-control currency-input" 
                                placeholder="0.00">
                     </div>
                 </div>
@@ -46,7 +46,7 @@
                         <input type="text" 
                                id="overdraft" 
                                name="overdraft" 
-                               class="form-control" 
+                               class="form-control currency-input" 
                                placeholder="0.00">
                     </div>
                 </div>
@@ -214,6 +214,7 @@
         transform: translateY(-50%);
         color: #6c757d;
         font-weight: 500;
+        z-index: 1;
     }
     
     .form-control {
@@ -262,14 +263,13 @@
 <!-- Place this in the "Client Controller" field -->
 <!-- ============================================ -->
 
-function($scope, $window) {
+api.controller = function($scope, $window) {
     var c = this;
     
-    // Initialize after DOM is ready
     c.$onInit = function() {
         setTimeout(function() {
             initializeWidget();
-        }, 500);
+        }, 1000); // Increased timeout to ensure form is fully loaded
     };
     
     function initializeWidget() {
@@ -284,128 +284,263 @@ function($scope, $window) {
         const creditSection = document.getElementById('creditSection');
         const justificationSection = document.getElementById('justificationSection');
         
-        // Format number with commas
-        function addCommas(value) {
-            // Remove existing commas and non-numeric chars except decimal
-            value = value.toString().replace(/[^0-9.]/g, '');
+        // Currency formatting functions
+        function formatCurrency(value) {
+            if (!value) return '';
             
-            // Split into integer and decimal parts
-            const parts = value.split('.');
+            // Remove all non-numeric characters except decimal point
+            let numStr = value.toString().replace(/[^\d.]/g, '');
             
-            // Add commas to integer part
-            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-            
-            // Limit decimal to 2 places
-            if (parts[1]) {
-                parts[1] = parts[1].substring(0, 2);
+            // Handle multiple decimal points - keep only the first one
+            const parts = numStr.split('.');
+            if (parts.length > 2) {
+                numStr = parts[0] + '.' + parts.slice(1).join('');
             }
             
-            return parts.join('.');
+            // Split into integer and decimal parts
+            const [integerPart, decimalPart] = numStr.split('.');
+            
+            // Add commas to integer part
+            const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            
+            // Combine with decimal part (limit to 2 decimal places)
+            if (decimalPart !== undefined) {
+                const limitedDecimal = decimalPart.substring(0, 2);
+                return formattedInteger + '.' + limitedDecimal;
+            }
+            
+            return formattedInteger;
         }
         
-        // Get value without commas
-        function removeCommas(value) {
-            return value.toString().replace(/,/g, '');
+        function getCurrencyValue(formattedValue) {
+            if (!formattedValue) return '';
+            return formattedValue.replace(/[^\d.]/g, '');
         }
         
-        // Setup currency field
-        function setupCurrencyField(fieldId, targetFieldName) {
-            const field = document.getElementById(fieldId);
-            if (!field) {
-                console.log('Field not found:', fieldId);
+        // Main function to update ServiceNow fields
+        function updateServiceNowField(fieldName, value) {
+            console.log('Attempting to update field:', fieldName, 'with value:', value);
+            
+            // Try multiple approaches to find and update the field
+            let updated = false;
+            
+            // Approach 1: Use g_form if available
+            const gform = getGForm();
+            if (gform) {
+                try {
+                    gform.setValue(fieldName, value);
+                    console.log('✓ Updated', fieldName, 'via g_form');
+                    updated = true;
+                } catch (e) {
+                    console.log('Failed to update via g_form:', e);
+                }
+            }
+            
+            // Approach 2: Direct DOM manipulation as backup
+            if (!updated) {
+                const field = findFieldInDOM(fieldName);
+                if (field) {
+                    try {
+                        if (field.type === 'checkbox') {
+                            field.checked = (value === true || value === 'true' || value === '1');
+                        } else {
+                            field.value = value;
+                        }
+                        
+                        // Trigger events
+                        ['input', 'change', 'blur'].forEach(eventType => {
+                            const event = new Event(eventType, { bubbles: true, cancelable: true });
+                            field.dispatchEvent(event);
+                        });
+                        
+                        console.log('✓ Updated', fieldName, 'via DOM');
+                        updated = true;
+                    } catch (e) {
+                        console.log('Failed DOM update:', e);
+                    }
+                }
+            }
+            
+            if (!updated) {
+                console.warn('Could not update field:', fieldName);
+            }
+            
+            return updated;
+        }
+        
+        // Helper function to get g_form from various contexts
+        function getGForm() {
+            // Try current window first
+            if (typeof g_form !== 'undefined') {
+                return g_form;
+            }
+            
+            // Try parent window
+            try {
+                if ($window.parent && $window.parent.g_form) {
+                    return $window.parent.g_form;
+                }
+            } catch (e) {}
+            
+            // Try top window
+            try {
+                if ($window.top && $window.top.g_form) {
+                    return $window.top.g_form;
+                }
+            } catch (e) {}
+            
+            return null;
+        }
+        
+        // Helper function to find field in DOM
+        function findFieldInDOM(fieldName) {
+            // Common selectors for ServiceNow fields
+            const selectors = [
+                `[name="${fieldName}"]`,
+                `#${fieldName}`,
+                `[id$="${fieldName}"]`,
+                `[data-name="${fieldName}"]`,
+                `.form-field[data-name="${fieldName}"] input`,
+                `.form-field[data-name="${fieldName}"] textarea`
+            ];
+            
+            // Search in current document
+            for (let selector of selectors) {
+                const field = document.querySelector(selector);
+                if (field) return field;
+            }
+            
+            // Search in parent document
+            try {
+                if ($window.parent && $window.parent.document) {
+                    for (let selector of selectors) {
+                        const field = $window.parent.document.querySelector(selector);
+                        if (field) return field;
+                    }
+                }
+            } catch (e) {}
+            
+            // Search in top document
+            try {
+                if ($window.top && $window.top.document) {
+                    for (let selector of selectors) {
+                        const field = $window.top.document.querySelector(selector);
+                        if (field) return field;
+                    }
+                }
+            } catch (e) {}
+            
+            return null;
+        }
+        
+        // Setup currency input field
+        function setupCurrencyField(inputId, fieldName) {
+            const input = document.getElementById(inputId);
+            if (!input) {
+                console.warn('Currency input not found:', inputId);
                 return;
             }
             
-            console.log('Setting up currency field:', fieldId, '→', targetFieldName);
+            let isUpdating = false;
             
-            // Format on input
-            field.addEventListener('input', function(e) {
-                const cursorPos = e.target.selectionStart;
-                const oldLength = e.target.value.length;
+            function handleCurrencyInput(event) {
+                if (isUpdating) return;
+                isUpdating = true;
                 
-                // Format with commas
-                const formatted = addCommas(e.target.value);
-                e.target.value = formatted;
+                const cursorPosition = event.target.selectionStart;
+                const oldValue = event.target.value;
+                const oldLength = oldValue.length;
+                
+                // Format the value
+                const formattedValue = formatCurrency(oldValue);
+                event.target.value = formattedValue;
                 
                 // Adjust cursor position
-                const newLength = formatted.length;
-                const diff = newLength - oldLength;
-                e.target.setSelectionRange(cursorPos + diff, cursorPos + diff);
+                const newLength = formattedValue.length;
+                const lengthDiff = newLength - oldLength;
+                const newCursorPosition = Math.max(0, cursorPosition + lengthDiff);
                 
-                // Get raw value without commas
-                const rawValue = removeCommas(formatted);
+                setTimeout(() => {
+                    event.target.setSelectionRange(newCursorPosition, newCursorPosition);
+                }, 0);
                 
-                console.log(fieldId + ' - Formatted:', formatted, 'Raw:', rawValue);
+                // Update ServiceNow field with raw numeric value
+                const rawValue = getCurrencyValue(formattedValue);
+                updateServiceNowField(fieldName, rawValue);
                 
-                // Update the record producer field
-                updateRecordProducerField(targetFieldName, rawValue);
-            });
+                isUpdating = false;
+            }
             
-            // Also update on blur
-            field.addEventListener('blur', function(e) {
-                const rawValue = removeCommas(e.target.value);
-                updateRecordProducerField(targetFieldName, rawValue);
+            input.addEventListener('input', handleCurrencyInput);
+            input.addEventListener('paste', function(e) {
+                setTimeout(() => handleCurrencyInput(e), 0);
             });
         }
         
         // Setup text area field
-        function setupTextAreaField(fieldId, targetFieldName) {
-            const field = document.getElementById(fieldId);
-            if (!field) {
-                console.log('Field not found:', fieldId);
+        function setupTextAreaField(inputId, fieldName) {
+            const input = document.getElementById(inputId);
+            if (!input) {
+                console.warn('Text area not found:', inputId);
                 return;
             }
             
-            console.log('Setting up text area field:', fieldId, '→', targetFieldName);
+            function handleTextChange(event) {
+                updateServiceNowField(fieldName, event.target.value);
+            }
             
-            field.addEventListener('input', function(e) {
-                console.log(fieldId + ' updated:', e.target.value);
-                updateRecordProducerField(targetFieldName, e.target.value);
-            });
-            
-            field.addEventListener('blur', function(e) {
-                updateRecordProducerField(targetFieldName, e.target.value);
-            });
+            input.addEventListener('input', handleTextChange);
+            input.addEventListener('change', handleTextChange);
         }
         
-        // Setup the currency fields
-        setupCurrencyField('disbursement', 'disbursement');
-        setupCurrencyField('overdraft', 'overdraft');
-        setupTextAreaField('businessNeed', 'overall_business_need');
+        // Setup checkbox field
+        function setupCheckboxField(inputId, fieldName) {
+            const input = document.getElementById(inputId);
+            if (!input) {
+                console.warn('Checkbox not found:', inputId);
+                return;
+            }
+            
+            function handleCheckboxChange(event) {
+                updateServiceNowField(fieldName, event.target.checked);
+            }
+            
+            input.addEventListener('change', handleCheckboxChange);
+        }
         
-        // Handle checkbox changes
+        // Handle authority selection
         function handleAuthoritySelection() {
             const nonCreditChecked = nonCreditCheckbox.checked;
             const creditChecked = creditCheckbox.checked;
             
-            console.log('Checkbox state - Non-Credit:', nonCreditChecked, 'Credit:', creditChecked);
+            console.log('Authority selection - Non-Credit:', nonCreditChecked, 'Credit:', creditChecked);
             
             // Update visual states
             nonCreditGroup.classList.toggle('active', nonCreditChecked);
             creditGroup.classList.toggle('active', creditChecked);
             
-            // Update record producer checkbox fields
-            updateRecordProducerField('non_credit_authority_check', nonCreditChecked);
-            updateRecordProducerField('credit_authority_check', creditChecked);
-            
             // Show/hide sections
             nonCreditSection.classList.toggle('active', nonCreditChecked);
             creditSection.classList.toggle('active', creditChecked);
-            
-            // Show justification if either is checked
             justificationSection.classList.toggle('active', nonCreditChecked || creditChecked);
+            
+            // Update ServiceNow fields
+            updateServiceNowField('non_credit_authority_check', nonCreditChecked);
+            updateServiceNowField('credit_authority_check', creditChecked);
         }
         
-        // Add checkbox event listeners
+        // Setup all event listeners
         if (nonCreditCheckbox) {
             nonCreditCheckbox.addEventListener('change', handleAuthoritySelection);
+            setupCheckboxField('nonCreditAuth', 'non_credit_authority_check');
         }
         
         if (creditCheckbox) {
             creditCheckbox.addEventListener('change', handleAuthoritySelection);
+            setupCheckboxField('creditAuth', 'credit_authority_check');
         }
         
-        // Make entire checkbox group clickable
+        // Make checkbox groups clickable
         if (nonCreditGroup) {
             nonCreditGroup.addEventListener('click', function(e) {
                 if (e.target.tagName !== 'INPUT') {
@@ -424,140 +559,51 @@ function($scope, $window) {
             });
         }
         
-        // Function to update ServiceNow record producer fields
-        function updateRecordProducerField(fieldName, value) {
-            console.log('>>> Updating field:', fieldName, 'with value:', value);
-            
-            try {
-                // Method 1: Direct g_form access
-                if ($window.g_form) {
-                    $window.g_form.setValue(fieldName, value);
-                    console.log('✓ Updated via $window.g_form');
-                    return;
-                }
-                
-                // Method 2: Parent window g_form
-                if ($window.parent && $window.parent.g_form) {
-                    $window.parent.g_form.setValue(fieldName, value);
-                    console.log('✓ Updated via parent.g_form');
-                    return;
-                }
-                
-                // Method 3: Top window g_form
-                if ($window.top && $window.top.g_form) {
-                    $window.top.g_form.setValue(fieldName, value);
-                    console.log('✓ Updated via top.g_form');
-                    return;
-                }
-                
-                // Method 4: Search for the field in the DOM
-                let field = null;
-                
-                // Search in current document
-                field = document.querySelector('input[name="' + fieldName + '"], textarea[name="' + fieldName + '"]');
-                
-                // Search in parent document
-                if (!field && $window.parent) {
-                    try {
-                        field = $window.parent.document.querySelector('input[name="' + fieldName + '"], textarea[name="' + fieldName + '"]');
-                    } catch(e) {}
-                }
-                
-                // Search in top document
-                if (!field && $window.top) {
-                    try {
-                        field = $window.top.document.querySelector('input[name="' + fieldName + '"], textarea[name="' + fieldName + '"]');
-                    } catch(e) {}
-                }
-                
-                // Search for field with id
-                if (!field) {
-                    field = document.getElementById(fieldName);
-                    if (!field && $window.parent) {
-                        try {
-                            field = $window.parent.document.getElementById(fieldName);
-                        } catch(e) {}
-                    }
-                    if (!field && $window.top) {
-                        try {
-                            field = $window.top.document.getElementById(fieldName);
-                        } catch(e) {}
-                    }
-                }
-                
-                if (field) {
-                    if (field.type === 'checkbox') {
-                        field.checked = (value === true || value === 'true');
-                    } else {
-                        field.value = value;
-                    }
-                    
-                    // Fire events to notify ServiceNow
-                    const inputEvent = new Event('input', { bubbles: true });
-                    const changeEvent = new Event('change', { bubbles: true });
-                    field.dispatchEvent(inputEvent);
-                    field.dispatchEvent(changeEvent);
-                    
-                    // Also try Angular digest if available
-                    if ($window.angular) {
-                        try {
-                            const scope = $window.angular.element(field).scope();
-                            if (scope) {
-                                scope.$apply();
-                            }
-                        } catch(e) {}
-                    }
-                    
-                    console.log('✓ Updated via DOM manipulation');
-                    return;
-                }
-                
-                console.log('✗ Could not find field or g_form. Field name:', fieldName);
-                
-            } catch(error) {
-                console.error('Error updating field:', error);
-            }
-        }
+        // Setup currency and text fields
+        setupCurrencyField('disbursement', 'disbursement');
+        setupCurrencyField('overdraft', 'overdraft');
+        setupTextAreaField('businessNeed', 'overall_business_need');
         
-        // Try to get initial values if available
-        try {
-            let gformRef = $window.g_form || ($window.parent && $window.parent.g_form) || ($window.top && $window.top.g_form);
-            
-            if (gformRef) {
-                console.log('Found g_form, loading initial values...');
-                
-                // Get existing values from record producer
-                const nonCreditValue = gformRef.getValue('non_credit_authority_check');
-                const creditValue = gformRef.getValue('credit_authority_check');
-                const disbursementValue = gformRef.getValue('disbursement');
-                const overdraftValue = gformRef.getValue('overdraft');
-                const businessNeedValue = gformRef.getValue('overall_business_need');
-                
-                // Set checkbox states
-                if (nonCreditValue === 'true' || nonCreditValue === true) {
-                    nonCreditCheckbox.checked = true;
+        // Load initial values from ServiceNow
+        setTimeout(function() {
+            const gform = getGForm();
+            if (gform) {
+                try {
+                    // Load checkbox values
+                    const nonCreditValue = gform.getValue('non_credit_authority_check');
+                    const creditValue = gform.getValue('credit_authority_check');
+                    
+                    if (nonCreditValue === 'true' || nonCreditValue === true || nonCreditValue === '1') {
+                        nonCreditCheckbox.checked = true;
+                    }
+                    if (creditValue === 'true' || creditValue === true || creditValue === '1') {
+                        creditCheckbox.checked = true;
+                    }
+                    
+                    // Load currency values
+                    const disbursementValue = gform.getValue('disbursement');
+                    const overdraftValue = gform.getValue('overdraft');
+                    const businessNeedValue = gform.getValue('overall_business_need');
+                    
+                    if (disbursementValue) {
+                        document.getElementById('disbursement').value = formatCurrency(disbursementValue);
+                    }
+                    if (overdraftValue) {
+                        document.getElementById('overdraft').value = formatCurrency(overdraftValue);
+                    }
+                    if (businessNeedValue) {
+                        document.getElementById('businessNeed').value = businessNeedValue;
+                    }
+                    
+                    // Update display
+                    handleAuthoritySelection();
+                    
+                    console.log('Initial values loaded successfully');
+                } catch (e) {
+                    console.log('Could not load initial values:', e);
                 }
-                if (creditValue === 'true' || creditValue === true) {
-                    creditCheckbox.checked = true;
-                }
-                
-                // Set field values with formatting
-                if (disbursementValue) {
-                    document.getElementById('disbursement').value = addCommas(disbursementValue);
-                }
-                if (overdraftValue) {
-                    document.getElementById('overdraft').value = addCommas(overdraftValue);
-                }
-                if (businessNeedValue) {
-                    document.getElementById('businessNeed').value = businessNeedValue;
-                }
-                
-                // Update display
-                handleAuthoritySelection();
             }
-        } catch(e) {
-            console.log('Could not load initial values:', e);
-        }
+        }, 500);
         
         console.log('=== Widget initialization complete ===');
     }
@@ -573,10 +619,8 @@ function($scope, $window) {
     data.user = gs.getUser().getName();
     data.userId = gs.getUserID();
     
-    // You can add any server-side data fetching or validation here
-    // For example, getting user's department or role-based defaults
-    
-    // Optional: Get any default values from system properties
-    // data.defaultDisbursementLimit = gs.getProperty('authority.default.disbursement', '');
-    // data.defaultOverdraftLimit = gs.getProperty('authority.default.overdraft', '');
+    // Add any additional server-side initialization here
+    // For example:
+    // data.defaultDisbursementLimit = gs.getProperty('authority.default.disbursement', '0');
+    // data.defaultOverdraftLimit = gs.getProperty('authority.default.overdraft', '0');
 })();
