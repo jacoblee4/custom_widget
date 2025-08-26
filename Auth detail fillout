@@ -265,6 +265,7 @@
 
 api.controller = function($scope, $window) {
     var c = this;
+    var g_form = $scope.page.g_form;
     
     c.$onInit = function() {
         setTimeout(function() {
@@ -284,16 +285,14 @@ api.controller = function($scope, $window) {
         const creditSection = document.getElementById('creditSection');
         const justificationSection = document.getElementById('justificationSection');
         
-        // Initialize widget data in scope
-        if (!$scope.data.authority_data) {
-            $scope.data.authority_data = {
-                non_credit_checked: false,
-                credit_checked: false,
-                disbursement_ach: '',
-                overdraft_external_accounts: '',
-                overall_business_need: ''
-            };
-        }
+        // Initialize widget data
+        c.authorityData = {
+            non_credit_checked: false,
+            credit_checked: false,
+            disbursement_ach: '',
+            overdraft_external_accounts: '',
+            overall_business_need: ''
+        };
         
         // Currency formatting functions
         function formatCurrency(value) {
@@ -321,11 +320,42 @@ api.controller = function($scope, $window) {
             return formattedValue.replace(/[^\d.]/g, '');
         }
         
-        // Update widget data in scope
+        // Update record producer variables (like the working widget does)
+        function updateRecordProducerVariables() {
+            console.log('Updating RP variables with authority data:', c.authorityData);
+            
+            // Set the business need field
+            g_form.setValue('overall_business_need', c.authorityData.overall_business_need);
+            
+            // Create arrays for authority data (similar to invoice widget pattern)
+            var authority_types = [];
+            var authority_amounts = [];
+            
+            // Add non-credit data if checked and has value
+            if (c.authorityData.non_credit_checked && c.authorityData.disbursement_ach) {
+                authority_types.push('non_credit');
+                authority_amounts.push(c.authorityData.disbursement_ach);
+            }
+            
+            // Add credit data if checked and has value
+            if (c.authorityData.credit_checked && c.authorityData.overdraft_external_accounts) {
+                authority_types.push('credit');
+                authority_amounts.push(c.authorityData.overdraft_external_accounts);
+            }
+            
+            // Set the array variables in the record producer
+            g_form.setValue('authority_types', authority_types.join(','));
+            g_form.setValue('authority_amounts', authority_amounts.join(','));
+            
+            console.log('Set authority_types:', authority_types.join(','));
+            console.log('Set authority_amounts:', authority_amounts.join(','));
+        }
+        
+        // Update widget data
         function updateWidgetData(fieldName, value) {
-            console.log('Updating widget data:', fieldName, '=', value);
-            $scope.data.authority_data[fieldName] = value;
-            console.log('Current authority data:', $scope.data.authority_data);
+            console.log('Widget data update:', fieldName, '=', value);
+            c.authorityData[fieldName] = value;
+            updateRecordProducerVariables();
         }
         
         // Handle authority selection
@@ -441,25 +471,6 @@ api.controller = function($scope, $window) {
 (function() {
     data.user = gs.getUser().getName();
     data.userId = gs.getUserID();
-    
-    gs.info('Authority Widget Server Script running');
-    gs.info('Input data: ' + JSON.stringify(input));
-    
-    // Check if we have authority data and this is a form submission
-    if (input && input.authority_data) {
-        var authData = input.authority_data;
-        gs.info('Processing authority data: ' + JSON.stringify(authData));
-        
-        // Set the overall_business_need for the record producer to pick up
-        if (authData.overall_business_need) {
-            data.overall_business_need = authData.overall_business_need;
-            gs.info('Set overall_business_need: ' + authData.overall_business_need);
-        }
-        
-        // Store authority data for the completion script
-        data.authority_widget_data = authData;
-    }
-    
 })();
 
 
@@ -467,26 +478,26 @@ api.controller = function($scope, $window) {
 <!-- ============================================ -->
 <!-- RP SCRIPT -->
 <!-- ============================================ -->
-// Record Producer Script - runs after parent record is created
-try {
-    gs.info('Authority RP Script - Processing record: ' + current.getUniqueValue());
+// Authority Widget Record Producer Script
+gs.info('Authority RP Script - Processing record: ' + current.getUniqueValue());
+
+var parentId = current.getUniqueValue();
+
+// Process authority data if available
+if (producer.authority_types && producer.authority_amounts) {
+    var authority_types = producer.authority_types.toString().split(',');
+    var authority_amounts = producer.authority_amounts.toString().split(',');
     
-    // Get the JSON data from the hidden field
-    var widgetDataJson = producer.authority_widget_json;
+    gs.info('Authority types: ' + authority_types.join('|'));
+    gs.info('Authority amounts: ' + authority_amounts.join('|'));
     
-    if (widgetDataJson) {
-        gs.info('Widget data received: ' + widgetDataJson);
-        
-        // Parse the JSON
-        var widgetData = JSON.parse(widgetDataJson);
-        var parentId = current.getUniqueValue();
-        
-        // Create non-credit authority record if checked and has value
-        if (widgetData.non_credit_checked === true && widgetData.disbursement_ach) {
+    for (var i = 0; i < authority_types.length; i++) {
+        if (authority_types[i] === 'non_credit') {
+            // Create non-credit authority record
             var nonCreditGR = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
             nonCreditGR.initialize();
             nonCreditGR.setValue('signature_request', parentId);
-            nonCreditGR.setValue('disbursement_ach', widgetData.disbursement_ach);
+            nonCreditGR.setValue('disbursement_ach', authority_amounts[i]);
             
             var nonCreditId = nonCreditGR.insert();
             if (nonCreditId) {
@@ -495,13 +506,12 @@ try {
                 gs.info('Failed to create non-credit authority record');
             }
         }
-        
-        // Create credit authority record if checked and has value
-        if (widgetData.credit_checked === true && widgetData.overdraft_external_accounts) {
+        else if (authority_types[i] === 'credit') {
+            // Create credit authority record
             var creditGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
             creditGR.initialize();
             creditGR.setValue('signature_request', parentId);
-            creditGR.setValue('overdraft_external_accounts', widgetData.overdraft_external_accounts);
+            creditGR.setValue('overdraft_external_accounts', authority_amounts[i]);
             
             var creditId = creditGR.insert();
             if (creditId) {
@@ -510,11 +520,5 @@ try {
                 gs.info('Failed to create credit authority record');
             }
         }
-        
-    } else {
-        gs.info('No widget data found in authority_widget_json field');
     }
-    
-} catch (e) {
-    gs.info('Error in Authority RP Script: ' + e.message);
 }
