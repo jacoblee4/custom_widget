@@ -469,13 +469,16 @@ If applicable: Enter the requested approval amount. If the authority type should
 api.controller = function($scope, $window) {
     var c = this;
     var g_form = $scope.page.g_form;
-    
+
+    // Tracks whether the user has attempted to submit yet
+    var hasSubmitted = false;
+
     c.$onInit = function() {
         setTimeout(function() {
             initializeWidget();
         }, 500);
     };
-    
+
     function initializeWidget() {
         // Get references to DOM elements
         const nonCreditCheckbox = document.getElementById('nonCreditAuth');
@@ -485,14 +488,14 @@ api.controller = function($scope, $window) {
         const nonCreditSection = document.getElementById('nonCreditSection');
         const creditSection = document.getElementById('creditSection');
         const justificationSection = document.getElementById('justificationSection');
-        
+
         const wireTransferCheck = document.getElementById('wireTransferCheck');
         const wireInternalOnlyContainer = document.getElementById('wireInternalOnlyContainer');
         const wireInternalOnly = document.getElementById('wireInternalOnly');
         const officialChecksCheck = document.getElementById('officialChecksCheck');
         const checksInternalOnlyContainer = document.getElementById('checksInternalOnlyContainer');
         const checksInternalOnly = document.getElementById('checksInternalOnly');
-        
+
         // Widget data model
         c.authorityData = {
             non_credit_checked: false,
@@ -514,17 +517,16 @@ api.controller = function($scope, $window) {
             unavailable_internal_only: false,
             overall_business_need: ''
         };
-        
-        // Error container
+
+        // Error container (widget-level)
         var errorContainer = document.createElement('div');
         errorContainer.id = 'validationErrors';
         errorContainer.style.cssText = 'display: none; background: #f8d7da; color: #721c24; padding: 15px; border: 1px solid #f5c6cb; border-radius: 6px; margin-bottom: 20px; font-size: 14px;';
-        
         var widgetContainer = document.querySelector('.widget-container');
         var widgetHeader = document.querySelector('.widget-header');
         widgetContainer.insertBefore(errorContainer, widgetHeader.nextSibling);
-        
-        // Format currency helpers
+
+        // Helpers: currency format
         function formatCurrency(value) {
             if (!value) return '';
             let numStr = value.toString().replace(/[^\d.]/g, '');
@@ -540,13 +542,13 @@ api.controller = function($scope, $window) {
             }
             return formattedInteger;
         }
-        
+
         function getCurrencyValue(formattedValue) {
             if (!formattedValue) return '';
             return formattedValue.replace(/[^\d.]/g, '');
         }
-        
-        // Show validation errors
+
+        // Render the widget error box
         function showValidationErrors(errors) {
             if (errors.length === 0) {
                 errorContainer.style.display = 'none';
@@ -559,51 +561,74 @@ api.controller = function($scope, $window) {
             errorHtml += '</ul>';
             errorContainer.innerHTML = errorHtml;
             errorContainer.style.display = 'block';
-            errorContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
-        
-        // Validation rules
-        function validateForm() {
+
+        // Core validation (with "silent" option)
+        function validateForm(silent) {
             var errors = [];
+
+            // Must select at least one authority type
             if (!c.authorityData.non_credit_checked && !c.authorityData.credit_checked) {
                 errors.push('You must select at least one authority type (Credit Authority or Non-Credit Authority)');
             }
+
+            // Business justification required
             if (!c.authorityData.overall_business_need || c.authorityData.overall_business_need.trim() === '') {
                 errors.push('Overall Business Need is required');
             }
+
+            // Non-credit rules
             if (c.authorityData.non_credit_checked) {
-                var hasNonCreditValue = c.authorityData.disbursement || c.authorityData.check_cashing_on_us || 
-                                        c.authorityData.check_cashing_not_on_us || c.authorityData.remote_deposit || 
+                var hasNonCreditValue = c.authorityData.disbursement || c.authorityData.check_cashing_on_us ||
+                                        c.authorityData.check_cashing_not_on_us || c.authorityData.remote_deposit ||
                                         c.authorityData.treasury_solutions_company_wire_limits || c.authorityData.fx_wire_limits;
+
                 if (!hasNonCreditValue) {
                     errors.push('If Non-Credit Authority is selected, at least one currency field must have a value');
                 }
-                if (c.authorityData.disbursement && 
-                    !c.authorityData.ach_checked && 
-                    !c.authorityData.wire_transfer_checked && 
+
+                if (c.authorityData.disbursement &&
+                    !c.authorityData.ach_checked &&
+                    !c.authorityData.wire_transfer_checked &&
                     !c.authorityData.official_checks_checked) {
                     errors.push('If Disbursement amount is entered, you must select at least one option: ACH, Wire Transfer, or Official Checks');
                 }
             }
+
+            // Credit rules
             if (c.authorityData.credit_checked) {
                 var hasCreditValue = c.authorityData.overdraft || c.authorityData.unavailable_funds;
                 if (!hasCreditValue) {
                     errors.push('If Credit Authority is selected, at least one currency field must have a value');
                 }
             }
-            
-            showValidationErrors(errors);
+
             var isValid = errors.length === 0;
+
+            // Always keep RP variables in sync so the server can block if needed
             g_form.setValue('form_validation_errors', errors.join('|'));
             g_form.setValue('form_is_valid', isValid ? 'true' : 'false');
+
+            // Only show the widget error box after first submit attempt,
+            // OR when hasSubmitted is true and we're validating due to live edits
+            if (!silent) {
+                showValidationErrors(errors);
+            } else {
+                // Ensure the box is hidden during silent validation
+                errorContainer.style.display = 'none';
+            }
+
             return isValid;
         }
-        
-        // Update record producer variables (no validation here anymore)
+
+        // Update RP variables and (silently) compute validity
         function updateRecordProducerVariables() {
+            // Map user-entered data to RP variables
             g_form.setValue('overall_business_need', c.authorityData.overall_business_need);
+
             var authority_types = [];
             var authority_data = [];
+
             if (c.authorityData.non_credit_checked) {
                 authority_types.push('non_credit');
                 var nonCreditData = {
@@ -620,6 +645,7 @@ api.controller = function($scope, $window) {
                 };
                 authority_data.push(JSON.stringify(nonCreditData));
             }
+
             if (c.authorityData.credit_checked) {
                 authority_types.push('credit');
                 var creditData = {
@@ -630,29 +656,35 @@ api.controller = function($scope, $window) {
                 };
                 authority_data.push(JSON.stringify(creditData));
             }
+
             g_form.setValue('authority_types', authority_types.join('|'));
             g_form.setValue('authority_data', authority_data.join('|'));
+
+            // Before first submit -> silent (no UI); after first submit -> show/update UI live
+            validateForm(!hasSubmitted);
         }
-        
-        // Live update handler
+
+        // Keep local model + RP variables updated
         function updateWidgetData(fieldName, value) {
             c.authorityData[fieldName] = value;
             updateRecordProducerVariables();
         }
-        
+
         // Authority selection toggles
         function handleAuthoritySelection() {
             const nonCreditChecked = nonCreditCheckbox.checked;
             const creditChecked = creditCheckbox.checked;
+
             nonCreditGroup.classList.toggle('active', nonCreditChecked);
             creditGroup.classList.toggle('active', creditChecked);
             nonCreditSection.classList.toggle('active', nonCreditChecked);
             creditSection.classList.toggle('active', creditChecked);
             justificationSection.classList.toggle('active', nonCreditChecked || creditChecked);
+
             updateWidgetData('non_credit_checked', nonCreditChecked);
             updateWidgetData('credit_checked', creditChecked);
         }
-        
+
         function handleWireTransferChange() {
             const isChecked = wireTransferCheck.checked;
             wireInternalOnlyContainer.style.display = isChecked ? 'block' : 'none';
@@ -662,7 +694,7 @@ api.controller = function($scope, $window) {
             }
             updateWidgetData('wire_transfer_checked', isChecked);
         }
-        
+
         function handleOfficialChecksChange() {
             const isChecked = officialChecksCheck.checked;
             checksInternalOnlyContainer.style.display = isChecked ? 'block' : 'none';
@@ -672,7 +704,7 @@ api.controller = function($scope, $window) {
             }
             updateWidgetData('official_checks_checked', isChecked);
         }
-        
+
         // Setup currency field
         function setupCurrencyField(inputId, fieldName) {
             const input = document.getElementById(inputId);
@@ -698,7 +730,7 @@ api.controller = function($scope, $window) {
             }
             input.addEventListener('input', handleCurrencyInput);
         }
-        
+
         // Setup generic field listeners
         function setupCheckboxField(inputId, fieldName) {
             const input = document.getElementById(inputId);
@@ -707,7 +739,7 @@ api.controller = function($scope, $window) {
                 updateWidgetData(fieldName, event.target.checked);
             });
         }
-        
+
         function setupTextAreaField(inputId, fieldName) {
             const input = document.getElementById(inputId);
             if (!input) return;
@@ -715,7 +747,7 @@ api.controller = function($scope, $window) {
                 updateWidgetData(fieldName, event.target.value);
             });
         }
-        
+
         // Bind events
         if (nonCreditCheckbox) nonCreditCheckbox.addEventListener('change', handleAuthoritySelection);
         if (creditCheckbox) creditCheckbox.addEventListener('change', handleAuthoritySelection);
@@ -737,7 +769,7 @@ api.controller = function($scope, $window) {
         }
         if (wireTransferCheck) wireTransferCheck.addEventListener('change', handleWireTransferChange);
         if (officialChecksCheck) officialChecksCheck.addEventListener('change', handleOfficialChecksChange);
-        
+
         setupCurrencyField('disbursement', 'disbursement');
         setupCurrencyField('checkCashingOnUs', 'check_cashing_on_us');
         setupCurrencyField('checkCashingNotOnUs', 'check_cashing_not_on_us');
@@ -746,30 +778,34 @@ api.controller = function($scope, $window) {
         setupCurrencyField('fxWireLimits', 'fx_wire_limits');
         setupCurrencyField('overdraft', 'overdraft');
         setupCurrencyField('unavailableFunds', 'unavailable_funds');
-        
+
         setupCheckboxField('achCheck', 'ach_checked');
         setupCheckboxField('wireInternalOnly', 'wire_internal_only');
         setupCheckboxField('checksInternalOnly', 'checks_internal_only');
         setupCheckboxField('overdraftInternalOnly', 'overdraft_internal_only');
         setupCheckboxField('unavailableInternalOnly', 'unavailable_internal_only');
-        
+
         setupTextAreaField('businessNeed', 'overall_business_need');
+
+        // 🔸 Initialize RP variables and default validation state (silent)
+        updateRecordProducerVariables();   // sets types/data + silent validate (invalid by default)
     }
-    
-    // 🔑 Only validate on submit
-c.onSubmit = function() {
-    var isValid = validateForm();
-    if (!isValid) {
-        // force error box to show and scroll into view
-        var errorBox = document.getElementById('validationErrors');
-        if (errorBox) {
-            errorBox.style.display = 'block';
-            errorBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    // 🔑 Validate on submit: first time shows error box and blocks;
+    // after that, live edits keep the box in sync via updateRecordProducerVariables()
+    c.onSubmit = function() {
+        hasSubmitted = true;
+        var isValid = validateForm(false);  // show messages now
+        if (!isValid) {
+            var errorBox = document.getElementById('validationErrors');
+            if (errorBox) {
+                errorBox.style.display = 'block';
+                errorBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+            return false; // block submission
         }
-        return false; // block submission
-    }
-    return true; // allow submission
-};
+        return true; // allow submission
+    };
 };
 
 
@@ -813,28 +849,28 @@ if (validationPassed) {
     if (producer.authority_types && producer.authority_data) {
         var authority_types = producer.authority_types.toString().split('|');
         var authority_data_strings = producer.authority_data.toString().split('|');
-        
+
         // Create child records for each authority type selected
         for (var i = 0; i < authority_types.length; i++) {
             var authorityType = authority_types[i];
             var authorityDataStr = authority_data_strings[i];
-            
+
             try {
                 var authorityData = JSON.parse(authorityDataStr);
-                
+
                 if (authorityType === 'non_credit') {
                     // Create non-credit authority limit record
                     var nonCreditGR = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
                     nonCreditGR.initialize();
-                    
+
                     // Link to parent signature request
                     nonCreditGR.setValue('parent', parentId);
-                    
+
                     // Set job code reference for reporting
                     if (producer.job_code) {
                         nonCreditGR.setValue('job_code', producer.job_code);
                     }
-                    
+
                     // Set all non-credit fields with values
                     if (authorityData.disbursement_ach) nonCreditGR.setValue('disbursement_ach', authorityData.disbursement_ach);
                     if (authorityData.disbursement_wire_transfer_external) nonCreditGR.setValue('disbursement_wire_transfer_external', authorityData.disbursement_wire_transfer_external);
@@ -846,22 +882,22 @@ if (validationPassed) {
                     if (authorityData.remote_deposit) nonCreditGR.setValue('remote_deposit', authorityData.remote_deposit);
                     if (authorityData.treasury_solutions_company_wire_limits) nonCreditGR.setValue('treasury_solutions_company_wire_limits', authorityData.treasury_solutions_company_wire_limits);
                     if (authorityData.fx_wire_limits) nonCreditGR.setValue('fx_wire_limits', authorityData.fx_wire_limits);
-                    
+
                     nonCreditGR.insert();
                 }
                 else if (authorityType === 'credit') {
                     // Create credit authority limit record
                     var creditGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
                     creditGR.initialize();
-                    
+
                     // Link to parent signature request
                     creditGR.setValue('parent', parentId);
-                    
+
                     // Set job code reference for reporting
                     if (producer.job_code) {
                         creditGR.setValue('job_code', producer.job_code);
                     }
-                    
+
                     // Set all credit fields with values
                     if (authorityData.overdraft_internal_accounts) {
                         creditGR.setValue('overdraft_internal_accounts', authorityData.overdraft_internal_accounts);
@@ -875,19 +911,20 @@ if (validationPassed) {
                     if (authorityData.unavailable_funds_external_accounts) {
                         creditGR.setValue('unavailable_funds_external_accounts', authorityData.unavailable_funds_external_accounts);
                     }
-                    
+
                     creditGR.insert();
                 }
-                
+
             } catch (e) {
                 // Handle JSON parsing errors gracefully
                 gs.addErrorMessage('Error processing authority data: ' + e.message);
             }
         }
     }
-    
+
 } else {
-    // Form validation failed - block submission only
-    // Widget handles showing errors to the user
+    // Form validation failed - show errors and prevent submission
+    var errors = producer.form_validation_errors ? producer.form_validation_errors.toString().split('|') : ['Form validation failed'];
+    gs.addErrorMessage('Please correct the following errors: ' + errors.join('; '));
     current.setAbortAction(true);
 }
