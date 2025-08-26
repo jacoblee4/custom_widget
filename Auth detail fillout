@@ -494,9 +494,6 @@ api.controller = function($scope, $window) {
         const checksInternalOnlyContainer = document.getElementById('checksInternalOnlyContainer');
         const checksInternalOnly = document.getElementById('checksInternalOnly');
         
-        // Track if validation has been triggered by submit attempt
-        var hasTriedToSubmit = false;
-        
         // Initialize widget data structure to track all form values
         c.authorityData = {
             // Main authority type checkboxes
@@ -591,7 +588,7 @@ api.controller = function($scope, $window) {
         }
         
         // Comprehensive form validation with business rules
-        function validateForm(showErrors) {
+        function validateForm() {
             var errors = [];
             
             // Rule: Must select at least one authority type
@@ -633,12 +630,8 @@ api.controller = function($scope, $window) {
                 }
             }
             
-            // Only show errors if requested (on submit or after first submit attempt)
-            if (showErrors) {
-                showValidationErrors(errors);
-            }
-            
-            // Set validation result for record producer
+            // Display errors persistently and set validation result for record producer
+            showValidationErrors(errors);
             var isValid = errors.length === 0;
             g_form.setValue('form_validation_errors', errors.join('|'));
             g_form.setValue('form_is_valid', isValid ? 'true' : 'false');
@@ -651,8 +644,8 @@ api.controller = function($scope, $window) {
             // Set the business need field for the parent record
             g_form.setValue('overall_business_need', c.authorityData.overall_business_need);
             
-            // Run validation - only show errors if user has tried to submit
-            validateForm(hasTriedToSubmit);
+            // Run validation check
+            validateForm();
             
             // Prepare data arrays for record producer processing
             var authority_types = [];
@@ -833,29 +826,6 @@ api.controller = function($scope, $window) {
             input.addEventListener('input', handleTextChange);
         }
         
-        // Listen for form submission attempts to trigger validation
-        // This ensures errors only show when user tries to submit
-        setTimeout(function() {
-            // Look for the submit button
-            var submitButton = document.querySelector('button[type="submit"], .btn-primary[ng-click*="submit"], .btn[ng-click*="submit"]');
-            if (submitButton) {
-                submitButton.addEventListener('click', function() {
-                    hasTriedToSubmit = true;
-                    // Trigger validation with error display
-                    validateForm(true);
-                });
-            }
-            
-            // Also listen for form submit events
-            var form = document.querySelector('form');
-            if (form) {
-                form.addEventListener('submit', function() {
-                    hasTriedToSubmit = true;
-                    validateForm(true);
-                });
-            }
-        }, 1000);
-        
         // Initialize all event listeners
         
         // Main authority type checkboxes
@@ -914,10 +884,6 @@ api.controller = function($scope, $window) {
         
         // Initialize text area field
         setupTextAreaField('businessNeed', 'overall_business_need');
-        
-        // Set initial state - form is valid until proven otherwise on submit
-        g_form.setValue('form_is_valid', 'true');
-        g_form.setValue('form_validation_errors', '');
     }
 };
 
