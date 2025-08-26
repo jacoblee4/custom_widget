@@ -847,146 +847,143 @@ api.controller = function($scope, $window) {
 <!-- ============================================ -->
 <!-- RP SCRIPT -->
 <!-- ============================================ -->
-// Authority Widget Record Producer Script - DEBUG VERSION
-gs.info('=== DEBUGGING Authority RP Script ===');
-gs.info('Current record sys_id: ' + current.getUniqueValue());
-
-// Debug all producer values first
-gs.info('DEBUG: All producer values:');
-gs.info('  - form_is_valid: "' + producer.form_is_valid + '" (type: ' + typeof producer.form_is_valid + ')');
-gs.info('  - form_validation_errors: "' + producer.form_validation_errors + '"');
-gs.info('  - authority_types: "' + producer.authority_types + '"');
-gs.info('  - authority_data: "' + producer.authority_data + '"');
-gs.info('  - overall_business_need: "' + producer.overall_business_need + '"');
-gs.info('  - job_code: "' + producer.job_code + '"');
+// Authority Widget Record Producer Script
+gs.info('=== Authority RP Script Starting ===');
 
 var parentId = current.getUniqueValue();
+gs.info('Parent record sys_id: ' + parentId);
 
 // Convert form_is_valid and check validation
 var formIsValid = producer.form_is_valid ? producer.form_is_valid.toString().trim() : 'false';
 var validationPassed = (formIsValid === 'true' || formIsValid === true || producer.form_is_valid === true);
 
-gs.info('DEBUG: formIsValid = "' + formIsValid + '"');
-gs.info('DEBUG: validationPassed = ' + validationPassed);
-
 if (validationPassed) {
-    gs.info('✓ Form validation passed, processing records...');
+    gs.info('Form validation passed, processing records...');
 
-    // Debug authority data parsing
-    if (producer.authority_types && producer.authority_data) {
-        gs.info('✓ Authority data found, parsing...');
+    // Set job code string fields on parent record FIRST
+    if (producer.job_code) {
+        gs.info('Setting job code fields on parent record...');
         
+        // Get the job code record to extract the string values
+        var jobCodeGR = new GlideRecord('x_banun_rbac_job_code');
+        if (jobCodeGR.get(producer.job_code)) {
+            gs.info('Found job code record: ' + producer.job_code);
+            
+            // Update the current parent record
+            current.setValue('job_code_string', jobCodeGR.getValue('job_code'));
+            current.setValue('job_function_description', jobCodeGR.getValue('job_function_description'));
+            current.update();
+            
+            gs.info('Set job_code_string: ' + jobCodeGR.getValue('job_code'));
+            gs.info('Set job_function_description: ' + jobCodeGR.getValue('job_function_description'));
+        } else {
+            gs.info('Job code record not found: ' + producer.job_code);
+        }
+    }
+
+    // Process authority data if available
+    if (producer.authority_types && producer.authority_data) {
         var authority_types = producer.authority_types.toString().split('|');
         var authority_data_strings = producer.authority_data.toString().split('|');
         
-        gs.info('DEBUG: authority_types array: [' + authority_types.join(', ') + ']');
-        gs.info('DEBUG: authority_data_strings length: ' + authority_data_strings.length);
+        gs.info('Authority types: ' + authority_types.join(','));
         
         for (var i = 0; i < authority_types.length; i++) {
             var authorityType = authority_types[i];
             var authorityDataStr = authority_data_strings[i];
             
-            gs.info('DEBUG: Processing item ' + i + ':');
-            gs.info('  - Type: "' + authorityType + '"');
-            gs.info('  - Data string: "' + authorityDataStr + '"');
-            
             try {
                 var authorityData = JSON.parse(authorityDataStr);
-                gs.info('  - Parsed data successfully');
-                gs.info('  - Parsed object keys: [' + Object.keys(authorityData).join(', ') + ']');
+                gs.info('Processing ' + authorityType + ' with data: ' + authorityDataStr);
                 
-                if (authorityType === 'credit') {
-                    gs.info('>>> Creating CREDIT authority record');
-                    gs.info('    - Parent ID: ' + parentId);
-                    gs.info('    - Job Code: ' + producer.job_code);
+                if (authorityType === 'non_credit') {
+                    // Create non-credit authority record
+                    var nonCreditGR = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
+                    nonCreditGR.initialize();
                     
-                    var creditGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
-                    gs.info('    - GlideRecord created for: x_banun_bunow_si_0_credit_authority_limits');
+                    // Set the parent relationship - try different field names
+                    nonCreditGR.setValue('parent', parentId);
+                    gs.info('Set parent relationship (parent): ' + parentId);
                     
-                    creditGR.initialize();
-                    gs.info('    - GlideRecord initialized');
-                    
-                    creditGR.setValue('signature_request', parentId);
-                    gs.info('    - Set signature_request: ' + parentId);
-                    
+                    // Set job code reference
                     if (producer.job_code) {
-                        creditGR.setValue('job_code', producer.job_code);
-                        gs.info('    - Set job_code: ' + producer.job_code);
+                        nonCreditGR.setValue('job_code', producer.job_code);
+                        gs.info('Set job_code reference: ' + producer.job_code);
                     }
                     
-                    // Debug each field setting
+                    // Set all the non-credit fields (only if they have values)
+                    if (authorityData.disbursement_ach) nonCreditGR.setValue('disbursement_ach', authorityData.disbursement_ach);
+                    if (authorityData.disbursement_wire_transfer_external) nonCreditGR.setValue('disbursement_wire_transfer_external', authorityData.disbursement_wire_transfer_external);
+                    if (authorityData.disbursement_wire_transfer_internal) nonCreditGR.setValue('disbursement_wire_transfer_internal', authorityData.disbursement_wire_transfer_internal);
+                    if (authorityData.disbursement_official_checks_external) nonCreditGR.setValue('disbursement_official_checks_external', authorityData.disbursement_official_checks_external);
+                    if (authorityData.disbursement_official_checks_internal) nonCreditGR.setValue('disbursement_official_checks_internal', authorityData.disbursement_official_checks_internal);
+                    if (authorityData.check_cashing_on_us) nonCreditGR.setValue('check_cashing_on_us', authorityData.check_cashing_on_us);
+                    if (authorityData.check_cashing_not_on_us) nonCreditGR.setValue('check_cashing_not_on_us', authorityData.check_cashing_not_on_us);
+                    if (authorityData.remote_deposit) nonCreditGR.setValue('remote_deposit', authorityData.remote_deposit);
+                    if (authorityData.treasury_solutions_company_wire_limits) nonCreditGR.setValue('treasury_solutions_company_wire_limits', authorityData.treasury_solutions_company_wire_limits);
+                    if (authorityData.fx_wire_limits) nonCreditGR.setValue('fx_wire_limits', authorityData.fx_wire_limits);
+                    
+                    var nonCreditId = nonCreditGR.insert();
+                    if (nonCreditId) {
+                        gs.info('SUCCESS: Non-credit authority record created: ' + nonCreditId + ' linked to parent: ' + parentId);
+                    } else {
+                        gs.info('ERROR: Failed to create non-credit authority record');
+                    }
+                }
+                else if (authorityType === 'credit') {
+                    // Create credit authority record
+                    var creditGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
+                    creditGR.initialize();
+                    
+                    // Set the parent relationship - try different field names
+                    creditGR.setValue('parent', parentId);
+                    gs.info('Set parent relationship (parent): ' + parentId);
+                    
+                    // Set job code reference
+                    if (producer.job_code) {
+                        creditGR.setValue('job_code', producer.job_code);
+                        gs.info('Set job_code reference: ' + producer.job_code);
+                    }
+                    
+                    // Set all the credit fields (only if they have values)
                     if (authorityData.overdraft_internal_accounts) {
                         creditGR.setValue('overdraft_internal_accounts', authorityData.overdraft_internal_accounts);
-                        gs.info('    - Set overdraft_internal_accounts: ' + authorityData.overdraft_internal_accounts);
+                        gs.info('Set overdraft_internal_accounts: ' + authorityData.overdraft_internal_accounts);
                     }
                     if (authorityData.overdraft_external_accounts) {
                         creditGR.setValue('overdraft_external_accounts', authorityData.overdraft_external_accounts);
-                        gs.info('    - Set overdraft_external_accounts: ' + authorityData.overdraft_external_accounts);
+                        gs.info('Set overdraft_external_accounts: ' + authorityData.overdraft_external_accounts);
                     }
                     if (authorityData.unavailable_funds_internal_accounts) {
                         creditGR.setValue('unavailable_funds_internal_accounts', authorityData.unavailable_funds_internal_accounts);
-                        gs.info('    - Set unavailable_funds_internal_accounts: ' + authorityData.unavailable_funds_internal_accounts);
+                        gs.info('Set unavailable_funds_internal_accounts: ' + authorityData.unavailable_funds_internal_accounts);
                     }
                     if (authorityData.unavailable_funds_external_accounts) {
                         creditGR.setValue('unavailable_funds_external_accounts', authorityData.unavailable_funds_external_accounts);
-                        gs.info('    - Set unavailable_funds_external_accounts: ' + authorityData.unavailable_funds_external_accounts);
+                        gs.info('Set unavailable_funds_external_accounts: ' + authorityData.unavailable_funds_external_accounts);
                     }
                     
-                    gs.info('    - About to insert record...');
                     var creditId = creditGR.insert();
-                    
                     if (creditId) {
-                        gs.info('    - ✓ SUCCESS: Credit record created with ID: ' + creditId);
+                        gs.info('SUCCESS: Credit authority record created: ' + creditId + ' linked to parent: ' + parentId);
                     } else {
-                        gs.info('    - ✗ FAILED: Could not create credit record');
-                        gs.info('    - Last error: ' + creditGR.getLastErrorMessage());
+                        gs.info('ERROR: Failed to create credit authority record');
                     }
-                }
-                else if (authorityType === 'non_credit') {
-                    gs.info('>>> Creating NON-CREDIT authority record');
-                    // Similar debugging for non-credit...
-                    var nonCreditGR = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
-                    nonCreditGR.initialize();
-                    nonCreditGR.setValue('signature_request', parentId);
-                    if (producer.job_code) {
-                        nonCreditGR.setValue('job_code', producer.job_code);
-                    }
-                    
-                    // Set fields...
-                    var nonCreditId = nonCreditGR.insert();
-                    
-                    if (nonCreditId) {
-                        gs.info('    - ✓ SUCCESS: Non-credit record created with ID: ' + nonCreditId);
-                    } else {
-                        gs.info('    - ✗ FAILED: Could not create non-credit record');
-                        gs.info('    - Last error: ' + nonCreditGR.getLastErrorMessage());
-                    }
-                }
-                else {
-                    gs.info('>>> Unknown authority type: ' + authorityType);
                 }
                 
             } catch (e) {
-                gs.info('✗ ERROR: Failed to parse JSON: ' + e.message);
-                gs.info('  - Raw data string: "' + authorityDataStr + '"');
+                gs.info('ERROR: Failed to process authority data: ' + e.message);
             }
         }
-        
     } else {
-        gs.info('✗ No authority data found');
-        gs.info('  - authority_types exists: ' + (producer.authority_types ? 'YES' : 'NO'));
-        gs.info('  - authority_data exists: ' + (producer.authority_data ? 'YES' : 'NO'));
-        
-        if (!producer.authority_types) gs.info('  - authority_types is: ' + producer.authority_types);
-        if (!producer.authority_data) gs.info('  - authority_data is: ' + producer.authority_data);
+        gs.info('No authority data found to process');
     }
     
 } else {
-    gs.info('✗ Form validation failed');
+    // Form validation failed
     var errors = producer.form_validation_errors ? producer.form_validation_errors.toString().split('|') : ['Form validation failed'];
-    gs.info('✗ Validation errors: ' + errors.join('; '));
     gs.addErrorMessage('Please correct the following errors: ' + errors.join('; '));
     current.setAbortAction(true);
 }
 
-gs.info('=== DEBUG Authority RP Script Complete ===');
+gs.info('=== Authority RP Script Complete ===');
