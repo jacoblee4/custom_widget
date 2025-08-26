@@ -133,7 +133,8 @@ If applicable: Enter the requested wire limit amount.">ⓘ</span>
                 <div class="form-group">
                     <label for="overdraft">
                         Overdraft 
-                        <span class="info-icon" title="Enter the overdraft limit for this authority">ⓘ</span>
+                        <span class="info-icon" title="Overdraft – This authority provides approval limits for Overdraft transactions based on the requested and approved selections. Internal Accounts are defined as BankUnited owned and controlled accounts.
+If applicable: Enter the requested approval amount. If the authority type should be restricted to internal accounts ONLY, select the appropriate option.">ⓘ</span>
                     </label>
                     <div class="currency-wrapper">
                         <span class="currency-symbol">$</span>
@@ -149,7 +150,8 @@ If applicable: Enter the requested wire limit amount.">ⓘ</span>
                 <div class="form-group">
                     <label for="unavailableFunds">
                         Unavailable Funds 
-                        <span class="info-icon" title="Enter the unavailable funds limit for this authority">ⓘ</span>
+                        <span class="info-icon" title="Unavailable Funds – This authority provides approval limits for Unavailable Funds transactions based on the requested and approved selections. Internal Accounts are defined as BankUnited owned and controlled accounts.
+If applicable: Enter the requested approval amount. If the authority type should be restricted to internal accounts ONLY, select the appropriate option.">ⓘ</span>
                     </label>
                     <div class="currency-wrapper">
                         <span class="currency-symbol">$</span>
@@ -167,7 +169,7 @@ If applicable: Enter the requested wire limit amount.">ⓘ</span>
     <div id="justificationSection" class="justification-section">
         <h3>Justification</h3>
         <div class="info-message">
-            Request Justification Information Icon - Using the text box below, please provide a detailed justification for this request.
+            Using the text box below, please provide a detailed justification for this request. For New Authority or Limit Change requests, include what the authority will be used for (i.e. The approval of Loan Fundings, Customer Transactions, Cash Management, etc.).
         </div>
         <div class="form-group">
             <label for="businessNeed">Overall Business Need <span class="required-asterisk">*</span></label>
