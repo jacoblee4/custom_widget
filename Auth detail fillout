@@ -262,153 +262,40 @@
 <!-- Place this in the "Client Controller" field -->
 <!-- ============================================ -->
 
-api.controller = function($scope, $window) {
-    var c = this;
+api.controller = function updateRecordProducerField(fieldName, value) {
+    console.log(">>> Updating RP field:", fieldName, value);
 
-    c.$onInit = function() {
-        setTimeout(initWidget, 500);
-    };
+    try {
+        let gformRef =
+            $window.g_form ||
+            ($window.parent && $window.parent.g_form) ||
+            ($window.top && $window.top.g_form);
 
-    function initWidget() {
-        console.log("=== Authority Limit Widget Init ===");
-
-        // Elements
-        const disbursement = document.getElementById("disbursement");
-        const overdraft = document.getElementById("overdraft");
-        const businessNeed = document.getElementById("businessNeed");
-        const nonCreditCheckbox = document.getElementById("nonCreditAuth");
-        const creditCheckbox = document.getElementById("creditAuth");
-        const nonCreditGroup = document.getElementById("nonCreditGroup");
-        const creditGroup = document.getElementById("creditGroup");
-        const nonCreditSection = document.getElementById("nonCreditSection");
-        const creditSection = document.getElementById("creditSection");
-        const justificationSection = document.getElementById("justificationSection");
-
-        // === Currency Formatting ===
-        function formatCurrencyInput(field, targetName) {
-            if (!field) return;
-
-            // While typing: update hidden var with raw number
-            field.addEventListener("input", function(e) {
-                let raw = e.target.value.replace(/,/g, "");
-                updateRecordProducerField(targetName, raw);
-            });
-
-            // On blur: format with commas
-            field.addEventListener("blur", function(e) {
-                let raw = e.target.value.replace(/,/g, "");
-                if (raw && !isNaN(raw)) {
-                    e.target.value = Number(raw).toLocaleString();
-                    updateRecordProducerField(targetName, raw);
-                }
-            });
-        }
-
-        // === Textarea sync ===
-        function setupTextArea(field, targetName) {
-            if (!field) return;
-            field.addEventListener("input", function(e) {
-                updateRecordProducerField(targetName, e.target.value);
-            });
-        }
-
-        // === Checkboxes sync + section toggle ===
-        function handleAuthoritySelection() {
-            const nonCreditChecked = nonCreditCheckbox.checked;
-            const creditChecked = creditCheckbox.checked;
-
-            nonCreditGroup.classList.toggle("active", nonCreditChecked);
-            creditGroup.classList.toggle("active", creditChecked);
-
-            nonCreditSection.classList.toggle("active", nonCreditChecked);
-            creditSection.classList.toggle("active", creditChecked);
-            justificationSection.classList.toggle("active", nonCreditChecked || creditChecked);
-
-            updateRecordProducerField("non_credit_authority_check", nonCreditChecked);
-            updateRecordProducerField("credit_authority_check", creditChecked);
-        }
-
-        if (nonCreditCheckbox) nonCreditCheckbox.addEventListener("change", handleAuthoritySelection);
-        if (creditCheckbox) creditCheckbox.addEventListener("change", handleAuthoritySelection);
-
-        // Click entire group to toggle
-        if (nonCreditGroup) nonCreditGroup.addEventListener("click", e => {
-            if (e.target.tagName !== "INPUT") {
-                nonCreditCheckbox.checked = !nonCreditCheckbox.checked;
-                handleAuthoritySelection();
-            }
-        });
-        if (creditGroup) creditGroup.addEventListener("click", e => {
-            if (e.target.tagName !== "INPUT") {
-                creditCheckbox.checked = !creditCheckbox.checked;
-                handleAuthoritySelection();
-            }
-        });
-
-        // Hook up fields
-        formatCurrencyInput(disbursement, "disbursement");
-        formatCurrencyInput(overdraft, "overdraft");
-        setupTextArea(businessNeed, "overall_business_need");
-
-        // === Util: push into hidden RP variable ===
-        function updateRecordProducerField(fieldName, value) {
-            console.log(">>> Updating RP field:", fieldName, value);
-
+        // 1. Update g_form if possible
+        if (gformRef && typeof gformRef.setValue === "function") {
             try {
-                let gformRef =
-                    $window.g_form ||
-                    ($window.parent && $window.parent.g_form) ||
-                    ($window.top && $window.top.g_form);
-
-                if (gformRef) {
-                    gformRef.setValue(fieldName, value);
-                    return;
-                }
-
-                // fallback: manipulate hidden input
-                let field = document.querySelector(
-                    `input[name="${fieldName}"], textarea[name="${fieldName}"]`
-                );
-                if (field) {
-                    field.value = value;
-                    field.dispatchEvent(new Event("input", { bubbles: true }));
-                    field.dispatchEvent(new Event("change", { bubbles: true }));
-                }
-            } catch (err) {
-                console.error("updateRecordProducerField failed:", err);
+                gformRef.setValue(fieldName, value);
+            } catch (e) {
+                console.warn("g_form.setValue failed for " + fieldName, e);
             }
         }
 
-        // === Preload existing values from RP ===
-        try {
-            let gformRef =
-                $window.g_form ||
-                ($window.parent && $window.parent.g_form) ||
-                ($window.top && $window.top.g_form);
-
-            if (gformRef) {
-                // Currency
-                let d = gformRef.getValue("disbursement");
-                if (d) disbursement.value = Number(d).toLocaleString();
-                let o = gformRef.getValue("overdraft");
-                if (o) overdraft.value = Number(o).toLocaleString();
-
-                // Textarea
-                businessNeed.value = gformRef.getValue("overall_business_need") || "";
-
-                // Checkboxes
-                if (gformRef.getValue("non_credit_authority_check") === "true")
-                    nonCreditCheckbox.checked = true;
-                if (gformRef.getValue("credit_authority_check") === "true")
-                    creditCheckbox.checked = true;
-
-                handleAuthoritySelection();
-            }
-        } catch (e) {
-            console.warn("Could not preload RP values:", e);
+        // 2. Always try to update the hidden input DOM element too
+        let field = document.querySelector(
+            `input[name="${fieldName}"], textarea[name="${fieldName}"]`
+        );
+        if (field) {
+            field.value = value;
+            field.dispatchEvent(new Event("input", { bubbles: true }));
+            field.dispatchEvent(new Event("change", { bubbles: true }));
+        } else {
+            console.warn("No hidden input found for " + fieldName);
         }
+    } catch (err) {
+        console.error("updateRecordProducerField failed:", err);
     }
 }
+
 
 
 
