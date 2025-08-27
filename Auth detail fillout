@@ -995,7 +995,7 @@ if (shouldProceed) {
             gs.addErrorMessage('Please correct the following errors: Overall Business Need is required');
             current.setAbortAction(true);
             gs.info('AUTH_FIX_DEBUG: Remove validation failed - business need missing');
-            return;
+            validationPassed = false;
         }
     } else {
         // For other request types, use the client validation result
@@ -1107,10 +1107,11 @@ if (shouldProceed) {
             }
         }
 
-   } else {
-    gs.addErrorMessage('Please correct the following errors: Overall Business Need is required');
-    current.setAbortAction(true);
-    gs.info('AUTH_FIX_DEBUG: Remove validation failed - business need missing');
-    validationPassed = false;
-}
+    } else {
+        // This should only happen for non-remove requests now
+        var errors = producer.form_validation_errors ? producer.form_validation_errors.toString().split('|') : ['Form validation failed'];
+        gs.info('AUTH_FIX_DEBUG: Validation failed, errors = ' + errors.join('; '));
+        gs.addErrorMessage('Please correct the following errors: ' + errors.join('; '));
+        current.setAbortAction(true);
+    }
 }
