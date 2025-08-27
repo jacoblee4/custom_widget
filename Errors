@@ -1,35 +1,35 @@
-08-27-2025 15:21:15
-Information	x_banun_bunow_si_0	AUTH_FIX_DEBUG: Final validationPassed = false
-
-08-27-2025 15:21:15
-Information	x_banun_bunow_si_0	AUTH_FIX_DEBUG: form_is_valid value = false
-
-08-27-2025 15:21:15
-Information	x_banun_bunow_si_0	AUTH_FIX_DEBUG: Debug request type = not_set
-
-08-27-2025 15:21:15
-Information	x_banun_bunow_si_0	AUTH_FIX_DEBUG: Remove validation failed - business need missing
-
-08-27-2025 15:21:15
-Information	x_banun_bunow_si_0	AUTH_FIX_DEBUG: Debug errors count = not_set
-
-08-27-2025 15:21:15
+08-27-2025 15:24:47
 Information	x_banun_bunow_si_0	AUTH_FIX_DEBUG: Request type = remove_authority
 
-08-27-2025 15:21:15
-Information	x_banun_bunow_si_0	AUTH_FIX_DEBUG: Server-side remove_authority validation
+08-27-2025 15:24:47
+Information	x_banun_bunow_si_0	AUTH_FIX_DEBUG: Remove validation failed - business need missing
 
-08-27-2025 15:21:15
-Information	x_banun_bunow_si_0	AUTH_FIX_DEBUG: Debug validation step = not_set
+08-27-2025 15:24:47
+Information	x_banun_bunow_si_0	AUTH_FIX_DEBUG: Debug errors count = not_set
 
-08-27-2025 15:21:15
+08-27-2025 15:24:47
 Information	x_banun_bunow_si_0	AUTH_FIX_DEBUG: Starting form validation
 
-08-27-2025 15:21:15
+08-27-2025 15:24:47
+Information	x_banun_bunow_si_0	AUTH_FIX_DEBUG: Server-side remove_authority validation
+
+08-27-2025 15:24:47
+Information	x_banun_bunow_si_0	AUTH_FIX_DEBUG: Debug validation step = not_set
+
+08-27-2025 15:24:47
 Information	x_banun_bunow_si_0	AUTH_FIX_DEBUG: Validation failed, errors = Overall Business Need is required; You must select at least one authority type (Credit Authority or Non-Credit Authority)
 
-08-27-2025 15:21:15
+08-27-2025 15:24:47
 Information	x_banun_bunow_si_0	AUTH_FIX_DEBUG: form_validation_errors = Overall Business Need is required|You must select at least one authority type (Credit Authority or Non-Credit Authority)
 
-08-27-2025 15:21:15
+08-27-2025 15:24:47
 Information	x_banun_bunow_si_0	AUTH_FIX_DEBUG: Debug c.requestType = not_set
+
+08-27-2025 15:24:47
+Information	x_banun_bunow_si_0	AUTH_FIX_DEBUG: Final validationPassed = false
+
+08-27-2025 15:24:47
+Information	x_banun_bunow_si_0	AUTH_FIX_DEBUG: form_is_valid value = false
+
+08-27-2025 15:24:47
+Information	x_banun_bunow_si_0	AUTH_FIX_DEBUG: Debug request type = not_set
