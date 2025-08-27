@@ -981,12 +981,30 @@ if (shouldProceed) {
     gs.info('AUTH_FIX_DEBUG: form_is_valid value = ' + producer.form_is_valid);
     gs.info('AUTH_FIX_DEBUG: form_validation_errors = ' + (producer.form_validation_errors || 'none'));
     
-    // Validate form data before processing
-    var formIsValid = producer.form_is_valid ? producer.form_is_valid.toString().trim() : 'false';
-    var validationPassed = (formIsValid === 'true' || formIsValid === true || producer.form_is_valid === true);
+    var validationPassed = false;
     
-    gs.info('AUTH_FIX_DEBUG: formIsValid string = ' + formIsValid);
-    gs.info('AUTH_FIX_DEBUG: validationPassed = ' + validationPassed);
+    // Handle remove_authority validation on server side
+    if (requestType === 'remove_authority') {
+        gs.info('AUTH_FIX_DEBUG: Server-side remove_authority validation');
+        // For remove requests, only check if business justification is provided
+        var businessNeed = producer.overall_business_need ? producer.overall_business_need.toString().trim() : '';
+        if (businessNeed && businessNeed.length > 0) {
+            validationPassed = true;
+            gs.info('AUTH_FIX_DEBUG: Remove validation passed - business need provided');
+        } else {
+            gs.addErrorMessage('Please correct the following errors: Overall Business Need is required');
+            current.setAbortAction(true);
+            gs.info('AUTH_FIX_DEBUG: Remove validation failed - business need missing');
+            return;
+        }
+    } else {
+        // For other request types, use the client validation result
+        var formIsValid = producer.form_is_valid ? producer.form_is_valid.toString().trim() : 'false';
+        validationPassed = (formIsValid === 'true' || formIsValid === true || producer.form_is_valid === true);
+        gs.info('AUTH_FIX_DEBUG: Using client validation result = ' + validationPassed);
+    }
+    
+    gs.info('AUTH_FIX_DEBUG: Final validationPassed = ' + validationPassed);
 
     if (validationPassed) {
         gs.info('AUTH_FIX_DEBUG: Validation passed, proceeding');
@@ -1002,8 +1020,8 @@ if (shouldProceed) {
             }
         }
 
-        // Process authority data if provided by widget
-        if (producer.authority_types && producer.authority_data) {
+        // Process authority data if provided by widget (skip for remove requests)
+        if (requestType !== 'remove_authority' && producer.authority_types && producer.authority_data) {
             var authority_types = producer.authority_types.toString().split('|');
             var authority_data_strings = producer.authority_data.toString().split('|');
 
@@ -1090,7 +1108,7 @@ if (shouldProceed) {
         }
 
     } else {
-        // Form validation failed - show errors and prevent submission
+        // This should only happen for non-remove requests now
         var errors = producer.form_validation_errors ? producer.form_validation_errors.toString().split('|') : ['Form validation failed'];
         gs.info('AUTH_FIX_DEBUG: Validation failed, errors = ' + errors.join('; '));
         gs.addErrorMessage('Please correct the following errors: ' + errors.join('; '));
