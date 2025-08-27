@@ -585,69 +585,73 @@ api.controller = function($scope, $window) {
 
         // Updated validation logic to handle remove authority
         function validateForm() {
-            var errors = [];
+    var errors = [];
 
-            // Get current request type to determine validation rules
-            var currentRequestType = c.getRequestType();
+    // Get current request type to determine validation rules
+    var currentRequestType = c.getRequestType();
+    
+    // Add debugging to see what's happening
+    console.log('validateForm - currentRequestType:', currentRequestType);
+    console.log('validateForm - c.requestType:', c.requestType);
 
-            // For remove authority requests, only validate justification
-            if (currentRequestType === 'remove_authority') {
-                if (!c.authorityData.overall_business_need || c.authorityData.overall_business_need.trim() === '') {
-                    errors.push('Overall Business Need is required');
-                }
-
-                var isValid = errors.length === 0;
-                g_form.setValue('form_validation_errors', errors.join('|'));
-                g_form.setValue('form_is_valid', isValid ? 'true' : 'false');
-                return isValid;
-            }
-
-            // For new_authority and change_to_existing_authority, run normal validation
-            
-            // Business justification required for all request types
-            if (!c.authorityData.overall_business_need || c.authorityData.overall_business_need.trim() === '') {
-                errors.push('Overall Business Need is required');
-            }
-
-            // Must select at least one authority type (only for non-remove requests)
-            if (!c.authorityData.non_credit_checked && !c.authorityData.credit_checked) {
-                errors.push('You must select at least one authority type (Credit Authority or Non-Credit Authority)');
-            }
-
-            // Non-credit authority validation (only for non-remove requests)
-            if (c.authorityData.non_credit_checked) {
-                var hasNonCreditValue = c.authorityData.disbursement || c.authorityData.check_cashing_on_us ||
-                    c.authorityData.check_cashing_not_on_us || c.authorityData.remote_deposit ||
-                    c.authorityData.treasury_solutions_company_wire_limits || c.authorityData.fx_wire_limits;
-
-                if (!hasNonCreditValue) {
-                    errors.push('If Non-Credit Authority is selected, at least one currency field must have a value');
-                }
-
-                if (c.authorityData.disbursement &&
-                    !c.authorityData.ach_checked &&
-                    !c.authorityData.wire_transfer_checked &&
-                    !c.authorityData.official_checks_checked) {
-                    errors.push('If Disbursement amount is entered, you must select at least one option: ACH, Wire Transfer, or Official Checks');
-                }
-            }
-
-            // Credit authority validation (only for non-remove requests)
-            if (c.authorityData.credit_checked) {
-                var hasCreditValue = c.authorityData.overdraft || c.authorityData.unavailable_funds;
-                if (!hasCreditValue) {
-                    errors.push('If Credit Authority is selected, at least one currency field must have a value');
-                }
-            }
-
-            var isValid = errors.length === 0;
-
-            // Update Record Producer variables for server-side validation
-            g_form.setValue('form_validation_errors', errors.join('|'));
-            g_form.setValue('form_is_valid', isValid ? 'true' : 'false');
-
-            return isValid;
+    // For remove authority requests, only validate justification
+    if (currentRequestType === 'remove_authority' || c.requestType === 'remove_authority') {
+        console.log('Remove authority validation - only checking justification');
+        if (!c.authorityData.overall_business_need || c.authorityData.overall_business_need.trim() === '') {
+            errors.push('Overall Business Need is required');
         }
+
+        var isValid = errors.length === 0;
+        g_form.setValue('form_validation_errors', errors.join('|'));
+        g_form.setValue('form_is_valid', isValid ? 'true' : 'false');
+        return isValid;
+    }
+
+    // For new_authority and change_to_existing_authority, run normal validation
+    console.log('Full validation running for request type:', currentRequestType);
+    
+    // Business justification required for all request types
+    if (!c.authorityData.overall_business_need || c.authorityData.overall_business_need.trim() === '') {
+        errors.push('Overall Business Need is required');
+    }
+
+    // Must select at least one authority type (only for non-remove requests)
+    if (!c.authorityData.non_credit_checked && !c.authorityData.credit_checked) {
+        errors.push('You must select at least one authority type (Credit Authority or Non-Credit Authority)');
+    }
+
+    // Rest of validation remains the same...
+    // (Non-credit and credit authority validation)
+    if (c.authorityData.non_credit_checked) {
+        var hasNonCreditValue = c.authorityData.disbursement || c.authorityData.check_cashing_on_us ||
+            c.authorityData.check_cashing_not_on_us || c.authorityData.remote_deposit ||
+            c.authorityData.treasury_solutions_company_wire_limits || c.authorityData.fx_wire_limits;
+
+        if (!hasNonCreditValue) {
+            errors.push('If Non-Credit Authority is selected, at least one currency field must have a value');
+        }
+
+        if (c.authorityData.disbursement &&
+            !c.authorityData.ach_checked &&
+            !c.authorityData.wire_transfer_checked &&
+            !c.authorityData.official_checks_checked) {
+            errors.push('If Disbursement amount is entered, you must select at least one option: ACH, Wire Transfer, or Official Checks');
+        }
+    }
+
+    if (c.authorityData.credit_checked) {
+        var hasCreditValue = c.authorityData.overdraft || c.authorityData.unavailable_funds;
+        if (!hasCreditValue) {
+            errors.push('If Credit Authority is selected, at least one currency field must have a value');
+        }
+    }
+
+    var isValid = errors.length === 0;
+    g_form.setValue('form_validation_errors', errors.join('|'));
+    g_form.setValue('form_is_valid', isValid ? 'true' : 'false');
+
+    return isValid;
+}
 
         // Updated updateRecordProducerVariables function
         function updateRecordProducerVariables() {
