@@ -18,7 +18,7 @@
   <div ng-if="c.jobCode && !c.loading && c.employees.length > 0" class="employees-container">
     <h4 class="employees-header">
       <i class="fa fa-users"></i>
-      Employees with job code: <strong>{{c.jobCodeDisplay || 'Unknown'}}</strong>
+      Employees With Job Code: <strong>{{c.jobCodeDisplay || 'Unknown'}}</strong>
       <span class="employee-count">({{c.employees.length}} total)</span>
     </h4>
     
@@ -68,7 +68,10 @@
   </div>
 </div>
 
-<!-- CSS - This goes in the CSS section of the widget -->
+
+
+
+<!-- CSS -->
 <style>
 .job-code-employees-widget {
   padding: 15px;
@@ -245,7 +248,6 @@
 </style>
 
 <!-- SERVER SCRIPT -->
-<!-- SERVER SCRIPT -->
 (function() {
   'use strict';
 
@@ -299,6 +301,9 @@
     data.jobCodeDisplay = jobCodeDisplayValue;
   }
 })();
+
+
+
 
 <!-- CLIENT CONTROLLER -->
 api.controller = function($scope, spUtil, $timeout) {
@@ -521,30 +526,170 @@ api.controller = function($scope, spUtil, $timeout) {
   }, 500);
 };
 
-<!-- OPTIONS SCHEMA -->
-[
-  {
-    "hint": "Title to display at the top of the widget",
-    "name": "title",
-    "section": "Presentation",
-    "default_value": "Job Code Employees",
-    "label": "Widget Title",
-    "type": "string"
-  },
-  {
-    "hint": "Field name for the job code on the record producer",
-    "name": "job_code_field",
-    "section": "Behavior",
-    "default_value": "job_code",
-    "label": "Job Code Field Name",
-    "type": "string"
-  },
-  {
-    "hint": "Number of employees to show per page",
-    "name": "page_size",
-    "section": "Behavior",
-    "default_value": "10",
-    "label": "Page Size",
-    "type": "integer"
-  }
-]
+
+
+
+<!-- Record Producer Script -->
+// Authority Widget Record Producer Script
+// Processes widget data and creates parent/child authority records
+
+var parentId = current.getUniqueValue();
+var shouldProceed = true; // Flag to control processing flow
+
+// Check authority limits validation first
+var requestType = producer.request_type ? producer.request_type.toString() : '';
+var jobCode = producer.job_code ? producer.job_code.toString() : '';
+
+// If we have both request type and job code, check if this combination should be blocked
+if (requestType && jobCode) {
+    // Get authority limits to check if they exist
+    var limitsExist = false;
+    var limitGr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
+    limitGr.addQuery('job_code', jobCode);
+    limitGr.addQuery('active', true);
+    limitGr.query();
+    if (limitGr.hasNext()) {
+        limitsExist = true;
+    }
+    
+    var shouldBlock = false;
+    var blockMessage = '';
+    
+    // Get job code display value
+    var jobCodeDisplay = '';
+    var jobGr = new GlideRecord('x_banun_rbac_job_code');
+    if (jobGr.get(jobCode)) {
+        jobCodeDisplay = jobGr.getDisplayValue();
+    }
+    
+    // Check blocking conditions
+    if (requestType === 'new_authority' && limitsExist) {
+        shouldBlock = true;
+        blockMessage = 'Authority limits already exist for job code ' + jobCodeDisplay + '. Please submit a "Change to Existing Authority" request instead.';
+    } else if (requestType === 'change_to_existing_authority' && !limitsExist) {
+        shouldBlock = true;
+        blockMessage = 'No authority limits found for job code ' + jobCodeDisplay + '. Please submit a "New Authority" request instead.';
+    } else if (requestType === 'remove_authority' && !limitsExist) {
+        shouldBlock = true;
+        blockMessage = 'No existing authority limits found for job code ' + jobCodeDisplay + '. Cannot proceed with removal request.';
+    }
+    
+    if (shouldBlock) {
+        gs.addErrorMessage(blockMessage);
+        current.setAbortAction(true);
+        shouldProceed = false; // Prevent further processing
+    }
+}
+
+// Only proceed if authority limits validation passed
+if (shouldProceed) {
+    // Validate form data before processing
+    var formIsValid = producer.form_is_valid ? producer.form_is_valid.toString().trim() : 'false';
+    var validationPassed = (formIsValid === 'true' || formIsValid === true || producer.form_is_valid === true);
+
+    if (validationPassed) {
+        // Set job code string fields on parent record for display purposes
+        if (producer.job_code) {
+            // Look up job code details from reference table
+            var jobCodeGR = new GlideRecord('x_banun_rbac_job_code');
+            if (jobCodeGR.get(producer.job_code)) {
+                // Set string fields on parent record (no update() call needed - RP handles this)
+                current.setValue('job_code_string', jobCodeGR.getValue('job_code'));
+                current.setValue('job_function_description', jobCodeGR.getValue('job_function_description'));
+            }
+        }
+
+        // Process authority data if provided by widget
+        if (producer.authority_types && producer.authority_data) {
+            var authority_types = producer.authority_types.toString().split('|');
+            var authority_data_strings = producer.authority_data.toString().split('|');
+
+            // Create child records for each authority type selected
+            for (var i = 0; i < authority_types.length; i++) {
+                var authorityType = authority_types[i];
+                var authorityDataStr = authority_data_strings[i];
+
+                try {
+                    var authorityData = JSON.parse(authorityDataStr);
+
+                    if (authorityType === 'non_credit') {
+                        // Create non-credit authority limit record
+                        var nonCreditGR = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
+                        nonCreditGR.initialize();
+
+                        // Link to parent signature request
+                        nonCreditGR.setValue('parent', parentId);
+
+                        // Set job code reference for reporting
+                        if (producer.job_code) {
+                            nonCreditGR.setValue('job_code', producer.job_code);
+                        }
+
+                        // Set all non-credit fields with values
+                        if (authorityData.disbursement_ach) 
+                            nonCreditGR.setValue('disbursement_ach', authorityData.disbursement_ach);
+                        if (authorityData.disbursement_wire_transfer_external) 
+                            nonCreditGR.setValue('disbursement_wire_transfer_external', authorityData.disbursement_wire_transfer_external);
+                        if (authorityData.disbursement_wire_transfer_internal) 
+                            nonCreditGR.setValue('disbursement_wire_transfer_internal', authorityData.disbursement_wire_transfer_internal);
+                        if (authorityData.disbursement_official_checks_external) 
+                            nonCreditGR.setValue('disbursement_official_checks_external', authorityData.disbursement_official_checks_external);
+                        if (authorityData.disbursement_official_checks_internal) 
+                            nonCreditGR.setValue('disbursement_official_checks_internal', authorityData.disbursement_official_checks_internal);
+                        if (authorityData.check_cashing_on_us) 
+                            nonCreditGR.setValue('check_cashing_on_us', authorityData.check_cashing_on_us);
+                        if (authorityData.check_cashing_not_on_us) 
+                            nonCreditGR.setValue('check_cashing_not_on_us', authorityData.check_cashing_not_on_us);
+                        if (authorityData.remote_deposit) 
+                            nonCreditGR.setValue('remote_deposit', authorityData.remote_deposit);
+                        if (authorityData.treasury_solutions_company_wire_limits) 
+                            nonCreditGR.setValue('treasury_solutions_company_wire_limits', authorityData.treasury_solutions_company_wire_limits);
+                        if (authorityData.fx_wire_limits) 
+                            nonCreditGR.setValue('fx_wire_limits', authorityData.fx_wire_limits);
+
+                        nonCreditGR.insert();
+                    }
+                    else if (authorityType === 'credit') {
+                        // Create credit authority limit record
+                        var creditGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
+                        creditGR.initialize();
+
+                        // Link to parent signature request
+                        creditGR.setValue('parent', parentId);
+
+                        // Set job code reference for reporting
+                        if (producer.job_code) {
+                            creditGR.setValue('job_code', producer.job_code);
+                        }
+
+                        // Set all credit fields with values
+                        if (authorityData.overdraft_internal_accounts) {
+                            creditGR.setValue('overdraft_internal_accounts', authorityData.overdraft_internal_accounts);
+                        }
+                        if (authorityData.overdraft_external_accounts) {
+                            creditGR.setValue('overdraft_external_accounts', authorityData.overdraft_external_accounts);
+                        }
+                        if (authorityData.unavailable_funds_internal_accounts) {
+                            creditGR.setValue('unavailable_funds_internal_accounts', authorityData.unavailable_funds_internal_accounts);
+                        }
+                        if (authorityData.unavailable_funds_external_accounts) {
+                            creditGR.setValue('unavailable_funds_external_accounts', authorityData.unavailable_funds_external_accounts);
+                        }
+
+                        creditGR.insert();
+                    }
+
+                } catch (e) {
+                    // Handle JSON parsing errors gracefully
+                    gs.addErrorMessage('Error processing authority data: ' + e.message);
+                }
+            }
+        }
+
+    } else {
+        // Form validation failed - show errors and prevent submission
+        var errors = producer.form_validation_errors ? producer.form_validation_errors.toString().split('|') : ['Form validation failed'];
+        gs.addErrorMessage('Please correct the following errors: ' + errors.join('; '));
+        current.setAbortAction(true);
+    }
+}
