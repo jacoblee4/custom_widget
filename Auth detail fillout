@@ -641,44 +641,44 @@ api.controller = function($scope, $window) {
         function updateWidgetData(fieldName, value) {
             c.authorityData[fieldName] = value;
             updateRecordProducerVariables();
-// Initialize Record Producer variables
-updateRecordProducerVariables();
+            // Initialize Record Producer variables
+            updateRecordProducerVariables();
 
-// Monitor request type changes
-setInterval(function() {
-    handleRequestTypeChange();
-}, 1000);
+            // Monitor request type changes
+            setInterval(function() {
+                handleRequestTypeChange();
+            }, 1000);
         }
 
         // Monitor request type changes to hide/show sections appropriately
-function handleRequestTypeChange() {
-    var currentRequestType = '';
-    try {
-        if (typeof g_form !== 'undefined' && g_form.getValue) {
-            currentRequestType = g_form.getValue('request_type') || '';
-        }
-    } catch (e) {}
+        function handleRequestTypeChange() {
+            var currentRequestType = '';
+            try {
+                if (typeof g_form !== 'undefined' && g_form.getValue) {
+                    currentRequestType = g_form.getValue('request_type') || '';
+                }
+            } catch (e) {}
 
-    if (currentRequestType === 'remove_authority') {
-        // Hide all sections for remove requests
-        nonCreditGroup.classList.remove('active');
-        creditGroup.classList.remove('active');
-        nonCreditSection.classList.remove('active');
-        creditSection.classList.remove('active');
-        justificationSection.classList.remove('active');
-        
-        // Uncheck checkboxes
-        if (nonCreditCheckbox) nonCreditCheckbox.checked = false;
-        if (creditCheckbox) creditCheckbox.checked = false;
-        
-        // Clear data
-        updateWidgetData('non_credit_checked', false);
-        updateWidgetData('credit_checked', false);
-    } else {
-        // For new/change requests, call normal handler
-        handleAuthoritySelection();
-    }
-}
+            if (currentRequestType === 'remove_authority') {
+                // Hide all sections for remove requests
+                nonCreditGroup.classList.remove('active');
+                creditGroup.classList.remove('active');
+                nonCreditSection.classList.remove('active');
+                creditSection.classList.remove('active');
+                justificationSection.classList.remove('active');
+
+                // Uncheck checkboxes
+                if (nonCreditCheckbox) nonCreditCheckbox.checked = false;
+                if (creditCheckbox) creditCheckbox.checked = false;
+
+                // Clear data
+                updateWidgetData('non_credit_checked', false);
+                updateWidgetData('credit_checked', false);
+            } else {
+                // For new/change requests, call normal handler
+                handleAuthoritySelection();
+            }
+        }
 
         // Handle Wire Transfer checkbox changes
         function handleWireTransferChange() {
@@ -802,7 +802,6 @@ function handleRequestTypeChange() {
         updateRecordProducerVariables();
     }
 };
-
 
 <!-- ============================================ -->
 <!-- SERVER SCRIPT -->
