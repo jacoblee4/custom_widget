@@ -2,12 +2,13 @@
 <!-- HTML  -->
 <!-- ============================================ -->
 
-<div class="widget-container">
+<div class="widget-container" ng-show="c.shouldShowWidget()">
     <div class="widget-header">
         <h2>Authority Limit Details</h2>
     </div>
     
-    <div class="main-content">
+    <!-- Show authority selection and details for new/change requests -->
+    <div class="main-content" ng-hide="c.isRemoveAuthority()">
         <div class="left-column">
             <div class="checkbox-group" id="nonCreditGroup">
                 <input type="checkbox" id="nonCreditAuth" name="non_credit_authority_check">
@@ -165,10 +166,14 @@ If applicable: Enter the requested approval amount. If the authority type should
         </div>
     </div>
 
-    <div id="justificationSection" class="justification-section">
+    <!-- Justification Section - Always show when widget is visible -->
+    <div id="justificationSection" class="justification-section active">
         <h3>Justification</h3>
-        <div class="info-message">
+        <div class="info-message" ng-hide="c.isRemoveAuthority()">
             Using the text box below, please provide a detailed justification for this request. For New Authority or Limit Change requests, include what the authority will be used for (i.e. The approval of Loan Fundings, Customer Transactions, Cash Management, etc.).
+        </div>
+        <div class="info-message" ng-show="c.isRemoveAuthority()">
+            Please provide a detailed justification for removing all existing authority limits for this job code.
         </div>
         <div class="form-group">
             <label for="businessNeed">Overall Business Need <span class="required-asterisk">*</span></label>
@@ -455,13 +460,67 @@ api.controller = function($scope, $window) {
     var c = this;
     var g_form = $scope.page.g_form;
 
+    // Add request type tracking
+    c.requestType = '';
+
     c.$onInit = function() {
         setTimeout(function() {
             initializeWidget();
         }, 500);
     };
 
+    // Method to check if current request is remove authority
+    c.isRemoveAuthority = function() {
+        return c.requestType === 'remove_authority';
+    };
+
+    // Method to determine if widget should be visible
+    c.shouldShowWidget = function() {
+        return c.requestType && (c.requestType === 'new_authority' || c.requestType === 'change_to_existing_authority' || c.requestType === 'remove_authority');
+    };
+
+    // Method to get request type from g_form
+    c.getRequestType = function() {
+        try {
+            if (typeof g_form !== 'undefined' && g_form.getValue) {
+                return g_form.getValue('request_type') || '';
+            }
+        } catch (e) {
+            // Handle error silently
+        }
+        return '';
+    };
+
+    // Method to monitor request type changes
+    c.setupRequestTypeMonitoring = function() {
+        var lastRequestType = '';
+        
+        // Poll for request type changes
+        var checkInterval = setInterval(function() {
+            var currentRequestType = c.getRequestType();
+            
+            if (currentRequestType !== lastRequestType) {
+                lastRequestType = currentRequestType;
+                c.requestType = currentRequestType;
+                
+                // Apply changes to scope
+                $scope.$apply(function() {
+                    // Re-run validation when request type changes
+                    validateForm();
+                });
+            }
+        }, 500);
+        
+        // Clean up on destroy
+        $scope.$on('$destroy', function() {
+            clearInterval(checkInterval);
+        });
+    };
+
     function initializeWidget() {
+        // Start monitoring request type
+        c.setupRequestTypeMonitoring();
+        
         // Get references to DOM elements
         const nonCreditCheckbox = document.getElementById('nonCreditAuth');
         const creditCheckbox = document.getElementById('creditAuth');
@@ -500,7 +559,7 @@ api.controller = function($scope, $window) {
             overall_business_need: ''
         };
 
-        // Currency formatting utilities
+        // Currency formatting utilities (same as before)
         function formatCurrency(value) {
             if (!value) return '';
             let numStr = value.toString().replace(/[^\d.]/g, '');
@@ -522,21 +581,15 @@ api.controller = function($scope, $window) {
             return formattedValue.replace(/[^\d.]/g, '');
         }
 
-        // Validation logic
+        // Updated validation logic to handle remove authority
         function validateForm() {
             var errors = [];
 
-            // Get current request type to determine if validation is needed
-            var currentRequestType = '';
-            try {
-                if (typeof g_form !== 'undefined' && g_form.getValue) {
-                    currentRequestType = g_form.getValue('request_type') || '';
-                }
-            } catch (e) {}
+            // Get current request type to determine validation rules
+            var currentRequestType = c.getRequestType();
 
-            // Skip validation for remove authority requests
+            // For remove authority requests, only validate justification
             if (currentRequestType === 'remove_authority') {
-                // For remove requests, only validate justification - no authority selection needed
                 if (!c.authorityData.overall_business_need || c.authorityData.overall_business_need.trim() === '') {
                     errors.push('Overall Business Need is required');
                 }
@@ -548,8 +601,7 @@ api.controller = function($scope, $window) {
             }
 
             // For new_authority and change_to_existing_authority, run normal validation
-
-            // Must select at least one authority type (but NOT for remove requests)
+            // Must select at least one authority type
             if (!c.authorityData.non_credit_checked && !c.authorityData.credit_checked) {
                 errors.push('You must select at least one authority type (Credit Authority or Non-Credit Authority)');
             }
@@ -594,17 +646,12 @@ api.controller = function($scope, $window) {
             return isValid;
         }
 
-        // Updated updateRecordProducerVariables function - also needs modification
+        // Updated updateRecordProducerVariables function
         function updateRecordProducerVariables() {
             g_form.setValue('overall_business_need', c.authorityData.overall_business_need);
 
             // Get current request type
-            var currentRequestType = '';
-            try {
-                if (typeof g_form !== 'undefined' && g_form.getValue) {
-                    currentRequestType = g_form.getValue('request_type') || '';
-                }
-            } catch (e) {}
+            var currentRequestType = c.getRequestType();
 
             // For remove authority requests, don't set authority data
             if (currentRequestType === 'remove_authority') {
@@ -617,7 +664,7 @@ api.controller = function($scope, $window) {
             var authority_types = [];
             var authority_data = [];
 
-            // Process non-credit authority data
+            // Process non-credit authority data (only for non-remove requests)
             if (c.authorityData.non_credit_checked) {
                 authority_types.push('non_credit');
                 var nonCreditData = {
@@ -635,7 +682,7 @@ api.controller = function($scope, $window) {
                 authority_data.push(JSON.stringify(nonCreditData));
             }
 
-            // Process credit authority data
+            // Process credit authority data (only for non-remove requests)
             if (c.authorityData.credit_checked) {
                 authority_types.push('credit');
                 var creditData = {
@@ -653,6 +700,10 @@ api.controller = function($scope, $window) {
             // Run validation
             validateForm();
         }
+
+        // Rest of the functions remain the same...
+        // (updateWidgetData, handleAuthoritySelection, etc.)
+
         // Update widget data and sync with Record Producer
         function updateWidgetData(fieldName, value) {
             c.authorityData[fieldName] = value;
@@ -669,7 +720,6 @@ api.controller = function($scope, $window) {
             creditGroup.classList.toggle('active', creditChecked);
             nonCreditSection.classList.toggle('active', nonCreditChecked);
             creditSection.classList.toggle('active', creditChecked);
-            justificationSection.classList.toggle('active', nonCreditChecked || creditChecked);
 
             // Update data model
             updateWidgetData('non_credit_checked', nonCreditChecked);
