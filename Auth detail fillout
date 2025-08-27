@@ -803,7 +803,8 @@ api.controller = function($scope, $window) {
                 errorBox.style.display = 'block';
                 errorBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
-            return false; // block submission
+            // Prevent form submission by throwing an error that ServiceNow will catch
+            throw new Error('Form validation failed');
         }
         return true; // allow submission
     };
@@ -925,7 +926,8 @@ if (validationPassed) {
     }
 
 } else {
-    // Form validation failed - prevent submission silently
-    // The widget handles error display, so we don't need ServiceNow's error messages
+    // Form validation failed - show errors and prevent submission
+    var errors = producer.form_validation_errors ? producer.form_validation_errors.toString().split('|') : ['Form validation failed'];
+    gs.addErrorMessage('Please correct the following errors: ' + errors.join('; '));
     current.setAbortAction(true);
 }
