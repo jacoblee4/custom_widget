@@ -964,10 +964,6 @@ if (requestType && jobCode) {
 if (shouldProceed) {
     gs.info('AUTH_FIX_DEBUG: Starting form validation');
     gs.info('AUTH_FIX_DEBUG: Request type = ' + requestType);
-    gs.info('AUTH_FIX_DEBUG: Debug request type = ' + (producer.debug_request_type || 'not_set'));
-    gs.info('AUTH_FIX_DEBUG: Debug c.requestType = ' + (producer.debug_c_request_type || 'not_set'));
-    gs.info('AUTH_FIX_DEBUG: Debug validation step = ' + (producer.debug_validation_step || 'not_set'));
-    gs.info('AUTH_FIX_DEBUG: Debug errors count = ' + (producer.debug_errors_count || 'not_set'));
     gs.info('AUTH_FIX_DEBUG: form_is_valid value = ' + producer.form_is_valid);
     gs.info('AUTH_FIX_DEBUG: form_validation_errors = ' + (producer.form_validation_errors || 'none'));
     
@@ -976,15 +972,15 @@ if (shouldProceed) {
     // Handle remove_authority validation on server side
     if (requestType === 'remove_authority') {
         gs.info('AUTH_FIX_DEBUG: Server-side remove_authority validation');
-        // For remove requests, only check if business justification is provided
+        // For remove requests, completely ignore client validation and only check business justification
         var businessNeed = producer.overall_business_need ? producer.overall_business_need.toString().trim() : '';
         if (businessNeed && businessNeed.length > 0) {
             validationPassed = true;
             gs.info('AUTH_FIX_DEBUG: Remove validation passed - business need provided');
         } else {
-            gs.addErrorMessage('Please correct the following errors: Overall Business Need is required');
-            current.setAbortAction(true);
             gs.info('AUTH_FIX_DEBUG: Remove validation failed - business need missing');
+            gs.addErrorMessage('Overall Business Need is required');
+            current.setAbortAction(true);
             validationPassed = false;
         }
     } else {
@@ -992,6 +988,14 @@ if (shouldProceed) {
         var formIsValid = producer.form_is_valid ? producer.form_is_valid.toString().trim() : 'false';
         validationPassed = (formIsValid === 'true' || formIsValid === true || producer.form_is_valid === true);
         gs.info('AUTH_FIX_DEBUG: Using client validation result = ' + validationPassed);
+        
+        // If client validation failed, show the client errors
+        if (!validationPassed) {
+            var errors = producer.form_validation_errors ? producer.form_validation_errors.toString().split('|') : ['Form validation failed'];
+            gs.info('AUTH_FIX_DEBUG: Client validation failed, errors = ' + errors.join('; '));
+            gs.addErrorMessage('Please correct the following errors: ' + errors.join('; '));
+            current.setAbortAction(true);
+        }
     }
     
     gs.info('AUTH_FIX_DEBUG: Final validationPassed = ' + validationPassed);
@@ -1001,10 +1005,8 @@ if (shouldProceed) {
         
         // Set job code string fields on parent record for display purposes
         if (producer.job_code) {
-            // Look up job code details from reference table
             var jobCodeGR = new GlideRecord('x_banun_rbac_job_code');
             if (jobCodeGR.get(producer.job_code)) {
-                // Set string fields on parent record (no update() call needed - RP handles this)
                 current.setValue('job_code_string', jobCodeGR.getValue('job_code'));
                 current.setValue('job_function_description', jobCodeGR.getValue('job_function_description'));
             }
