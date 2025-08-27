@@ -361,12 +361,6 @@ If applicable: Enter the requested approval amount. If the authority type should
     border-left: 3px solid #ffd93d;
 }
 
-@media (max-width: 768px) {
-    .main-content {
-        grid-template-columns: 1fr;
-    }
-}
-
 .disbursement-options {
     margin-top: 15px;
     padding-left: 15px;
@@ -430,18 +424,6 @@ If applicable: Enter the requested approval amount. If the authority type should
     margin-left: 3px;
 }
 
-.validation-error {
-    color: #d9534f;
-    font-size: 12px;
-    margin-top: 5px;
-    font-style: italic;
-}
-
-.form-control.error {
-    border-color: #d9534f;
-    box-shadow: 0 0 0 2px rgba(217, 83, 79, 0.1);
-}
-
 .info-icon {
     display: inline-block;
     width: 16px;
@@ -461,6 +443,11 @@ If applicable: Enter the requested approval amount. If the authority type should
     margin-top: 12px !important;
 }
 
+@media (max-width: 768px) {
+    .main-content {
+        grid-template-columns: 1fr;
+    }
+}
 
 <!-- ============================================ -->
 <!-- CLIENT CONTROLLER -->
@@ -470,9 +457,6 @@ If applicable: Enter the requested approval amount. If the authority type should
 api.controller = function($scope, $window) {
     var c = this;
     var g_form = $scope.page.g_form;
-
-    // Tracks whether the user has attempted to submit yet
-    var hasSubmitted = false;
 
     c.$onInit = function() {
         setTimeout(function() {
@@ -497,7 +481,7 @@ api.controller = function($scope, $window) {
         const checksInternalOnlyContainer = document.getElementById('checksInternalOnlyContainer');
         const checksInternalOnly = document.getElementById('checksInternalOnly');
 
-        // Widget data model
+        // Widget data model - stores all form state
         c.authorityData = {
             non_credit_checked: false,
             credit_checked: false,
@@ -519,15 +503,7 @@ api.controller = function($scope, $window) {
             overall_business_need: ''
         };
 
-        // Error container (widget-level)
-        var errorContainer = document.createElement('div');
-        errorContainer.id = 'validationErrors';
-        errorContainer.style.cssText = 'display: none; background: #f8d7da; color: #721c24; padding: 15px; border: 1px solid #f5c6cb; border-radius: 6px; margin-bottom: 20px; font-size: 14px;';
-        var widgetContainer = document.querySelector('.widget-container');
-        var widgetHeader = document.querySelector('.widget-header');
-        widgetContainer.insertBefore(errorContainer, widgetHeader.nextSibling);
-
-        // Helpers: currency format
+        // Currency formatting utilities
         function formatCurrency(value) {
             if (!value) return '';
             let numStr = value.toString().replace(/[^\d.]/g, '');
@@ -549,23 +525,8 @@ api.controller = function($scope, $window) {
             return formattedValue.replace(/[^\d.]/g, '');
         }
 
-        // Render the widget error box
-        function showValidationErrors(errors) {
-            if (errors.length === 0) {
-                errorContainer.style.display = 'none';
-                return;
-            }
-            var errorHtml = '<strong>Please correct the following errors:</strong><ul>';
-            errors.forEach(function(error) {
-                errorHtml += '<li>' + error + '</li>';
-            });
-            errorHtml += '</ul>';
-            errorContainer.innerHTML = errorHtml;
-            errorContainer.style.display = 'block';
-        }
-
-        // Core validation (with "silent" option)
-        function validateForm(silent) {
+        // Validation logic
+        function validateForm() {
             var errors = [];
 
             // Must select at least one authority type
@@ -578,7 +539,7 @@ api.controller = function($scope, $window) {
                 errors.push('Overall Business Need is required');
             }
 
-            // Non-credit rules
+            // Non-credit authority validation
             if (c.authorityData.non_credit_checked) {
                 var hasNonCreditValue = c.authorityData.disbursement || c.authorityData.check_cashing_on_us ||
                                         c.authorityData.check_cashing_not_on_us || c.authorityData.remote_deposit ||
@@ -596,7 +557,7 @@ api.controller = function($scope, $window) {
                 }
             }
 
-            // Credit rules
+            // Credit authority validation
             if (c.authorityData.credit_checked) {
                 var hasCreditValue = c.authorityData.overdraft || c.authorityData.unavailable_funds;
                 if (!hasCreditValue) {
@@ -606,30 +567,21 @@ api.controller = function($scope, $window) {
 
             var isValid = errors.length === 0;
 
-            // Always keep RP variables in sync so the server can block if needed
+            // Update Record Producer variables for server-side validation
             g_form.setValue('form_validation_errors', errors.join('|'));
             g_form.setValue('form_is_valid', isValid ? 'true' : 'false');
-
-            // Only show the widget error box after first submit attempt,
-            // OR when hasSubmitted is true and we're validating due to live edits
-            if (!silent) {
-                showValidationErrors(errors);
-            } else {
-                // Ensure the box is hidden during silent validation
-                errorContainer.style.display = 'none';
-            }
 
             return isValid;
         }
 
-        // Update RP variables and (silently) compute validity
+        // Update Record Producer variables with current form data
         function updateRecordProducerVariables() {
-            // Map user-entered data to RP variables
             g_form.setValue('overall_business_need', c.authorityData.overall_business_need);
 
             var authority_types = [];
             var authority_data = [];
 
+            // Process non-credit authority data
             if (c.authorityData.non_credit_checked) {
                 authority_types.push('non_credit');
                 var nonCreditData = {
@@ -647,6 +599,7 @@ api.controller = function($scope, $window) {
                 authority_data.push(JSON.stringify(nonCreditData));
             }
 
+            // Process credit authority data
             if (c.authorityData.credit_checked) {
                 authority_types.push('credit');
                 var creditData = {
@@ -661,31 +614,34 @@ api.controller = function($scope, $window) {
             g_form.setValue('authority_types', authority_types.join('|'));
             g_form.setValue('authority_data', authority_data.join('|'));
 
-            // Before first submit -> silent (no UI); after first submit -> show/update UI live
-            validateForm(!hasSubmitted);
+            // Run validation
+            validateForm();
         }
 
-        // Keep local model + RP variables updated
+        // Update widget data and sync with Record Producer
         function updateWidgetData(fieldName, value) {
             c.authorityData[fieldName] = value;
             updateRecordProducerVariables();
         }
 
-        // Authority selection toggles
+        // Handle authority type selection (Credit/Non-Credit)
         function handleAuthoritySelection() {
             const nonCreditChecked = nonCreditCheckbox.checked;
             const creditChecked = creditCheckbox.checked;
 
+            // Update visual states
             nonCreditGroup.classList.toggle('active', nonCreditChecked);
             creditGroup.classList.toggle('active', creditChecked);
             nonCreditSection.classList.toggle('active', nonCreditChecked);
             creditSection.classList.toggle('active', creditChecked);
             justificationSection.classList.toggle('active', nonCreditChecked || creditChecked);
 
+            // Update data model
             updateWidgetData('non_credit_checked', nonCreditChecked);
             updateWidgetData('credit_checked', creditChecked);
         }
 
+        // Handle Wire Transfer checkbox changes
         function handleWireTransferChange() {
             const isChecked = wireTransferCheck.checked;
             wireInternalOnlyContainer.style.display = isChecked ? 'block' : 'none';
@@ -696,6 +652,7 @@ api.controller = function($scope, $window) {
             updateWidgetData('wire_transfer_checked', isChecked);
         }
 
+        // Handle Official Checks checkbox changes
         function handleOfficialChecksChange() {
             const isChecked = officialChecksCheck.checked;
             checksInternalOnlyContainer.style.display = isChecked ? 'block' : 'none';
@@ -706,25 +663,31 @@ api.controller = function($scope, $window) {
             updateWidgetData('official_checks_checked', isChecked);
         }
 
-        // Setup currency field
+        // Setup currency input field with formatting
         function setupCurrencyField(inputId, fieldName) {
             const input = document.getElementById(inputId);
             if (!input) return;
+            
             let isUpdating = false;
             function handleCurrencyInput(event) {
                 if (isUpdating) return;
                 isUpdating = true;
+                
                 const cursorPosition = event.target.selectionStart;
                 const oldValue = event.target.value;
                 const oldLength = oldValue.length;
                 const formattedValue = formatCurrency(oldValue);
+                
                 event.target.value = formattedValue;
+                
+                // Maintain cursor position after formatting
                 const newLength = formattedValue.length;
                 const lengthDiff = newLength - oldLength;
                 const newCursorPosition = Math.max(0, cursorPosition + lengthDiff);
                 setTimeout(() => {
                     event.target.setSelectionRange(newCursorPosition, newCursorPosition);
                 }, 0);
+                
                 const rawValue = getCurrencyValue(formattedValue);
                 updateWidgetData(fieldName, rawValue);
                 isUpdating = false;
@@ -732,7 +695,7 @@ api.controller = function($scope, $window) {
             input.addEventListener('input', handleCurrencyInput);
         }
 
-        // Setup generic field listeners
+        // Setup checkbox field
         function setupCheckboxField(inputId, fieldName) {
             const input = document.getElementById(inputId);
             if (!input) return;
@@ -741,6 +704,7 @@ api.controller = function($scope, $window) {
             });
         }
 
+        // Setup textarea field
         function setupTextAreaField(inputId, fieldName) {
             const input = document.getElementById(inputId);
             if (!input) return;
@@ -749,9 +713,11 @@ api.controller = function($scope, $window) {
             });
         }
 
-        // Bind events
+        // Bind all event listeners
         if (nonCreditCheckbox) nonCreditCheckbox.addEventListener('change', handleAuthoritySelection);
         if (creditCheckbox) creditCheckbox.addEventListener('change', handleAuthoritySelection);
+        
+        // Allow clicking on the entire checkbox group to toggle
         if (nonCreditGroup) {
             nonCreditGroup.addEventListener('click', function(e) {
                 if (e.target.tagName !== 'INPUT') {
@@ -768,9 +734,11 @@ api.controller = function($scope, $window) {
                 }
             });
         }
+
         if (wireTransferCheck) wireTransferCheck.addEventListener('change', handleWireTransferChange);
         if (officialChecksCheck) officialChecksCheck.addEventListener('change', handleOfficialChecksChange);
 
+        // Setup all currency fields
         setupCurrencyField('disbursement', 'disbursement');
         setupCurrencyField('checkCashingOnUs', 'check_cashing_on_us');
         setupCurrencyField('checkCashingNotOnUs', 'check_cashing_not_on_us');
@@ -780,65 +748,18 @@ api.controller = function($scope, $window) {
         setupCurrencyField('overdraft', 'overdraft');
         setupCurrencyField('unavailableFunds', 'unavailable_funds');
 
+        // Setup all checkbox fields
         setupCheckboxField('achCheck', 'ach_checked');
         setupCheckboxField('wireInternalOnly', 'wire_internal_only');
         setupCheckboxField('checksInternalOnly', 'checks_internal_only');
         setupCheckboxField('overdraftInternalOnly', 'overdraft_internal_only');
         setupCheckboxField('unavailableInternalOnly', 'unavailable_internal_only');
 
+        // Setup textarea field
         setupTextAreaField('businessNeed', 'overall_business_need');
 
-        // 🔸 Initialize RP variables and default validation state (silent)
+        // Initialize Record Producer variables
         updateRecordProducerVariables();
-
-        // Hook into the actual submit button click - try multiple selectors and wait for it to exist
-        function interceptSubmitButton() {
-            var submitSelectors = [
-                'button[name="sysparm_ck"]',
-                'input[name="sysparm_ck"]',
-                'button[type="submit"]',
-                'input[type="submit"]',
-                '.form_action_button',
-                '#sysverb_submit',
-                'button:contains("Submit")',
-                'input[value*="Submit"]'
-            ];
-
-            var submitButton = null;
-            for (var i = 0; i < submitSelectors.length; i++) {
-                submitButton = document.querySelector(submitSelectors[i]);
-                if (submitButton) break;
-            }
-
-            if (submitButton) {
-                submitButton.addEventListener('click', function(e) {
-                    hasSubmitted = true;
-                    var isValid = validateForm(false);  // show widget errors
-                    
-                    if (!isValid) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        e.stopImmediatePropagation();
-                        
-                        var errorBox = document.getElementById('validationErrors');
-                        if (errorBox) {
-                            errorBox.style.display = 'block';
-                            errorBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                        }
-                        
-                        return false;
-                    }
-                }, true); // Use capture phase
-                
-                console.log('Submit button intercepted:', submitButton);
-            } else {
-                // If submit button not found, try again in 500ms
-                setTimeout(interceptSubmitButton, 500);
-            }
-        }
-
-        // Start looking for submit button after a delay
-        setTimeout(interceptSubmitButton, 1000);
     }
 };
 
@@ -849,10 +770,10 @@ api.controller = function($scope, $window) {
 <!-- ============================================ -->
 
 (function() {
+    // Basic server-side data initialization
     data.user = gs.getUser().getName();
     data.userId = gs.getUserID();
 })();
-
 
 
 <!-- ============================================ -->
@@ -906,16 +827,26 @@ if (validationPassed) {
                     }
 
                     // Set all non-credit fields with values
-                    if (authorityData.disbursement_ach) nonCreditGR.setValue('disbursement_ach', authorityData.disbursement_ach);
-                    if (authorityData.disbursement_wire_transfer_external) nonCreditGR.setValue('disbursement_wire_transfer_external', authorityData.disbursement_wire_transfer_external);
-                    if (authorityData.disbursement_wire_transfer_internal) nonCreditGR.setValue('disbursement_wire_transfer_internal', authorityData.disbursement_wire_transfer_internal);
-                    if (authorityData.disbursement_official_checks_external) nonCreditGR.setValue('disbursement_official_checks_external', authorityData.disbursement_official_checks_external);
-                    if (authorityData.disbursement_official_checks_internal) nonCreditGR.setValue('disbursement_official_checks_internal', authorityData.disbursement_official_checks_internal);
-                    if (authorityData.check_cashing_on_us) nonCreditGR.setValue('check_cashing_on_us', authorityData.check_cashing_on_us);
-                    if (authorityData.check_cashing_not_on_us) nonCreditGR.setValue('check_cashing_not_on_us', authorityData.check_cashing_not_on_us);
-                    if (authorityData.remote_deposit) nonCreditGR.setValue('remote_deposit', authorityData.remote_deposit);
-                    if (authorityData.treasury_solutions_company_wire_limits) nonCreditGR.setValue('treasury_solutions_company_wire_limits', authorityData.treasury_solutions_company_wire_limits);
-                    if (authorityData.fx_wire_limits) nonCreditGR.setValue('fx_wire_limits', authorityData.fx_wire_limits);
+                    if (authorityData.disbursement_ach) 
+                        nonCreditGR.setValue('disbursement_ach', authorityData.disbursement_ach);
+                    if (authorityData.disbursement_wire_transfer_external) 
+                        nonCreditGR.setValue('disbursement_wire_transfer_external', authorityData.disbursement_wire_transfer_external);
+                    if (authorityData.disbursement_wire_transfer_internal) 
+                        nonCreditGR.setValue('disbursement_wire_transfer_internal', authorityData.disbursement_wire_transfer_internal);
+                    if (authorityData.disbursement_official_checks_external) 
+                        nonCreditGR.setValue('disbursement_official_checks_external', authorityData.disbursement_official_checks_external);
+                    if (authorityData.disbursement_official_checks_internal) 
+                        nonCreditGR.setValue('disbursement_official_checks_internal', authorityData.disbursement_official_checks_internal);
+                    if (authorityData.check_cashing_on_us) 
+                        nonCreditGR.setValue('check_cashing_on_us', authorityData.check_cashing_on_us);
+                    if (authorityData.check_cashing_not_on_us) 
+                        nonCreditGR.setValue('check_cashing_not_on_us', authorityData.check_cashing_not_on_us);
+                    if (authorityData.remote_deposit) 
+                        nonCreditGR.setValue('remote_deposit', authorityData.remote_deposit);
+                    if (authorityData.treasury_solutions_company_wire_limits) 
+                        nonCreditGR.setValue('treasury_solutions_company_wire_limits', authorityData.treasury_solutions_company_wire_limits);
+                    if (authorityData.fx_wire_limits) 
+                        nonCreditGR.setValue('fx_wire_limits', authorityData.fx_wire_limits);
 
                     nonCreditGR.insert();
                 }
