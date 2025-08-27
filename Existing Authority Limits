@@ -987,6 +987,7 @@ if (requestType && jobCode) {
         current.setAbortAction(true);
         shouldProceed = false; // Prevent further processing
     }
+}
 
 // Only proceed if authority limits validation passed
 if (shouldProceed) {
