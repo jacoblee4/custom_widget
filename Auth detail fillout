@@ -482,16 +482,43 @@ api.controller = function($scope, $window) {
     };
 
     // Method to get request type from g_form
-    c.getRequestType = function() {
-        try {
-            if (typeof g_form !== 'undefined' && g_form.getValue) {
-                return g_form.getValue('request_type') || '';
-            }
-        } catch (e) {
-            // Handle error silently
+    // Method to get request type from g_form
+c.getRequestType = function() {
+    try {
+        // Try multiple methods to get request type
+        var requestType = '';
+        
+        // Method 1: Direct g_form access
+        if (typeof g_form !== 'undefined' && g_form.getValue) {
+            requestType = g_form.getValue('request_type');
+            if (requestType) return requestType;
         }
-        return '';
-    };
+        
+        // Method 2: Parent window g_form
+        if (window.parent && window.parent.g_form && window.parent.g_form.getValue) {
+            requestType = window.parent.g_form.getValue('request_type');
+            if (requestType) return requestType;
+        }
+        
+        // Method 3: DOM query
+        var requestTypeField = document.querySelector('select[name="request_type"], [data-name="request_type"] select');
+        if (requestTypeField && requestTypeField.value) {
+            return requestTypeField.value;
+        }
+        
+        // Method 4: Use cached value
+        if (c.requestType) {
+            return c.requestType;
+        }
+        
+    } catch (e) {
+        // Handle error silently, but try cached value
+        if (c.requestType) {
+            return c.requestType;
+        }
+    }
+    return '';
+};
 
     // Method to monitor request type changes
     c.setupRequestTypeMonitoring = function() {
