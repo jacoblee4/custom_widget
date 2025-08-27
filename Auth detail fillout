@@ -925,8 +925,7 @@ if (validationPassed) {
     }
 
 } else {
-    // Form validation failed - show errors and prevent submission
-    var errors = producer.form_validation_errors ? producer.form_validation_errors.toString().split('|') : ['Form validation failed'];
-    gs.addErrorMessage('Please correct the following errors: ' + errors.join('; '));
+    // Form validation failed - prevent submission silently
+    // The widget handles error display, so we don't need ServiceNow's error messages
     current.setAbortAction(true);
 }
