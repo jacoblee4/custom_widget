@@ -1027,16 +1027,10 @@ if (shouldProceed) {
                         // Create non-credit authority limit record
                         var nonCreditGR = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
                         nonCreditGR.initialize();
-
-                        // Link to parent signature request
                         nonCreditGR.setValue('parent', parentId);
-
-                        // Set job code reference for reporting
                         if (producer.job_code) {
                             nonCreditGR.setValue('job_code', producer.job_code);
                         }
-
-                        // Set all non-credit fields with values
                         if (authorityData.disbursement_ach)
                             nonCreditGR.setValue('disbursement_ach', authorityData.disbursement_ach);
                         if (authorityData.disbursement_wire_transfer_external)
@@ -1057,22 +1051,15 @@ if (shouldProceed) {
                             nonCreditGR.setValue('treasury_solutions_company_wire_limits', authorityData.treasury_solutions_company_wire_limits);
                         if (authorityData.fx_wire_limits)
                             nonCreditGR.setValue('fx_wire_limits', authorityData.fx_wire_limits);
-
                         nonCreditGR.insert();
                     } else if (authorityType === 'credit') {
                         // Create credit authority limit record
                         var creditGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
                         creditGR.initialize();
-
-                        // Link to parent signature request
                         creditGR.setValue('parent', parentId);
-
-                        // Set job code reference for reporting
                         if (producer.job_code) {
                             creditGR.setValue('job_code', producer.job_code);
                         }
-
-                        // Set all credit fields with values
                         if (authorityData.overdraft_internal_accounts) {
                             creditGR.setValue('overdraft_internal_accounts', authorityData.overdraft_internal_accounts);
                         }
@@ -1085,22 +1072,12 @@ if (shouldProceed) {
                         if (authorityData.unavailable_funds_external_accounts) {
                             creditGR.setValue('unavailable_funds_external_accounts', authorityData.unavailable_funds_external_accounts);
                         }
-
                         creditGR.insert();
                     }
-
                 } catch (e) {
-                    // Handle JSON parsing errors gracefully
                     gs.addErrorMessage('Error processing authority data: ' + e.message);
                 }
             }
         }
-
-    } else {
-        // This should only happen for non-remove requests now
-        var errors = producer.form_validation_errors ? producer.form_validation_errors.toString().split('|') : ['Form validation failed'];
-        gs.info('AUTH_FIX_DEBUG: Validation failed, errors = ' + errors.join('; '));
-        gs.addErrorMessage('Please correct the following errors: ' + errors.join('; '));
-        current.setAbortAction(true);
     }
 }
