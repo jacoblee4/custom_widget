@@ -774,6 +774,11 @@ api.controller = function($scope, spUtil, $timeout) {
     if (!c.jobCode) {
       c.authorityLimits = [];
       c.updateFormValidation();
+// Also update form_is_valid based on authority limits validation
+var shouldBlock = c.shouldBlockSubmission();
+if (shouldBlock) {
+    g_form.setValue('form_is_valid', 'false');
+}
       return;
     }
     
@@ -939,46 +944,49 @@ api.controller = function($scope, spUtil, $timeout) {
 var parentId = current.getUniqueValue();
 var shouldProceed = true; // Flag to control processing flow
 
-// Authority Limits Widget Validation (Safety Net)
-var authorityLimitsBlocked = producer.authority_limits_validation_blocked ? 
-    producer.authority_limits_validation_blocked.toString().trim() : 'false';
+// Check authority limits validation first
+var requestType = producer.request_type ? producer.request_type.toString() : '';
+var jobCode = producer.job_code ? producer.job_code.toString() : '';
 
-if (authorityLimitsBlocked === 'true') {
-    var requestType = producer.request_type ? producer.request_type.toString() : '';
-    var jobCode = producer.job_code ? producer.job_code.toString() : '';
-    var errorMessage = '';
+// If we have both request type and job code, check if this combination should be blocked
+if (requestType && jobCode) {
+    // Get authority limits to check if they exist
+    var limitsExist = false;
+    var limitGr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
+    limitGr.addQuery('job_code', jobCode);
+    limitGr.addQuery('active', true);
+    limitGr.query();
+    if (limitGr.hasNext()) {
+        limitsExist = true;
+    }
     
-    // Get job code display value for error message
+    var shouldBlock = false;
+    var blockMessage = '';
+    
+    // Get job code display value
     var jobCodeDisplay = '';
-    if (jobCode) {
-        var jobGr = new GlideRecord('x_banun_rbac_job_code');
-        if (jobGr.get(jobCode)) {
-            jobCodeDisplay = jobGr.getDisplayValue();
-        }
+    var jobGr = new GlideRecord('x_banun_rbac_job_code');
+    if (jobGr.get(jobCode)) {
+        jobCodeDisplay = jobGr.getDisplayValue();
     }
     
-    // Generate appropriate error message based on request type
-    switch (requestType) {
-        case 'new_authority':
-            errorMessage = 'Authority limits already exist for job code ' + jobCodeDisplay + 
-                          '. Please submit a "Change to Existing Authority" request instead.';
-            break;
-        case 'change_to_existing_authority':
-            errorMessage = 'No authority limits found for job code ' + jobCodeDisplay + 
-                          '. Please submit a "New Authority" request instead.';
-            break;
-        case 'remove_authority':
-            errorMessage = 'No existing authority limits found for job code ' + jobCodeDisplay + 
-                          '. Cannot proceed with removal request.';
-            break;
-        default:
-            errorMessage = 'Authority limits validation failed. Please check your request type and job code selection.';
+    // Check blocking conditions
+    if (requestType === 'new_authority' && limitsExist) {
+        shouldBlock = true;
+        blockMessage = 'Authority limits already exist for job code ' + jobCodeDisplay + '. Please submit a "Change to Existing Authority" request instead.';
+    } else if (requestType === 'change_to_existing_authority' && !limitsExist) {
+        shouldBlock = true;
+        blockMessage = 'No authority limits found for job code ' + jobCodeDisplay + '. Please submit a "New Authority" request instead.';
+    } else if (requestType === 'remove_authority' && !limitsExist) {
+        shouldBlock = true;
+        blockMessage = 'No existing authority limits found for job code ' + jobCodeDisplay + '. Cannot proceed with removal request.';
     }
     
-    gs.addErrorMessage(errorMessage);
-    current.setAbortAction(true);
-    shouldProceed = false; // Prevent further processing
-}
+    if (shouldBlock) {
+        gs.addErrorMessage(blockMessage);
+        current.setAbortAction(true);
+        shouldProceed = false; // Prevent further processing
+    }
 
 // Only proceed if authority limits validation passed
 if (shouldProceed) {
