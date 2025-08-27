@@ -641,24 +641,44 @@ api.controller = function($scope, $window) {
         function updateWidgetData(fieldName, value) {
             c.authorityData[fieldName] = value;
             updateRecordProducerVariables();
+// Initialize Record Producer variables
+updateRecordProducerVariables();
+
+// Monitor request type changes
+setInterval(function() {
+    handleRequestTypeChange();
+}, 1000);
         }
 
-        // Handle authority type selection (Credit/Non-Credit)
-        function handleAuthoritySelection() {
-            const nonCreditChecked = nonCreditCheckbox.checked;
-            const creditChecked = creditCheckbox.checked;
-
-            // Update visual states
-            nonCreditGroup.classList.toggle('active', nonCreditChecked);
-            creditGroup.classList.toggle('active', creditChecked);
-            nonCreditSection.classList.toggle('active', nonCreditChecked);
-            creditSection.classList.toggle('active', creditChecked);
-            justificationSection.classList.toggle('active', nonCreditChecked || creditChecked);
-
-            // Update data model
-            updateWidgetData('non_credit_checked', nonCreditChecked);
-            updateWidgetData('credit_checked', creditChecked);
+        // Monitor request type changes to hide/show sections appropriately
+function handleRequestTypeChange() {
+    var currentRequestType = '';
+    try {
+        if (typeof g_form !== 'undefined' && g_form.getValue) {
+            currentRequestType = g_form.getValue('request_type') || '';
         }
+    } catch (e) {}
+
+    if (currentRequestType === 'remove_authority') {
+        // Hide all sections for remove requests
+        nonCreditGroup.classList.remove('active');
+        creditGroup.classList.remove('active');
+        nonCreditSection.classList.remove('active');
+        creditSection.classList.remove('active');
+        justificationSection.classList.remove('active');
+        
+        // Uncheck checkboxes
+        if (nonCreditCheckbox) nonCreditCheckbox.checked = false;
+        if (creditCheckbox) creditCheckbox.checked = false;
+        
+        // Clear data
+        updateWidgetData('non_credit_checked', false);
+        updateWidgetData('credit_checked', false);
+    } else {
+        // For new/change requests, call normal handler
+        handleAuthoritySelection();
+    }
+}
 
         // Handle Wire Transfer checkbox changes
         function handleWireTransferChange() {
