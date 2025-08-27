@@ -774,11 +774,6 @@ api.controller = function($scope, spUtil, $timeout) {
     if (!c.jobCode) {
       c.authorityLimits = [];
       c.updateFormValidation();
-// Also update form_is_valid based on authority limits validation
-var shouldBlock = c.shouldBlockSubmission();
-if (shouldBlock) {
-    g_form.setValue('form_is_valid', 'false');
-}
       return;
     }
     
@@ -929,6 +924,7 @@ if (shouldBlock) {
     }, 1500);
   }, 500);
 };
+
 
 
 
