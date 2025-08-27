@@ -835,6 +835,12 @@ api.controller = function($scope, spUtil, $timeout) {
 
 // Record Producer Script
 
+// Authority Widget Record Producer Script
+// Processes widget data and creates parent/child authority records
+
+var parentId = current.getUniqueValue();
+var shouldProceed = true; // Flag to control processing flow
+
 // Authority Limits Widget Validation
 // Check if the authority limits widget has blocked submission based on request type
 var authorityLimitsBlocked = producer.authority_limits_validation_blocked ? 
@@ -874,120 +880,118 @@ if (authorityLimitsBlocked === 'true') {
     
     gs.addErrorMessage(errorMessage);
     current.setAbortAction(true);
-    return; // Exit early to prevent further processing
+    shouldProceed = false; // Prevent further processing
 }
 
-// Authority Widget Record Producer Script
-// Processes widget data and creates parent/child authority records
+// Only proceed if authority limits validation passed
+if (shouldProceed) {
+    // Validate form data before processing
+    var formIsValid = producer.form_is_valid ? producer.form_is_valid.toString().trim() : 'false';
+    var validationPassed = (formIsValid === 'true' || formIsValid === true || producer.form_is_valid === true);
 
-var parentId = current.getUniqueValue();
-
-// Validate form data before processing
-var formIsValid = producer.form_is_valid ? producer.form_is_valid.toString().trim() : 'false';
-var validationPassed = (formIsValid === 'true' || formIsValid === true || producer.form_is_valid === true);
-
-if (validationPassed) {
-    // Set job code string fields on parent record for display purposes
-    if (producer.job_code) {
-        // Look up job code details from reference table
-        var jobCodeGR = new GlideRecord('x_banun_rbac_job_code');
-        if (jobCodeGR.get(producer.job_code)) {
-            // Set string fields on parent record (no update() call needed - RP handles this)
-            current.setValue('job_code_string', jobCodeGR.getValue('job_code'));
-            current.setValue('job_function_description', jobCodeGR.getValue('job_function_description'));
-        }
-    }
-
-    // Process authority data if provided by widget
-    if (producer.authority_types && producer.authority_data) {
-        var authority_types = producer.authority_types.toString().split('|');
-        var authority_data_strings = producer.authority_data.toString().split('|');
-
-        // Create child records for each authority type selected
-        for (var i = 0; i < authority_types.length; i++) {
-            var authorityType = authority_types[i];
-            var authorityDataStr = authority_data_strings[i];
-
-            try {
-                var authorityData = JSON.parse(authorityDataStr);
-
-                if (authorityType === 'non_credit') {
-                    // Create non-credit authority limit record
-                    var nonCreditGR = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
-                    nonCreditGR.initialize();
-
-                    // Link to parent signature request
-                    nonCreditGR.setValue('parent', parentId);
-
-                    // Set job code reference for reporting
-                    if (producer.job_code) {
-                        nonCreditGR.setValue('job_code', producer.job_code);
-                    }
-
-                    // Set all non-credit fields with values
-                    if (authorityData.disbursement_ach) 
-                        nonCreditGR.setValue('disbursement_ach', authorityData.disbursement_ach);
-                    if (authorityData.disbursement_wire_transfer_external) 
-                        nonCreditGR.setValue('disbursement_wire_transfer_external', authorityData.disbursement_wire_transfer_external);
-                    if (authorityData.disbursement_wire_transfer_internal) 
-                        nonCreditGR.setValue('disbursement_wire_transfer_internal', authorityData.disbursement_wire_transfer_internal);
-                    if (authorityData.disbursement_official_checks_external) 
-                        nonCreditGR.setValue('disbursement_official_checks_external', authorityData.disbursement_official_checks_external);
-                    if (authorityData.disbursement_official_checks_internal) 
-                        nonCreditGR.setValue('disbursement_official_checks_internal', authorityData.disbursement_official_checks_internal);
-                    if (authorityData.check_cashing_on_us) 
-                        nonCreditGR.setValue('check_cashing_on_us', authorityData.check_cashing_on_us);
-                    if (authorityData.check_cashing_not_on_us) 
-                        nonCreditGR.setValue('check_cashing_not_on_us', authorityData.check_cashing_not_on_us);
-                    if (authorityData.remote_deposit) 
-                        nonCreditGR.setValue('remote_deposit', authorityData.remote_deposit);
-                    if (authorityData.treasury_solutions_company_wire_limits) 
-                        nonCreditGR.setValue('treasury_solutions_company_wire_limits', authorityData.treasury_solutions_company_wire_limits);
-                    if (authorityData.fx_wire_limits) 
-                        nonCreditGR.setValue('fx_wire_limits', authorityData.fx_wire_limits);
-
-                    nonCreditGR.insert();
-                }
-                else if (authorityType === 'credit') {
-                    // Create credit authority limit record
-                    var creditGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
-                    creditGR.initialize();
-
-                    // Link to parent signature request
-                    creditGR.setValue('parent', parentId);
-
-                    // Set job code reference for reporting
-                    if (producer.job_code) {
-                        creditGR.setValue('job_code', producer.job_code);
-                    }
-
-                    // Set all credit fields with values
-                    if (authorityData.overdraft_internal_accounts) {
-                        creditGR.setValue('overdraft_internal_accounts', authorityData.overdraft_internal_accounts);
-                    }
-                    if (authorityData.overdraft_external_accounts) {
-                        creditGR.setValue('overdraft_external_accounts', authorityData.overdraft_external_accounts);
-                    }
-                    if (authorityData.unavailable_funds_internal_accounts) {
-                        creditGR.setValue('unavailable_funds_internal_accounts', authorityData.unavailable_funds_internal_accounts);
-                    }
-                    if (authorityData.unavailable_funds_external_accounts) {
-                        creditGR.setValue('unavailable_funds_external_accounts', authorityData.unavailable_funds_external_accounts);
-                    }
-
-                    creditGR.insert();
-                }
-
-            } catch (e) {
-                // Handle JSON parsing errors gracefully
-                gs.addErrorMessage('Error processing authority data: ' + e.message);
+    if (validationPassed) {
+        // Set job code string fields on parent record for display purposes
+        if (producer.job_code) {
+            // Look up job code details from reference table
+            var jobCodeGR = new GlideRecord('x_banun_rbac_job_code');
+            if (jobCodeGR.get(producer.job_code)) {
+                // Set string fields on parent record (no update() call needed - RP handles this)
+                current.setValue('job_code_string', jobCodeGR.getValue('job_code'));
+                current.setValue('job_function_description', jobCodeGR.getValue('job_function_description'));
             }
         }
-    }
 
-} else {
-    // Form validation failed - show errors and prevent submission
-    var errors = producer.form_validation_errors ? producer.form_validation_errors.toString().split('|') : ['Form validation failed'];
-    gs.addErrorMessage('Please correct the following errors: ' + errors.join('; '));
-    current.setAbortAction(true);
+        // Process authority data if provided by widget
+        if (producer.authority_types && producer.authority_data) {
+            var authority_types = producer.authority_types.toString().split('|');
+            var authority_data_strings = producer.authority_data.toString().split('|');
+
+            // Create child records for each authority type selected
+            for (var i = 0; i < authority_types.length; i++) {
+                var authorityType = authority_types[i];
+                var authorityDataStr = authority_data_strings[i];
+
+                try {
+                    var authorityData = JSON.parse(authorityDataStr);
+
+                    if (authorityType === 'non_credit') {
+                        // Create non-credit authority limit record
+                        var nonCreditGR = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
+                        nonCreditGR.initialize();
+
+                        // Link to parent signature request
+                        nonCreditGR.setValue('parent', parentId);
+
+                        // Set job code reference for reporting
+                        if (producer.job_code) {
+                            nonCreditGR.setValue('job_code', producer.job_code);
+                        }
+
+                        // Set all non-credit fields with values
+                        if (authorityData.disbursement_ach) 
+                            nonCreditGR.setValue('disbursement_ach', authorityData.disbursement_ach);
+                        if (authorityData.disbursement_wire_transfer_external) 
+                            nonCreditGR.setValue('disbursement_wire_transfer_external', authorityData.disbursement_wire_transfer_external);
+                        if (authorityData.disbursement_wire_transfer_internal) 
+                            nonCreditGR.setValue('disbursement_wire_transfer_internal', authorityData.disbursement_wire_transfer_internal);
+                        if (authorityData.disbursement_official_checks_external) 
+                            nonCreditGR.setValue('disbursement_official_checks_external', authorityData.disbursement_official_checks_external);
+                        if (authorityData.disbursement_official_checks_internal) 
+                            nonCreditGR.setValue('disbursement_official_checks_internal', authorityData.disbursement_official_checks_internal);
+                        if (authorityData.check_cashing_on_us) 
+                            nonCreditGR.setValue('check_cashing_on_us', authorityData.check_cashing_on_us);
+                        if (authorityData.check_cashing_not_on_us) 
+                            nonCreditGR.setValue('check_cashing_not_on_us', authorityData.check_cashing_not_on_us);
+                        if (authorityData.remote_deposit) 
+                            nonCreditGR.setValue('remote_deposit', authorityData.remote_deposit);
+                        if (authorityData.treasury_solutions_company_wire_limits) 
+                            nonCreditGR.setValue('treasury_solutions_company_wire_limits', authorityData.treasury_solutions_company_wire_limits);
+                        if (authorityData.fx_wire_limits) 
+                            nonCreditGR.setValue('fx_wire_limits', authorityData.fx_wire_limits);
+
+                        nonCreditGR.insert();
+                    }
+                    else if (authorityType === 'credit') {
+                        // Create credit authority limit record
+                        var creditGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
+                        creditGR.initialize();
+
+                        // Link to parent signature request
+                        creditGR.setValue('parent', parentId);
+
+                        // Set job code reference for reporting
+                        if (producer.job_code) {
+                            creditGR.setValue('job_code', producer.job_code);
+                        }
+
+                        // Set all credit fields with values
+                        if (authorityData.overdraft_internal_accounts) {
+                            creditGR.setValue('overdraft_internal_accounts', authorityData.overdraft_internal_accounts);
+                        }
+                        if (authorityData.overdraft_external_accounts) {
+                            creditGR.setValue('overdraft_external_accounts', authorityData.overdraft_external_accounts);
+                        }
+                        if (authorityData.unavailable_funds_internal_accounts) {
+                            creditGR.setValue('unavailable_funds_internal_accounts', authorityData.unavailable_funds_internal_accounts);
+                        }
+                        if (authorityData.unavailable_funds_external_accounts) {
+                            creditGR.setValue('unavailable_funds_external_accounts', authorityData.unavailable_funds_external_accounts);
+                        }
+
+                        creditGR.insert();
+                    }
+
+                } catch (e) {
+                    // Handle JSON parsing errors gracefully
+                    gs.addErrorMessage('Error processing authority data: ' + e.message);
+                }
+            }
+        }
+
+    } else {
+        // Form validation failed - show errors and prevent submission
+        var errors = producer.form_validation_errors ? producer.form_validation_errors.toString().split('|') : ['Form validation failed'];
+        gs.addErrorMessage('Please correct the following errors: ' + errors.join('; '));
+        current.setAbortAction(true);
+    }
 }
