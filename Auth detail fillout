@@ -526,72 +526,72 @@ api.controller = function($scope, $window) {
         }
 
         // Validation logic
-function validateForm() {
-    var errors = [];
+        function validateForm() {
+            var errors = [];
 
-    // Get current request type to determine if validation is needed
-    var currentRequestType = '';
-    try {
-        if (typeof g_form !== 'undefined' && g_form.getValue) {
-            currentRequestType = g_form.getValue('request_type') || '';
+            // Get current request type to determine if validation is needed
+            var currentRequestType = '';
+            try {
+                if (typeof g_form !== 'undefined' && g_form.getValue) {
+                    currentRequestType = g_form.getValue('request_type') || '';
+                }
+            } catch (e) {}
+
+            // Skip validation for remove authority requests
+            if (currentRequestType === 'remove_authority') {
+                // For remove requests, we don't need authority details filled out
+                var isValid = true;
+                g_form.setValue('form_validation_errors', '');
+                g_form.setValue('form_is_valid', 'true');
+                return isValid;
+            }
+
+            // For new_authority and change_to_existing_authority, run normal validation
+
+            // Must select at least one authority type
+            if (!c.authorityData.non_credit_checked && !c.authorityData.credit_checked) {
+                errors.push('You must select at least one authority type (Credit Authority or Non-Credit Authority)');
+            }
+
+            // Business justification required
+            if (!c.authorityData.overall_business_need || c.authorityData.overall_business_need.trim() === '') {
+                errors.push('Overall Business Need is required');
+            }
+
+            // Non-credit authority validation
+            if (c.authorityData.non_credit_checked) {
+                var hasNonCreditValue = c.authorityData.disbursement || c.authorityData.check_cashing_on_us ||
+                    c.authorityData.check_cashing_not_on_us || c.authorityData.remote_deposit ||
+                    c.authorityData.treasury_solutions_company_wire_limits || c.authorityData.fx_wire_limits;
+
+                if (!hasNonCreditValue) {
+                    errors.push('If Non-Credit Authority is selected, at least one currency field must have a value');
+                }
+
+                if (c.authorityData.disbursement &&
+                    !c.authorityData.ach_checked &&
+                    !c.authorityData.wire_transfer_checked &&
+                    !c.authorityData.official_checks_checked) {
+                    errors.push('If Disbursement amount is entered, you must select at least one option: ACH, Wire Transfer, or Official Checks');
+                }
+            }
+
+            // Credit authority validation
+            if (c.authorityData.credit_checked) {
+                var hasCreditValue = c.authorityData.overdraft || c.authorityData.unavailable_funds;
+                if (!hasCreditValue) {
+                    errors.push('If Credit Authority is selected, at least one currency field must have a value');
+                }
+            }
+
+            var isValid = errors.length === 0;
+
+            // Update Record Producer variables for server-side validation
+            g_form.setValue('form_validation_errors', errors.join('|'));
+            g_form.setValue('form_is_valid', isValid ? 'true' : 'false');
+
+            return isValid;
         }
-    } catch (e) {}
-
-    // Skip validation for remove authority requests
-    if (currentRequestType === 'remove_authority') {
-        // For remove requests, we don't need authority details filled out
-        var isValid = true;
-        g_form.setValue('form_validation_errors', '');
-        g_form.setValue('form_is_valid', 'true');
-        return isValid;
-    }
-
-    // For new_authority and change_to_existing_authority, run normal validation
-    
-    // Must select at least one authority type
-    if (!c.authorityData.non_credit_checked && !c.authorityData.credit_checked) {
-        errors.push('You must select at least one authority type (Credit Authority or Non-Credit Authority)');
-    }
-
-    // Business justification required
-    if (!c.authorityData.overall_business_need || c.authorityData.overall_business_need.trim() === '') {
-        errors.push('Overall Business Need is required');
-    }
-
-    // Non-credit authority validation
-    if (c.authorityData.non_credit_checked) {
-        var hasNonCreditValue = c.authorityData.disbursement || c.authorityData.check_cashing_on_us ||
-                                c.authorityData.check_cashing_not_on_us || c.authorityData.remote_deposit ||
-                                c.authorityData.treasury_solutions_company_wire_limits || c.authorityData.fx_wire_limits;
-
-        if (!hasNonCreditValue) {
-            errors.push('If Non-Credit Authority is selected, at least one currency field must have a value');
-        }
-
-        if (c.authorityData.disbursement &&
-            !c.authorityData.ach_checked &&
-            !c.authorityData.wire_transfer_checked &&
-            !c.authorityData.official_checks_checked) {
-            errors.push('If Disbursement amount is entered, you must select at least one option: ACH, Wire Transfer, or Official Checks');
-        }
-    }
-
-    // Credit authority validation
-    if (c.authorityData.credit_checked) {
-        var hasCreditValue = c.authorityData.overdraft || c.authorityData.unavailable_funds;
-        if (!hasCreditValue) {
-            errors.push('If Credit Authority is selected, at least one currency field must have a value');
-        }
-    }
-
-    var isValid = errors.length === 0;
-
-    // Update Record Producer variables for server-side validation
-    g_form.setValue('form_validation_errors', errors.join('|'));
-    g_form.setValue('form_is_valid', isValid ? 'true' : 'false');
-
-    return isValid;
-}
 
         // Update Record Producer variables with current form data
         function updateRecordProducerVariables() {
@@ -686,19 +686,20 @@ function validateForm() {
         function setupCurrencyField(inputId, fieldName) {
             const input = document.getElementById(inputId);
             if (!input) return;
-            
+
             let isUpdating = false;
+
             function handleCurrencyInput(event) {
                 if (isUpdating) return;
                 isUpdating = true;
-                
+
                 const cursorPosition = event.target.selectionStart;
                 const oldValue = event.target.value;
                 const oldLength = oldValue.length;
                 const formattedValue = formatCurrency(oldValue);
-                
+
                 event.target.value = formattedValue;
-                
+
                 // Maintain cursor position after formatting
                 const newLength = formattedValue.length;
                 const lengthDiff = newLength - oldLength;
@@ -706,7 +707,7 @@ function validateForm() {
                 setTimeout(() => {
                     event.target.setSelectionRange(newCursorPosition, newCursorPosition);
                 }, 0);
-                
+
                 const rawValue = getCurrencyValue(formattedValue);
                 updateWidgetData(fieldName, rawValue);
                 isUpdating = false;
@@ -735,7 +736,7 @@ function validateForm() {
         // Bind all event listeners
         if (nonCreditCheckbox) nonCreditCheckbox.addEventListener('change', handleAuthoritySelection);
         if (creditCheckbox) creditCheckbox.addEventListener('change', handleAuthoritySelection);
-        
+
         // Allow clicking on the entire checkbox group to toggle
         if (nonCreditGroup) {
             nonCreditGroup.addEventListener('click', function(e) {
