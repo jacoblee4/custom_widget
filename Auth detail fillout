@@ -624,26 +624,16 @@ c.getRequestType = function() {
         }
     } catch(e) {}
     
-    // For remove authority requests, only validate justification
+    // For remove authority requests, skip client validation entirely - let server handle it
     if (currentRequestType === 'remove_authority' || c.requestType === 'remove_authority') {
         try {
-            g_form.setValue('debug_validation_step', 'remove_authority_path');
+            g_form.setValue('debug_validation_step', 'remove_authority_skip_client');
         } catch(e) {}
         
-        if (!c.authorityData.overall_business_need || c.authorityData.overall_business_need.trim() === '') {
-            errors.push('Overall Business Need is required');
-        }
-
-        var isValid = errors.length === 0;
-        
-        try {
-            g_form.setValue('debug_validation_step', 'remove_authority_complete');
-            g_form.setValue('debug_errors_count', errors.length.toString());
-        } catch(e) {}
-        
-        g_form.setValue('form_validation_errors', errors.join('|'));
-        g_form.setValue('form_is_valid', isValid ? 'true' : 'false');
-        return isValid;
+        // Set validation to true and let server handle the actual validation
+        g_form.setValue('form_validation_errors', '');
+        g_form.setValue('form_is_valid', 'true');
+        return true;
     }
 
     try {
