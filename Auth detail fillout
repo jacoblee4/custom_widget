@@ -661,14 +661,20 @@ api.controller = function($scope, $window) {
             g_form.setValue('authority_types', authority_types.join('|'));
             g_form.setValue('authority_data', authority_data.join('|'));
 
-            // Before first submit -> silent (no UI); after first submit -> show/update UI live
-            validateForm(!hasSubmitted);
+            // Always show validation errors after any user interaction
+            validateForm(false);
         }
 
         // Keep local model + RP variables updated
         function updateWidgetData(fieldName, value) {
             c.authorityData[fieldName] = value;
             updateRecordProducerVariables();
+
+            // Force show validation errors immediately when form loads with no selections
+setTimeout(function() {
+    hasSubmitted = true;  // Force validation to show errors
+    validateForm(false);
+}, 100);
         }
 
         // Authority selection toggles
