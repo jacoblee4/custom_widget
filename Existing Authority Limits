@@ -795,6 +795,11 @@ api.controller = function($scope, spUtil, $timeout) {
       
       // Update form validation after loading
       c.updateFormValidation();
+      
+      // Setup submission blocking after limits are loaded
+      $timeout(function() {
+        c.setupSubmissionBlocking();
+      }, 500);
     }).catch(function(error) {
       // Error - show message and clear limits
       spUtil.addErrorMessage('Failed to load authority limits');
@@ -804,6 +809,95 @@ api.controller = function($scope, spUtil, $timeout) {
       // Update form validation after error
       c.updateFormValidation();
     });
+  };
+  
+  /**
+   * Set up form submission blocking to prevent invalid submissions
+   */
+  c.setupSubmissionBlocking = function() {
+    // Find submit buttons and intercept clicks
+    var submitSelectors = [
+      'button[name="sysparm_ck"]',
+      'input[name="sysparm_ck"]', 
+      'button[type="submit"]',
+      'input[type="submit"]',
+      '.form_action_button',
+      '#sysverb_submit',
+      'button:contains("Submit")',
+      'input[value*="Submit"]'
+    ];
+    
+    function blockSubmission(e) {
+      if (c.shouldBlockSubmission()) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        
+        // Show appropriate error message based on request type
+        var requestType = c.requestType;
+        var jobCodeDisplay = c.jobCodeDisplay || 'Unknown';
+        var errorMsg = '';
+        
+        switch (requestType) {
+          case 'new_authority':
+            errorMsg = 'Authority limits already exist for job code ' + jobCodeDisplay + '. Please submit a "Change to Existing Authority" request instead.';
+            break;
+          case 'change_to_existing_authority':
+            errorMsg = 'No authority limits found for job code ' + jobCodeDisplay + '. Please submit a "New Authority" request instead.';
+            break;
+          case 'remove_authority':
+            errorMsg = 'No existing authority limits found for job code ' + jobCodeDisplay + '. Cannot proceed with removal request.';
+            break;
+          default:
+            errorMsg = 'Please check your request type and job code selection.';
+        }
+        
+        // Show error message (try different methods)
+        try {
+          if (typeof spUtil !== 'undefined') {
+            spUtil.addErrorMessage(errorMsg);
+          } else if (typeof g_form !== 'undefined' && g_form.addErrorMessage) {
+            g_form.addErrorMessage(errorMsg);
+          } else {
+            alert(errorMsg); // Fallback
+          }
+        } catch (err) {
+          alert(errorMsg); // Final fallback
+        }
+        
+        return false;
+      }
+    }
+    
+    // Add event listeners to all submit buttons
+    submitSelectors.forEach(function(selector) {
+      var buttons = document.querySelectorAll(selector);
+      buttons.forEach(function(button) {
+        // Remove existing listeners to avoid duplicates
+        button.removeEventListener('click', blockSubmission, true);
+        // Add new listener
+        button.addEventListener('click', blockSubmission, true); // Use capture phase
+      });
+    });
+    
+    // Also try to hook into g_form onSubmit if available
+    try {
+      if (typeof g_form !== 'undefined') {
+        var originalOnSubmit = g_form.onSubmit;
+        g_form.onSubmit = function() {
+          if (c.shouldBlockSubmission()) {
+            return false; // Block submission
+          }
+          // Call original onSubmit if it exists and we're not blocking
+          if (originalOnSubmit) {
+            return originalOnSubmit.call(this);
+          }
+          return true;
+        };
+      }
+    } catch (e) {
+      // g_form may not be available in all contexts
+    }
   };
   
   /**
@@ -823,9 +917,13 @@ api.controller = function($scope, spUtil, $timeout) {
     
     // Start monitoring for changes
     c.setupFieldMonitoring();
+    
+    // Setup initial submission blocking
+    $timeout(function() {
+      c.setupSubmissionBlocking();
+    }, 1500);
   }, 500);
 };
-
 
 
 
@@ -841,8 +939,7 @@ api.controller = function($scope, spUtil, $timeout) {
 var parentId = current.getUniqueValue();
 var shouldProceed = true; // Flag to control processing flow
 
-// Authority Limits Widget Validation
-// Check if the authority limits widget has blocked submission based on request type
+// Authority Limits Widget Validation (Safety Net)
 var authorityLimitsBlocked = producer.authority_limits_validation_blocked ? 
     producer.authority_limits_validation_blocked.toString().trim() : 'false';
 
