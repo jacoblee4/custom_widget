@@ -586,29 +586,44 @@ api.controller = function($scope, $window) {
         // Updated validation logic to handle remove authority
         function validateForm() {
     var errors = [];
-
-    // Get current request type to determine validation rules
     var currentRequestType = c.getRequestType();
     
-    // Add debugging to see what's happening
-    console.log('validateForm - currentRequestType:', currentRequestType);
-    console.log('validateForm - c.requestType:', c.requestType);
-
+    // Send debug info to server logs
+    try {
+        if (typeof g_form !== 'undefined' && g_form.setValue) {
+            g_form.setValue('debug_request_type', currentRequestType || 'undefined');
+            g_form.setValue('debug_c_request_type', c.requestType || 'undefined');
+            g_form.setValue('debug_validation_step', 'starting');
+        }
+    } catch(e) {}
+    
     // For remove authority requests, only validate justification
     if (currentRequestType === 'remove_authority' || c.requestType === 'remove_authority') {
-        console.log('Remove authority validation - only checking justification');
+        try {
+            g_form.setValue('debug_validation_step', 'remove_authority_path');
+        } catch(e) {}
+        
         if (!c.authorityData.overall_business_need || c.authorityData.overall_business_need.trim() === '') {
             errors.push('Overall Business Need is required');
         }
 
         var isValid = errors.length === 0;
+        
+        try {
+            g_form.setValue('debug_validation_step', 'remove_authority_complete');
+            g_form.setValue('debug_errors_count', errors.length.toString());
+        } catch(e) {}
+        
         g_form.setValue('form_validation_errors', errors.join('|'));
         g_form.setValue('form_is_valid', isValid ? 'true' : 'false');
         return isValid;
     }
 
+    try {
+        g_form.setValue('debug_validation_step', 'full_validation_path');
+    } catch(e) {}
+
     // For new_authority and change_to_existing_authority, run normal validation
-    console.log('Full validation running for request type:', currentRequestType);
     
     // Business justification required for all request types
     if (!c.authorityData.overall_business_need || c.authorityData.overall_business_need.trim() === '') {
@@ -620,8 +635,7 @@ api.controller = function($scope, $window) {
         errors.push('You must select at least one authority type (Credit Authority or Non-Credit Authority)');
     }
 
-    // Rest of validation remains the same...
-    // (Non-credit and credit authority validation)
+    // Non-credit authority validation (only for non-remove requests)
     if (c.authorityData.non_credit_checked) {
         var hasNonCreditValue = c.authorityData.disbursement || c.authorityData.check_cashing_on_us ||
             c.authorityData.check_cashing_not_on_us || c.authorityData.remote_deposit ||
@@ -639,6 +653,7 @@ api.controller = function($scope, $window) {
         }
     }
 
+    // Credit authority validation (only for non-remove requests)
     if (c.authorityData.credit_checked) {
         var hasCreditValue = c.authorityData.overdraft || c.authorityData.unavailable_funds;
         if (!hasCreditValue) {
@@ -647,6 +662,8 @@ api.controller = function($scope, $window) {
     }
 
     var isValid = errors.length === 0;
+
+    // Update Record Producer variables for server-side validation
     g_form.setValue('form_validation_errors', errors.join('|'));
     g_form.setValue('form_is_valid', isValid ? 'true' : 'false');
 
@@ -924,11 +941,25 @@ if (requestType && jobCode) {
 
 // Only proceed if authority limits validation passed
 if (shouldProceed) {
+    gs.info('AUTH_FIX_DEBUG: Starting form validation');
+    gs.info('AUTH_FIX_DEBUG: Request type = ' + requestType);
+    gs.info('AUTH_FIX_DEBUG: Debug request type = ' + (producer.debug_request_type || 'not_set'));
+    gs.info('AUTH_FIX_DEBUG: Debug c.requestType = ' + (producer.debug_c_request_type || 'not_set'));
+    gs.info('AUTH_FIX_DEBUG: Debug validation step = ' + (producer.debug_validation_step || 'not_set'));
+    gs.info('AUTH_FIX_DEBUG: Debug errors count = ' + (producer.debug_errors_count || 'not_set'));
+    gs.info('AUTH_FIX_DEBUG: form_is_valid value = ' + producer.form_is_valid);
+    gs.info('AUTH_FIX_DEBUG: form_validation_errors = ' + (producer.form_validation_errors || 'none'));
+    
     // Validate form data before processing
     var formIsValid = producer.form_is_valid ? producer.form_is_valid.toString().trim() : 'false';
     var validationPassed = (formIsValid === 'true' || formIsValid === true || producer.form_is_valid === true);
+    
+    gs.info('AUTH_FIX_DEBUG: formIsValid string = ' + formIsValid);
+    gs.info('AUTH_FIX_DEBUG: validationPassed = ' + validationPassed);
 
     if (validationPassed) {
+        gs.info('AUTH_FIX_DEBUG: Validation passed, proceeding');
+        
         // Set job code string fields on parent record for display purposes
         if (producer.job_code) {
             // Look up job code details from reference table
@@ -1030,6 +1061,7 @@ if (shouldProceed) {
     } else {
         // Form validation failed - show errors and prevent submission
         var errors = producer.form_validation_errors ? producer.form_validation_errors.toString().split('|') : ['Form validation failed'];
+        gs.info('AUTH_FIX_DEBUG: Validation failed, errors = ' + errors.join('; '));
         gs.addErrorMessage('Please correct the following errors: ' + errors.join('; '));
         current.setAbortAction(true);
     }
