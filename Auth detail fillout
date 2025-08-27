@@ -468,354 +468,378 @@ If applicable: Enter the requested approval amount. If the authority type should
 <!-- ============================================ -->
 
 api.controller = function($scope, $window) {
-   var c = this;
-   var g_form = $scope.page.g_form;
+    var c = this;
+    var g_form = $scope.page.g_form;
 
-   // Tracks whether the user has attempted to submit yet
-   var hasSubmitted = false;
+    // Tracks whether the user has attempted to submit yet
+    var hasSubmitted = false;
 
-   c.$onInit = function() {
-       setTimeout(function() {
-           initializeWidget();
-       }, 500);
-   };
+    c.$onInit = function() {
+        setTimeout(function() {
+            initializeWidget();
+        }, 500);
+    };
 
-   function initializeWidget() {
-       // Get references to DOM elements
-       const nonCreditCheckbox = document.getElementById('nonCreditAuth');
-       const creditCheckbox = document.getElementById('creditAuth');
-       const nonCreditGroup = document.getElementById('nonCreditGroup');
-       const creditGroup = document.getElementById('creditGroup');
-       const nonCreditSection = document.getElementById('nonCreditSection');
-       const creditSection = document.getElementById('creditSection');
-       const justificationSection = document.getElementById('justificationSection');
+    function initializeWidget() {
+        // Get references to DOM elements
+        const nonCreditCheckbox = document.getElementById('nonCreditAuth');
+        const creditCheckbox = document.getElementById('creditAuth');
+        const nonCreditGroup = document.getElementById('nonCreditGroup');
+        const creditGroup = document.getElementById('creditGroup');
+        const nonCreditSection = document.getElementById('nonCreditSection');
+        const creditSection = document.getElementById('creditSection');
+        const justificationSection = document.getElementById('justificationSection');
 
-       const wireTransferCheck = document.getElementById('wireTransferCheck');
-       const wireInternalOnlyContainer = document.getElementById('wireInternalOnlyContainer');
-       const wireInternalOnly = document.getElementById('wireInternalOnly');
-       const officialChecksCheck = document.getElementById('officialChecksCheck');
-       const checksInternalOnlyContainer = document.getElementById('checksInternalOnlyContainer');
-       const checksInternalOnly = document.getElementById('checksInternalOnly');
+        const wireTransferCheck = document.getElementById('wireTransferCheck');
+        const wireInternalOnlyContainer = document.getElementById('wireInternalOnlyContainer');
+        const wireInternalOnly = document.getElementById('wireInternalOnly');
+        const officialChecksCheck = document.getElementById('officialChecksCheck');
+        const checksInternalOnlyContainer = document.getElementById('checksInternalOnlyContainer');
+        const checksInternalOnly = document.getElementById('checksInternalOnly');
 
-       // Widget data model
-       c.authorityData = {
-           non_credit_checked: false,
-           credit_checked: false,
-           disbursement: '',
-           ach_checked: false,
-           wire_transfer_checked: false,
-           wire_internal_only: false,
-           official_checks_checked: false,
-           checks_internal_only: false,
-           check_cashing_on_us: '',
-           check_cashing_not_on_us: '',
-           remote_deposit: '',
-           treasury_solutions_company_wire_limits: '',
-           fx_wire_limits: '',
-           overdraft: '',
-           overdraft_internal_only: false,
-           unavailable_funds: '',
-           unavailable_internal_only: false,
-           overall_business_need: ''
-       };
+        // Widget data model
+        c.authorityData = {
+            non_credit_checked: false,
+            credit_checked: false,
+            disbursement: '',
+            ach_checked: false,
+            wire_transfer_checked: false,
+            wire_internal_only: false,
+            official_checks_checked: false,
+            checks_internal_only: false,
+            check_cashing_on_us: '',
+            check_cashing_not_on_us: '',
+            remote_deposit: '',
+            treasury_solutions_company_wire_limits: '',
+            fx_wire_limits: '',
+            overdraft: '',
+            overdraft_internal_only: false,
+            unavailable_funds: '',
+            unavailable_internal_only: false,
+            overall_business_need: ''
+        };
 
-       // Error container (widget-level)
-       var errorContainer = document.createElement('div');
-       errorContainer.id = 'validationErrors';
-       errorContainer.style.cssText = 'display: none; background: #f8d7da; color: #721c24; padding: 15px; border: 1px solid #f5c6cb; border-radius: 6px; margin-bottom: 20px; font-size: 14px;';
-       var widgetContainer = document.querySelector('.widget-container');
-       var widgetHeader = document.querySelector('.widget-header');
-       widgetContainer.insertBefore(errorContainer, widgetHeader.nextSibling);
+        // Error container (widget-level)
+        var errorContainer = document.createElement('div');
+        errorContainer.id = 'validationErrors';
+        errorContainer.style.cssText = 'display: none; background: #f8d7da; color: #721c24; padding: 15px; border: 1px solid #f5c6cb; border-radius: 6px; margin-bottom: 20px; font-size: 14px;';
+        var widgetContainer = document.querySelector('.widget-container');
+        var widgetHeader = document.querySelector('.widget-header');
+        widgetContainer.insertBefore(errorContainer, widgetHeader.nextSibling);
 
-       // Helpers: currency format
-       function formatCurrency(value) {
-           if (!value) return '';
-           let numStr = value.toString().replace(/[^\d.]/g, '');
-           const parts = numStr.split('.');
-           if (parts.length > 2) {
-               numStr = parts[0] + '.' + parts.slice(1).join('');
-           }
-           const [integerPart, decimalPart] = numStr.split('.');
-           const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-           if (decimalPart !== undefined) {
-               const limitedDecimal = decimalPart.substring(0, 2);
-               return formattedInteger + '.' + limitedDecimal;
-           }
-           return formattedInteger;
-       }
+        // Helpers: currency format
+        function formatCurrency(value) {
+            if (!value) return '';
+            let numStr = value.toString().replace(/[^\d.]/g, '');
+            const parts = numStr.split('.');
+            if (parts.length > 2) {
+                numStr = parts[0] + '.' + parts.slice(1).join('');
+            }
+            const [integerPart, decimalPart] = numStr.split('.');
+            const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            if (decimalPart !== undefined) {
+                const limitedDecimal = decimalPart.substring(0, 2);
+                return formattedInteger + '.' + limitedDecimal;
+            }
+            return formattedInteger;
+        }
 
-       function getCurrencyValue(formattedValue) {
-           if (!formattedValue) return '';
-           return formattedValue.replace(/[^\d.]/g, '');
-       }
+        function getCurrencyValue(formattedValue) {
+            if (!formattedValue) return '';
+            return formattedValue.replace(/[^\d.]/g, '');
+        }
 
-       // Render the widget error box
-       function showValidationErrors(errors) {
-           if (errors.length === 0) {
-               errorContainer.style.display = 'none';
-               return;
-           }
-           var errorHtml = '<strong>Please correct the following errors:</strong><ul>';
-           errors.forEach(function(error) {
-               errorHtml += '<li>' + error + '</li>';
-           });
-           errorHtml += '</ul>';
-           errorContainer.innerHTML = errorHtml;
-           errorContainer.style.display = 'block';
-       }
+        // Render the widget error box
+        function showValidationErrors(errors) {
+            if (errors.length === 0) {
+                errorContainer.style.display = 'none';
+                return;
+            }
+            var errorHtml = '<strong>Please correct the following errors:</strong><ul>';
+            errors.forEach(function(error) {
+                errorHtml += '<li>' + error + '</li>';
+            });
+            errorHtml += '</ul>';
+            errorContainer.innerHTML = errorHtml;
+            errorContainer.style.display = 'block';
+        }
 
-       // Core validation (with "silent" option)
-       function validateForm(silent) {
-           var errors = [];
+        // Core validation (with "silent" option)
+        function validateForm(silent) {
+            var errors = [];
 
-           // Must select at least one authority type
-           if (!c.authorityData.non_credit_checked && !c.authorityData.credit_checked) {
-               errors.push('You must select at least one authority type (Credit Authority or Non-Credit Authority)');
-           }
+            // Must select at least one authority type
+            if (!c.authorityData.non_credit_checked && !c.authorityData.credit_checked) {
+                errors.push('You must select at least one authority type (Credit Authority or Non-Credit Authority)');
+            }
 
-           // Business justification required
-           if (!c.authorityData.overall_business_need || c.authorityData.overall_business_need.trim() === '') {
-               errors.push('Overall Business Need is required');
-           }
+            // Business justification required
+            if (!c.authorityData.overall_business_need || c.authorityData.overall_business_need.trim() === '') {
+                errors.push('Overall Business Need is required');
+            }
 
-           // Non-credit rules
-           if (c.authorityData.non_credit_checked) {
-               var hasNonCreditValue = c.authorityData.disbursement || c.authorityData.check_cashing_on_us ||
-                                       c.authorityData.check_cashing_not_on_us || c.authorityData.remote_deposit ||
-                                       c.authorityData.treasury_solutions_company_wire_limits || c.authorityData.fx_wire_limits;
+            // Non-credit rules
+            if (c.authorityData.non_credit_checked) {
+                var hasNonCreditValue = c.authorityData.disbursement || c.authorityData.check_cashing_on_us ||
+                                        c.authorityData.check_cashing_not_on_us || c.authorityData.remote_deposit ||
+                                        c.authorityData.treasury_solutions_company_wire_limits || c.authorityData.fx_wire_limits;
 
-               if (!hasNonCreditValue) {
-                   errors.push('If Non-Credit Authority is selected, at least one currency field must have a value');
-               }
+                if (!hasNonCreditValue) {
+                    errors.push('If Non-Credit Authority is selected, at least one currency field must have a value');
+                }
 
-               if (c.authorityData.disbursement &&
-                   !c.authorityData.ach_checked &&
-                   !c.authorityData.wire_transfer_checked &&
-                   !c.authorityData.official_checks_checked) {
-                   errors.push('If Disbursement amount is entered, you must select at least one option: ACH, Wire Transfer, or Official Checks');
-               }
-           }
+                if (c.authorityData.disbursement &&
+                    !c.authorityData.ach_checked &&
+                    !c.authorityData.wire_transfer_checked &&
+                    !c.authorityData.official_checks_checked) {
+                    errors.push('If Disbursement amount is entered, you must select at least one option: ACH, Wire Transfer, or Official Checks');
+                }
+            }
 
-           // Credit rules
-           if (c.authorityData.credit_checked) {
-               var hasCreditValue = c.authorityData.overdraft || c.authorityData.unavailable_funds;
-               if (!hasCreditValue) {
-                   errors.push('If Credit Authority is selected, at least one currency field must have a value');
-               }
-           }
+            // Credit rules
+            if (c.authorityData.credit_checked) {
+                var hasCreditValue = c.authorityData.overdraft || c.authorityData.unavailable_funds;
+                if (!hasCreditValue) {
+                    errors.push('If Credit Authority is selected, at least one currency field must have a value');
+                }
+            }
 
-           var isValid = errors.length === 0;
+            var isValid = errors.length === 0;
 
-           // Always keep RP variables in sync so the server can block if needed
-           g_form.setValue('form_validation_errors', errors.join('|'));
-           g_form.setValue('form_is_valid', isValid ? 'true' : 'false');
+            // Always keep RP variables in sync so the server can block if needed
+            g_form.setValue('form_validation_errors', errors.join('|'));
+            g_form.setValue('form_is_valid', isValid ? 'true' : 'false');
 
-           // Only show the widget error box after first submit attempt,
-           // OR when hasSubmitted is true and we're validating due to live edits
-           if (!silent) {
-               showValidationErrors(errors);
-           } else {
-               // Ensure the box is hidden during silent validation
-               errorContainer.style.display = 'none';
-           }
+            // Only show the widget error box after first submit attempt,
+            // OR when hasSubmitted is true and we're validating due to live edits
+            if (!silent) {
+                showValidationErrors(errors);
+            } else {
+                // Ensure the box is hidden during silent validation
+                errorContainer.style.display = 'none';
+            }
 
-           return isValid;
-       }
+            return isValid;
+        }
 
-       // Update RP variables and (silently) compute validity
-       function updateRecordProducerVariables() {
-           // Map user-entered data to RP variables
-           g_form.setValue('overall_business_need', c.authorityData.overall_business_need);
+        // Update RP variables and (silently) compute validity
+        function updateRecordProducerVariables() {
+            // Map user-entered data to RP variables
+            g_form.setValue('overall_business_need', c.authorityData.overall_business_need);
 
-           var authority_types = [];
-           var authority_data = [];
+            var authority_types = [];
+            var authority_data = [];
 
-           if (c.authorityData.non_credit_checked) {
-               authority_types.push('non_credit');
-               var nonCreditData = {
-                   disbursement_ach: (c.authorityData.ach_checked && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
-                   disbursement_wire_transfer_external: (c.authorityData.wire_transfer_checked && !c.authorityData.wire_internal_only && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
-                   disbursement_wire_transfer_internal: (c.authorityData.wire_transfer_checked && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
-                   disbursement_official_checks_external: (c.authorityData.official_checks_checked && !c.authorityData.checks_internal_only && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
-                   disbursement_official_checks_internal: (c.authorityData.official_checks_checked && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
-                   check_cashing_on_us: c.authorityData.check_cashing_on_us,
-                   check_cashing_not_on_us: c.authorityData.check_cashing_not_on_us,
-                   remote_deposit: c.authorityData.remote_deposit,
-                   treasury_solutions_company_wire_limits: c.authorityData.treasury_solutions_company_wire_limits,
-                   fx_wire_limits: c.authorityData.fx_wire_limits
-               };
-               authority_data.push(JSON.stringify(nonCreditData));
-           }
+            if (c.authorityData.non_credit_checked) {
+                authority_types.push('non_credit');
+                var nonCreditData = {
+                    disbursement_ach: (c.authorityData.ach_checked && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
+                    disbursement_wire_transfer_external: (c.authorityData.wire_transfer_checked && !c.authorityData.wire_internal_only && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
+                    disbursement_wire_transfer_internal: (c.authorityData.wire_transfer_checked && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
+                    disbursement_official_checks_external: (c.authorityData.official_checks_checked && !c.authorityData.checks_internal_only && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
+                    disbursement_official_checks_internal: (c.authorityData.official_checks_checked && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
+                    check_cashing_on_us: c.authorityData.check_cashing_on_us,
+                    check_cashing_not_on_us: c.authorityData.check_cashing_not_on_us,
+                    remote_deposit: c.authorityData.remote_deposit,
+                    treasury_solutions_company_wire_limits: c.authorityData.treasury_solutions_company_wire_limits,
+                    fx_wire_limits: c.authorityData.fx_wire_limits
+                };
+                authority_data.push(JSON.stringify(nonCreditData));
+            }
 
-           if (c.authorityData.credit_checked) {
-               authority_types.push('credit');
-               var creditData = {
-                   overdraft_internal_accounts: c.authorityData.overdraft || '',
-                   overdraft_external_accounts: (c.authorityData.overdraft && !c.authorityData.overdraft_internal_only) ? c.authorityData.overdraft : '',
-                   unavailable_funds_internal_accounts: c.authorityData.unavailable_funds || '',
-                   unavailable_funds_external_accounts: (c.authorityData.unavailable_funds && !c.authorityData.unavailable_internal_only) ? c.authorityData.unavailable_funds : ''
-               };
-               authority_data.push(JSON.stringify(creditData));
-           }
+            if (c.authorityData.credit_checked) {
+                authority_types.push('credit');
+                var creditData = {
+                    overdraft_internal_accounts: c.authorityData.overdraft || '',
+                    overdraft_external_accounts: (c.authorityData.overdraft && !c.authorityData.overdraft_internal_only) ? c.authorityData.overdraft : '',
+                    unavailable_funds_internal_accounts: c.authorityData.unavailable_funds || '',
+                    unavailable_funds_external_accounts: (c.authorityData.unavailable_funds && !c.authorityData.unavailable_internal_only) ? c.authorityData.unavailable_funds : ''
+                };
+                authority_data.push(JSON.stringify(creditData));
+            }
 
-           g_form.setValue('authority_types', authority_types.join('|'));
-           g_form.setValue('authority_data', authority_data.join('|'));
+            g_form.setValue('authority_types', authority_types.join('|'));
+            g_form.setValue('authority_data', authority_data.join('|'));
 
-           // Before first submit -> silent (no UI); after first submit -> show/update UI live
-           validateForm(!hasSubmitted);
-       }
+            // Before first submit -> silent (no UI); after first submit -> show/update UI live
+            validateForm(!hasSubmitted);
+        }
 
-       // Keep local model + RP variables updated
-       function updateWidgetData(fieldName, value) {
-           c.authorityData[fieldName] = value;
-           updateRecordProducerVariables();
-       }
+        // Keep local model + RP variables updated
+        function updateWidgetData(fieldName, value) {
+            c.authorityData[fieldName] = value;
+            updateRecordProducerVariables();
+        }
 
-       // Authority selection toggles
-       function handleAuthoritySelection() {
-           const nonCreditChecked = nonCreditCheckbox.checked;
-           const creditChecked = creditCheckbox.checked;
+        // Authority selection toggles
+        function handleAuthoritySelection() {
+            const nonCreditChecked = nonCreditCheckbox.checked;
+            const creditChecked = creditCheckbox.checked;
 
-           nonCreditGroup.classList.toggle('active', nonCreditChecked);
-           creditGroup.classList.toggle('active', creditChecked);
-           nonCreditSection.classList.toggle('active', nonCreditChecked);
-           creditSection.classList.toggle('active', creditChecked);
-           justificationSection.classList.toggle('active', nonCreditChecked || creditChecked);
+            nonCreditGroup.classList.toggle('active', nonCreditChecked);
+            creditGroup.classList.toggle('active', creditChecked);
+            nonCreditSection.classList.toggle('active', nonCreditChecked);
+            creditSection.classList.toggle('active', creditChecked);
+            justificationSection.classList.toggle('active', nonCreditChecked || creditChecked);
 
-           updateWidgetData('non_credit_checked', nonCreditChecked);
-           updateWidgetData('credit_checked', creditChecked);
-       }
+            updateWidgetData('non_credit_checked', nonCreditChecked);
+            updateWidgetData('credit_checked', creditChecked);
+        }
 
-       function handleWireTransferChange() {
-           const isChecked = wireTransferCheck.checked;
-           wireInternalOnlyContainer.style.display = isChecked ? 'block' : 'none';
-           if (!isChecked) {
-               wireInternalOnly.checked = false;
-               updateWidgetData('wire_internal_only', false);
-           }
-           updateWidgetData('wire_transfer_checked', isChecked);
-       }
+        function handleWireTransferChange() {
+            const isChecked = wireTransferCheck.checked;
+            wireInternalOnlyContainer.style.display = isChecked ? 'block' : 'none';
+            if (!isChecked) {
+                wireInternalOnly.checked = false;
+                updateWidgetData('wire_internal_only', false);
+            }
+            updateWidgetData('wire_transfer_checked', isChecked);
+        }
 
-       function handleOfficialChecksChange() {
-           const isChecked = officialChecksCheck.checked;
-           checksInternalOnlyContainer.style.display = isChecked ? 'block' : 'none';
-           if (!isChecked) {
-               checksInternalOnly.checked = false;
-               updateWidgetData('checks_internal_only', false);
-           }
-           updateWidgetData('official_checks_checked', isChecked);
-       }
+        function handleOfficialChecksChange() {
+            const isChecked = officialChecksCheck.checked;
+            checksInternalOnlyContainer.style.display = isChecked ? 'block' : 'none';
+            if (!isChecked) {
+                checksInternalOnly.checked = false;
+                updateWidgetData('checks_internal_only', false);
+            }
+            updateWidgetData('official_checks_checked', isChecked);
+        }
 
-       // Setup currency field
-       function setupCurrencyField(inputId, fieldName) {
-           const input = document.getElementById(inputId);
-           if (!input) return;
-           let isUpdating = false;
-           function handleCurrencyInput(event) {
-               if (isUpdating) return;
-               isUpdating = true;
-               const cursorPosition = event.target.selectionStart;
-               const oldValue = event.target.value;
-               const oldLength = oldValue.length;
-               const formattedValue = formatCurrency(oldValue);
-               event.target.value = formattedValue;
-               const newLength = formattedValue.length;
-               const lengthDiff = newLength - oldLength;
-               const newCursorPosition = Math.max(0, cursorPosition + lengthDiff);
-               setTimeout(() => {
-                   event.target.setSelectionRange(newCursorPosition, newCursorPosition);
-               }, 0);
-               const rawValue = getCurrencyValue(formattedValue);
-               updateWidgetData(fieldName, rawValue);
-               isUpdating = false;
-           }
-           input.addEventListener('input', handleCurrencyInput);
-       }
+        // Setup currency field
+        function setupCurrencyField(inputId, fieldName) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            let isUpdating = false;
+            function handleCurrencyInput(event) {
+                if (isUpdating) return;
+                isUpdating = true;
+                const cursorPosition = event.target.selectionStart;
+                const oldValue = event.target.value;
+                const oldLength = oldValue.length;
+                const formattedValue = formatCurrency(oldValue);
+                event.target.value = formattedValue;
+                const newLength = formattedValue.length;
+                const lengthDiff = newLength - oldLength;
+                const newCursorPosition = Math.max(0, cursorPosition + lengthDiff);
+                setTimeout(() => {
+                    event.target.setSelectionRange(newCursorPosition, newCursorPosition);
+                }, 0);
+                const rawValue = getCurrencyValue(formattedValue);
+                updateWidgetData(fieldName, rawValue);
+                isUpdating = false;
+            }
+            input.addEventListener('input', handleCurrencyInput);
+        }
 
-       // Setup generic field listeners
-       function setupCheckboxField(inputId, fieldName) {
-           const input = document.getElementById(inputId);
-           if (!input) return;
-           input.addEventListener('change', function(event) {
-               updateWidgetData(fieldName, event.target.checked);
-           });
-       }
+        // Setup generic field listeners
+        function setupCheckboxField(inputId, fieldName) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            input.addEventListener('change', function(event) {
+                updateWidgetData(fieldName, event.target.checked);
+            });
+        }
 
-       function setupTextAreaField(inputId, fieldName) {
-           const input = document.getElementById(inputId);
-           if (!input) return;
-           input.addEventListener('input', function(event) {
-               updateWidgetData(fieldName, event.target.value);
-           });
-       }
+        function setupTextAreaField(inputId, fieldName) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            input.addEventListener('input', function(event) {
+                updateWidgetData(fieldName, event.target.value);
+            });
+        }
 
-       // Bind events
-       if (nonCreditCheckbox) nonCreditCheckbox.addEventListener('change', handleAuthoritySelection);
-       if (creditCheckbox) creditCheckbox.addEventListener('change', handleAuthoritySelection);
-       if (nonCreditGroup) {
-           nonCreditGroup.addEventListener('click', function(e) {
-               if (e.target.tagName !== 'INPUT') {
-                   nonCreditCheckbox.checked = !nonCreditCheckbox.checked;
-                   handleAuthoritySelection();
-               }
-           });
-       }
-       if (creditGroup) {
-           creditGroup.addEventListener('click', function(e) {
-               if (e.target.tagName !== 'INPUT') {
-                   creditCheckbox.checked = !creditCheckbox.checked;
-                   handleAuthoritySelection();
-               }
-           });
-       }
-       if (wireTransferCheck) wireTransferCheck.addEventListener('change', handleWireTransferChange);
-       if (officialChecksCheck) officialChecksCheck.addEventListener('change', handleOfficialChecksChange);
+        // Bind events
+        if (nonCreditCheckbox) nonCreditCheckbox.addEventListener('change', handleAuthoritySelection);
+        if (creditCheckbox) creditCheckbox.addEventListener('change', handleAuthoritySelection);
+        if (nonCreditGroup) {
+            nonCreditGroup.addEventListener('click', function(e) {
+                if (e.target.tagName !== 'INPUT') {
+                    nonCreditCheckbox.checked = !nonCreditCheckbox.checked;
+                    handleAuthoritySelection();
+                }
+            });
+        }
+        if (creditGroup) {
+            creditGroup.addEventListener('click', function(e) {
+                if (e.target.tagName !== 'INPUT') {
+                    creditCheckbox.checked = !creditCheckbox.checked;
+                    handleAuthoritySelection();
+                }
+            });
+        }
+        if (wireTransferCheck) wireTransferCheck.addEventListener('change', handleWireTransferChange);
+        if (officialChecksCheck) officialChecksCheck.addEventListener('change', handleOfficialChecksChange);
 
-       setupCurrencyField('disbursement', 'disbursement');
-       setupCurrencyField('checkCashingOnUs', 'check_cashing_on_us');
-       setupCurrencyField('checkCashingNotOnUs', 'check_cashing_not_on_us');
-       setupCurrencyField('remoteDeposit', 'remote_deposit');
-       setupCurrencyField('treasurySolutions', 'treasury_solutions_company_wire_limits');
-       setupCurrencyField('fxWireLimits', 'fx_wire_limits');
-       setupCurrencyField('overdraft', 'overdraft');
-       setupCurrencyField('unavailableFunds', 'unavailable_funds');
+        setupCurrencyField('disbursement', 'disbursement');
+        setupCurrencyField('checkCashingOnUs', 'check_cashing_on_us');
+        setupCurrencyField('checkCashingNotOnUs', 'check_cashing_not_on_us');
+        setupCurrencyField('remoteDeposit', 'remote_deposit');
+        setupCurrencyField('treasurySolutions', 'treasury_solutions_company_wire_limits');
+        setupCurrencyField('fxWireLimits', 'fx_wire_limits');
+        setupCurrencyField('overdraft', 'overdraft');
+        setupCurrencyField('unavailableFunds', 'unavailable_funds');
 
-       setupCheckboxField('achCheck', 'ach_checked');
-       setupCheckboxField('wireInternalOnly', 'wire_internal_only');
-       setupCheckboxField('checksInternalOnly', 'checks_internal_only');
-       setupCheckboxField('overdraftInternalOnly', 'overdraft_internal_only');
-       setupCheckboxField('unavailableInternalOnly', 'unavailable_internal_only');
+        setupCheckboxField('achCheck', 'ach_checked');
+        setupCheckboxField('wireInternalOnly', 'wire_internal_only');
+        setupCheckboxField('checksInternalOnly', 'checks_internal_only');
+        setupCheckboxField('overdraftInternalOnly', 'overdraft_internal_only');
+        setupCheckboxField('unavailableInternalOnly', 'unavailable_internal_only');
 
-       setupTextAreaField('businessNeed', 'overall_business_need');
+        setupTextAreaField('businessNeed', 'overall_business_need');
 
-       // 🔸 Initialize RP variables and default validation state (silent)
-       updateRecordProducerVariables();
+        // 🔸 Initialize RP variables and default validation state (silent)
+        updateRecordProducerVariables();
 
-       // Hook into ServiceNow's Record Producer validation
-       if (typeof window.g_form !== 'undefined' && g_form) {
-           // Override the form's onSubmit validation
-           var originalOnSubmit = g_form.onSubmit;
-           g_form.onSubmit = function() {
-               hasSubmitted = true;
-               var isValid = validateForm(false);  // show widget errors
-               
-               if (!isValid) {
-                   var errorBox = document.getElementById('validationErrors');
-                   if (errorBox) {
-                       errorBox.style.display = 'block';
-                       errorBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                   }
-                   return false; // block submission
-               }
-               
-               // If valid, call original onSubmit if it exists
-               if (originalOnSubmit) {
-                   return originalOnSubmit.call(this);
-               }
-               return true;
-           };
-       }
-   }
+        // Hook into the actual submit button click - try multiple selectors and wait for it to exist
+        function interceptSubmitButton() {
+            var submitSelectors = [
+                'button[name="sysparm_ck"]',
+                'input[name="sysparm_ck"]',
+                'button[type="submit"]',
+                'input[type="submit"]',
+                '.form_action_button',
+                '#sysverb_submit',
+                'button:contains("Submit")',
+                'input[value*="Submit"]'
+            ];
+
+            var submitButton = null;
+            for (var i = 0; i < submitSelectors.length; i++) {
+                submitButton = document.querySelector(submitSelectors[i]);
+                if (submitButton) break;
+            }
+
+            if (submitButton) {
+                submitButton.addEventListener('click', function(e) {
+                    hasSubmitted = true;
+                    var isValid = validateForm(false);  // show widget errors
+                    
+                    if (!isValid) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.stopImmediatePropagation();
+                        
+                        var errorBox = document.getElementById('validationErrors');
+                        if (errorBox) {
+                            errorBox.style.display = 'block';
+                            errorBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        }
+                        
+                        return false;
+                    }
+                }, true); // Use capture phase
+                
+                console.log('Submit button intercepted:', submitButton);
+            } else {
+                // If submit button not found, try again in 500ms
+                setTimeout(interceptSubmitButton, 500);
+            }
+        }
+
+        // Start looking for submit button after a delay
+        setTimeout(interceptSubmitButton, 1000);
+    }
 };
 
 
