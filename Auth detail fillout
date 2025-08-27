@@ -792,22 +792,26 @@ api.controller = function($scope, $window) {
         updateRecordProducerVariables();   // sets types/data + silent validate (invalid by default)
     }
 
-    // 🔑 Validate on submit: first time shows error box and blocks;
-    // after that, live edits keep the box in sync via updateRecordProducerVariables()
-    c.onSubmit = function() {
-        hasSubmitted = true;
-        var isValid = validateForm(false);  // show messages now
-        if (!isValid) {
-            var errorBox = document.getElementById('validationErrors');
-            if (errorBox) {
-                errorBox.style.display = 'block';
-                errorBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }
-            // Prevent form submission by throwing an error that ServiceNow will catch
-            throw new Error('Form validation failed');
+     // Hook into ServiceNow's form submission process
+    setTimeout(function() {
+        var submitButton = document.querySelector('button[type="submit"], input[type="submit"], .form_action_button');
+        if (submitButton) {
+            submitButton.addEventListener('click', function(e) {
+                hasSubmitted = true;
+                var isValid = validateForm(false);  // show messages now
+                if (!isValid) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var errorBox = document.getElementById('validationErrors');
+                    if (errorBox) {
+                        errorBox.style.display = 'block';
+                        errorBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                    return false;
+                }
+            });
         }
-        return true; // allow submission
-    };
+    }, 1000);
 };
 
 
