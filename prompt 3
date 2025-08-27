@@ -1,0 +1,11 @@
+This widget needs some updates. It's going to be heavily dependent on which type of request is selected from request_type. Here are the scenarios
+
+New authority (	new_authority)
+
+Currently the widget will either display the current limits or a message "No authority limits found for job code XYZ". We need to modify this. For new, if limits are found it should display an error message like "Authority limits found for this job code. Please submit a change to existing authority for job code XYZ" and it should display the existing limits. If NO limits are found this is good, it should display "No existing authority limits found, Please fill out the Authority limit details below". Also, if it's a new AND limits were found it should restrict the user from submitting the form displaying an error to submit a change instead.
+
+Next is a "change to existing authority" ( change_to_existing_authority)
+This is like the opposite of a a new. If no limits are found it should show an error that no limits were found for job code XYZ and to submit a new authority for this type of request and it should restrict them from submitting. If existing limits are found just display them like it currently does and let them proceed.
+
+Last is Remove Authority (remove_authority)
+For this, it should also confirm after a job code was selected that existing limits exist. If none exist it should display an error that no existing limits were found for the job code and restrict them from submitting the form. If it found limits it should display them but also display a warning that submitting the removal request for job code XYZ will remove all the existing limits that it's showing.
