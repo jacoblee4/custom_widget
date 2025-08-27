@@ -461,6 +461,7 @@ If applicable: Enter the requested approval amount. If the authority type should
     margin-top: 12px !important;
 }
 
+
 <!-- ============================================ -->
 <!-- CLIENT CONTROLLER -->
 <!-- Place this in the "Client Controller" field -->
@@ -807,6 +808,7 @@ api.controller = function($scope, $window) {
         return true; // allow submission
     };
 };
+
 
 
 <!-- ============================================ -->
