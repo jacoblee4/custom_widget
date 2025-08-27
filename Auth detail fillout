@@ -699,58 +699,62 @@ c.getRequestType = function() {
 
         // Updated updateRecordProducerVariables function
         function updateRecordProducerVariables() {
-            g_form.setValue('overall_business_need', c.authorityData.overall_business_need);
+    g_form.setValue('overall_business_need', c.authorityData.overall_business_need);
 
-            // Get current request type
-            var currentRequestType = c.getRequestType();
+    // Get current request type - use multiple methods
+    var currentRequestType = c.getRequestType();
+    
+    // Also update our cached request type
+    c.requestType = currentRequestType;
 
-            // For remove authority requests, don't set authority data
-            if (currentRequestType === 'remove_authority') {
-                g_form.setValue('authority_types', '');
-                g_form.setValue('authority_data', '');
-                validateForm(); // Only validate justification
-                return;
-            }
+    // For remove authority requests, don't set authority data
+    if (currentRequestType === 'remove_authority') {
+        g_form.setValue('authority_types', '');
+        g_form.setValue('authority_data', '');
+        // Make sure validation runs
+        validateForm();
+        return;
+    }
 
-            var authority_types = [];
-            var authority_data = [];
+    var authority_types = [];
+    var authority_data = [];
 
-            // Process non-credit authority data (only for non-remove requests)
-            if (c.authorityData.non_credit_checked) {
-                authority_types.push('non_credit');
-                var nonCreditData = {
-                    disbursement_ach: (c.authorityData.ach_checked && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
-                    disbursement_wire_transfer_external: (c.authorityData.wire_transfer_checked && !c.authorityData.wire_internal_only && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
-                    disbursement_wire_transfer_internal: (c.authorityData.wire_transfer_checked && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
-                    disbursement_official_checks_external: (c.authorityData.official_checks_checked && !c.authorityData.checks_internal_only && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
-                    disbursement_official_checks_internal: (c.authorityData.official_checks_checked && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
-                    check_cashing_on_us: c.authorityData.check_cashing_on_us,
-                    check_cashing_not_on_us: c.authorityData.check_cashing_not_on_us,
-                    remote_deposit: c.authorityData.remote_deposit,
-                    treasury_solutions_company_wire_limits: c.authorityData.treasury_solutions_company_wire_limits,
-                    fx_wire_limits: c.authorityData.fx_wire_limits
-                };
-                authority_data.push(JSON.stringify(nonCreditData));
-            }
+    // Process non-credit authority data (only for non-remove requests)
+    if (c.authorityData.non_credit_checked) {
+        authority_types.push('non_credit');
+        var nonCreditData = {
+            disbursement_ach: (c.authorityData.ach_checked && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
+            disbursement_wire_transfer_external: (c.authorityData.wire_transfer_checked && !c.authorityData.wire_internal_only && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
+            disbursement_wire_transfer_internal: (c.authorityData.wire_transfer_checked && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
+            disbursement_official_checks_external: (c.authorityData.official_checks_checked && !c.authorityData.checks_internal_only && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
+            disbursement_official_checks_internal: (c.authorityData.official_checks_checked && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
+            check_cashing_on_us: c.authorityData.check_cashing_on_us,
+            check_cashing_not_on_us: c.authorityData.check_cashing_not_on_us,
+            remote_deposit: c.authorityData.remote_deposit,
+            treasury_solutions_company_wire_limits: c.authorityData.treasury_solutions_company_wire_limits,
+            fx_wire_limits: c.authorityData.fx_wire_limits
+        };
+        authority_data.push(JSON.stringify(nonCreditData));
+    }
 
-            // Process credit authority data (only for non-remove requests)
-            if (c.authorityData.credit_checked) {
-                authority_types.push('credit');
-                var creditData = {
-                    overdraft_internal_accounts: c.authorityData.overdraft || '',
-                    overdraft_external_accounts: (c.authorityData.overdraft && !c.authorityData.overdraft_internal_only) ? c.authorityData.overdraft : '',
-                    unavailable_funds_internal_accounts: c.authorityData.unavailable_funds || '',
-                    unavailable_funds_external_accounts: (c.authorityData.unavailable_funds && !c.authorityData.unavailable_internal_only) ? c.authorityData.unavailable_funds : ''
-                };
-                authority_data.push(JSON.stringify(creditData));
-            }
+    // Process credit authority data (only for non-remove requests)
+    if (c.authorityData.credit_checked) {
+        authority_types.push('credit');
+        var creditData = {
+            overdraft_internal_accounts: c.authorityData.overdraft || '',
+            overdraft_external_accounts: (c.authorityData.overdraft && !c.authorityData.overdraft_internal_only) ? c.authorityData.overdraft : '',
+            unavailable_funds_internal_accounts: c.authorityData.unavailable_funds || '',
+            unavailable_funds_external_accounts: (c.authorityData.unavailable_funds && !c.authorityData.unavailable_internal_only) ? c.authorityData.unavailable_funds : ''
+        };
+        authority_data.push(JSON.stringify(creditData));
+    }
 
-            g_form.setValue('authority_types', authority_types.join('|'));
-            g_form.setValue('authority_data', authority_data.join('|'));
+    g_form.setValue('authority_types', authority_types.join('|'));
+    g_form.setValue('authority_data', authority_data.join('|'));
 
-            // Run validation
-            validateForm();
-        }
+    // Run validation
+    validateForm();
+}
 
         // Rest of the functions remain the same...
         // (updateWidgetData, handleAuthoritySelection, etc.)
