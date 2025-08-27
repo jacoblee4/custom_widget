@@ -1,50 +1,32 @@
-08-26-2025 14:05:37
-Information	x_banun_bunow_si_0	Set overdraft_external_accounts: 10000
+08-27-2025 15:08:19
+Information	x_banun_bunow_si_0	AUTH_FIX_DEBUG: form_validation_errors = Overall Business Need is required|You must select at least one authority type (Credit Authority or Non-Credit Authority)
 
-08-26-2025 14:05:37
-Information	x_banun_bunow_si_0	=== Authority RP Script Complete ===
+08-27-2025 15:08:19
+Information	x_banun_bunow_si_0	AUTH_FIX_DEBUG: Debug c.requestType = not_set
 
-08-26-2025 14:05:37
-Information	x_banun_bunow_si_0	DEBUG: Form validation passed, processing records...
+08-27-2025 15:08:19
+Information	x_banun_bunow_si_0	AUTH_FIX_DEBUG: form_is_valid value = false
 
-08-26-2025 14:05:37
-Information	x_banun_bunow_si_0	DEBUG: form_is_valid = "true"
+08-27-2025 15:08:19
+Information	x_banun_bunow_si_0	AUTH_FIX_DEBUG: Debug request type = not_set
 
-08-26-2025 14:05:37
-Information	x_banun_bunow_si_0	Processing credit with data: {"overdraft_internal_accounts":"","overdraft_external_accounts":"10000","unavailable_funds_internal_accounts":"","unavailable_funds_external_accounts":"10000"}
+08-27-2025 15:08:19
+Information	x_banun_bunow_si_0	AUTH_FIX_DEBUG: Validation failed, errors = Overall Business Need is required; You must select at least one authority type (Credit Authority or Non-Credit Authority)
 
-08-26-2025 14:05:37
-Information	x_banun_bunow_si_0	SUCCESS: Credit authority record created: 72bbe46a1b272e10f5b0cbfa234bcba0 linked to parent: 0eaba06a1b272e10f5b0cbfa234bcb89
+08-27-2025 15:08:19
+Information	x_banun_bunow_si_0	AUTH_FIX_DEBUG: Debug errors count = not_set
 
-08-26-2025 14:05:37
-Information	x_banun_bunow_si_0	DEBUG: validationPassed = true
+08-27-2025 15:08:19
+Information	x_banun_bunow_si_0	AUTH_FIX_DEBUG: Request type = remove_authority
 
-08-26-2025 14:05:37
-Information	x_banun_bunow_si_0	Current record sys_id: 0eaba06a1b272e10f5b0cbfa234bcb89
+08-27-2025 15:08:19
+Information	x_banun_bunow_si_0	AUTH_FIX_DEBUG: validationPassed = false
 
-08-26-2025 14:05:37
-Information	x_banun_bunow_si_0	Authority types: credit
+08-27-2025 15:08:19
+Information	x_banun_bunow_si_0	AUTH_FIX_DEBUG: Debug validation step = not_set
 
-08-26-2025 14:05:37
-Information	x_banun_bunow_si_0	DEBUG: formIsValid after conversion = "true"
+08-27-2025 15:08:19
+Information	x_banun_bunow_si_0	AUTH_FIX_DEBUG: Starting form validation
 
-08-26-2025 14:05:37
-Information	x_banun_bunow_si_0	=== Authority RP Script Starting ===
-
-08-26-2025 14:05:37
-Information	x_banun_bunow_si_0	Parent record sys_id: 0eaba06a1b272e10f5b0cbfa234bcb89
-
-08-26-2025 14:05:37
-Information	x_banun_bunow_si_0	DEBUG: form_is_valid type = object
-
-08-26-2025 14:05:37
-Information	x_banun_bunow_si_0	Set unavailable_funds_external_accounts: 10000
-
-08-26-2025 14:05:26
-Information	x_banun_bunow_si_0	Job Code Employees Widget - Job Code Value: AAMGR
-
-08-26-2025 14:05:26
-Information	x_banun_bunow_si_0	Job Code Employees Widget - Job Code Sys ID: 2c909cc31b474a10cd80ffbe034bcb69
-
-08-26-2025 14:05:26
-Information	x_banun_bunow_si_0	Job Code Employees Widget - Found 1 employees
+08-27-2025 15:08:19
+Information	x_banun_bunow_si_0	AUTH_FIX_DEBUG: formIsValid string = false
