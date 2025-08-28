@@ -51,23 +51,16 @@ if (requestType && jobCode) {
 
 // Only proceed if authority limits validation passed
 if (shouldProceed) {
-    gs.info('AUTH_FIX_DEBUG: Starting form validation');
-    gs.info('AUTH_FIX_DEBUG: Request type = ' + requestType);
-    gs.info('AUTH_FIX_DEBUG: form_is_valid value = ' + producer.form_is_valid);
-    gs.info('AUTH_FIX_DEBUG: form_validation_errors = ' + (producer.form_validation_errors || 'none'));
 
     var validationPassed = false;
 
     // Handle remove_authority validation on server side
     if (requestType === 'remove_authority') {
-        gs.info('AUTH_FIX_DEBUG: Server-side remove_authority validation');
         // For remove requests, completely ignore client validation and only check business justification
         var businessNeed = producer.overall_business_need ? producer.overall_business_need.toString().trim() : '';
         if (businessNeed && businessNeed.length > 0) {
             validationPassed = true;
-            gs.info('AUTH_FIX_DEBUG: Remove validation passed - business need provided');
         } else {
-            gs.info('AUTH_FIX_DEBUG: Remove validation failed - business need missing');
             gs.addErrorMessage('Overall Business Need is required');
             current.setAbortAction(true);
             validationPassed = false;
@@ -76,22 +69,17 @@ if (shouldProceed) {
         // For other request types, use the client validation result
         var formIsValid = producer.form_is_valid ? producer.form_is_valid.toString().trim() : 'false';
         validationPassed = (formIsValid === 'true' || formIsValid === true || producer.form_is_valid === true);
-        gs.info('AUTH_FIX_DEBUG: Using client validation result = ' + validationPassed);
 
         // If client validation failed, show the client errors
         if (!validationPassed) {
             var errors = producer.form_validation_errors ? producer.form_validation_errors.toString().split('|') : ['Form validation failed'];
-            gs.info('AUTH_FIX_DEBUG: Client validation failed, errors = ' + errors.join('; '));
             gs.addErrorMessage('Please correct the following errors: ' + errors.join('; '));
             current.setAbortAction(true);
         }
     }
 
-    gs.info('AUTH_FIX_DEBUG: Final validationPassed = ' + validationPassed);
 
     if (validationPassed) {
-        gs.info('AUTH_FIX_DEBUG: Validation passed, proceeding');
-
         // Set job code string fields on parent record for display purposes
         if (producer.job_code) {
             var jobCodeGR = new GlideRecord('x_banun_rbac_job_code');
@@ -103,7 +91,6 @@ if (shouldProceed) {
 
         // Handle REMOVE AUTHORITY request - copy existing limits as child records
         if (requestType === 'remove_authority' && producer.job_code) {
-            gs.info('AUTH_FIX_DEBUG: Processing remove_authority - copying existing limits');
             
             // Query for existing authority limits - get the most recent if multiple exist
             var existingLimitsGr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
@@ -114,15 +101,6 @@ if (shouldProceed) {
             existingLimitsGr.query();
             
             if (existingLimitsGr.next()) {
-                // Log if we found multiple records (shouldn't happen but good to know)
-                var countGr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
-                countGr.addQuery('job_code', producer.job_code);
-                countGr.addQuery('active', true);
-                countGr.query();
-                var recordCount = countGr.getRowCount();
-                if (recordCount > 1) {
-                    gs.warn('AUTH_FIX_DEBUG: Found ' + recordCount + ' active authority limit records for job code ' + jobCodeDisplay + '. Using most recent.');
-                }
                 
                 // Check if there are any non-credit values
                 var hasNonCreditValues = 
@@ -174,7 +152,6 @@ if (shouldProceed) {
                     }
                     
                     var nonCreditSysId = nonCreditGR.insert();
-                    gs.info('AUTH_FIX_DEBUG: Created non-credit child record: ' + nonCreditSysId);
                 }
                 
                 // Create credit child record if there are credit values
@@ -201,18 +178,9 @@ if (shouldProceed) {
                     }
                     
                     var creditSysId = creditGR.insert();
-                    gs.info('AUTH_FIX_DEBUG: Created credit child record: ' + creditSysId);
                 }
                 
-                // Log if no values were found to copy
-                if (!hasNonCreditValues && !hasCreditValues) {
-                    gs.warn('AUTH_FIX_DEBUG: Authority limit record found for job code ' + jobCodeDisplay + ' but contains no values to copy.');
-                }
-            } else {
-                // This shouldn't happen as we already validated limits exist, but log it
-                gs.error('AUTH_FIX_DEBUG: No authority limit record found for removal request, job code: ' + jobCodeDisplay);
             }
-            
         } else if (requestType !== 'remove_authority' && producer.authority_types && producer.authority_data) {
             // Process authority data for NEW and CHANGE requests (existing logic)
             var authority_types = producer.authority_types.toString().split('|');
