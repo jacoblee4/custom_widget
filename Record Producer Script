@@ -1,0 +1,286 @@
+// Authority Widget Record Producer Script
+// Processes widget data and creates parent/child authority records
+
+var parentId = current.getUniqueValue();
+var shouldProceed = true; // Flag to control processing flow
+
+// Check authority limits validation first
+var requestType = producer.request_type ? producer.request_type.toString() : '';
+var jobCode = producer.job_code ? producer.job_code.toString() : '';
+
+// If we have both request type and job code, check if this combination should be blocked
+if (requestType && jobCode) {
+    // Get authority limits to check if they exist
+    var limitsExist = false;
+    var limitGr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
+    limitGr.addQuery('job_code', jobCode);
+    limitGr.addQuery('active', true);
+    limitGr.query();
+    if (limitGr.hasNext()) {
+        limitsExist = true;
+    }
+
+    var shouldBlock = false;
+    var blockMessage = '';
+
+    // Get job code display value
+    var jobCodeDisplay = '';
+    var jobGr = new GlideRecord('x_banun_rbac_job_code');
+    if (jobGr.get(jobCode)) {
+        jobCodeDisplay = jobGr.getDisplayValue();
+    }
+
+    // Check blocking conditions
+    if (requestType === 'new_authority' && limitsExist) {
+        shouldBlock = true;
+        blockMessage = 'Authority limits already exist for job code ' + jobCodeDisplay + '. Please submit a "Change to Existing Authority" request instead.';
+    } else if (requestType === 'change_to_existing_authority' && !limitsExist) {
+        shouldBlock = true;
+        blockMessage = 'No authority limits found for job code ' + jobCodeDisplay + '. Please submit a "New Authority" request instead.';
+    } else if (requestType === 'remove_authority' && !limitsExist) {
+        shouldBlock = true;
+        blockMessage = 'No existing authority limits found for job code ' + jobCodeDisplay + '. Cannot proceed with removal request.';
+    }
+
+    if (shouldBlock) {
+        gs.addErrorMessage(blockMessage);
+        current.setAbortAction(true);
+        shouldProceed = false; // Prevent further processing
+    }
+}
+
+// Only proceed if authority limits validation passed
+if (shouldProceed) {
+    gs.info('AUTH_FIX_DEBUG: Starting form validation');
+    gs.info('AUTH_FIX_DEBUG: Request type = ' + requestType);
+    gs.info('AUTH_FIX_DEBUG: form_is_valid value = ' + producer.form_is_valid);
+    gs.info('AUTH_FIX_DEBUG: form_validation_errors = ' + (producer.form_validation_errors || 'none'));
+
+    var validationPassed = false;
+
+    // Handle remove_authority validation on server side
+    if (requestType === 'remove_authority') {
+        gs.info('AUTH_FIX_DEBUG: Server-side remove_authority validation');
+        // For remove requests, completely ignore client validation and only check business justification
+        var businessNeed = producer.overall_business_need ? producer.overall_business_need.toString().trim() : '';
+        if (businessNeed && businessNeed.length > 0) {
+            validationPassed = true;
+            gs.info('AUTH_FIX_DEBUG: Remove validation passed - business need provided');
+        } else {
+            gs.info('AUTH_FIX_DEBUG: Remove validation failed - business need missing');
+            gs.addErrorMessage('Overall Business Need is required');
+            current.setAbortAction(true);
+            validationPassed = false;
+        }
+    } else {
+        // For other request types, use the client validation result
+        var formIsValid = producer.form_is_valid ? producer.form_is_valid.toString().trim() : 'false';
+        validationPassed = (formIsValid === 'true' || formIsValid === true || producer.form_is_valid === true);
+        gs.info('AUTH_FIX_DEBUG: Using client validation result = ' + validationPassed);
+
+        // If client validation failed, show the client errors
+        if (!validationPassed) {
+            var errors = producer.form_validation_errors ? producer.form_validation_errors.toString().split('|') : ['Form validation failed'];
+            gs.info('AUTH_FIX_DEBUG: Client validation failed, errors = ' + errors.join('; '));
+            gs.addErrorMessage('Please correct the following errors: ' + errors.join('; '));
+            current.setAbortAction(true);
+        }
+    }
+
+    gs.info('AUTH_FIX_DEBUG: Final validationPassed = ' + validationPassed);
+
+    if (validationPassed) {
+        gs.info('AUTH_FIX_DEBUG: Validation passed, proceeding');
+
+        // Set job code string fields on parent record for display purposes
+        if (producer.job_code) {
+            var jobCodeGR = new GlideRecord('x_banun_rbac_job_code');
+            if (jobCodeGR.get(producer.job_code)) {
+                current.setValue('job_code_string', jobCodeGR.getValue('job_code'));
+                current.setValue('job_function_description', jobCodeGR.getValue('job_function_description'));
+            }
+        }
+
+        // Handle REMOVE AUTHORITY request - copy existing limits as child records
+        if (requestType === 'remove_authority' && producer.job_code) {
+            gs.info('AUTH_FIX_DEBUG: Processing remove_authority - copying existing limits');
+            
+            // Query for existing authority limits - get the most recent if multiple exist
+            var existingLimitsGr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
+            existingLimitsGr.addQuery('job_code', producer.job_code);
+            existingLimitsGr.addQuery('active', true);
+            existingLimitsGr.orderByDesc('sys_created_on'); // Get most recent first if multiple exist
+            existingLimitsGr.setLimit(1); // Only get the first (most recent) record
+            existingLimitsGr.query();
+            
+            if (existingLimitsGr.next()) {
+                // Log if we found multiple records (shouldn't happen but good to know)
+                var countGr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
+                countGr.addQuery('job_code', producer.job_code);
+                countGr.addQuery('active', true);
+                countGr.query();
+                var recordCount = countGr.getRowCount();
+                if (recordCount > 1) {
+                    gs.warn('AUTH_FIX_DEBUG: Found ' + recordCount + ' active authority limit records for job code ' + jobCodeDisplay + '. Using most recent.');
+                }
+                
+                // Check if there are any non-credit values
+                var hasNonCreditValues = 
+                    existingLimitsGr.getValue('disbursement_ach') ||
+                    existingLimitsGr.getValue('disbursement_wire_transfer_external') ||
+                    existingLimitsGr.getValue('disbursement_wire_transfer_internal') ||
+                    existingLimitsGr.getValue('disbursement_official_checks_external') ||
+                    existingLimitsGr.getValue('disbursement_official_checks_internal') ||
+                    existingLimitsGr.getValue('check_cashing_on_us') ||
+                    existingLimitsGr.getValue('check_cashing_not_on_us') ||
+                    existingLimitsGr.getValue('remote_deposit') ||
+                    existingLimitsGr.getValue('treasury_solutions_company_wire_limits') ||
+                    existingLimitsGr.getValue('fx_wire_limits');
+                
+                // Check if there are any credit values
+                var hasCreditValues = 
+                    existingLimitsGr.getValue('overdraft_external_accounts') ||
+                    existingLimitsGr.getValue('overdraft_internal_accounts') ||
+                    existingLimitsGr.getValue('unavailable_funds_external_accounts') ||
+                    existingLimitsGr.getValue('unavailable_funds_internal_accounts');
+                
+                // Create non-credit child record if there are non-credit values
+                if (hasNonCreditValues) {
+                    var nonCreditGR = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
+                    nonCreditGR.initialize();
+                    nonCreditGR.setValue('parent', parentId);
+                    nonCreditGR.setValue('job_code', producer.job_code);
+                    
+                    // Copy all non-credit values from existing limit
+                    var nonCreditFields = [
+                        'disbursement_ach',
+                        'disbursement_wire_transfer_external',
+                        'disbursement_wire_transfer_internal',
+                        'disbursement_official_checks_external',
+                        'disbursement_official_checks_internal',
+                        'check_cashing_on_us',
+                        'check_cashing_not_on_us',
+                        'remote_deposit',
+                        'treasury_solutions_company_wire_limits',
+                        'fx_wire_limits'
+                    ];
+                    
+                    for (var i = 0; i < nonCreditFields.length; i++) {
+                        var fieldName = nonCreditFields[i];
+                        var fieldValue = existingLimitsGr.getValue(fieldName);
+                        if (fieldValue) {
+                            nonCreditGR.setValue(fieldName, fieldValue);
+                        }
+                    }
+                    
+                    var nonCreditSysId = nonCreditGR.insert();
+                    gs.info('AUTH_FIX_DEBUG: Created non-credit child record: ' + nonCreditSysId);
+                }
+                
+                // Create credit child record if there are credit values
+                if (hasCreditValues) {
+                    var creditGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
+                    creditGR.initialize();
+                    creditGR.setValue('parent', parentId);
+                    creditGR.setValue('job_code', producer.job_code);
+                    
+                    // Copy all credit values from existing limit
+                    var creditFields = [
+                        'overdraft_external_accounts',
+                        'overdraft_internal_accounts',
+                        'unavailable_funds_external_accounts',
+                        'unavailable_funds_internal_accounts'
+                    ];
+                    
+                    for (var j = 0; j < creditFields.length; j++) {
+                        var creditFieldName = creditFields[j];
+                        var creditFieldValue = existingLimitsGr.getValue(creditFieldName);
+                        if (creditFieldValue) {
+                            creditGR.setValue(creditFieldName, creditFieldValue);
+                        }
+                    }
+                    
+                    var creditSysId = creditGR.insert();
+                    gs.info('AUTH_FIX_DEBUG: Created credit child record: ' + creditSysId);
+                }
+                
+                // Log if no values were found to copy
+                if (!hasNonCreditValues && !hasCreditValues) {
+                    gs.warn('AUTH_FIX_DEBUG: Authority limit record found for job code ' + jobCodeDisplay + ' but contains no values to copy.');
+                }
+            } else {
+                // This shouldn't happen as we already validated limits exist, but log it
+                gs.error('AUTH_FIX_DEBUG: No authority limit record found for removal request, job code: ' + jobCodeDisplay);
+            }
+            
+        } else if (requestType !== 'remove_authority' && producer.authority_types && producer.authority_data) {
+            // Process authority data for NEW and CHANGE requests (existing logic)
+            var authority_types = producer.authority_types.toString().split('|');
+            var authority_data_strings = producer.authority_data.toString().split('|');
+
+            // Create child records for each authority type selected
+            for (var i = 0; i < authority_types.length; i++) {
+                var authorityType = authority_types[i];
+                var authorityDataStr = authority_data_strings[i];
+
+                try {
+                    var authorityData = JSON.parse(authorityDataStr);
+
+                    if (authorityType === 'non_credit') {
+                        // Create non-credit authority limit record
+                        var nonCreditGR = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
+                        nonCreditGR.initialize();
+                        nonCreditGR.setValue('parent', parentId);
+                        if (producer.job_code) {
+                            nonCreditGR.setValue('job_code', producer.job_code);
+                        }
+                        if (authorityData.disbursement_ach)
+                            nonCreditGR.setValue('disbursement_ach', authorityData.disbursement_ach);
+                        if (authorityData.disbursement_wire_transfer_external)
+                            nonCreditGR.setValue('disbursement_wire_transfer_external', authorityData.disbursement_wire_transfer_external);
+                        if (authorityData.disbursement_wire_transfer_internal)
+                            nonCreditGR.setValue('disbursement_wire_transfer_internal', authorityData.disbursement_wire_transfer_internal);
+                        if (authorityData.disbursement_official_checks_external)
+                            nonCreditGR.setValue('disbursement_official_checks_external', authorityData.disbursement_official_checks_external);
+                        if (authorityData.disbursement_official_checks_internal)
+                            nonCreditGR.setValue('disbursement_official_checks_internal', authorityData.disbursement_official_checks_internal);
+                        if (authorityData.check_cashing_on_us)
+                            nonCreditGR.setValue('check_cashing_on_us', authorityData.check_cashing_on_us);
+                        if (authorityData.check_cashing_not_on_us)
+                            nonCreditGR.setValue('check_cashing_not_on_us', authorityData.check_cashing_not_on_us);
+                        if (authorityData.remote_deposit)
+                            nonCreditGR.setValue('remote_deposit', authorityData.remote_deposit);
+                        if (authorityData.treasury_solutions_company_wire_limits)
+                            nonCreditGR.setValue('treasury_solutions_company_wire_limits', authorityData.treasury_solutions_company_wire_limits);
+                        if (authorityData.fx_wire_limits)
+                            nonCreditGR.setValue('fx_wire_limits', authorityData.fx_wire_limits);
+                        nonCreditGR.insert();
+                    } else if (authorityType === 'credit') {
+                        // Create credit authority limit record
+                        var creditGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
+                        creditGR.initialize();
+                        creditGR.setValue('parent', parentId);
+                        if (producer.job_code) {
+                            creditGR.setValue('job_code', producer.job_code);
+                        }
+                        if (authorityData.overdraft_internal_accounts) {
+                            creditGR.setValue('overdraft_internal_accounts', authorityData.overdraft_internal_accounts);
+                        }
+                        if (authorityData.overdraft_external_accounts) {
+                            creditGR.setValue('overdraft_external_accounts', authorityData.overdraft_external_accounts);
+                        }
+                        if (authorityData.unavailable_funds_internal_accounts) {
+                            creditGR.setValue('unavailable_funds_internal_accounts', authorityData.unavailable_funds_internal_accounts);
+                        }
+                        if (authorityData.unavailable_funds_external_accounts) {
+                            creditGR.setValue('unavailable_funds_external_accounts', authorityData.unavailable_funds_external_accounts);
+                        }
+                        creditGR.insert();
+                    }
+                } catch (e) {
+                    gs.addErrorMessage('Error processing authority data: ' + e.message);
+                }
+            }
+        }
+    }
+}
