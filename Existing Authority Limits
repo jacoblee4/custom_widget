@@ -406,8 +406,8 @@
             var gr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
             gr.addQuery('job_code', jobCode);
             gr.addQuery('active', true);
-            g.orderByDesc('sys_created_on');
-            g.setLimit(1);
+            gr.orderByDesc('sys_created_on');
+            gr.setLimit(1);
             gr.query();
 
             // Process each authority limit record found
