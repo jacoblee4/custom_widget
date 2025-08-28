@@ -182,6 +182,8 @@ If applicable: Enter the requested approval amount. If the authority type should
     </div>
 </div>
 
+
+
 <!-- ============================================ -->
 <!-- CSS -->
 <!-- ============================================ -->
@@ -452,6 +454,8 @@ If applicable: Enter the requested approval amount. If the authority type should
     }
 }
 
+
+
 <!-- ============================================ -->
 <!-- CLIENT CONTROLLER -->
 <!-- ============================================ -->
@@ -469,42 +473,37 @@ api.controller = function($scope, $window) {
         }, 500);
     };
 
-    // Method to check if current request is remove authority
+    // Check if current request is remove authority
     c.isRemoveAuthority = function() {
         return c.requestType === 'remove_authority';
     };
 
-    // Method to determine if widget should be visible
+    // Determine if widget should be visible
     c.shouldShowWidget = function() {
         return c.requestType && (c.requestType === 'new_authority' || c.requestType === 'change_to_existing_authority' || c.requestType === 'remove_authority');
     };
 
-    // Method to get request type from g_form
-    // Method to get request type from g_form
+    // Get request type from g_form
     c.getRequestType = function() {
         try {
             // Try multiple methods to get request type
             var requestType = '';
 
-            // Method 1: Direct g_form access
             if (typeof g_form !== 'undefined' && g_form.getValue) {
                 requestType = g_form.getValue('request_type');
                 if (requestType) return requestType;
             }
 
-            // Method 2: Parent window g_form
             if (window.parent && window.parent.g_form && window.parent.g_form.getValue) {
                 requestType = window.parent.g_form.getValue('request_type');
                 if (requestType) return requestType;
             }
 
-            // Method 3: DOM query
             var requestTypeField = document.querySelector('select[name="request_type"], [data-name="request_type"] select');
             if (requestTypeField && requestTypeField.value) {
                 return requestTypeField.value;
             }
 
-            // Method 4: Use cached value
             if (c.requestType) {
                 return c.requestType;
             }
@@ -518,7 +517,7 @@ api.controller = function($scope, $window) {
         return '';
     };
 
-    // Method to monitor request type changes
+    // Mmonitor request type changes
     c.setupRequestTypeMonitoring = function() {
         var lastRequestType = '';
 
@@ -548,21 +547,21 @@ api.controller = function($scope, $window) {
         // Start monitoring request type
         c.setupRequestTypeMonitoring();
 
-        // Get references to DOM elements
-        const nonCreditCheckbox = document.getElementById('nonCreditAuth');
-        const creditCheckbox = document.getElementById('creditAuth');
-        const nonCreditGroup = document.getElementById('nonCreditGroup');
-        const creditGroup = document.getElementById('creditGroup');
-        const nonCreditSection = document.getElementById('nonCreditSection');
-        const creditSection = document.getElementById('creditSection');
-        const justificationSection = document.getElementById('justificationSection');
+        // Get references to elements
+        var nonCreditCheckbox = document.getElementById('nonCreditAuth');
+        var creditCheckbox = document.getElementById('creditAuth');
+        var nonCreditGroup = document.getElementById('nonCreditGroup');
+        var creditGroup = document.getElementById('creditGroup');
+        var nonCreditSection = document.getElementById('nonCreditSection');
+        var creditSection = document.getElementById('creditSection');
+        var justificationSection = document.getElementById('justificationSection');
 
-        const wireTransferCheck = document.getElementById('wireTransferCheck');
-        const wireInternalOnlyContainer = document.getElementById('wireInternalOnlyContainer');
-        const wireInternalOnly = document.getElementById('wireInternalOnly');
-        const officialChecksCheck = document.getElementById('officialChecksCheck');
-        const checksInternalOnlyContainer = document.getElementById('checksInternalOnlyContainer');
-        const checksInternalOnly = document.getElementById('checksInternalOnly');
+        var wireTransferCheck = document.getElementById('wireTransferCheck');
+        var wireInternalOnlyContainer = document.getElementById('wireInternalOnlyContainer');
+        var wireInternalOnly = document.getElementById('wireInternalOnly');
+        var officialChecksCheck = document.getElementById('officialChecksCheck');
+        var checksInternalOnlyContainer = document.getElementById('checksInternalOnlyContainer');
+        var checksInternalOnly = document.getElementById('checksInternalOnly');
 
         // Widget data model - stores all form state
         c.authorityData = {
@@ -589,15 +588,15 @@ api.controller = function($scope, $window) {
         // Currency formatting utilities (same as before)
         function formatCurrency(value) {
             if (!value) return '';
-            let numStr = value.toString().replace(/[^\d.]/g, '');
-            const parts = numStr.split('.');
+            var numStr = value.toString().replace(/[^\d.]/g, '');
+            var parts = numStr.split('.');
             if (parts.length > 2) {
                 numStr = parts[0] + '.' + parts.slice(1).join('');
             }
-            const [integerPart, decimalPart] = numStr.split('.');
-            const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            var [integerPart, decimalPart] = numStr.split('.');
+            var formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
             if (decimalPart !== undefined) {
-                const limitedDecimal = decimalPart.substring(0, 2);
+                var limitedDecimal = decimalPart.substring(0, 2);
                 return formattedInteger + '.' + limitedDecimal;
             }
             return formattedInteger;
@@ -755,8 +754,8 @@ api.controller = function($scope, $window) {
 
         // Handle authority type selection (Credit/Non-Credit)
         function handleAuthoritySelection() {
-            const nonCreditChecked = nonCreditCheckbox.checked;
-            const creditChecked = creditCheckbox.checked;
+            var nonCreditChecked = nonCreditCheckbox.checked;
+            var creditChecked = creditCheckbox.checked;
 
             // Update visual states
             nonCreditGroup.classList.toggle('active', nonCreditChecked);
@@ -771,7 +770,7 @@ api.controller = function($scope, $window) {
 
         // Handle Wire Transfer checkbox changes
         function handleWireTransferChange() {
-            const isChecked = wireTransferCheck.checked;
+            var isChecked = wireTransferCheck.checked;
             wireInternalOnlyContainer.style.display = isChecked ? 'block' : 'none';
             if (!isChecked) {
                 wireInternalOnly.checked = false;
@@ -782,7 +781,7 @@ api.controller = function($scope, $window) {
 
         // Handle Official Checks checkbox changes
         function handleOfficialChecksChange() {
-            const isChecked = officialChecksCheck.checked;
+            var isChecked = officialChecksCheck.checked;
             checksInternalOnlyContainer.style.display = isChecked ? 'block' : 'none';
             if (!isChecked) {
                 checksInternalOnly.checked = false;
@@ -793,31 +792,31 @@ api.controller = function($scope, $window) {
 
         // Setup currency input field with formatting
         function setupCurrencyField(inputId, fieldName) {
-            const input = document.getElementById(inputId);
+            var input = document.getElementById(inputId);
             if (!input) return;
 
-            let isUpdating = false;
+            var isUpdating = false;
 
             function handleCurrencyInput(event) {
                 if (isUpdating) return;
                 isUpdating = true;
 
-                const cursorPosition = event.target.selectionStart;
-                const oldValue = event.target.value;
-                const oldLength = oldValue.length;
-                const formattedValue = formatCurrency(oldValue);
+                var cursorPosition = event.target.selectionStart;
+                var oldValue = event.target.value;
+                var oldLength = oldValue.length;
+                var formattedValue = formatCurrency(oldValue);
 
                 event.target.value = formattedValue;
 
                 // Maintain cursor position after formatting
-                const newLength = formattedValue.length;
-                const lengthDiff = newLength - oldLength;
-                const newCursorPosition = Math.max(0, cursorPosition + lengthDiff);
+                var newLength = formattedValue.length;
+                var lengthDiff = newLength - oldLength;
+                var newCursorPosition = Math.max(0, cursorPosition + lengthDiff);
                 setTimeout(() => {
                     event.target.setSelectionRange(newCursorPosition, newCursorPosition);
                 }, 0);
 
-                const rawValue = getCurrencyValue(formattedValue);
+                var rawValue = getCurrencyValue(formattedValue);
                 updateWidgetData(fieldName, rawValue);
                 isUpdating = false;
             }
@@ -826,7 +825,7 @@ api.controller = function($scope, $window) {
 
         // Setup checkbox field
         function setupCheckboxField(inputId, fieldName) {
-            const input = document.getElementById(inputId);
+            var input = document.getElementById(inputId);
             if (!input) return;
             input.addEventListener('change', function(event) {
                 updateWidgetData(fieldName, event.target.checked);
@@ -835,7 +834,7 @@ api.controller = function($scope, $window) {
 
         // Setup textarea field
         function setupTextAreaField(inputId, fieldName) {
-            const input = document.getElementById(inputId);
+            var input = document.getElementById(inputId);
             if (!input) return;
             input.addEventListener('input', function(event) {
                 updateWidgetData(fieldName, event.target.value);
@@ -893,12 +892,13 @@ api.controller = function($scope, $window) {
 };
 
 
+
 <!-- ============================================ -->
 <!-- SERVER SCRIPT -->
 <!-- ============================================ -->
 
 (function() {
-    // Basic server-side data initialization
+    // Server-side data initialization
     data.user = gs.getUser().getName();
     data.userId = gs.getUserID();
 })();
