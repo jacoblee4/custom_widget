@@ -72,7 +72,6 @@
 
 
 <!-- CSS -->
-<style>
 .job-code-employees-widget {
   padding: 15px;
   font-family: 'Source Sans Pro', Arial, sans-serif;
@@ -245,7 +244,10 @@
     text-align: center;
   }
 }
-</style>
+
+
+
+
 
 <!-- SERVER SCRIPT -->
 (function() {
@@ -261,11 +263,10 @@
       // Get the actual job code value from the job code table
       var jobGr = new GlideRecord('x_banun_rbac_job_code');
       if (jobGr.get(jobCodeSysId)) {
-        // Get the display value (this is what we show in the UI)
+        // Get the display value
         jobCodeDisplayValue = jobGr.getDisplayValue();
         
         // Get the actual job code value - this should match what's stored in u_job_code
-        // You may need to adjust the field name based on your job code table structure
         jobCodeValue = jobGr.getValue('job_code') || 
                       jobGr.getValue('u_job_code') || 
                       jobGr.getValue('code') || 
@@ -290,11 +291,6 @@
         
         employees.push(employee);
       }
-      
-      // Debug logging
-      gs.info('Job Code Employees Widget - Job Code Sys ID: ' + jobCodeSysId);
-      gs.info('Job Code Employees Widget - Job Code Value: ' + jobCodeValue);
-      gs.info('Job Code Employees Widget - Found ' + employees.length + ' employees');
     }
     
     data.employees = employees;
@@ -323,23 +319,23 @@ api.controller = function($scope, spUtil, $timeout) {
   // Function to get job code value from the form
   c.getJobCodeValue = function() {
     try {
-      // Method 1: Direct g_form access
+      // Get job code
       if (typeof g_form !== 'undefined' && g_form.getValue) {
         return g_form.getValue('job_code');
       }
       
-      // Method 2: Check if we're in a Service Portal form
+      // Check if we're in a Service Portal form
       if (window.parent && window.parent.g_form) {
         return window.parent.g_form.getValue('job_code');
       }
       
-      // Method 3: DOM query for record producer fields
+      // Query for record producer fields
       var jobCodeField = document.querySelector('select[name="job_code"], input[name="job_code"], [data-name="job_code"] select, [data-name="job_code"] input');
       if (jobCodeField) {
         return jobCodeField.value || jobCodeField.selectedOptions?.[0]?.value || '';
       }
       
-      // Method 4: Angular form scope (for Service Portal)
+      // Angular form scope (for Service Portal)
       if ($scope.data && $scope.data.job_code) {
         return $scope.data.job_code;
       }
@@ -351,7 +347,7 @@ api.controller = function($scope, spUtil, $timeout) {
     return '';
   };
   
-  // Function to set up polling to monitor job code changes
+  // Set up polling to monitor job code changes
   c.setupJobCodeMonitoring = function() {
     var lastJobCode = '';
     
@@ -381,7 +377,7 @@ api.controller = function($scope, spUtil, $timeout) {
     }, 1000);
   };
   
-  // Function to set up direct event listeners
+  // Set up direct event listeners
   c.setupDirectListeners = function() {
     // Try to add change listeners to job code fields
     var selectors = [
@@ -551,17 +547,17 @@ if (requestType && jobCode) {
     if (limitGr.hasNext()) {
         limitsExist = true;
     }
-    
+
     var shouldBlock = false;
     var blockMessage = '';
-    
+
     // Get job code display value
     var jobCodeDisplay = '';
     var jobGr = new GlideRecord('x_banun_rbac_job_code');
     if (jobGr.get(jobCode)) {
         jobCodeDisplay = jobGr.getDisplayValue();
     }
-    
+
     // Check blocking conditions
     if (requestType === 'new_authority' && limitsExist) {
         shouldBlock = true;
@@ -573,7 +569,7 @@ if (requestType && jobCode) {
         shouldBlock = true;
         blockMessage = 'No existing authority limits found for job code ' + jobCodeDisplay + '. Cannot proceed with removal request.';
     }
-    
+
     if (shouldBlock) {
         gs.addErrorMessage(blockMessage);
         current.setAbortAction(true);
@@ -583,24 +579,58 @@ if (requestType && jobCode) {
 
 // Only proceed if authority limits validation passed
 if (shouldProceed) {
-    // Validate form data before processing
-    var formIsValid = producer.form_is_valid ? producer.form_is_valid.toString().trim() : 'false';
-    var validationPassed = (formIsValid === 'true' || formIsValid === true || producer.form_is_valid === true);
+    gs.info('AUTH_FIX_DEBUG: Starting form validation');
+    gs.info('AUTH_FIX_DEBUG: Request type = ' + requestType);
+    gs.info('AUTH_FIX_DEBUG: form_is_valid value = ' + producer.form_is_valid);
+    gs.info('AUTH_FIX_DEBUG: form_validation_errors = ' + (producer.form_validation_errors || 'none'));
+
+    var validationPassed = false;
+
+    // Handle remove_authority validation on server side
+    if (requestType === 'remove_authority') {
+        gs.info('AUTH_FIX_DEBUG: Server-side remove_authority validation');
+        // For remove requests, completely ignore client validation and only check business justification
+        var businessNeed = producer.overall_business_need ? producer.overall_business_need.toString().trim() : '';
+        if (businessNeed && businessNeed.length > 0) {
+            validationPassed = true;
+            gs.info('AUTH_FIX_DEBUG: Remove validation passed - business need provided');
+        } else {
+            gs.info('AUTH_FIX_DEBUG: Remove validation failed - business need missing');
+            gs.addErrorMessage('Overall Business Need is required');
+            current.setAbortAction(true);
+            validationPassed = false;
+        }
+    } else {
+        // For other request types, use the client validation result
+        var formIsValid = producer.form_is_valid ? producer.form_is_valid.toString().trim() : 'false';
+        validationPassed = (formIsValid === 'true' || formIsValid === true || producer.form_is_valid === true);
+        gs.info('AUTH_FIX_DEBUG: Using client validation result = ' + validationPassed);
+
+        // If client validation failed, show the client errors
+        if (!validationPassed) {
+            var errors = producer.form_validation_errors ? producer.form_validation_errors.toString().split('|') : ['Form validation failed'];
+            gs.info('AUTH_FIX_DEBUG: Client validation failed, errors = ' + errors.join('; '));
+            gs.addErrorMessage('Please correct the following errors: ' + errors.join('; '));
+            current.setAbortAction(true);
+        }
+    }
+
+    gs.info('AUTH_FIX_DEBUG: Final validationPassed = ' + validationPassed);
 
     if (validationPassed) {
+        gs.info('AUTH_FIX_DEBUG: Validation passed, proceeding');
+
         // Set job code string fields on parent record for display purposes
         if (producer.job_code) {
-            // Look up job code details from reference table
             var jobCodeGR = new GlideRecord('x_banun_rbac_job_code');
             if (jobCodeGR.get(producer.job_code)) {
-                // Set string fields on parent record (no update() call needed - RP handles this)
                 current.setValue('job_code_string', jobCodeGR.getValue('job_code'));
                 current.setValue('job_function_description', jobCodeGR.getValue('job_function_description'));
             }
         }
 
-        // Process authority data if provided by widget
-        if (producer.authority_types && producer.authority_data) {
+        // Process authority data if provided by widget (skip for remove requests)
+        if (requestType !== 'remove_authority' && producer.authority_types && producer.authority_data) {
             var authority_types = producer.authority_types.toString().split('|');
             var authority_data_strings = producer.authority_data.toString().split('|');
 
@@ -616,53 +646,39 @@ if (shouldProceed) {
                         // Create non-credit authority limit record
                         var nonCreditGR = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
                         nonCreditGR.initialize();
-
-                        // Link to parent signature request
                         nonCreditGR.setValue('parent', parentId);
-
-                        // Set job code reference for reporting
                         if (producer.job_code) {
                             nonCreditGR.setValue('job_code', producer.job_code);
                         }
-
-                        // Set all non-credit fields with values
-                        if (authorityData.disbursement_ach) 
+                        if (authorityData.disbursement_ach)
                             nonCreditGR.setValue('disbursement_ach', authorityData.disbursement_ach);
-                        if (authorityData.disbursement_wire_transfer_external) 
+                        if (authorityData.disbursement_wire_transfer_external)
                             nonCreditGR.setValue('disbursement_wire_transfer_external', authorityData.disbursement_wire_transfer_external);
-                        if (authorityData.disbursement_wire_transfer_internal) 
+                        if (authorityData.disbursement_wire_transfer_internal)
                             nonCreditGR.setValue('disbursement_wire_transfer_internal', authorityData.disbursement_wire_transfer_internal);
-                        if (authorityData.disbursement_official_checks_external) 
+                        if (authorityData.disbursement_official_checks_external)
                             nonCreditGR.setValue('disbursement_official_checks_external', authorityData.disbursement_official_checks_external);
-                        if (authorityData.disbursement_official_checks_internal) 
+                        if (authorityData.disbursement_official_checks_internal)
                             nonCreditGR.setValue('disbursement_official_checks_internal', authorityData.disbursement_official_checks_internal);
-                        if (authorityData.check_cashing_on_us) 
+                        if (authorityData.check_cashing_on_us)
                             nonCreditGR.setValue('check_cashing_on_us', authorityData.check_cashing_on_us);
-                        if (authorityData.check_cashing_not_on_us) 
+                        if (authorityData.check_cashing_not_on_us)
                             nonCreditGR.setValue('check_cashing_not_on_us', authorityData.check_cashing_not_on_us);
-                        if (authorityData.remote_deposit) 
+                        if (authorityData.remote_deposit)
                             nonCreditGR.setValue('remote_deposit', authorityData.remote_deposit);
-                        if (authorityData.treasury_solutions_company_wire_limits) 
+                        if (authorityData.treasury_solutions_company_wire_limits)
                             nonCreditGR.setValue('treasury_solutions_company_wire_limits', authorityData.treasury_solutions_company_wire_limits);
-                        if (authorityData.fx_wire_limits) 
+                        if (authorityData.fx_wire_limits)
                             nonCreditGR.setValue('fx_wire_limits', authorityData.fx_wire_limits);
-
                         nonCreditGR.insert();
-                    }
-                    else if (authorityType === 'credit') {
+                    } else if (authorityType === 'credit') {
                         // Create credit authority limit record
                         var creditGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
                         creditGR.initialize();
-
-                        // Link to parent signature request
                         creditGR.setValue('parent', parentId);
-
-                        // Set job code reference for reporting
                         if (producer.job_code) {
                             creditGR.setValue('job_code', producer.job_code);
                         }
-
-                        // Set all credit fields with values
                         if (authorityData.overdraft_internal_accounts) {
                             creditGR.setValue('overdraft_internal_accounts', authorityData.overdraft_internal_accounts);
                         }
@@ -675,21 +691,12 @@ if (shouldProceed) {
                         if (authorityData.unavailable_funds_external_accounts) {
                             creditGR.setValue('unavailable_funds_external_accounts', authorityData.unavailable_funds_external_accounts);
                         }
-
                         creditGR.insert();
                     }
-
                 } catch (e) {
-                    // Handle JSON parsing errors gracefully
                     gs.addErrorMessage('Error processing authority data: ' + e.message);
                 }
             }
         }
-
-    } else {
-        // Form validation failed - show errors and prevent submission
-        var errors = producer.form_validation_errors ? producer.form_validation_errors.toString().split('|') : ['Form validation failed'];
-        gs.addErrorMessage('Please correct the following errors: ' + errors.join('; '));
-        current.setAbortAction(true);
     }
 }
