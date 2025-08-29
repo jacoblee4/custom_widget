@@ -313,7 +313,7 @@ api.controller = function($scope, spUtil, $timeout) {
   
   // Pagination variables
   c.currentPage = 1;
-  c.pageSize = 10;
+  c.pageSize = 5;
   c.totalPages = 1;
   
   // Function to get job code value from the form
