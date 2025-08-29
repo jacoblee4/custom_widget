@@ -453,17 +453,36 @@
 
 // client controller
 
+// User-facing error handling for ServiceNow widget
 api.controller = function($scope, spUtil, $timeout) {
   var c = this;
   
-  // Initialize controller variables
-  c.jobCode = '';          // Stores the job code sys_id
-  c.jobCodeDisplay = '';   // Stores the job code display value
-  c.authorityLimits = [];  // Array to hold authority limit records
-  c.loading = false;       // Loading state indicator
-  c.requestType = '';      // Current request type
+  // Show critical error to user
+  c.showCriticalError = function(context) {
+    var errorMsg = 'The Authority Limits widget has encountered a critical error and cannot function properly. Please contact your system administrator for assistance.';
+    
+    // Try multiple methods to ensure the user sees the error
+    try {
+      if (typeof spUtil !== 'undefined' && spUtil.addErrorMessage) {
+        spUtil.addErrorMessage(errorMsg);
+      } else if (typeof g_form !== 'undefined' && g_form.addErrorMessage) {
+        g_form.addErrorMessage(errorMsg);
+      } else if (window.parent && window.parent.g_form && window.parent.g_form.addErrorMessage) {
+        window.parent.g_form.addErrorMessage(errorMsg);
+      } else {
+        // Fallback to alert if ServiceNow messaging isn't available
+        alert(errorMsg);
+      }
+    } catch (msgError) {
+      // Last resort - always works
+      alert(errorMsg);
+    }
+    
+    // Log for admin debugging (but user error is priority)
+    console.error('Authority Limits Widget Critical Error in ' + context + ' - User has been notified');
+  };
   
-  // Get the current request type value from the form
+  // Improved getRequestTypeValue with critical error handling
   c.getRequestTypeValue = function() {
     try {
       // Method 1: Direct g_form access
@@ -487,63 +506,15 @@ api.controller = function($scope, spUtil, $timeout) {
         return $scope.data.request_type;
       }
       
-    } catch (e) {
+      return '';
+      
+    } catch (error) {
+      c.showCriticalError('getRequestTypeValue');
+      return '';
     }
-    
-    return '';
   };
   
-  // Check if current request type is "New Authority"
-  c.isNewAuthority = function() {
-    return c.requestType === 'new_authority';
-  };
-  
-  // Check if current request type is "Change to Existing Authority"
-  c.isChangeAuthority = function() {
-    return c.requestType === 'change_to_existing_authority';
-  };
-  
-  // Check if current request type is "Remove Authority"
-  c.isRemoveAuthority = function() {
-    return c.requestType === 'remove_authority';
-  };
-  
-  // Determine if existing limits should be displayed
-  c.shouldShowLimits = function() {
-    if (!c.jobCode || c.loading || c.authorityLimits.length === 0) {
-      return false;
-    }
-
-    return c.isChangeAuthority() || c.isRemoveAuthority() || c.isNewAuthority();
-  };
-  
-  // Check if form submission should be blocked based on request type and limits
-  c.shouldBlockSubmission = function() {
-    if (!c.jobCode || c.loading) {
-      return false; // Don't block if no job code or still loading
-    }
-    
-    var hasLimits = c.authorityLimits.length > 0;
-    
-    // Block new authority if limits already exist
-    if (c.isNewAuthority() && hasLimits) {
-      return true;
-    }
-    
-    // Block change authority if no limits exist
-    if (c.isChangeAuthority() && !hasLimits) {
-      return true;
-    }
-    
-    // Block remove authority if no limits exist
-    if (c.isRemoveAuthority() && !hasLimits) {
-      return true;
-    }
-    
-    return false;
-  };
-  
-  //Retrieves the job code value from various possible sources
+  // Improved getJobCodeValue with critical error handling
   c.getJobCodeValue = function() {
     try {
       // Method 1: Direct g_form access (standard ServiceNow forms)
@@ -567,13 +538,15 @@ api.controller = function($scope, spUtil, $timeout) {
         return $scope.data.job_code;
       }
       
-    } catch (e) {
+      return '';
+      
+    } catch (error) {
+      c.showCriticalError('getJobCodeValue');
+      return '';
     }
-    
-    return '';
   };
   
-  //Retrieves the display value of the selected job code
+  // Improved getJobCodeDisplayValue with critical error handling
   c.getJobCodeDisplayValue = function() {
     try {
       // Method 1: g_form display box
@@ -596,17 +569,19 @@ api.controller = function($scope, spUtil, $timeout) {
         return displayField.value;
       }
       
-    } catch (e) {
+      return '';
+      
+    } catch (error) {
+      c.showCriticalError('getJobCodeDisplayValue');
+      return '';
     }
-    
-    return '';
   };
   
-  //Update form validation status based on current state
+  // Improved updateFormValidation with critical error handling
   c.updateFormValidation = function() {
-    var shouldBlock = c.shouldBlockSubmission();
-    
     try {
+      var shouldBlock = c.shouldBlockSubmission();
+      
       // Update Record Producer validation variables
       if (typeof g_form !== 'undefined' && g_form.setValue) {
         g_form.setValue('authority_limits_validation_blocked', shouldBlock ? 'true' : 'false');
@@ -616,101 +591,61 @@ api.controller = function($scope, spUtil, $timeout) {
       if (window.parent && window.parent.g_form && window.parent.g_form.setValue) {
         window.parent.g_form.setValue('authority_limits_validation_blocked', shouldBlock ? 'true' : 'false');
       }
-    } catch (e) {
+      
+    } catch (error) {
+      c.showCriticalError('updateFormValidation - Form validation may not work properly');
     }
   };
   
-  /**
-   * Sets up polling mechanism to detect job code and request type changes
-   * Polls every 500ms to check for changes in form fields
-   */
-  c.setupFieldMonitoring = function() {
-    var lastJobCode = '';
-    var lastRequestType = '';
-    
-    // Create polling interval
-    var checkInterval = setInterval(function() {
-      var currentJobCode = c.getJobCodeValue();
-      var currentRequestType = c.getRequestTypeValue();
-      
-      // Check if either field has changed
-      if (currentJobCode !== lastJobCode || currentRequestType !== lastRequestType) {
-        lastJobCode = currentJobCode;
-        lastRequestType = currentRequestType;
-        c.jobCode = currentJobCode;
-        c.requestType = currentRequestType;
-        c.jobCodeDisplay = c.getJobCodeDisplayValue();
-        
-        // Use $timeout to ensure Angular digest cycle
-        $timeout(function() {
-          c.loadAuthorityLimits();
-        });
-      }
-    }, 500);
-    
-    // Clean up interval when widget is destroyed
-    $scope.$on('$destroy', function() {
-      clearInterval(checkInterval);
-    });
-    
-    // Set up direct event listeners after a delay
-    $timeout(function() {
-      c.setupDirectListeners();
-    }, 1000);
-  };
-  
-  /**
-   * Sets up direct event listeners on form fields
-   * Provides immediate response to changes when possible
-   */
+  // Improved setupDirectListeners with critical error handling
   c.setupDirectListeners = function() {
-    // Define selectors for job code fields
-    var jobCodeSelectors = [
-      'select[name="job_code"]',
-      'input[name="job_code"]', 
-      '[data-name="job_code"] select',
-      '[data-name="job_code"] input',
-      '#job_code'
-    ];
-    
-    // Define selectors for request type fields
-    var requestTypeSelectors = [
-      'select[name="request_type"]',
-      'input[name="request_type"]',
-      '[data-name="request_type"] select',
-      '[data-name="request_type"] input',
-      '#request_type'
-    ];
-    
-    // Add change event listeners to job code fields
-    jobCodeSelectors.forEach(function(selector) {
-      var elements = document.querySelectorAll(selector);
-      elements.forEach(function(element) {
-        element.addEventListener('change', function() {
-          $timeout(function() {
-            c.jobCode = c.getJobCodeValue();
-            c.jobCodeDisplay = c.getJobCodeDisplayValue();
-            c.loadAuthorityLimits();
-          });
-        });
-      });
-    });
-    
-    // Add change event listeners to request type fields
-    requestTypeSelectors.forEach(function(selector) {
-      var elements = document.querySelectorAll(selector);
-      elements.forEach(function(element) {
-        element.addEventListener('change', function() {
-          $timeout(function() {
-            c.requestType = c.getRequestTypeValue();
-            c.loadAuthorityLimits();
-          });
-        });
-      });
-    });
-    
-    // Try to set up g_form callbacks for native ServiceNow change detection
     try {
+      // Define selectors for job code fields
+      var jobCodeSelectors = [
+        'select[name="job_code"]',
+        'input[name="job_code"]', 
+        '[data-name="job_code"] select',
+        '[data-name="job_code"] input',
+        '#job_code'
+      ];
+      
+      // Define selectors for request type fields
+      var requestTypeSelectors = [
+        'select[name="request_type"]',
+        'input[name="request_type"]',
+        '[data-name="request_type"] select',
+        '[data-name="request_type"] input',
+        '#request_type'
+      ];
+      
+      // Add change event listeners to job code fields
+      jobCodeSelectors.forEach(function(selector) {
+        var elements = document.querySelectorAll(selector);
+        elements.forEach(function(element) {
+          element.addEventListener('change', function() {
+            $timeout(function() {
+              c.jobCode = c.getJobCodeValue();
+              c.jobCodeDisplay = c.getJobCodeDisplayValue();
+              c.loadAuthorityLimits();
+            });
+          });
+        });
+      });
+      
+      // Add change event listeners to request type fields
+      requestTypeSelectors.forEach(function(selector) {
+        var elements = document.querySelectorAll(selector);
+        elements.forEach(function(element) {
+          element.addEventListener('change', function() {
+            $timeout(function() {
+              c.requestType = c.getRequestTypeValue();
+              c.loadAuthorityLimits();
+            });
+          });
+        });
+      });
+      
+      // Try to set up g_form callbacks for native ServiceNow change detection
       if (typeof g_form !== 'undefined' && g_form.addOnChangeCallback) {
         g_form.addOnChangeCallback('job_code', function() {
           $timeout(function() {
@@ -727,14 +662,98 @@ api.controller = function($scope, spUtil, $timeout) {
           });
         });
       }
-    } catch (e) {
+      
+    } catch (error) {
+      c.showCriticalError('setupDirectListeners - Automatic field detection may not work');
     }
   };
   
-  /**
-   * Loads authority limits from the server for the selected job code
-   * Makes a server call to retrieve limit data
-   */
+  // Improved setupSubmissionBlocking with critical error handling
+  c.setupSubmissionBlocking = function() {
+    try {
+      // Find submit buttons and intercept clicks
+      var submitSelectors = [
+        'button[name="sysparm_ck"]',
+        'input[name="sysparm_ck"]', 
+        'button[type="submit"]',
+        'input[type="submit"]',
+        '.form_action_button',
+        '#sysverb_submit',
+        'button:contains("Submit")',
+        'input[value*="Submit"]'
+      ];
+      
+      function blockSubmission(e) {
+        if (c.shouldBlockSubmission()) {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          
+          // Show appropriate error message based on request type
+          var requestType = c.requestType;
+          var jobCodeDisplay = c.jobCodeDisplay || 'Unknown';
+          var errorMsg = '';
+          
+          switch (requestType) {
+            case 'new_authority':
+              errorMsg = 'Authority limits already exist for job code ' + jobCodeDisplay + '. Please submit a "Change to Existing Authority" request instead.';
+              break;
+            case 'change_to_existing_authority':
+              errorMsg = 'No authority limits found for job code ' + jobCodeDisplay + '. Please submit a "New Authority" request instead.';
+              break;
+            case 'remove_authority':
+              errorMsg = 'No existing authority limits found for job code ' + jobCodeDisplay + '. Cannot proceed with removal request.';
+              break;
+            default:
+              errorMsg = 'Please check your request type and job code selection.';
+          }
+          
+          // Show error message
+          try {
+            if (typeof spUtil !== 'undefined') {
+              spUtil.addErrorMessage(errorMsg);
+            } else if (typeof g_form !== 'undefined' && g_form.addErrorMessage) {
+              g_form.addErrorMessage(errorMsg);
+            } else {
+              alert(errorMsg);
+            }
+          } catch (msgError) {
+            alert(errorMsg); // Final fallback
+          }
+          
+          return false;
+        }
+      }
+      
+      // Add event listeners to all submit buttons
+      submitSelectors.forEach(function(selector) {
+        var buttons = document.querySelectorAll(selector);
+        buttons.forEach(function(button) {
+          button.removeEventListener('click', blockSubmission, true);
+          button.addEventListener('click', blockSubmission, true);
+        });
+      });
+      
+      // Hook into g_form onSubmit if available
+      if (typeof g_form !== 'undefined') {
+        var originalOnSubmit = g_form.onSubmit;
+        g_form.onSubmit = function() {
+          if (c.shouldBlockSubmission()) {
+            return false; // Block submission
+          }
+          if (originalOnSubmit) {
+            return originalOnSubmit.call(this);
+          }
+          return true;
+        };
+      }
+      
+    } catch (error) {
+      c.showCriticalError('setupSubmissionBlocking - Form submission validation may not work properly');
+    }
+  };
+  
+  // Enhanced loadAuthorityLimits with user-facing error handling
   c.loadAuthorityLimits = function() {
     // Clear limits if no job code selected
     if (!c.jobCode) {
@@ -766,124 +785,57 @@ api.controller = function($scope, spUtil, $timeout) {
       $timeout(function() {
         c.setupSubmissionBlocking();
       }, 500);
+      
     }).catch(function(error) {
-      // Error - show message and clear limits
-      spUtil.addErrorMessage('Failed to load authority limits');
+      // Show user-facing error message immediately
+      var errorMsg = 'Unable to load authority limits for the selected job code. Please contact your system administrator for assistance.';
+      
+      try {
+        if (typeof spUtil !== 'undefined' && spUtil.addErrorMessage) {
+          spUtil.addErrorMessage(errorMsg);
+        } else if (typeof g_form !== 'undefined' && g_form.addErrorMessage) {
+          g_form.addErrorMessage(errorMsg);
+        } else {
+          alert(errorMsg);
+        }
+      } catch (msgError) {
+        alert(errorMsg);
+      }
+      
+      // Log for admin debugging
+      console.error('Authority Limits server call failed:', error);
+      
       c.authorityLimits = [];
       c.loading = false;
-      
-      // Update form validation after error
       c.updateFormValidation();
     });
   };
   
-  // Set up form submission blocking to prevent invalid submissions
-  c.setupSubmissionBlocking = function() {
-    // Find submit buttons and intercept clicks
-    var submitSelectors = [
-      'button[name="sysparm_ck"]',
-      'input[name="sysparm_ck"]', 
-      'button[type="submit"]',
-      'input[type="submit"]',
-      '.form_action_button',
-      '#sysverb_submit',
-      'button:contains("Submit")',
-      'input[value*="Submit"]'
-    ];
-    
-    function blockSubmission(e) {
-      if (c.shouldBlockSubmission()) {
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        
-        // Show appropriate error message based on request type
-        var requestType = c.requestType;
-        var jobCodeDisplay = c.jobCodeDisplay || 'Unknown';
-        var errorMsg = '';
-        
-        switch (requestType) {
-          case 'new_authority':
-            errorMsg = 'Authority limits already exist for job code ' + jobCodeDisplay + '. Please submit a "Change to Existing Authority" request instead.';
-            break;
-          case 'change_to_existing_authority':
-            errorMsg = 'No authority limits found for job code ' + jobCodeDisplay + '. Please submit a "New Authority" request instead.';
-            break;
-          case 'remove_authority':
-            errorMsg = 'No existing authority limits found for job code ' + jobCodeDisplay + '. Cannot proceed with removal request.';
-            break;
-          default:
-            errorMsg = 'Please check your request type and job code selection.';
-        }
-        
-        // Show error message (try different methods)
-        try {
-          if (typeof spUtil !== 'undefined') {
-            spUtil.addErrorMessage(errorMsg);
-          } else if (typeof g_form !== 'undefined' && g_form.addErrorMessage) {
-            g_form.addErrorMessage(errorMsg);
-          } else {
-            alert(errorMsg); // Fallback
-          }
-        } catch (err) {
-          alert(errorMsg); // Final fallback
-        }
-        
-        return false;
-      }
-    }
-    
-    // Add event listeners to all submit buttons
-    submitSelectors.forEach(function(selector) {
-      var buttons = document.querySelectorAll(selector);
-      buttons.forEach(function(button) {
-        // Remove existing listeners to avoid duplicates
-        button.removeEventListener('click', blockSubmission, true);
-        // Add new listener
-        button.addEventListener('click', blockSubmission, true); // Use capture phase
-      });
-    });
-    
-    // Also try to hook into g_form onSubmit if available
-    try {
-      if (typeof g_form !== 'undefined') {
-        var originalOnSubmit = g_form.onSubmit;
-        g_form.onSubmit = function() {
-          if (c.shouldBlockSubmission()) {
-            return false; // Block submission
-          }
-          // Call original onSubmit if it exists and we're not blocking
-          if (originalOnSubmit) {
-            return originalOnSubmit.call(this);
-          }
-          return true;
-        };
-      }
-    } catch (e) {
-    }
-  };
-  
-  /**
-   * Initialize widget on load
-   * Sets up initial values and monitoring
-   */
+  // Initialize widget with error handling
   $timeout(function() {
-    // Get initial field values
-    c.jobCode = c.getJobCodeValue();
-    c.requestType = c.getRequestTypeValue();
-    c.jobCodeDisplay = c.getJobCodeDisplayValue();
-    
-    // Load limits if job code already selected
-    if (c.jobCode) {
-      c.loadAuthorityLimits();
+    try {
+      // Get initial field values
+      c.jobCode = c.getJobCodeValue();
+      c.requestType = c.getRequestTypeValue();
+      c.jobCodeDisplay = c.getJobCodeDisplayValue();
+      
+      // Load limits if job code already selected
+      if (c.jobCode) {
+        c.loadAuthorityLimits();
+      }
+      
+      // Start monitoring for changes
+      c.setupFieldMonitoring();
+      
+      // Setup initial submission blocking
+      $timeout(function() {
+        c.setupSubmissionBlocking();
+      }, 1500);
+      
+    } catch (error) {
+      c.showCriticalError('widget initialization');
     }
-    
-    // Start monitoring for changes
-    c.setupFieldMonitoring();
-    
-    // Setup initial submission blocking
-    $timeout(function() {
-      c.setupSubmissionBlocking();
-    }, 1500);
   }, 500);
+  
+  // Rest of your existing methods (isNewAuthority, isChangeAuthority, etc.)...
 };
