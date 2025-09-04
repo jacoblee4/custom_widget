@@ -355,14 +355,42 @@ If applicable: Enter the requested approval amount. If the authority type should
 }
 
 .info-message {
-    background: white;
-    padding: 12px;
+    background: transparent; /* Remove white background */
+    padding: 0;              /* Remove padding that makes it look like a field */
+    border-radius: 0;        /* Remove rounded corners */
+    margin-bottom: 16px;
+    font-size: 14px;
+    color: #495057;          /* Darker text color for better readability */
+    line-height: 1.5;
+    border-left: none;       /* Remove the yellow left border */
+    font-style: normal;      /* Ensure it's not italic */
+    font-weight: normal;     /* Normal weight text */
+}
+
+/* Alternative approach - if you want to keep some visual distinction */
+.info-message-alternative {
+    background: #f8f9fa;     /* Very light gray background */
+    padding: 12px 16px;      /* Different padding style */
     border-radius: 4px;
     margin-bottom: 16px;
     font-size: 14px;
-    color: #6c757d;
+    color: #495057;
     line-height: 1.5;
-    border-left: 3px solid #ffd93d;
+    border: 1px solid #e9ecef; /* Light border instead of left accent */
+    font-style: italic;      /* Italic to show it's instructional */
+    border-left: 3px solid #007bff; /* Blue left accent instead of yellow */
+}
+
+/* Another option - simple text styling */
+.info-message-simple {
+    background: none;
+    padding: 0 0 12px 0;
+    border: none;
+    margin-bottom: 16px;
+    font-size: 14px;
+    color: #6c757d;          /* Muted text color */
+    line-height: 1.5;
+    font-style: italic;      /* Italic for instructional text */
 }
 
 .disbursement-options {
