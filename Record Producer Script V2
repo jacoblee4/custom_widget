@@ -251,6 +251,60 @@ if (shouldProceed) {
 
                             // Set the new value
                             if (newValue) {
+                                nonCreditGR.setValue(fieldName, newValue);
+                            }
+
+                            // Set the original value for comparison
+                            nonCreditGR.setValue('original_' + fieldName, originalValue);
+
+                            // Track the change
+                            if (requestType === 'change_to_existing_authority') {
+                                var changeTracker = createChangeTracker(originalValue, newValue, nonCreditFieldMappings[fieldName]);
+                                if (changeTracker.has_changed) {
+                                    changesSummary.push(changeTracker.field_label + ': ' + 
+                                        (originalValue ? '$' + originalValue : '$0') + ' → ' + 
+                                        (newValue ? '$' + newValue : '$0'));
+                                }
+                            }
+                        }
+
+                        // Store changes summary for email notifications
+                        if (changesSummary.length > 0) {
+                            nonCreditGR.setValue('changes_summary', changesSummary.join('\n'));
+                        }
+
+                        nonCreditGR.insert();
+
+                    } else if (authorityType === 'credit') {
+                        // Create credit authority limit record with change tracking
+                        var creditGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
+                        creditGR.initialize();
+                        creditGR.setValue('parent', parentId);
+                        if (producer.job_code) {
+                            creditGR.setValue('job_code', producer.job_code);
+                        }
+
+                        // Track changes for each credit field
+                        var creditFieldMappings = {
+                            'overdraft_internal_accounts': 'Overdraft Internal Accounts',
+                            'overdraft_external_accounts': 'Overdraft External Accounts',
+                            'unavailable_funds_internal_accounts': 'Unavailable Funds Internal Accounts',
+                            'unavailable_funds_external_accounts': 'Unavailable Funds External Accounts'
+                        };
+
+                        var changesSummary = [];
+
+                        for (var fieldName in creditFieldMappings) {
+                            var newValue = authorityData[fieldName] || '';
+                            var originalValue = '';
+                            
+                            // Get original value if this is a change request
+                            if (requestType === 'change_to_existing_authority' && existingLimitsGr) {
+                                originalValue = existingLimitsGr.getValue(fieldName) || '';
+                            }
+
+                            // Set the new value
+                            if (newValue) {
                                 creditGR.setValue(fieldName, newValue);
                             }
 
@@ -262,121 +316,13 @@ if (shouldProceed) {
                                 var changeTracker = createChangeTracker(originalValue, newValue, creditFieldMappings[fieldName]);
                                 if (changeTracker.has_changed) {
                                     changesSummary.push(changeTracker.field_label + ': ' + 
-                                        (originalValue ? '.getValue(fieldName) || '';
-                            }
-
-                            // Set the new value
-                            if (newValue) {
-                                nonCreditGR.setValue(fieldName, newValue);
-                            }
-
-                            // Set the original value for comparison
-                            nonCreditGR.setValue('original_' + fieldName, originalValue);
-
-                            // Track the change
-                            if (requestType === 'change_to_existing_authority') {
-                                var changeTracker = createChangeTracker(originalValue, newValue, nonCreditFieldMappings[fieldName]);
-                                if (changeTracker.has_changed) {
-                                    changesSummary.push(changeTracker.field_label + ': ' + 
                                         (originalValue ? '$' + originalValue : '$0') + ' → ' + 
                                         (newValue ? '$' + newValue : '$0'));
                                 }
                             }
                         }
 
-                        // Store changes summary as JSON for email notifications
-                        if (changesSummary.length > 0) {
-                            nonCreditGR.setValue('changes_summary', changesSummary.join('\n'));
-                        }
-
-                        nonCreditGR.insert();
-
-                    } else if (authorityType === 'credit') {
-                        // Create credit authority limit record with change tracking
-                        var creditGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
-                        creditGR.initialize();
-                        creditGR.setValue('parent', parentId);
-                        if (producer.job_code) {
-                            creditGR.setValue('job_code', producer.job_code);
-                        }
-
-                        // Track changes for each credit field
-                        var creditFieldMappings = {
-                            'overdraft_internal_accounts': 'Overdraft Internal Accounts',
-                            'overdraft_external_accounts': 'Overdraft External Accounts',
-                            'unavailable_funds_internal_accounts': 'Unavailable Funds Internal Accounts',
-                            'unavailable_funds_external_accounts': 'Unavailable Funds External Accounts'
-                        };
-
-                        var changesSummary = [];
-
-                        for (var fieldName in creditFieldMappings) {
-                            var newValue = authorityData[fieldName] || '';
-                            var originalValue = '';
-                            
-                            // Get original value if this is a change request
-                            if (requestType === 'change_to_existing_authority' && existingLimitsGr) {
-                                originalValue = existingLimitsGr + originalValue : '$0') + ' → ' + 
-                                        (newValue ? '.getValue(fieldName) || '';
-                            }
-
-                            // Set the new value
-                            if (newValue) {
-                                nonCreditGR.setValue(fieldName, newValue);
-                            }
-
-                            // Set the original value for comparison
-                            nonCreditGR.setValue('original_' + fieldName, originalValue);
-
-                            // Track the change
-                            if (requestType === 'change_to_existing_authority') {
-                                var changeTracker = createChangeTracker(originalValue, newValue, nonCreditFieldMappings[fieldName]);
-                                if (changeTracker.has_changed) {
-                                    changesSummary.push(changeTracker.field_label + ': ' + 
-                                        (originalValue ? '$' + originalValue : '$0') + ' → ' + 
-                                        (newValue ? '$' + newValue : '$0'));
-                                }
-                            }
-                        }
-
-                        // Store changes summary as JSON for email notifications
-                        if (changesSummary.length > 0) {
-                            nonCreditGR.setValue('changes_summary', changesSummary.join('\n'));
-                        }
-
-                        nonCreditGR.insert();
-
-                    } else if (authorityType === 'credit') {
-                        // Create credit authority limit record with change tracking
-                        var creditGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
-                        creditGR.initialize();
-                        creditGR.setValue('parent', parentId);
-                        if (producer.job_code) {
-                            creditGR.setValue('job_code', producer.job_code);
-                        }
-
-                        // Track changes for each credit field
-                        var creditFieldMappings = {
-                            'overdraft_internal_accounts': 'Overdraft Internal Accounts',
-                            'overdraft_external_accounts': 'Overdraft External Accounts',
-                            'unavailable_funds_internal_accounts': 'Unavailable Funds Internal Accounts',
-                            'unavailable_funds_external_accounts': 'Unavailable Funds External Accounts'
-                        };
-
-                        var changesSummary = [];
-
-                        for (var fieldName in creditFieldMappings) {
-                            var newValue = authorityData[fieldName] || '';
-                            var originalValue = '';
-                            
-                            // Get original value if this is a change request
-                            if (requestType === 'change_to_existing_authority' && existingLimitsGr) {
-                                originalValue = existingLimitsGr + newValue : '$0'));
-                                }
-                            }
-                        }
-
-                        // Store changes summary as JSON for email notifications
+                        // Store changes summary for email notifications
                         if (changesSummary.length > 0) {
                             creditGR.setValue('changes_summary', changesSummary.join('\n'));
                         }
@@ -447,116 +393,8 @@ if (shouldProceed) {
                         }
                         
                         overallChangesSummary.push(allFieldMappings[fieldName] + changeType + ': ' + 
-                            (originalValue ? '.getValue(fieldName) || '';
-                            }
-
-                            // Set the new value
-                            if (newValue) {
-                                nonCreditGR.setValue(fieldName, newValue);
-                            }
-
-                            // Set the original value for comparison
-                            nonCreditGR.setValue('original_' + fieldName, originalValue);
-
-                            // Track the change
-                            if (requestType === 'change_to_existing_authority') {
-                                var changeTracker = createChangeTracker(originalValue, newValue, nonCreditFieldMappings[fieldName]);
-                                if (changeTracker.has_changed) {
-                                    changesSummary.push(changeTracker.field_label + ': ' + 
-                                        (originalValue ? '$' + originalValue : '$0') + ' → ' + 
-                                        (newValue ? '$' + newValue : '$0'));
-                                }
-                            }
-                        }
-
-                        // Store changes summary as JSON for email notifications
-                        if (changesSummary.length > 0) {
-                            nonCreditGR.setValue('changes_summary', changesSummary.join('\n'));
-                        }
-
-                        nonCreditGR.insert();
-
-                    } else if (authorityType === 'credit') {
-                        // Create credit authority limit record with change tracking
-                        var creditGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
-                        creditGR.initialize();
-                        creditGR.setValue('parent', parentId);
-                        if (producer.job_code) {
-                            creditGR.setValue('job_code', producer.job_code);
-                        }
-
-                        // Track changes for each credit field
-                        var creditFieldMappings = {
-                            'overdraft_internal_accounts': 'Overdraft Internal Accounts',
-                            'overdraft_external_accounts': 'Overdraft External Accounts',
-                            'unavailable_funds_internal_accounts': 'Unavailable Funds Internal Accounts',
-                            'unavailable_funds_external_accounts': 'Unavailable Funds External Accounts'
-                        };
-
-                        var changesSummary = [];
-
-                        for (var fieldName in creditFieldMappings) {
-                            var newValue = authorityData[fieldName] || '';
-                            var originalValue = '';
-                            
-                            // Get original value if this is a change request
-                            if (requestType === 'change_to_existing_authority' && existingLimitsGr) {
-                                originalValue = existingLimitsGr + originalValue : '$0') + ' → ' + 
-                            (newValue ? '.getValue(fieldName) || '';
-                            }
-
-                            // Set the new value
-                            if (newValue) {
-                                nonCreditGR.setValue(fieldName, newValue);
-                            }
-
-                            // Set the original value for comparison
-                            nonCreditGR.setValue('original_' + fieldName, originalValue);
-
-                            // Track the change
-                            if (requestType === 'change_to_existing_authority') {
-                                var changeTracker = createChangeTracker(originalValue, newValue, nonCreditFieldMappings[fieldName]);
-                                if (changeTracker.has_changed) {
-                                    changesSummary.push(changeTracker.field_label + ': ' + 
-                                        (originalValue ? '$' + originalValue : '$0') + ' → ' + 
-                                        (newValue ? '$' + newValue : '$0'));
-                                }
-                            }
-                        }
-
-                        // Store changes summary as JSON for email notifications
-                        if (changesSummary.length > 0) {
-                            nonCreditGR.setValue('changes_summary', changesSummary.join('\n'));
-                        }
-
-                        nonCreditGR.insert();
-
-                    } else if (authorityType === 'credit') {
-                        // Create credit authority limit record with change tracking
-                        var creditGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
-                        creditGR.initialize();
-                        creditGR.setValue('parent', parentId);
-                        if (producer.job_code) {
-                            creditGR.setValue('job_code', producer.job_code);
-                        }
-
-                        // Track changes for each credit field
-                        var creditFieldMappings = {
-                            'overdraft_internal_accounts': 'Overdraft Internal Accounts',
-                            'overdraft_external_accounts': 'Overdraft External Accounts',
-                            'unavailable_funds_internal_accounts': 'Unavailable Funds Internal Accounts',
-                            'unavailable_funds_external_accounts': 'Unavailable Funds External Accounts'
-                        };
-
-                        var changesSummary = [];
-
-                        for (var fieldName in creditFieldMappings) {
-                            var newValue = authorityData[fieldName] || '';
-                            var originalValue = '';
-                            
-                            // Get original value if this is a change request
-                            if (requestType === 'change_to_existing_authority' && existingLimitsGr) {
-                                originalValue = existingLimitsGr + newValue : '$0'));
+                            (originalValue ? '$' + originalValue : '$0') + ' → ' + 
+                            (newValue ? '$' + newValue : '$0'));
                     }
                 }
             }
@@ -569,58 +407,4 @@ if (shouldProceed) {
             }
         }
     }
-}.getValue(fieldName) || '';
-                            }
-
-                            // Set the new value
-                            if (newValue) {
-                                nonCreditGR.setValue(fieldName, newValue);
-                            }
-
-                            // Set the original value for comparison
-                            nonCreditGR.setValue('original_' + fieldName, originalValue);
-
-                            // Track the change
-                            if (requestType === 'change_to_existing_authority') {
-                                var changeTracker = createChangeTracker(originalValue, newValue, nonCreditFieldMappings[fieldName]);
-                                if (changeTracker.has_changed) {
-                                    changesSummary.push(changeTracker.field_label + ': ' + 
-                                        (originalValue ? '$' + originalValue : '$0') + ' → ' + 
-                                        (newValue ? '$' + newValue : '$0'));
-                                }
-                            }
-                        }
-
-                        // Store changes summary as JSON for email notifications
-                        if (changesSummary.length > 0) {
-                            nonCreditGR.setValue('changes_summary', changesSummary.join('\n'));
-                        }
-
-                        nonCreditGR.insert();
-
-                    } else if (authorityType === 'credit') {
-                        // Create credit authority limit record with change tracking
-                        var creditGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
-                        creditGR.initialize();
-                        creditGR.setValue('parent', parentId);
-                        if (producer.job_code) {
-                            creditGR.setValue('job_code', producer.job_code);
-                        }
-
-                        // Track changes for each credit field
-                        var creditFieldMappings = {
-                            'overdraft_internal_accounts': 'Overdraft Internal Accounts',
-                            'overdraft_external_accounts': 'Overdraft External Accounts',
-                            'unavailable_funds_internal_accounts': 'Unavailable Funds Internal Accounts',
-                            'unavailable_funds_external_accounts': 'Unavailable Funds External Accounts'
-                        };
-
-                        var changesSummary = [];
-
-                        for (var fieldName in creditFieldMappings) {
-                            var newValue = authorityData[fieldName] || '';
-                            var originalValue = '';
-                            
-                            // Get original value if this is a change request
-                            if (requestType === 'change_to_existing_authority' && existingLimitsGr) {
-                                originalValue = existingLimitsGr
+}
