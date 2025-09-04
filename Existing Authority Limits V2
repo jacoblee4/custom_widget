@@ -1,0 +1,51 @@
+// ============================================
+// HTML (keep your existing HTML)
+// ============================================
+
+// ============================================  
+// CSS (keep your existing CSS)
+// ============================================
+
+// ============================================
+// CLIENT CONTROLLER (UPDATED)
+// ============================================
+
+api.controller = function($scope, spUtil, $timeout) {
+  var c = this;
+  
+  // Initialize controller variables
+  c.jobCode = '';          // Stores the job code sys_id
+  c.jobCodeDisplay = '';   // Stores the job code display value
+  c.authorityLimits = [];  // Array to hold authority limit records
+  c.loading = false;       // Loading state indicator
+  c.requestType = '';      // Current request type
+  
+  // Get the current request type value from the form
+  c.getRequestTypeValue = function() {
+    try {
+      // Method 1: Direct g_form access
+      if (typeof g_form !== 'undefined' && g_form.getValue) {
+        return g_form.getValue('request_type') || '';
+      }
+      
+      // Method 2: Parent frame g_form (Service Portal)
+      if (window.parent && window.parent.g_form) {
+        return window.parent.g_form.getValue('request_type') || '';
+      }
+      
+      // Method 3: DOM query for form fields
+      var requestTypeField = document.querySelector('select[name="request_type"], input[name="request_type"], [data-name="request_type"] select, [data-name="request_type"] input');
+      if (requestTypeField) {
+        return requestTypeField.value || requestTypeField.selectedOptions?.[0]?.value || '';
+      }
+      
+      // Method 4: Angular scope data
+      if ($scope.data && $scope.data.request_type) {
+        return $scope.data.request_type;
+      }
+      
+    } catch (e) {
+    }
+    
+    return '';
+  };
