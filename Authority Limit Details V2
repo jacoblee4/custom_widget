@@ -1,0 +1,1409 @@
+<!-- ============================================ -->
+<!-- HTML  -->
+<!-- ============================================ -->
+
+<div class="widget-container" ng-show="c.shouldShowWidget()">
+    <div class="widget-header">
+        <h2>Authority Limit Details</h2>
+        <!-- Show change indicator when in change mode -->
+        <div ng-if="c.isChangeAuthority() && c.hasExistingLimits()" class="change-notice">
+            <i class="fa fa-info-circle"></i>
+            Fields have been pre-populated with current values. Modify only the fields you want to change.
+        </div>
+    </div>
+    
+    <!-- Show authority selection and details for new/change requests -->
+    <div class="main-content" ng-hide="c.isRemoveAuthority()">
+        <div class="left-column">
+            <div class="checkbox-group" id="nonCreditGroup">
+                <input type="checkbox" id="nonCreditAuth" name="non_credit_authority_check">
+                <label for="nonCreditAuth">Non-Credit Authority</label>
+            </div>
+            
+            <div id="nonCreditSection" class="section">
+                <h3>Non-Credit Authority Limits</h3>
+                
+                <!-- Disbursement Section -->
+                <div class="form-group">
+                    <label for="disbursement">
+                        Disbursement 
+                        <span class="info-icon" title="Disbursements – This authority provides approval limits for the disbursement of ACH, Wire Transfers, and/or Official Check transaction types based on the requested and approved selections. Internal Accounts are defined as BankUnited owned and controlled accounts.
+If applicable: Choose the appropriate transaction type(s) and enter the requested disbursement amount. If the transaction type(s) should be restricted to internal accounts, select the Internal Accounts Only option.">ⓘ</span>
+                        <!-- Show current value indicator for changes -->
+                        <span ng-if="c.isChangeAuthority() && c.currentLimits && c.getCurrentDisbursementValue()" class="current-value-indicator">
+                            (Current: {{c.getCurrentDisbursementValue() | currency}})
+                        </span>
+                    </label>
+                    <div class="currency-wrapper">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="disbursement" class="form-control" placeholder="">
+                    </div>
+                </div>
+                
+                <div class="disbursement-options">
+                    <div class="checkbox-group-small">
+                        <input type="checkbox" id="achCheck">
+                        <label for="achCheck">ACH</label>
+                        <span ng-if="c.isChangeAuthority() && c.currentLimits && c.currentLimits.disbursement_ach" class="current-value-small">
+                            ({{c.currentLimits.disbursement_ach | currency}})
+                        </span>
+                    </div>
+                    
+                    <div class="checkbox-group-small">
+                        <input type="checkbox" id="wireTransferCheck">
+                        <label for="wireTransferCheck">Wire Transfer</label>
+                        <span ng-if="c.isChangeAuthority() && c.currentLimits && (c.currentLimits.disbursement_wire_transfer_external || c.currentLimits.disbursement_wire_transfer_internal)" class="current-value-small">
+                            (Ext: {{c.currentLimits.disbursement_wire_transfer_external | currency}}, Int: {{c.currentLimits.disbursement_wire_transfer_internal | currency}})
+                        </span>
+                    </div>
+                    
+                    <div class="indented-checkbox" id="wireInternalOnlyContainer" style="display: none;">
+                        <input type="checkbox" id="wireInternalOnly">
+                        <label for="wireInternalOnly">Internal Accounts Only</label>
+                    </div>
+                    
+                    <div class="checkbox-group-small">
+                        <input type="checkbox" id="officialChecksCheck">
+                        <label for="officialChecksCheck">Official Checks</label>
+                        <span ng-if="c.isChangeAuthority() && c.currentLimits && (c.currentLimits.disbursement_official_checks_external || c.currentLimits.disbursement_official_checks_internal)" class="current-value-small">
+                            (Ext: {{c.currentLimits.disbursement_official_checks_external | currency}}, Int: {{c.currentLimits.disbursement_official_checks_internal | currency}})
+                        </span>
+                    </div>
+                    
+                    <div class="indented-checkbox spaced-indent" id="checksInternalOnlyContainer" style="display: none;">
+                        <input type="checkbox" id="checksInternalOnly">
+                        <label for="checksInternalOnly">Internal Accounts Only</label>
+                    </div>
+                </div>
+                
+                <!-- Check Cashing Section -->
+                <div class="subsection">
+                    <h4>
+                        Check Cashing & Cash Withdrawal 
+                        <span class="info-icon" title="Check Cashing – This authority provides the ability to approve cash withdrawals, the cashing of checks drawn on BankUnited (On-Us), and checks drawn on another institution (not On-Us) that are being cashed by BankUnited. Approval limit is based on the selected options and amounts.
+If applicable: Choose the appropriate option(s) and enter the requested approval limit amount.">ⓘ</span>
+                    </h4>
+                    <div class="form-group">
+                        <label for="checkCashingOnUs">On-Us (Checks & Cash Withdrawals)
+                            <span ng-if="c.isChangeAuthority() && c.currentLimits && c.currentLimits.check_cashing_on_us" class="current-value-indicator">
+                                (Current: {{c.currentLimits.check_cashing_on_us | currency}})
+                            </span>
+                        </label>
+                        <div class="currency-wrapper">
+                            <span class="currency-symbol">$</span>
+                            <input type="text" id="checkCashingOnUs" class="form-control" placeholder="">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="checkCashingNotOnUs">Not On-Us (Checks)
+                            <span ng-if="c.isChangeAuthority() && c.currentLimits && c.currentLimits.check_cashing_not_on_us" class="current-value-indicator">
+                                (Current: {{c.currentLimits.check_cashing_not_on_us | currency}})
+                            </span>
+                        </label>
+                        <div class="currency-wrapper">
+                            <span class="currency-symbol">$</span>
+                            <input type="text" id="checkCashingNotOnUs" class="form-control" placeholder="">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Other Fields Section -->
+                <div class="subsection">
+                    <div class="form-group">
+                        <label for="remoteDeposit">
+                            Remote Deposit 
+                            <span class="info-icon" title="Remote Deposit – This authority provides the ability to approve external client Remote Deposit limits, utilizing the TS Daily Remote Deposit Capture Limit Approval Form.
+If applicable: Enter the requested Remote Deposit Capture limit amount.">ⓘ</span>
+                            <span ng-if="c.isChangeAuthority() && c.currentLimits && c.currentLimits.remote_deposit" class="current-value-indicator">
+                                (Current: {{c.currentLimits.remote_deposit | currency}})
+                            </span>
+                        </label>
+                        <div class="currency-wrapper">
+                            <span class="currency-symbol">$</span>
+                            <input type="text" id="remoteDeposit" class="form-control" placeholder="">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="treasurySolutions">
+                            Treasury Solutions Company Wire Limits 
+                            <span class="info-icon" title="Treasury Solutions Company Wire Limits – This authority provides the ability to approve external client wire limits, utilizing the TS Daily Wire Limit Approval Form. This external client limit applies to the Treasury Solution systems (i.e. BFS/Lynx, OBS).
+If applicable: Enter the requested wire limit amount.">ⓘ</span>
+                            <span ng-if="c.isChangeAuthority() && c.currentLimits && c.currentLimits.treasury_solutions_company_wire_limits" class="current-value-indicator">
+                                (Current: {{c.currentLimits.treasury_solutions_company_wire_limits | currency}})
+                            </span>
+                        </label>
+                        <div class="currency-wrapper">
+                            <span class="currency-symbol">$</span>
+                            <input type="text" id="treasurySolutions" class="form-control" placeholder="">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="fxWireLimits">
+                            FX Wire Limits 
+                            <span class="info-icon" title="FX Wire Limits – This authority provides the ability to approve external client wire limits, utilizing the BankUnitedFX Wire Limit Approval Form. This external client limit applies to the Treasury Solution system BankUnitedFX.
+If applicable: Enter the requested wire limit amount.">ⓘ</span>
+                            <span ng-if="c.isChangeAuthority() && c.currentLimits && c.currentLimits.fx_wire_limits" class="current-value-indicator">
+                                (Current: {{c.currentLimits.fx_wire_limits | currency}})
+                            </span>
+                        </label>
+                        <div class="currency-wrapper">
+                            <span class="currency-symbol">$</span>
+                            <input type="text" id="fxWireLimits" class="form-control" placeholder="">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-column">
+            <div class="checkbox-group" id="creditGroup">
+                <input type="checkbox" id="creditAuth" name="credit_authority_check">
+                <label for="creditAuth">Credit Authority</label>
+            </div>
+            
+            <div id="creditSection" class="section">
+                <h3>Credit Authority Limits</h3>
+                
+                <!-- Overdraft Section -->
+                <div class="form-group">
+                    <label for="overdraft">
+                        Overdraft 
+                        <span class="info-icon" title="Overdraft – This authority provides approval limits for Overdraft transactions based on the requested and approved selections. Internal Accounts are defined as BankUnited owned and controlled accounts.
+If applicable: Enter the requested approval amount. If the authority type should be restricted to internal accounts ONLY, select the appropriate option.">ⓘ</span>
+                        <span ng-if="c.isChangeAuthority() && c.currentLimits && (c.currentLimits.overdraft_external_accounts || c.currentLimits.overdraft_internal_accounts)" class="current-value-indicator">
+                            (Current Ext: {{c.currentLimits.overdraft_external_accounts | currency}}, Int: {{c.currentLimits.overdraft_internal_accounts | currency}})
+                        </span>
+                    </label>
+                    <div class="currency-wrapper">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="overdraft" class="form-control" placeholder="">
+                    </div>
+                    <div class="indented-checkbox">
+                        <input type="checkbox" id="overdraftInternalOnly">
+                        <label for="overdraftInternalOnly">Internal Accounts Only</label>
+                    </div>
+                </div>
+                
+                <!-- Unavailable Funds Section -->
+                <div class="form-group">
+                    <label for="unavailableFunds">
+                        Unavailable Funds 
+                        <span class="info-icon" title="Unavailable Funds – This authority provides approval limits for Unavailable Funds transactions based on the requested and approved selections. Internal Accounts are defined as BankUnited owned and controlled accounts.
+If applicable: Enter the requested approval amount. If the authority type should be restricted to internal accounts ONLY, select the appropriate option.">ⓘ</span>
+                        <span ng-if="c.isChangeAuthority() && c.currentLimits && (c.currentLimits.unavailable_funds_external_accounts || c.currentLimits.unavailable_funds_internal_accounts)" class="current-value-indicator">
+                            (Current Ext: {{c.currentLimits.unavailable_funds_external_accounts | currency}}, Int: {{c.currentLimits.unavailable_funds_internal_accounts | currency}})
+                        </span>
+                    </label>
+                    <div class="currency-wrapper">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="unavailableFunds" class="form-control" placeholder="">
+                    </div>
+                    <div class="indented-checkbox">
+                        <input type="checkbox" id="unavailableInternalOnly">
+                        <label for="unavailableInternalOnly">Internal Accounts Only</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Justification Section - Always show when widget is visible -->
+    <div id="justificationSection" class="justification-section active">
+        <h3>Justification</h3>
+        <div class="info-message" ng-hide="c.isRemoveAuthority()">
+            Using the text box below, please provide a detailed justification for this request. For New Authority or Limit Change requests, include what the authority will be used for (i.e. The approval of Loan Fundings, Customer Transactions, Cash Management, etc.).
+        </div>
+        <div class="info-message" ng-show="c.isRemoveAuthority()">
+            Please provide a detailed justification for removing all existing authority limits for this job code.
+        </div>
+        <div class="form-group">
+            <label for="businessNeed">Overall Business Need <span class="required-asterisk">*</span></label>
+            <textarea id="businessNeed" class="form-control textarea"></textarea>
+        </div>
+    </div>
+</div>
+
+
+<!-- ============================================ -->
+<!-- CSS -->
+<!-- ============================================ -->
+
+<style>
+.widget-container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 24px;
+}
+
+.widget-header {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #e8e8e8;
+}
+
+.widget-header h2 {
+    color: #333;
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 10px 0;
+}
+
+.change-notice {
+    background: #e8f4f8;
+    color: #2c5aa0;
+    padding: 10px 15px;
+    border-radius: 4px;
+    border-left: 4px solid #2196f3;
+    font-size: 14px;
+}
+
+.main-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 24px;
+}
+
+.left-column, .right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.checkbox-group:hover {
+    background: #e9ecef;
+    border-color: #adb5bd;
+}
+
+.checkbox-group.active {
+    background: #e7f5ff;
+    border-color: #339af0;
+}
+
+.checkbox-group input[type="checkbox"] {
+    margin-right: 10px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.checkbox-group label {
+    cursor: pointer;
+    font-size: 15px;
+    color: #333;
+    font-weight: 500;
+    user-select: none;
+    margin: 0;
+}
+
+.section {
+    display: none;
+    padding: 20px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+}
+
+.section.active {
+    display: block;
+}
+
+.section h3 {
+    color: #495057;
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 16px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    color: #495057;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.15s ease-in-out;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #339af0;
+    box-shadow: 0 0 0 2px rgba(51, 154, 240, 0.1);
+}
+
+.form-control.textarea {
+    min-height: 120px;
+    resize: vertical;
+    font-family: inherit;
+}
+
+.currency-wrapper {
+    position: relative;
+}
+
+.currency-wrapper .currency-symbol {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    font-weight: 500;
+    z-index: 1;
+}
+
+.currency-wrapper .form-control {
+    padding-left: 28px;
+}
+
+.justification-section {
+    display: none;
+    padding: 20px;
+    background: #fff4e6;
+    border: 1px solid #ffd93d;
+    border-radius: 6px;
+}
+
+.justification-section.active {
+    display: block;
+}
+
+.justification-section h3 {
+    color: #495057;
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+}
+
+.justification-section .form-group label {
+    color: #212529;
+    font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 8px;
+}
+
+.info-message {
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    margin-bottom: 16px;
+    font-size: 14px;
+    color: #495057;
+    line-height: 1.5;
+    border-left: none;
+    font-style: normal;
+    font-weight: normal;
+}
+
+.current-value-indicator {
+    color: #666;
+    font-size: 12px;
+    font-weight: normal;
+    margin-left: 5px;
+}
+
+.current-value-small {
+    color: #666;
+    font-size: 11px;
+    font-weight: normal;
+    margin-left: 8px;
+}
+
+.disbursement-options {
+    margin-top: 15px;
+    padding-left: 15px;
+}
+
+.checkbox-group-small {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.checkbox-group-small input[type="checkbox"] {
+    margin-right: 8px;
+    width: 16px;
+    height: 16px;
+}
+
+.checkbox-group-small label {
+    font-size: 14px;
+    color: #495057;
+    margin: 0;
+    cursor: pointer;
+}
+
+.indented-checkbox {
+    margin-left: 25px;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.indented-checkbox input[type="checkbox"] {
+    margin-right: 8px;
+    width: 14px;
+    height: 14px;
+}
+
+.indented-checkbox label {
+    font-size: 13px;
+    color: #6c757d;
+    margin: 0;
+    cursor: pointer;
+}
+
+.subsection {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #dee2e6;
+}
+
+.subsection h4 {
+    color: #495057;
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 15px 0;
+}
+
+.required-asterisk {
+    color: #d9534f;
+    font-weight: bold;
+    margin-left: 3px;
+}
+
+.info-icon {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background-color: #17a2b8;
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 12px;
+    line-height: 16px;
+    margin-left: 5px;
+    cursor: help;
+    font-weight: normal;
+}
+
+.spaced-indent {
+    margin-top: 12px !important;
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+
+<!-- ============================================ -->
+<!-- CLIENT CONTROLLER -->
+<!-- ============================================ -->
+
+<script>
+api.controller = function($scope, $window) {
+    var c = this;
+    var g_form = $scope.page.g_form;
+
+    // Add request type tracking and current limits
+    c.requestType = '';
+    c.currentLimits = null;
+    c.originalLimits = null; // Store original values for comparison
+    c.currentJobCode = '';
+    c.lastRequestType = '';
+
+    c.$onInit = function() {
+        setTimeout(function() {
+            initializeWidget();
+        }, 500);
+    };
+
+    // Check if current request is remove authority
+    c.isRemoveAuthority = function() {
+        return c.requestType === 'remove_authority';
+    };
+
+    // Check if current request is change to existing authority
+    c.isChangeAuthority = function() {
+        return c.requestType === 'change_to_existing_authority';
+    };
+
+    // Check if we have existing limits data
+    c.hasExistingLimits = function() {
+        return c.currentLimits && Object.keys(c.currentLimits).length > 0;
+    };
+
+    // Get the highest disbursement value from current limits for display
+    c.getCurrentDisbursementValue = function() {
+        if (!c.currentLimits) return null;
+        
+        var disbursementValues = [
+            c.currentLimits.disbursement_ach,
+            c.currentLimits.disbursement_wire_transfer_external,
+            c.currentLimits.disbursement_wire_transfer_internal,
+            c.currentLimits.disbursement_official_checks_external,
+            c.currentLimits.disbursement_official_checks_internal
+        ];
+        
+        var maxValue = 0;
+        disbursementValues.forEach(function(val) {
+            var numVal = parseFloat(val || 0);
+            if (numVal > maxValue) {
+                maxValue = numVal;
+            }
+        });
+        
+        return maxValue > 0 ? maxValue : null;
+    };
+
+    // Determine if widget should be visible
+    c.shouldShowWidget = function() {
+        return c.requestType && (c.requestType === 'new_authority' || c.requestType === 'change_to_existing_authority' || c.requestType === 'remove_authority');
+    };
+
+    // Get request type from g_form
+    c.getRequestType = function() {
+        try {
+            // Try multiple methods to get request type
+            var requestType = '';
+
+            if (typeof g_form !== 'undefined' && g_form.getValue) {
+                requestType = g_form.getValue('request_type');
+                if (requestType) return requestType;
+            }
+
+            if (window.parent && window.parent.g_form && window.parent.g_form.getValue) {
+                requestType = window.parent.g_form.getValue('request_type');
+                if (requestType) return requestType;
+            }
+
+            var requestTypeField = document.querySelector('select[name="request_type"], [data-name="request_type"] select');
+            if (requestTypeField && requestTypeField.value) {
+                return requestTypeField.value;
+            }
+
+            if (c.requestType) {
+                return c.requestType;
+            }
+
+        } catch (e) {
+            // Handle error silently, but try cached value
+            if (c.requestType) {
+                return c.requestType;
+            }
+        }
+        return '';
+    };
+
+    // Get current job code value
+    c.getJobCodeValue = function() {
+        try {
+            if (typeof g_form !== 'undefined' && g_form.getValue) {
+                return g_form.getValue('job_code');
+            }
+            
+            if (window.parent && window.parent.g_form && window.parent.g_form.getValue) {
+                return window.parent.g_form.getValue('job_code');
+            }
+            
+            var jobCodeField = document.querySelector('select[name="job_code"], [data-name="job_code"] select');
+            if (jobCodeField && jobCodeField.value) {
+                return jobCodeField.value;
+            }
+        } catch (e) {
+            // Handle error silently
+        }
+        return '';
+    };
+
+    // Listen for authority limits data from the Existing Authority Limits widget
+    c.setupExistingLimitsListener = function() {
+        // Listen for custom events from the Existing Authority Limits widget
+        $scope.$on('authorityLimitsLoaded', function(event, data) {
+            var jobCode = c.getJobCodeValue();
+            var requestType = c.getRequestType();
+            
+            // Check if job code or request type changed
+            if (jobCode !== c.currentJobCode || requestType !== c.lastRequestType) {
+                c.currentJobCode = jobCode;
+                c.lastRequestType = requestType;
+                
+                // Clear form when job code changes or switching from change to new
+                if (requestType !== 'change_to_existing_authority') {
+                    c.clearAllFields();
+                    c.currentLimits = null;
+                    c.originalLimits = null;
+                    return;
+                }
+            }
+            
+            if (data && data.limits && data.limits.length > 0) {
+                c.currentLimits = data.limits[0]; // Use the first (most recent) limit
+                c.originalLimits = angular.copy(c.currentLimits); // Store original for comparison
+                
+                // If we're in change mode, auto-populate the form
+                if (c.isChangeAuthority()) {
+                    setTimeout(function() {
+                        c.autoPopulateFromExistingLimits();
+                    }, 100);
+                }
+            } else {
+                c.currentLimits = null;
+                c.originalLimits = null;
+                
+                // Clear fields if no limits found
+                if (c.isChangeAuthority()) {
+                    c.clearAllFields();
+                }
+            }
+        });
+
+        // Also try to get data from global scope if available
+        var checkForLimitsData = function() {
+            var jobCode = c.getJobCodeValue();
+            var requestType = c.getRequestType();
+            
+            // Detect job code or request type changes
+            if (jobCode !== c.currentJobCode || requestType !== c.lastRequestType) {
+                c.currentJobCode = jobCode;
+                c.lastRequestType = requestType;
+                
+                // Clear form when switching away from change mode or job code changes
+                if (requestType !== 'change_to_existing_authority') {
+                    c.clearAllFields();
+                    c.currentLimits = null;
+                    c.originalLimits = null;
+                    return;
+                }
+            }
+            
+            if (window.authorityLimitsData && window.authorityLimitsData.length > 0) {
+                c.currentLimits = window.authorityLimitsData[0];
+                c.originalLimits = angular.copy(c.currentLimits);
+                
+                if (c.isChangeAuthority()) {
+                    setTimeout(function() {
+                        c.autoPopulateFromExistingLimits();
+                    }, 100);
+                }
+            } else if (c.isChangeAuthority()) {
+                // Clear fields if in change mode but no limits found
+                c.clearAllFields();
+                c.currentLimits = null;
+                c.originalLimits = null;
+            }
+        };
+
+        // Check periodically for limits data and job code changes
+        var limitsCheckInterval = setInterval(function() {
+            checkForLimitsData();
+        }, 1000);
+
+        // Clean up on destroy
+        $scope.$on('$destroy', function() {
+            clearInterval(limitsCheckInterval);
+        });
+    };
+
+    // Clear all form fields and checkboxes
+    c.clearAllFields = function() {
+        // Clear all checkboxes
+        var checkboxes = ['nonCreditAuth', 'creditAuth', 'achCheck', 'wireTransferCheck', 
+                         'wireInternalOnly', 'officialChecksCheck', 'checksInternalOnly',
+                         'overdraftInternalOnly', 'unavailableInternalOnly'];
+        
+        checkboxes.forEach(function(id) {
+            var checkbox = document.getElementById(id);
+            if (checkbox) {
+                checkbox.checked = false;
+            }
+        });
+
+        // Clear all currency fields
+        var currencyFields = ['disbursement', 'checkCashingOnUs', 'checkCashingNotOnUs',
+                             'remoteDeposit', 'treasurySolutions', 'fxWireLimits', 
+                             'overdraft', 'unavailableFunds'];
+        
+        currencyFields.forEach(function(id) {
+            var field = document.getElementById(id);
+            if (field) {
+                field.value = '';
+            }
+        });
+
+        // Clear business need
+        var businessNeed = document.getElementById('businessNeed');
+        if (businessNeed) {
+            businessNeed.value = '';
+        }
+
+        // Reset widget data
+        if (typeof c.authorityData !== 'undefined') {
+            c.authorityData = {
+                non_credit_checked: false,
+                credit_checked: false,
+                disbursement: '',
+                ach_checked: false,
+                wire_transfer_checked: false,
+                wire_internal_only: false,
+                official_checks_checked: false,
+                checks_internal_only: false,
+                check_cashing_on_us: '',
+                check_cashing_not_on_us: '',
+                remote_deposit: '',
+                treasury_solutions_company_wire_limits: '',
+                fx_wire_limits: '',
+                overdraft: '',
+                overdraft_internal_only: false,
+                unavailable_funds: '',
+                unavailable_internal_only: false,
+                overall_business_need: ''
+            };
+        }
+
+        // Hide sections
+        var nonCreditSection = document.getElementById('nonCreditSection');
+        var creditSection = document.getElementById('creditSection');
+        var nonCreditGroup = document.getElementById('nonCreditGroup');
+        var creditGroup = document.getElementById('creditGroup');
+        
+        if (nonCreditSection) nonCreditSection.classList.remove('active');
+        if (creditSection) creditSection.classList.remove('active');
+        if (nonCreditGroup) nonCreditGroup.classList.remove('active');
+        if (creditGroup) creditGroup.classList.remove('active');
+
+        // Update Record Producer variables
+        if (typeof updateRecordProducerVariables === 'function') {
+            updateRecordProducerVariables();
+        }
+    };
+
+    // Auto-populate form fields from existing limits
+    c.autoPopulateFromExistingLimits = function() {
+        if (!c.currentLimits || !c.isChangeAuthority()) return;
+
+        var limits = c.currentLimits;
+        
+        // Check if we have any non-credit values > 0
+        var hasNonCreditValues = 
+            parseFloat(limits.disbursement_ach || 0) > 0 ||
+            parseFloat(limits.disbursement_wire_transfer_external || 0) > 0 ||
+            parseFloat(limits.disbursement_wire_transfer_internal || 0) > 0 ||
+            parseFloat(limits.disbursement_official_checks_external || 0) > 0 ||
+            parseFloat(limits.disbursement_official_checks_internal || 0) > 0 ||
+            parseFloat(limits.check_cashing_on_us || 0) > 0 ||
+            parseFloat(limits.check_cashing_not_on_us || 0) > 0 ||
+            parseFloat(limits.remote_deposit || 0) > 0 ||
+            parseFloat(limits.treasury_solutions_company_wire_limits || 0) > 0 ||
+            parseFloat(limits.fx_wire_limits || 0) > 0;
+
+        // Check if we have any credit values > 0
+        var hasCreditValues = 
+            parseFloat(limits.overdraft_external_accounts || 0) > 0 ||
+            parseFloat(limits.overdraft_internal_accounts || 0) > 0 ||
+            parseFloat(limits.unavailable_funds_external_accounts || 0) > 0 ||
+            parseFloat(limits.unavailable_funds_internal_accounts || 0) > 0;
+
+        // Auto-check authority types if they have values
+        var nonCreditCheckbox = document.getElementById('nonCreditAuth');
+        var creditCheckbox = document.getElementById('creditAuth');
+        
+        if (hasNonCreditValues && nonCreditCheckbox) {
+            nonCreditCheckbox.checked = true;
+            updateWidgetData('non_credit_checked', true);
+            handleAuthoritySelection();
+            
+            // Populate non-credit fields
+            c.populateNonCreditFields(limits);
+        }
+
+        if (hasCreditValues && creditCheckbox) {
+            creditCheckbox.checked = true;
+            updateWidgetData('credit_checked', true);
+            handleAuthoritySelection();
+            
+            // Populate credit fields
+            c.populateCreditFields(limits);
+        }
+    };
+
+    // Populate non-credit fields based on existing limits
+    c.populateNonCreditFields = function(limits) {
+        // Handle disbursement logic - this is the complex part
+        c.handleDisbursementPopulation(limits);
+
+        // Simple fields - just populate with existing values
+        if (limits.check_cashing_on_us && parseFloat(limits.check_cashing_on_us) > 0) {
+            var onUsField = document.getElementById('checkCashingOnUs');
+            if (onUsField) {
+                onUsField.value = formatCurrency(limits.check_cashing_on_us);
+                updateWidgetData('check_cashing_on_us', getCurrencyValue(limits.check_cashing_on_us));
+            }
+        }
+
+        if (limits.check_cashing_not_on_us && parseFloat(limits.check_cashing_not_on_us) > 0) {
+            var notOnUsField = document.getElementById('checkCashingNotOnUs');
+            if (notOnUsField) {
+                notOnUsField.value = formatCurrency(limits.check_cashing_not_on_us);
+                updateWidgetData('check_cashing_not_on_us', getCurrencyValue(limits.check_cashing_not_on_us));
+            }
+        }
+
+        if (limits.remote_deposit && parseFloat(limits.remote_deposit) > 0) {
+            var remoteDepositField = document.getElementById('remoteDeposit');
+            if (remoteDepositField) {
+                remoteDepositField.value = formatCurrency(limits.remote_deposit);
+                updateWidgetData('remote_deposit', getCurrencyValue(limits.remote_deposit));
+            }
+        }
+
+        if (limits.treasury_solutions_company_wire_limits && parseFloat(limits.treasury_solutions_company_wire_limits) > 0) {
+            var treasuryField = document.getElementById('treasurySolutions');
+            if (treasuryField) {
+                treasuryField.value = formatCurrency(limits.treasury_solutions_company_wire_limits);
+                updateWidgetData('treasury_solutions_company_wire_limits', getCurrencyValue(limits.treasury_solutions_company_wire_limits));
+            }
+        }
+
+        if (limits.fx_wire_limits && parseFloat(limits.fx_wire_limits) > 0) {
+            var fxField = document.getElementById('fxWireLimits');
+            if (fxField) {
+                fxField.value = formatCurrency(limits.fx_wire_limits);
+                updateWidgetData('fx_wire_limits', getCurrencyValue(limits.fx_wire_limits));
+            }
+        }
+    };
+
+    // Handle complex disbursement population logic
+    c.handleDisbursementPopulation = function(limits) {
+        var achValue = parseFloat(limits.disbursement_ach || 0);
+        var wireExtValue = parseFloat(limits.disbursement_wire_transfer_external || 0);
+        var wireIntValue = parseFloat(limits.disbursement_wire_transfer_internal || 0);
+        var checksExtValue = parseFloat(limits.disbursement_official_checks_external || 0);
+        var checksIntValue = parseFloat(limits.disbursement_official_checks_internal || 0);
+
+        var disbursementField = document.getElementById('disbursement');
+        var achCheck = document.getElementById('achCheck');
+        var wireCheck = document.getElementById('wireTransferCheck');
+        var wireInternalOnly = document.getElementById('wireInternalOnly');
+        var wireInternalContainer = document.getElementById('wireInternalOnlyContainer');
+        var checksCheck = document.getElementById('officialChecksCheck');
+        var checksInternalOnly = document.getElementById('checksInternalOnly');
+        var checksInternalContainer = document.getElementById('checksInternalOnlyContainer');
+
+        // Find the highest disbursement value to populate the main field
+        var maxDisbursement = Math.max(achValue, wireExtValue, wireIntValue, checksExtValue, checksIntValue);
+
+        if (maxDisbursement > 0 && disbursementField) {
+            disbursementField.value = formatCurrency(maxDisbursement.toString());
+            updateWidgetData('disbursement', maxDisbursement.toString());
+        }
+
+        // Check ACH if it has a value
+        if (achValue > 0 && achCheck) {
+            achCheck.checked = true;
+            updateWidgetData('ach_checked', true);
+        }
+
+        // Handle Wire Transfer logic
+        if ((wireExtValue > 0 || wireIntValue > 0) && wireCheck) {
+            wireCheck.checked = true;
+            updateWidgetData('wire_transfer_checked', true);
+            
+            // Show internal only container
+            if (wireInternalContainer) {
+                wireInternalContainer.style.display = 'block';
+            }
+            
+            // Check "Internal Only" if only internal has value or if external is 0
+            if (wireIntValue > 0 && wireExtValue === 0 && wireInternalOnly) {
+                wireInternalOnly.checked = true;
+                updateWidgetData('wire_internal_only', true);
+            }
+        }
+
+        // Handle Official Checks logic  
+        if ((checksExtValue > 0 || checksIntValue > 0) && checksCheck) {
+            checksCheck.checked = true;
+            updateWidgetData('official_checks_checked', true);
+            
+            // Show internal only container
+            if (checksInternalContainer) {
+                checksInternalContainer.style.display = 'block';
+            }
+            
+            // Check "Internal Only" if only internal has value or if external is 0
+            if (checksIntValue > 0 && checksExtValue === 0 && checksInternalOnly) {
+                checksInternalOnly.checked = true;
+                updateWidgetData('checks_internal_only', true);
+            }
+        }
+    };
+
+    // Populate credit fields based on existing limits
+    c.populateCreditFields = function(limits) {
+        // Handle Overdraft
+        var overdraftExtValue = parseFloat(limits.overdraft_external_accounts || 0);
+        var overdraftIntValue = parseFloat(limits.overdraft_internal_accounts || 0);
+        var maxOverdraft = Math.max(overdraftExtValue, overdraftIntValue);
+
+        if (maxOverdraft > 0) {
+            var overdraftField = document.getElementById('overdraft');
+            var overdraftInternalOnly = document.getElementById('overdraftInternalOnly');
+            
+            if (overdraftField) {
+                overdraftField.value = formatCurrency(maxOverdraft.toString());
+                updateWidgetData('overdraft', maxOverdraft.toString());
+            }
+            
+            // Check "Internal Only" if only internal has value
+            if (overdraftIntValue > 0 && overdraftExtValue === 0 && overdraftInternalOnly) {
+                overdraftInternalOnly.checked = true;
+                updateWidgetData('overdraft_internal_only', true);
+            }
+        }
+
+        // Handle Unavailable Funds
+        var unavailableExtValue = parseFloat(limits.unavailable_funds_external_accounts || 0);
+        var unavailableIntValue = parseFloat(limits.unavailable_funds_internal_accounts || 0);
+        var maxUnavailable = Math.max(unavailableExtValue, unavailableIntValue);
+
+        if (maxUnavailable > 0) {
+            var unavailableField = document.getElementById('unavailableFunds');
+            var unavailableInternalOnly = document.getElementById('unavailableInternalOnly');
+            
+            if (unavailableField) {
+                unavailableField.value = formatCurrency(maxUnavailable.toString());
+                updateWidgetData('unavailable_funds', maxUnavailable.toString());
+            }
+            
+            // Check "Internal Only" if only internal has value
+            if (unavailableIntValue > 0 && unavailableExtValue === 0 && unavailableInternalOnly) {
+                unavailableInternalOnly.checked = true;
+                updateWidgetData('unavailable_internal_only', true);
+            }
+        }
+    };
+
+    // Monitor request type changes
+    c.setupRequestTypeMonitoring = function() {
+        var lastRequestType = '';
+
+        // Poll for request type changes
+        var checkInterval = setInterval(function() {
+            var currentRequestType = c.getRequestType();
+
+            if (currentRequestType !== lastRequestType) {
+                lastRequestType = currentRequestType;
+                c.requestType = currentRequestType;
+
+                // Apply changes to scope
+                $scope.$apply(function() {
+                    // Re-run validation when request type changes
+                    validateForm();
+                });
+            }
+        }, 500);
+
+        // Clean up on destroy
+        $scope.$on('$destroy', function() {
+            clearInterval(checkInterval);
+        });
+    };
+
+    function initializeWidget() {
+        // Start monitoring request type
+        c.setupRequestTypeMonitoring();
+        
+        // Setup existing limits listener
+        c.setupExistingLimitsListener();
+
+        // Get references to elements
+        var nonCreditCheckbox = document.getElementById('nonCreditAuth');
+        var creditCheckbox = document.getElementById('creditAuth');
+        var nonCreditGroup = document.getElementById('nonCreditGroup');
+        var creditGroup = document.getElementById('creditGroup');
+        var nonCreditSection = document.getElementById('nonCreditSection');
+        var creditSection = document.getElementById('creditSection');
+        var justificationSection = document.getElementById('justificationSection');
+
+        var wireTransferCheck = document.getElementById('wireTransferCheck');
+        var wireInternalOnlyContainer = document.getElementById('wireInternalOnlyContainer');
+        var wireInternalOnly = document.getElementById('wireInternalOnly');
+        var officialChecksCheck = document.getElementById('officialChecksCheck');
+        var checksInternalOnlyContainer = document.getElementById('checksInternalOnlyContainer');
+        var checksInternalOnly = document.getElementById('checksInternalOnly');
+
+        // Widget data model - stores all form state
+        c.authorityData = {
+            non_credit_checked: false,
+            credit_checked: false,
+            disbursement: '',
+            ach_checked: false,
+            wire_transfer_checked: false,
+            wire_internal_only: false,
+            official_checks_checked: false,
+            checks_internal_only: false,
+            check_cashing_on_us: '',
+            check_cashing_not_on_us: '',
+            remote_deposit: '',
+            treasury_solutions_company_wire_limits: '',
+            fx_wire_limits: '',
+            overdraft: '',
+            overdraft_internal_only: false,
+            unavailable_funds: '',
+            unavailable_internal_only: false,
+            overall_business_need: ''
+        };
+
+        // Currency formatting utilities
+        function formatCurrency(value) {
+            if (!value) return '';
+            var numStr = value.toString().replace(/[^\d.]/g, '');
+            var parts = numStr.split('.');
+            if (parts.length > 2) {
+                numStr = parts[0] + '.' + parts.slice(1).join('');
+            }
+            var splitValue = numStr.split('.');
+            var integerPart = splitValue[0];
+            var decimalPart = splitValue[1];
+            var formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            if (decimalPart !== undefined) {
+                var limitedDecimal = decimalPart.substring(0, 2);
+                return formattedInteger + '.' + limitedDecimal;
+            }
+            return formattedInteger;
+        }
+
+        function getCurrencyValue(formattedValue) {
+            if (!formattedValue) return '';
+            return formattedValue.replace(/[^\d.]/g, '');
+        }
+
+        // Updated validation logic to handle remove authority
+        function validateForm() {
+            var errors = [];
+            var currentRequestType = c.getRequestType();
+
+            // Send debug info to server logs
+            try {
+                if (typeof g_form !== 'undefined' && g_form.setValue) {
+                    g_form.setValue('debug_request_type', currentRequestType || 'undefined');
+                    g_form.setValue('debug_c_request_type', c.requestType || 'undefined');
+                    g_form.setValue('debug_validation_step', 'starting');
+                }
+            } catch (e) {}
+
+            // For remove authority requests, skip client validation entirely - let server handle it
+            if (currentRequestType === 'remove_authority' || c.requestType === 'remove_authority') {
+                try {
+                    g_form.setValue('debug_validation_step', 'remove_authority_skip_client');
+                } catch (e) {}
+
+                // Set validation to true and let server handle the actual validation
+                g_form.setValue('form_validation_errors', '');
+                g_form.setValue('form_is_valid', 'true');
+                return true;
+            }
+
+            try {
+                g_form.setValue('debug_validation_step', 'full_validation_path');
+            } catch (e) {}
+
+            // For new_authority and change_to_existing_authority, run normal validation
+
+            // Business justification required for all request types
+            if (!c.authorityData.overall_business_need || c.authorityData.overall_business_need.trim() === '') {
+                errors.push('Overall Business Need is required');
+            }
+
+            // Must select at least one authority type (only for non-remove requests)
+            if (!c.authorityData.non_credit_checked && !c.authorityData.credit_checked) {
+                errors.push('You must select at least one authority type (Credit Authority or Non-Credit Authority)');
+            }
+
+            // Non-credit authority validation (only for non-remove requests)
+            if (c.authorityData.non_credit_checked) {
+                var hasNonCreditValue = c.authorityData.disbursement || c.authorityData.check_cashing_on_us ||
+                    c.authorityData.check_cashing_not_on_us || c.authorityData.remote_deposit ||
+                    c.authorityData.treasury_solutions_company_wire_limits || c.authorityData.fx_wire_limits;
+
+                if (!hasNonCreditValue) {
+                    errors.push('If Non-Credit Authority is selected, at least one currency field must have a value');
+                }
+
+                if (c.authorityData.disbursement &&
+                    !c.authorityData.ach_checked &&
+                    !c.authorityData.wire_transfer_checked &&
+                    !c.authorityData.official_checks_checked) {
+                    errors.push('If Disbursement amount is entered, you must select at least one option: ACH, Wire Transfer, or Official Checks');
+                }
+            }
+
+            // Credit authority validation (only for non-remove requests)
+            if (c.authorityData.credit_checked) {
+                var hasCreditValue = c.authorityData.overdraft || c.authorityData.unavailable_funds;
+                if (!hasCreditValue) {
+                    errors.push('If Credit Authority is selected, at least one currency field must have a value');
+                }
+            }
+
+            var isValid = errors.length === 0;
+
+            // Update Record Producer variables for server-side validation
+            g_form.setValue('form_validation_errors', errors.join('|'));
+            g_form.setValue('form_is_valid', isValid ? 'true' : 'false');
+
+            return isValid;
+        }
+
+        // Updated updateRecordProducerVariables function
+        function updateRecordProducerVariables() {
+            g_form.setValue('overall_business_need', c.authorityData.overall_business_need);
+
+            // Get current request type - use multiple methods
+            var currentRequestType = c.getRequestType();
+
+            // Also update our cached request type
+            c.requestType = currentRequestType;
+
+            // For remove authority requests, don't set authority data
+            if (currentRequestType === 'remove_authority') {
+                g_form.setValue('authority_types', '');
+                g_form.setValue('authority_data', '');
+                // Make sure validation runs
+                validateForm();
+                return;
+            }
+
+            var authority_types = [];
+            var authority_data = [];
+
+            // Process non-credit authority data (only for non-remove requests)
+            if (c.authorityData.non_credit_checked) {
+                authority_types.push('non_credit');
+                var nonCreditData = {
+                    disbursement_ach: (c.authorityData.ach_checked && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
+                    disbursement_wire_transfer_external: (c.authorityData.wire_transfer_checked && !c.authorityData.wire_internal_only && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
+                    disbursement_wire_transfer_internal: (c.authorityData.wire_transfer_checked && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
+                    disbursement_official_checks_external: (c.authorityData.official_checks_checked && !c.authorityData.checks_internal_only && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
+                    disbursement_official_checks_internal: (c.authorityData.official_checks_checked && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
+                    check_cashing_on_us: c.authorityData.check_cashing_on_us,
+                    check_cashing_not_on_us: c.authorityData.check_cashing_not_on_us,
+                    remote_deposit: c.authorityData.remote_deposit,
+                    treasury_solutions_company_wire_limits: c.authorityData.treasury_solutions_company_wire_limits,
+                    fx_wire_limits: c.authorityData.fx_wire_limits
+                };
+                authority_data.push(JSON.stringify(nonCreditData));
+            }
+
+            // Process credit authority data (only for non-remove requests)
+            if (c.authorityData.credit_checked) {
+                authority_types.push('credit');
+                var creditData = {
+                    overdraft_internal_accounts: c.authorityData.overdraft || '',
+                    overdraft_external_accounts: (c.authorityData.overdraft && !c.authorityData.overdraft_internal_only) ? c.authorityData.overdraft : '',
+                    unavailable_funds_internal_accounts: c.authorityData.unavailable_funds || '',
+                    unavailable_funds_external_accounts: (c.authorityData.unavailable_funds && !c.authorityData.unavailable_internal_only) ? c.authorityData.unavailable_funds : ''
+                };
+                authority_data.push(JSON.stringify(creditData));
+            }
+
+            g_form.setValue('authority_types', authority_types.join('|'));
+            g_form.setValue('authority_data', authority_data.join('|'));
+
+            // Run validation
+            validateForm();
+        }
+
+        // Update widget data and sync with Record Producer
+        function updateWidgetData(fieldName, value) {
+            c.authorityData[fieldName] = value;
+            updateRecordProducerVariables();
+        }
+
+        // Handle authority type selection (Credit/Non-Credit)
+        function handleAuthoritySelection() {
+            var nonCreditChecked = nonCreditCheckbox.checked;
+            var creditChecked = creditCheckbox.checked;
+
+            // Update visual states
+            nonCreditGroup.classList.toggle('active', nonCreditChecked);
+            creditGroup.classList.toggle('active', creditChecked);
+            nonCreditSection.classList.toggle('active', nonCreditChecked);
+            creditSection.classList.toggle('active', creditChecked);
+
+            // Update data model
+            updateWidgetData('non_credit_checked', nonCreditChecked);
+            updateWidgetData('credit_checked', creditChecked);
+        }
+
+        // Handle Wire Transfer checkbox changes
+        function handleWireTransferChange() {
+            var isChecked = wireTransferCheck.checked;
+            wireInternalOnlyContainer.style.display = isChecked ? 'block' : 'none';
+            if (!isChecked) {
+                wireInternalOnly.checked = false;
+                updateWidgetData('wire_internal_only', false);
+            }
+            updateWidgetData('wire_transfer_checked', isChecked);
+        }
+
+        // Handle Official Checks checkbox changes
+        function handleOfficialChecksChange() {
+            var isChecked = officialChecksCheck.checked;
+            checksInternalOnlyContainer.style.display = isChecked ? 'block' : 'none';
+            if (!isChecked) {
+                checksInternalOnly.checked = false;
+                updateWidgetData('checks_internal_only', false);
+            }
+            updateWidgetData('official_checks_checked', isChecked);
+        }
+
+        // Setup currency input field with formatting
+        function setupCurrencyField(inputId, fieldName) {
+            var input = document.getElementById(inputId);
+            if (!input) return;
+
+            var isUpdating = false;
+
+            function handleCurrencyInput(event) {
+                if (isUpdating) return;
+                isUpdating = true;
+
+                var cursorPosition = event.target.selectionStart;
+                var oldValue = event.target.value;
+                var oldLength = oldValue.length;
+                var formattedValue = formatCurrency(oldValue);
+
+                event.target.value = formattedValue;
+
+                // Maintain cursor position after formatting
+                var newLength = formattedValue.length;
+                var lengthDiff = newLength - oldLength;
+                var newCursorPosition = Math.max(0, cursorPosition + lengthDiff);
+                setTimeout(() => {
+                    event.target.setSelectionRange(newCursorPosition, newCursorPosition);
+                }, 0);
+
+                var rawValue = getCurrencyValue(formattedValue);
+                updateWidgetData(fieldName, rawValue);
+                isUpdating = false;
+            }
+            input.addEventListener('input', handleCurrencyInput);
+        }
+
+        // Setup checkbox field
+        function setupCheckboxField(inputId, fieldName) {
+            var input = document.getElementById(inputId);
+            if (!input) return;
+            input.addEventListener('change', function(event) {
+                updateWidgetData(fieldName, event.target.checked);
+            });
+        }
+
+        // Setup textarea field
+        function setupTextAreaField(inputId, fieldName) {
+            var input = document.getElementById(inputId);
+            if (!input) return;
+            input.addEventListener('input', function(event) {
+                updateWidgetData(fieldName, event.target.value);
+            });
+        }
+
+        // Bind all event listeners
+        if (nonCreditCheckbox) nonCreditCheckbox.addEventListener('change', handleAuthoritySelection);
+        if (creditCheckbox) creditCheckbox.addEventListener('change', handleAuthoritySelection);
+
+        // Allow clicking on the entire checkbox group to toggle
+        if (nonCreditGroup) {
+            nonCreditGroup.addEventListener('click', function(e) {
+                if (e.target.tagName !== 'INPUT') {
+                    nonCreditCheckbox.checked = !nonCreditCheckbox.checked;
+                    handleAuthoritySelection();
+                }
+            });
+        }
+        if (creditGroup) {
+            creditGroup.addEventListener('click', function(e) {
+                if (e.target.tagName !== 'INPUT') {
+                    creditCheckbox.checked = !creditCheckbox.checked;
+                    handleAuthoritySelection();
+                }
+            });
+        }
+
+        if (wireTransferCheck) wireTransferCheck.addEventListener('change', handleWireTransferChange);
+        if (officialChecksCheck) officialChecksCheck.addEventListener('change', handleOfficialChecksChange);
+
+        // Setup all currency fields
+        setupCurrencyField('disbursement', 'disbursement');
+        setupCurrencyField('checkCashingOnUs', 'check_cashing_on_us');
+        setupCurrencyField('checkCashingNotOnUs', 'check_cashing_not_on_us');
+        setupCurrencyField('remoteDeposit', 'remote_deposit');
+        setupCurrencyField('treasurySolutions', 'treasury_solutions_company_wire_limits');
+        setupCurrencyField('fxWireLimits', 'fx_wire_limits');
+        setupCurrencyField('overdraft', 'overdraft');
+        setupCurrencyField('unavailableFunds', 'unavailable_funds');
+
+        // Setup all checkbox fields
+        setupCheckboxField('achCheck', 'ach_checked');
+        setupCheckboxField('wireInternalOnly', 'wire_internal_only');
+        setupCheckboxField('checksInternalOnly', 'checks_internal_only');
+        setupCheckboxField('overdraftInternalOnly', 'overdraft_internal_only');
+        setupCheckboxField('unavailableInternalOnly', 'unavailable_internal_only');
+
+        // Setup textarea field
+        setupTextAreaField('businessNeed', 'overall_business_need');
+
+        // Initialize Record Producer variables
+        updateRecordProducerVariables();
+    }
+};
+</script>
+
+
+<!-- ============================================ -->
+<!-- SERVER SCRIPT -->
+<!-- ============================================ -->
+
+<script>
+(function() {
+    // Server-side data initialization
+    data.user = gs.getUser().getName();
+    data.userId = gs.getUserID();
+})();
+</script>
