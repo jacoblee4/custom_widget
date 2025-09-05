@@ -9,6 +9,7 @@ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1
 $apply @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:173
 eval @ authority_limit_details.js:243Understand this error
 employees_with_job_code.js:104 Loading employees for job code: d790d4071b474a10cd80ffbe034bcb0a
+employees_with_job_code.js:119 Server response: {template: '<div class="job-code-employees-widget">\n <div ng-i…gth}} employees\n   </div>\n  </div>\n </div>\n</div>', $$uiNotification: Array(0), css: '\n.v4092a30a1be3e610f5b0cbfa234bcb64 .job-code-empl…bcb64 .pagination-info {\n\ttext-align: center;\n}\n}', data: {…}, roles: '', …}
 js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:145 ReferenceError: updateRecordProducerVariables is not defined
     at c.populateFieldsFromExistingLimits (authority_limit_details.js:226:9)
     at eval (authority_limit_details.js:91:19)
@@ -58,7 +59,6 @@ $eval @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_202
 $digest @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:170
 $apply @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:173
 eval @ authority_limit_details.js:243Understand this error
-employees_with_job_code.js:119 Server response: {template: '<div class="job-code-employees-widget">\n <div ng-i…gth}} employees\n   </div>\n  </div>\n </div>\n</div>', $$uiNotification: Array(0), css: '\n.v4092a30a1be3e610f5b0cbfa234bcb64 .job-code-empl…bcb64 .pagination-info {\n\ttext-align: center;\n}\n}', data: {…}, roles: '', …}
 js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:145 SyntaxError: Failed to execute 'querySelectorAll' on 'Document': 'button:contains("Submit")' is not a valid selector.
     at eval (existing_authority_limits.js:322:30)
     at Array.forEach (<anonymous>)
