@@ -338,8 +338,8 @@ If applicable: Enter the requested approval amount. If the authority type should
 .justification-section {
     display: none;
     padding: 20px;
-    background: #fff4e6;
-    border: 1px solid #ffd93d;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
     border-radius: 6px;
     
     &.active {
@@ -355,10 +355,10 @@ If applicable: Enter the requested approval amount. If the authority type should
 }
 
 .justification-section .form-group label {
- color: #212529;
-  font-weight: 600;
-  font-size: 15px;
-  margin-bottom: 8px;
+    color: #212529;
+    font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 8px;
 }
 
 .info-message {
@@ -367,7 +367,7 @@ If applicable: Enter the requested approval amount. If the authority type should
     border-radius: 0;
     margin-bottom: 16px;
     font-size: 14px;
-    color: #495057;
+    color: #6c757d;
     line-height: 1.5;
     border-left: none;
     font-style: normal;
