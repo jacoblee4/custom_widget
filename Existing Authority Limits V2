@@ -1,14 +1,63 @@
-// ============================================
-// HTML (keep your existing HTML)
-// ============================================
+// SERVER SCRIPT - Updated to support auto-population integration
 
-// ============================================  
-// CSS (keep your existing CSS)
-// ============================================
+(function() {
+    // Check if the request is for getting authority limits
+    if (input && input.action === 'getAuthorityLimits') {
+        // Extract job code sys_id from the input
+        var jobCode = input.job_code;
+        var limits = [];
+        var jobCodeDisplayValue = '';
 
-// ============================================
-// CLIENT CONTROLLER (UPDATED)
-// ============================================
+        if (jobCode) {
+            // Retrieve the display value of the job code for UI display
+            var jobGr = new GlideRecord('x_banun_rbac_job_code');
+            if (jobGr.get(jobCode)) {
+                jobCodeDisplayValue = jobGr.getDisplayValue();
+            }
+
+            // Query the authority limits table for active limits matching this job code
+            var gr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
+            gr.addQuery('job_code', jobCode);
+            gr.addQuery('active', true);
+            gr.orderByDesc('sys_created_on');
+            gr.setLimit(1);
+            gr.query();
+
+            // Process each authority limit record found
+            if (gr.next()) {
+                // Build the limit object with all authority limit fields
+                var limit = {
+                    // Credit limits - Grouped into Overdraft and Unavailable Funds
+                    overdraft_external_accounts: gr.getValue('overdraft_external_accounts'),
+                    overdraft_internal_accounts: gr.getValue('overdraft_internal_accounts'),
+                    unavailable_funds_external_accounts: gr.getValue('unavailable_funds_external_accounts'),
+                    unavailable_funds_internal_accounts: gr.getValue('unavailable_funds_internal_accounts'),
+
+                    // Non-credit limits - Grouped into Disbursements, Check Cashing, and others
+                    disbursement_ach: gr.getValue('disbursement_ach'),
+                    disbursement_wire_transfer_external: gr.getValue('disbursement_wire_transfer_external'),
+                    disbursement_wire_transfer_internal: gr.getValue('disbursement_wire_transfer_internal'),
+                    disbursement_official_checks_external: gr.getValue('disbursement_official_checks_external'),
+                    disbursement_official_checks_internal: gr.getValue('disbursement_official_checks_internal'),
+                    check_cashing_on_us: gr.getValue('check_cashing_on_us'),
+                    check_cashing_not_on_us: gr.getValue('check_cashing_not_on_us'),
+                    remote_deposit: gr.getValue('remote_deposit'),
+                    treasury_solutions_company_wire_limits: gr.getValue('treasury_solutions_company_wire_limits'),
+                    fx_wire_limits: gr.getValue('fx_wire_limits')
+                };
+
+                // Add the limit to the array
+                limits.push(limit);
+            }
+        }
+
+        // Return the limits array and job code display value to the client
+        data.limits = limits;
+        data.jobCodeDisplay = jobCodeDisplayValue;
+    }
+})();
+
+// CLIENT CONTROLLER - Updated to support auto-population integration
 
 api.controller = function($scope, spUtil, $timeout) {
   var c = this;
@@ -100,7 +149,7 @@ api.controller = function($scope, spUtil, $timeout) {
     return false;
   };
   
-  //Retrieves the job code value from various possible sources
+  // Retrieves the job code value from various possible sources
   c.getJobCodeValue = function() {
     try {
       // Method 1: Direct g_form access (standard ServiceNow forms)
@@ -130,7 +179,7 @@ api.controller = function($scope, spUtil, $timeout) {
     return '';
   };
   
-  //Retrieves the display value of the selected job code
+  // Retrieves the display value of the selected job code
   c.getJobCodeDisplayValue = function() {
     try {
       // Method 1: g_form display box
@@ -159,7 +208,7 @@ api.controller = function($scope, spUtil, $timeout) {
     return '';
   };
   
-  //Update form validation status based on current state
+  // Update form validation status based on current state
   c.updateFormValidation = function() {
     var shouldBlock = c.shouldBlockSubmission();
     
@@ -177,10 +226,27 @@ api.controller = function($scope, spUtil, $timeout) {
     }
   };
   
-  /**
-   * Sets up polling mechanism to detect job code and request type changes
-   * Polls every 500ms to check for changes in form fields
-   */
+  // Trigger auto-population in Authority Details widget for change requests
+  c.triggerAutoPopulation = function() {
+    if (c.isChangeAuthority() && c.authorityLimits.length > 0) {
+      // Send a custom event to notify the Authority Details widget to auto-populate
+      var event = new CustomEvent('authorityLimitsLoaded', {
+        detail: {
+          limits: c.authorityLimits[0],
+          jobCode: c.jobCode,
+          jobCodeDisplay: c.jobCodeDisplay
+        }
+      });
+      
+      // Dispatch the event after a short delay to ensure the Authority Details widget is ready
+      $timeout(function() {
+        window.dispatchEvent(event);
+      }, 500);
+    }
+  };
+  
+  // Sets up polling mechanism to detect job code and request type changes
+  // Polls every 500ms to check for changes in form fields
   c.setupFieldMonitoring = function() {
     var lastJobCode = '';
     var lastRequestType = '';
@@ -216,10 +282,8 @@ api.controller = function($scope, spUtil, $timeout) {
     }, 1000);
   };
   
-  /**
-   * Sets up direct event listeners on form fields
-   * Provides immediate response to changes when possible
-   */
+  // Sets up direct event listeners on form fields
+  // Provides immediate response to changes when possible
   c.setupDirectListeners = function() {
     // Define selectors for job code fields
     var jobCodeSelectors = [
@@ -288,26 +352,13 @@ api.controller = function($scope, spUtil, $timeout) {
     }
   };
   
-  /**
-   * Loads authority limits from the server for the selected job code
-   * Makes a server call to retrieve limit data
-   * *** UPDATED TO BROADCAST DATA TO OTHER WIDGETS ***
-   */
+  // Loads authority limits from the server for the selected job code
+  // Makes a server call to retrieve limit data
   c.loadAuthorityLimits = function() {
     // Clear limits if no job code selected
     if (!c.jobCode) {
       c.authorityLimits = [];
       c.updateFormValidation();
-      
-      // *** NEW: Broadcast empty data to other widgets ***
-      $scope.$broadcast('authorityLimitsLoaded', {
-        limits: [],
-        jobCodeDisplay: ''
-      });
-      
-      // *** NEW: Clear global data ***
-      window.authorityLimitsData = [];
-      
       return;
     }
     
@@ -327,19 +378,11 @@ api.controller = function($scope, spUtil, $timeout) {
       }
       c.loading = false;
       
-      // *** NEW: BROADCAST DATA TO OTHER WIDGETS ***
-      // Broadcast limits data to other widgets (like Authority Limit Details widget)
-      $scope.$broadcast('authorityLimitsLoaded', {
-        limits: c.authorityLimits,
-        jobCodeDisplay: c.jobCodeDisplay,
-        jobCode: c.jobCode
-      });
-      
-      // *** NEW: Also set global data for other widgets to access ***
-      window.authorityLimitsData = c.authorityLimits;
-      
       // Update form validation after loading
       c.updateFormValidation();
+      
+      // Trigger auto-population for change requests
+      c.triggerAutoPopulation();
       
       // Setup submission blocking after limits are loaded
       $timeout(function() {
@@ -350,15 +393,6 @@ api.controller = function($scope, spUtil, $timeout) {
       spUtil.addErrorMessage('Failed to load authority limits');
       c.authorityLimits = [];
       c.loading = false;
-      
-      // *** NEW: Broadcast empty data on error ***
-      $scope.$broadcast('authorityLimitsLoaded', {
-        limits: [],
-        jobCodeDisplay: c.jobCodeDisplay
-      });
-      
-      // *** NEW: Clear global data ***
-      window.authorityLimitsData = [];
       
       // Update form validation after error
       c.updateFormValidation();
@@ -451,10 +485,8 @@ api.controller = function($scope, spUtil, $timeout) {
     }
   };
   
-  /**
-   * Initialize widget on load
-   * Sets up initial values and monitoring
-   */
+  // Initialize widget on load
+  // Sets up initial values and monitoring
   $timeout(function() {
     // Get initial field values
     c.jobCode = c.getJobCodeValue();
