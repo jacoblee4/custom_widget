@@ -1,4 +1,7 @@
-Job code changed from f19090071b474a10cd80ffbe034bcb4e to d790d4071b474a10cd80ffbe034bcb0a
+sp?id=bu_cat_item&sys_id=1443e22d1b5b26d84726c9d6624bcbd0:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">Understand this warning
+/api/now/v1/cs/user/preferences/notification:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)Understand this error
+/uxa/now/web/metric:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)Understand this error
+employees_with_job_code.js:47 Job code changed from f19090071b474a10cd80ffbe034bcb4e to d790d4071b474a10cd80ffbe034bcb0a
 js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:145 ReferenceError: validateForm is not defined
     at eval (authority_limit_details.js:250:21)
     at m.$eval (js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:173:69)
@@ -59,44 +62,51 @@ $eval @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_202
 $digest @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:170
 $apply @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:173
 eval @ authority_limit_details.js:243Understand this error
-js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:145 SyntaxError: Failed to execute 'querySelectorAll' on 'Document': 'button:contains("Submit")' is not a valid selector.
-    at eval (existing_authority_limits.js:322:30)
-    at Array.forEach (<anonymous>)
-    at c.setupSubmissionBlocking (existing_authority_limits.js:321:21)
-    at eval (existing_authority_limits.js:258:11)
-    at js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:186:133
-    at f (js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:71:148)
-    at js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:74:68
-(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:145
-(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:117
-(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:186
-f @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:71
-(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:74
+createTracer.js:101 Invalid attribute value set for key: updatePayload
+setAttribute @ createTracer.js:101
+fn @ createUpdateContext.js:25
+Ot.timeout @ index.js:411
+(anonymous) @ requestIdleCallback.js:7
 setTimeout
-(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:74
-e @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:186
-eval @ existing_authority_limits.js:257
-(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:158
-$eval @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:173
-$digest @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:170
-$apply @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:173
-l @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:124
-L @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:129
-(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:130
-XMLHttpRequest.send
-(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:693
-(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:131
-r @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:126
-(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:123
-(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:158
-$eval @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:173
-$digest @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:170
-$apply @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:173
-(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:186
-f @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:71
-(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:74
+oe @ defer.js:7
+Ot @ requestIdleCallback.js:4
+ud @ index.js:393
+Pe @ index.js:294
+(anonymous) @ createUpdateContext.js:1
+Xt @ deferHelperExecution.js:15
+(anonymous) @ createUpdateState.js:214
+m @ wrapDispatch.js:36
+(anonymous) @ index.js:235
+g @ lodash.js:10401
+w @ lodash.js:10450
+f @ lodash.js:10438
 setTimeout
-(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:74
-e @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:186
-eval @ existing_authority_limits.js:157Understand this error
+Fa @ lodash.js:6710
+f @ lodash.js:10441
+setTimeout
+Fa @ lodash.js:6710
+f @ lodash.js:10441
+setTimeout
+Fa @ lodash.js:6710
+f @ lodash.js:10441
+setTimeout
+Fa @ lodash.js:6710
+f @ lodash.js:10441
+setTimeout
+Fa @ lodash.js:6710
+f @ lodash.js:10441
+setTimeout
+Fa @ lodash.js:6710
+(anonymous) @ lodash.js:10409
+M @ lodash.js:10478
+(anonymous) @ index.js:263
+childList
+(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:17
+sa @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:17
+before @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:17
+u @ sp_min.jsx?v=07-15-2025_1916:583
+(anonymous) @ sp_min.jsx?v=07-15-2025_1916:583
+(anonymous) @ sp_min.jsx?v=07-15-2025_1916:583
+dispatch @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:17
+(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:17Understand this warning
 createTracer.js:101 Invalid attribute value set for key: updatePayload
