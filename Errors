@@ -1,3 +1,4 @@
+Job code changed from f19090071b474a10cd80ffbe034bcb4e to d790d4071b474a10cd80ffbe034bcb0a
 js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:145 ReferenceError: validateForm is not defined
     at eval (authority_limit_details.js:250:21)
     at m.$eval (js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:173:69)
@@ -8,7 +9,6 @@ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1
 $apply @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:173
 eval @ authority_limit_details.js:243Understand this error
 employees_with_job_code.js:104 Loading employees for job code: d790d4071b474a10cd80ffbe034bcb0a
-employees_with_job_code.js:119 Server response: {template: '<div class="job-code-employees-widget">\n <div ng-i…gth}} employees\n   </div>\n  </div>\n </div>\n</div>', $$uiNotification: Array(0), css: '\n.v4092a30a1be3e610f5b0cbfa234bcb64 .job-code-empl…bcb64 .pagination-info {\n\ttext-align: center;\n}\n}', data: {…}, roles: '', …}
 js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:145 ReferenceError: updateRecordProducerVariables is not defined
     at c.populateFieldsFromExistingLimits (authority_limit_details.js:226:9)
     at eval (authority_limit_details.js:91:19)
@@ -18,7 +18,7 @@ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1
     at m.$apply (js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:173:363)
     at l (js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:124:373)
     at L (js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:129:376)
-    at N.onload (js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:130:338)
+    at XMLHttpRequest.<anonymous> (js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:130:338)
 (anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:145
 (anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:117
 (anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:159
@@ -27,9 +27,9 @@ $digest @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2
 $apply @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:173
 l @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:124
 L @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:129
-N.onload @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:130
+(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:130
 XMLHttpRequest.send
-XMLHttpRequest.send @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:693
+(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:693
 (anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:131
 r @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:126
 (anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:123
@@ -39,7 +39,7 @@ $digest @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2
 $apply @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:173
 eval @ authority_limit_details.js:243Understand this error
 sp_min.jsx?v=07-15-2025_1916:2988 Failed to load existing limits:
-i.console.error @ sp_min.jsx?v=07-15-2025_1916:2988
+(anonymous) @ sp_min.jsx?v=07-15-2025_1916:2988
 eval @ authority_limit_details.js:94
 (anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:158
 $eval @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:173
@@ -47,9 +47,9 @@ $digest @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2
 $apply @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:173
 l @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:124
 L @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:129
-N.onload @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:130
+(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:130
 XMLHttpRequest.send
-XMLHttpRequest.send @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:693
+(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:693
 (anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:131
 r @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:126
 (anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:123
@@ -58,6 +58,7 @@ $eval @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_202
 $digest @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:170
 $apply @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:173
 eval @ authority_limit_details.js:243Understand this error
+employees_with_job_code.js:119 Server response: {template: '<div class="job-code-employees-widget">\n <div ng-i…gth}} employees\n   </div>\n  </div>\n </div>\n</div>', $$uiNotification: Array(0), css: '\n.v4092a30a1be3e610f5b0cbfa234bcb64 .job-code-empl…bcb64 .pagination-info {\n\ttext-align: center;\n}\n}', data: {…}, roles: '', …}
 js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:145 SyntaxError: Failed to execute 'querySelectorAll' on 'Document': 'button:contains("Submit")' is not a valid selector.
     at eval (existing_authority_limits.js:322:30)
     at Array.forEach (<anonymous>)
@@ -66,3 +67,36 @@ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1
     at js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:186:133
     at f (js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:71:148)
     at js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:74:68
+(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:145
+(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:117
+(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:186
+f @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:71
+(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:74
+setTimeout
+(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:74
+e @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:186
+eval @ existing_authority_limits.js:257
+(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:158
+$eval @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:173
+$digest @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:170
+$apply @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:173
+l @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:124
+L @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:129
+(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:130
+XMLHttpRequest.send
+(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:693
+(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:131
+r @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:126
+(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:123
+(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:158
+$eval @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:173
+$digest @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:170
+$apply @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:173
+(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:186
+f @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:71
+(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:74
+setTimeout
+(anonymous) @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:74
+e @ js_includes_sp_libs.jsx?v=07-15-2025_1916&lp=Thu_Aug_07_07_13_24_PDT_2025&c=37_1077:186
+eval @ existing_authority_limits.js:157Understand this error
+createTracer.js:101 Invalid attribute value set for key: updatePayload
