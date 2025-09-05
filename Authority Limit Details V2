@@ -1,3 +1,44 @@
+//       Server script
+
+(function() {
+    // Existing code...
+    
+    // Add handler for fetching existing limits
+    if (input && input.action === 'getExistingLimits' && input.job_code) {
+        var limitsGr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
+        limitsGr.addQuery('job_code', input.job_code);
+        limitsGr.addQuery('active', true);
+        limitsGr.orderByDesc('sys_created_on');
+        limitsGr.setLimit(1);
+        limitsGr.query();
+        
+        data.limits = [];
+        if (limitsGr.next()) {
+            var limit = {};
+            var fields = [
+                'disbursement_ach', 'disbursement_wire_transfer_external', 'disbursement_wire_transfer_internal',
+                'disbursement_official_checks_external', 'disbursement_official_checks_internal',
+                'check_cashing_on_us', 'check_cashing_not_on_us', 'remote_deposit',
+                'treasury_solutions_company_wire_limits', 'fx_wire_limits',
+                'overdraft_external_accounts', 'overdraft_internal_accounts',
+                'unavailable_funds_external_accounts', 'unavailable_funds_internal_accounts'
+            ];
+            
+            fields.forEach(function(field) {
+                limit[field] = limitsGr.getValue(field) || '';
+            });
+            
+            data.limits.push(limit);
+        }
+    }
+})();
+
+
+
+
+
+//  client controller
+
 // Add these new variables at the top of initializeWidget()
 function initializeWidget() {
     // Start monitoring request type
