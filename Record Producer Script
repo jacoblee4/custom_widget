@@ -78,6 +78,7 @@ if (shouldProceed) {
         }
     }
 
+
     if (validationPassed) {
         // Set job code string fields on parent record for display purposes
         if (producer.job_code) {
@@ -88,8 +89,10 @@ if (shouldProceed) {
             }
         }
 
-        // Get existing limits for ALL request types (we'll use them differently based on type)
+        // NEW: Get existing limits for ALL request types (we'll use them differently based on type)
         var existingLimits = {};
+        var existingLimitsFound = false;
+        
         if (producer.job_code) {
             var existingLimitsGr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
             existingLimitsGr.addQuery('job_code', producer.job_code);
@@ -99,6 +102,7 @@ if (shouldProceed) {
             existingLimitsGr.query();
             
             if (existingLimitsGr.next()) {
+                existingLimitsFound = true;
                 // Store all existing values
                 existingLimits = {
                     // Non-credit limits
@@ -122,93 +126,92 @@ if (shouldProceed) {
         }
 
         // Handle REMOVE AUTHORITY request - copy existing limits as child records
-        if (requestType === 'remove_authority' && producer.job_code) {
+        if (requestType === 'remove_authority' && producer.job_code && existingLimitsFound) {
             
-            if (existingLimits && Object.keys(existingLimits).length > 0) {
+            // Check if there are any non-credit values
+            var hasNonCreditValues = 
+                existingLimits.disbursement_ach ||
+                existingLimits.disbursement_wire_transfer_external ||
+                existingLimits.disbursement_wire_transfer_internal ||
+                existingLimits.disbursement_official_checks_external ||
+                existingLimits.disbursement_official_checks_internal ||
+                existingLimits.check_cashing_on_us ||
+                existingLimits.check_cashing_not_on_us ||
+                existingLimits.remote_deposit ||
+                existingLimits.treasury_solutions_company_wire_limits ||
+                existingLimits.fx_wire_limits;
+            
+            // Check if there are any credit values
+            var hasCreditValues = 
+                existingLimits.overdraft_external_accounts ||
+                existingLimits.overdraft_internal_accounts ||
+                existingLimits.unavailable_funds_external_accounts ||
+                existingLimits.unavailable_funds_internal_accounts;
+            
+            // Create non-credit child record if there are non-credit values
+            if (hasNonCreditValues) {
+                var nonCreditGR = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
+                nonCreditGR.initialize();
+                nonCreditGR.setValue('parent', parentId);
+                nonCreditGR.setValue('job_code', producer.job_code);
                 
-                // Check if there are any non-credit values
-                var hasNonCreditValues = 
-                    existingLimits.disbursement_ach ||
-                    existingLimits.disbursement_wire_transfer_external ||
-                    existingLimits.disbursement_wire_transfer_internal ||
-                    existingLimits.disbursement_official_checks_external ||
-                    existingLimits.disbursement_official_checks_internal ||
-                    existingLimits.check_cashing_on_us ||
-                    existingLimits.check_cashing_not_on_us ||
-                    existingLimits.remote_deposit ||
-                    existingLimits.treasury_solutions_company_wire_limits ||
-                    existingLimits.fx_wire_limits;
+                // Copy all non-credit values from existing limit
+                var nonCreditFields = [
+                    'disbursement_ach',
+                    'disbursement_wire_transfer_external',
+                    'disbursement_wire_transfer_internal',
+                    'disbursement_official_checks_external',
+                    'disbursement_official_checks_internal',
+                    'check_cashing_on_us',
+                    'check_cashing_not_on_us',
+                    'remote_deposit',
+                    'treasury_solutions_company_wire_limits',
+                    'fx_wire_limits'
+                ];
                 
-                // Check if there are any credit values
-                var hasCreditValues = 
-                    existingLimits.overdraft_external_accounts ||
-                    existingLimits.overdraft_internal_accounts ||
-                    existingLimits.unavailable_funds_external_accounts ||
-                    existingLimits.unavailable_funds_internal_accounts;
-                
-                // Create non-credit child record if there are non-credit values
-                if (hasNonCreditValues) {
-                    var nonCreditGR = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
-                    nonCreditGR.initialize();
-                    nonCreditGR.setValue('parent', parentId);
-                    nonCreditGR.setValue('job_code', producer.job_code);
-                    
-                    // For REMOVE: Set both original AND regular fields to existing values
-                    // This shows what's being removed
-                    var nonCreditFields = [
-                        'disbursement_ach',
-                        'disbursement_wire_transfer_external',
-                        'disbursement_wire_transfer_internal',
-                        'disbursement_official_checks_external',
-                        'disbursement_official_checks_internal',
-                        'check_cashing_on_us',
-                        'check_cashing_not_on_us',
-                        'remote_deposit',
-                        'treasury_solutions_company_wire_limits',
-                        'fx_wire_limits'
-                    ];
-                    
-                    for (var i = 0; i < nonCreditFields.length; i++) {
-                        var fieldName = nonCreditFields[i];
-                        var fieldValue = existingLimits[fieldName];
-                        if (fieldValue) {
-                            nonCreditGR.setValue(fieldName, fieldValue);
-                            nonCreditGR.setValue('original_' + fieldName, fieldValue);
-                        }
+                for (var i = 0; i < nonCreditFields.length; i++) {
+                    var fieldName = nonCreditFields[i];
+                    var fieldValue = existingLimits[fieldName];
+                    if (fieldValue) {
+                        // For REMOVE: Set both original AND regular fields to existing values
+                        nonCreditGR.setValue(fieldName, fieldValue);
+                        nonCreditGR.setValue('original_' + fieldName, fieldValue);
                     }
-                    
-                    nonCreditGR.insert();
                 }
                 
-                // Create credit child record if there are credit values
-                if (hasCreditValues) {
-                    var creditGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
-                    creditGR.initialize();
-                    creditGR.setValue('parent', parentId);
-                    creditGR.setValue('job_code', producer.job_code);
-                    
-                    var creditFields = [
-                        'overdraft_external_accounts',
-                        'overdraft_internal_accounts',
-                        'unavailable_funds_external_accounts',
-                        'unavailable_funds_internal_accounts'
-                    ];
-                    
-                    for (var j = 0; j < creditFields.length; j++) {
-                        var creditFieldName = creditFields[j];
-                        var creditFieldValue = existingLimits[creditFieldName];
-                        if (creditFieldValue) {
-                            creditGR.setValue(creditFieldName, creditFieldValue);
-                            creditGR.setValue('original_' + creditFieldName, creditFieldValue);
-                        }
+                var nonCreditSysId = nonCreditGR.insert();
+            }
+            
+            // Create credit child record if there are credit values
+            if (hasCreditValues) {
+                var creditGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
+                creditGR.initialize();
+                creditGR.setValue('parent', parentId);
+                creditGR.setValue('job_code', producer.job_code);
+                
+                // Copy all credit values from existing limit
+                var creditFields = [
+                    'overdraft_external_accounts',
+                    'overdraft_internal_accounts',
+                    'unavailable_funds_external_accounts',
+                    'unavailable_funds_internal_accounts'
+                ];
+                
+                for (var j = 0; j < creditFields.length; j++) {
+                    var creditFieldName = creditFields[j];
+                    var creditFieldValue = existingLimits[creditFieldName];
+                    if (creditFieldValue) {
+                        // For REMOVE: Set both original AND regular fields to existing values
+                        creditGR.setValue(creditFieldName, creditFieldValue);
+                        creditGR.setValue('original_' + creditFieldName, creditFieldValue);
                     }
-                    
-                    creditGR.insert();
                 }
+                
+                var creditSysId = creditGR.insert();
             }
             
         } else if (requestType !== 'remove_authority' && producer.authority_types && producer.authority_data) {
-            // Process authority data for NEW and CHANGE requests
+            // Process authority data for NEW and CHANGE requests (existing logic)
             var authority_types = producer.authority_types.toString().split('|');
             var authority_data_strings = producer.authority_data.toString().split('|');
 
@@ -251,10 +254,10 @@ if (shouldProceed) {
                         if (authorityData.fx_wire_limits)
                             nonCreditGR.setValue('fx_wire_limits', authorityData.fx_wire_limits);
                         
-                        // Set the ORIGINAL values (what existed before this request)
-                        // For NEW requests, these will be empty/null
-                        // For CHANGE requests, these will have the existing values
-                        if (requestType === 'change_to_existing_authority' && existingLimits) {
+                        // NEW: Set the ORIGINAL values for CHANGE requests
+                        if (requestType === 'change_to_existing_authority' && existingLimitsFound) {
+                            // Set all original values, even if they're empty/null
+                            // This gives complete picture of what existed before
                             nonCreditGR.setValue('original_disbursement_ach', existingLimits.disbursement_ach || '');
                             nonCreditGR.setValue('original_disbursement_wire_transfer_external', existingLimits.disbursement_wire_transfer_external || '');
                             nonCreditGR.setValue('original_disbursement_wire_transfer_internal', existingLimits.disbursement_wire_transfer_internal || '');
@@ -266,6 +269,7 @@ if (shouldProceed) {
                             nonCreditGR.setValue('original_treasury_solutions_company_wire_limits', existingLimits.treasury_solutions_company_wire_limits || '');
                             nonCreditGR.setValue('original_fx_wire_limits', existingLimits.fx_wire_limits || '');
                         }
+                        // For NEW requests, original fields remain empty/null (no need to set them)
                         
                         nonCreditGR.insert();
                         
@@ -292,15 +296,16 @@ if (shouldProceed) {
                             creditGR.setValue('unavailable_funds_external_accounts', authorityData.unavailable_funds_external_accounts);
                         }
                         
-                        // Set the ORIGINAL values (what existed before this request)
-                        // For NEW requests, these will be empty/null
-                        // For CHANGE requests, these will have the existing values
-                        if (requestType === 'change_to_existing_authority' && existingLimits) {
+                        // NEW: Set the ORIGINAL values for CHANGE requests
+                        if (requestType === 'change_to_existing_authority' && existingLimitsFound) {
+                            // Set all original values, even if they're empty/null
+                            // This gives complete picture of what existed before
                             creditGR.setValue('original_overdraft_internal_accounts', existingLimits.overdraft_internal_accounts || '');
                             creditGR.setValue('original_overdraft_external_accounts', existingLimits.overdraft_external_accounts || '');
                             creditGR.setValue('original_unavailable_funds_internal_accounts', existingLimits.unavailable_funds_internal_accounts || '');
                             creditGR.setValue('original_unavailable_funds_external_accounts', existingLimits.unavailable_funds_external_accounts || '');
                         }
+                        // For NEW requests, original fields remain empty/null (no need to set them)
                         
                         creditGR.insert();
                     }
