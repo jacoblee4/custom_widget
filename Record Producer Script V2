@@ -12,17 +12,32 @@ var jobCode = producer.job_code ? producer.job_code.toString() : '';
 if (requestType && jobCode) {
     // Get authority limits to check if they exist
     var limitsExist = false;
-    var existingLimitsGr = null;
+    var existingLimits = null;
     var limitGr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
     limitGr.addQuery('job_code', jobCode);
     limitGr.addQuery('active', true);
     limitGr.orderByDesc('sys_created_on');
     limitGr.setLimit(1);
     limitGr.query();
-    if (limitGr.hasNext()) {
-        limitGr.next();
+    if (limitGr.next()) {
         limitsExist = true;
-        existingLimitsGr = limitGr; // Keep reference for later use
+        // Store existing limits for change comparison
+        existingLimits = {
+            overdraft_external_accounts: limitGr.getValue('overdraft_external_accounts') || '0',
+            overdraft_internal_accounts: limitGr.getValue('overdraft_internal_accounts') || '0',
+            unavailable_funds_external_accounts: limitGr.getValue('unavailable_funds_external_accounts') || '0',
+            unavailable_funds_internal_accounts: limitGr.getValue('unavailable_funds_internal_accounts') || '0',
+            disbursement_ach: limitGr.getValue('disbursement_ach') || '0',
+            disbursement_wire_transfer_external: limitGr.getValue('disbursement_wire_transfer_external') || '0',
+            disbursement_wire_transfer_internal: limitGr.getValue('disbursement_wire_transfer_internal') || '0',
+            disbursement_official_checks_external: limitGr.getValue('disbursement_official_checks_external') || '0',
+            disbursement_official_checks_internal: limitGr.getValue('disbursement_official_checks_internal') || '0',
+            check_cashing_on_us: limitGr.getValue('check_cashing_on_us') || '0',
+            check_cashing_not_on_us: limitGr.getValue('check_cashing_not_on_us') || '0',
+            remote_deposit: limitGr.getValue('remote_deposit') || '0',
+            treasury_solutions_company_wire_limits: limitGr.getValue('treasury_solutions_company_wire_limits') || '0',
+            fx_wire_limits: limitGr.getValue('fx_wire_limits') || '0'
+        };
     }
 
     var shouldBlock = false;
@@ -54,22 +69,78 @@ if (requestType && jobCode) {
     }
 }
 
-// Helper function to compare values and determine if changed
-function hasValueChanged(originalValue, newValue) {
-    var original = parseFloat(originalValue || 0);
-    var newVal = parseFloat(newValue || 0);
-    return original !== newVal;
+// Helper function to format currency for display
+function formatCurrencyDisplay(value) {
+    if (!value || value === '0' || value === 0) return '$0.00';
+    var num = parseFloat(value.toString().replace(/[^\d.]/g, ''));
+    return ' + num.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 }
 
-// Helper function to create change tracking object
-function createChangeTracker(originalValue, newValue, fieldLabel) {
+// Helper function to check if a value is significant (> 0)
+function hasSignificantValue(value) {
+    if (!value) return false;
+    var num = parseFloat(value.toString().replace(/[^\d.]/g, ''));
+    return num > 0;
+}
+
+// Function to generate change summary for notifications
+function generateChangeSummary(existingLimits, newData, authorityType) {
+    var changes = [];
+    var noChanges = [];
+    
+    if (authorityType === 'non_credit') {
+        var fieldMappings = {
+            'disbursement_ach': 'Disbursement ACH',
+            'disbursement_wire_transfer_external': 'Disbursement Wire Transfer (External)',
+            'disbursement_wire_transfer_internal': 'Disbursement Wire Transfer (Internal)',
+            'disbursement_official_checks_external': 'Disbursement Official Checks (External)',
+            'disbursement_official_checks_internal': 'Disbursement Official Checks (Internal)',
+            'check_cashing_on_us': 'Check Cashing On-Us',
+            'check_cashing_not_on_us': 'Check Cashing Not On-Us',
+            'remote_deposit': 'Remote Deposit',
+            'treasury_solutions_company_wire_limits': 'Treasury Solutions Wire Limits',
+            'fx_wire_limits': 'FX Wire Limits'
+        };
+        
+        for (var field in fieldMappings) {
+            var oldValue = existingLimits[field] || '0';
+            var newValue = newData[field] || '0';
+            var displayName = fieldMappings[field];
+            
+            if (hasSignificantValue(oldValue) || hasSignificantValue(newValue)) {
+                if (oldValue !== newValue) {
+                    changes.push(displayName + ': ' + formatCurrencyDisplay(oldValue) + ' → ' + formatCurrencyDisplay(newValue));
+                } else if (hasSignificantValue(oldValue)) {
+                    noChanges.push(displayName + ': ' + formatCurrencyDisplay(oldValue) + ' (no change)');
+                }
+            }
+        }
+    } else if (authorityType === 'credit') {
+        var creditFieldMappings = {
+            'overdraft_external_accounts': 'Overdraft (External Accounts)',
+            'overdraft_internal_accounts': 'Overdraft (Internal Accounts)',
+            'unavailable_funds_external_accounts': 'Unavailable Funds (External Accounts)',
+            'unavailable_funds_internal_accounts': 'Unavailable Funds (Internal Accounts)'
+        };
+        
+        for (var field in creditFieldMappings) {
+            var oldValue = existingLimits[field] || '0';
+            var newValue = newData[field] || '0';
+            var displayName = creditFieldMappings[field];
+            
+            if (hasSignificantValue(oldValue) || hasSignificantValue(newValue)) {
+                if (oldValue !== newValue) {
+                    changes.push(displayName + ': ' + formatCurrencyDisplay(oldValue) + ' → ' + formatCurrencyDisplay(newValue));
+                } else if (hasSignificantValue(oldValue)) {
+                    noChanges.push(displayName + ': ' + formatCurrencyDisplay(oldValue) + ' (no change)');
+                }
+            }
+        }
+    }
+    
     return {
-        field_label: fieldLabel,
-        original_value: originalValue || '',
-        new_value: newValue || '',
-        has_changed: hasValueChanged(originalValue, newValue),
-        change_type: !originalValue && newValue ? 'added' : 
-                    originalValue && !newValue ? 'removed' : 'modified'
+        changes: changes,
+        noChanges: noChanges
     };
 }
 
@@ -102,7 +173,6 @@ if (shouldProceed) {
         }
     }
 
-
     if (validationPassed) {
         // Set job code string fields on parent record for display purposes
         if (producer.job_code) {
@@ -117,27 +187,34 @@ if (shouldProceed) {
         if (requestType === 'remove_authority' && producer.job_code) {
             
             // Query for existing authority limits - get the most recent if multiple exist
-            if (existingLimitsGr) {
+            var existingLimitsGr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
+            existingLimitsGr.addQuery('job_code', producer.job_code);
+            existingLimitsGr.addQuery('active', true);
+            existingLimitsGr.orderByDesc('sys_created_on'); // Get most recent first if multiple exist
+            existingLimitsGr.setLimit(1); // Only get the first (most recent) record
+            existingLimitsGr.query();
+            
+            if (existingLimitsGr.next()) {
                 
                 // Check if there are any non-credit values
                 var hasNonCreditValues = 
-                    existingLimitsGr.getValue('disbursement_ach') ||
-                    existingLimitsGr.getValue('disbursement_wire_transfer_external') ||
-                    existingLimitsGr.getValue('disbursement_wire_transfer_internal') ||
-                    existingLimitsGr.getValue('disbursement_official_checks_external') ||
-                    existingLimitsGr.getValue('disbursement_official_checks_internal') ||
-                    existingLimitsGr.getValue('check_cashing_on_us') ||
-                    existingLimitsGr.getValue('check_cashing_not_on_us') ||
-                    existingLimitsGr.getValue('remote_deposit') ||
-                    existingLimitsGr.getValue('treasury_solutions_company_wire_limits') ||
-                    existingLimitsGr.getValue('fx_wire_limits');
+                    hasSignificantValue(existingLimitsGr.getValue('disbursement_ach')) ||
+                    hasSignificantValue(existingLimitsGr.getValue('disbursement_wire_transfer_external')) ||
+                    hasSignificantValue(existingLimitsGr.getValue('disbursement_wire_transfer_internal')) ||
+                    hasSignificantValue(existingLimitsGr.getValue('disbursement_official_checks_external')) ||
+                    hasSignificantValue(existingLimitsGr.getValue('disbursement_official_checks_internal')) ||
+                    hasSignificantValue(existingLimitsGr.getValue('check_cashing_on_us')) ||
+                    hasSignificantValue(existingLimitsGr.getValue('check_cashing_not_on_us')) ||
+                    hasSignificantValue(existingLimitsGr.getValue('remote_deposit')) ||
+                    hasSignificantValue(existingLimitsGr.getValue('treasury_solutions_company_wire_limits')) ||
+                    hasSignificantValue(existingLimitsGr.getValue('fx_wire_limits'));
                 
                 // Check if there are any credit values
                 var hasCreditValues = 
-                    existingLimitsGr.getValue('overdraft_external_accounts') ||
-                    existingLimitsGr.getValue('overdraft_internal_accounts') ||
-                    existingLimitsGr.getValue('unavailable_funds_external_accounts') ||
-                    existingLimitsGr.getValue('unavailable_funds_internal_accounts');
+                    hasSignificantValue(existingLimitsGr.getValue('overdraft_external_accounts')) ||
+                    hasSignificantValue(existingLimitsGr.getValue('overdraft_internal_accounts')) ||
+                    hasSignificantValue(existingLimitsGr.getValue('unavailable_funds_external_accounts')) ||
+                    hasSignificantValue(existingLimitsGr.getValue('unavailable_funds_internal_accounts'));
                 
                 // Create non-credit child record if there are non-credit values
                 if (hasNonCreditValues) {
@@ -165,10 +242,11 @@ if (shouldProceed) {
                         var fieldValue = existingLimitsGr.getValue(fieldName);
                         if (fieldValue) {
                             nonCreditGR.setValue(fieldName, fieldValue);
-                            // For remove requests, set original values same as current (will be removed)
-                            nonCreditGR.setValue('original_' + fieldName, fieldValue);
                         }
                     }
+                    
+                    // Add note that this is a removal request
+                    nonCreditGR.setValue('notes', 'REMOVAL REQUEST: These limits will be removed upon approval.');
                     
                     var nonCreditSysId = nonCreditGR.insert();
                 }
@@ -193,17 +271,17 @@ if (shouldProceed) {
                         var creditFieldValue = existingLimitsGr.getValue(creditFieldName);
                         if (creditFieldValue) {
                             creditGR.setValue(creditFieldName, creditFieldValue);
-                            // For remove requests, set original values same as current (will be removed)
-                            creditGR.setValue('original_' + creditFieldName, creditFieldValue);
                         }
                     }
                     
+                    // Add note that this is a removal request
+                    creditGR.setValue('notes', 'REMOVAL REQUEST: These limits will be removed upon approval.');
+                    
                     var creditSysId = creditGR.insert();
                 }
-                
             }
         } else if (requestType !== 'remove_authority' && producer.authority_types && producer.authority_data) {
-            // Process authority data for NEW and CHANGE requests with change tracking
+            // Process authority data for NEW and CHANGE requests
             var authority_types = producer.authority_types.toString().split('|');
             var authority_data_strings = producer.authority_data.toString().split('|');
 
@@ -214,119 +292,90 @@ if (shouldProceed) {
 
                 try {
                     var authorityData = JSON.parse(authorityDataStr);
+                    var changeSummary = '';
+                    var changeDetails = '';
+
+                    // For change requests, generate change summary
+                    if (requestType === 'change_to_existing_authority' && existingLimits) {
+                        var summaryData = generateChangeSummary(existingLimits, authorityData, authorityType);
+                        
+                        if (summaryData.changes.length > 0) {
+                            changeDetails += '\n\nCHANGES REQUESTED:\n' + summaryData.changes.join('\n');
+                        }
+                        
+                        if (summaryData.noChanges.length > 0) {
+                            changeDetails += '\n\nUNCHANGED VALUES:\n' + summaryData.noChanges.join('\n');
+                        }
+                        
+                        changeSummary = 'CHANGE REQUEST - See notes for detailed comparison with existing limits.';
+                    }
 
                     if (authorityType === 'non_credit') {
-                        // Create non-credit authority limit record with change tracking
+                        // Create non-credit authority limit record
                         var nonCreditGR = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
                         nonCreditGR.initialize();
                         nonCreditGR.setValue('parent', parentId);
                         if (producer.job_code) {
                             nonCreditGR.setValue('job_code', producer.job_code);
                         }
-
-                        // Track changes for each non-credit field
-                        var nonCreditFieldMappings = {
-                            'disbursement_ach': 'ACH Disbursement',
-                            'disbursement_wire_transfer_external': 'Wire Transfer External',
-                            'disbursement_wire_transfer_internal': 'Wire Transfer Internal',
-                            'disbursement_official_checks_external': 'Official Checks External',
-                            'disbursement_official_checks_internal': 'Official Checks Internal',
-                            'check_cashing_on_us': 'Check Cashing On-Us',
-                            'check_cashing_not_on_us': 'Check Cashing Not On-Us',
-                            'remote_deposit': 'Remote Deposit',
-                            'treasury_solutions_company_wire_limits': 'Treasury Solutions Wire Limits',
-                            'fx_wire_limits': 'FX Wire Limits'
-                        };
-
-                        var changesSummary = [];
-
-                        for (var fieldName in nonCreditFieldMappings) {
-                            var newValue = authorityData[fieldName] || '';
-                            var originalValue = '';
-                            
-                            // Get original value if this is a change request
-                            if (requestType === 'change_to_existing_authority' && existingLimitsGr) {
-                                originalValue = existingLimitsGr.getValue(fieldName) || '';
-                            }
-
-                            // Set the new value
-                            if (newValue) {
-                                nonCreditGR.setValue(fieldName, newValue);
-                            }
-
-                            // Set the original value for comparison
-                            nonCreditGR.setValue('original_' + fieldName, originalValue);
-
-                            // Track the change
-                            if (requestType === 'change_to_existing_authority') {
-                                var changeTracker = createChangeTracker(originalValue, newValue, nonCreditFieldMappings[fieldName]);
-                                if (changeTracker.has_changed) {
-                                    changesSummary.push(changeTracker.field_label + ': ' + 
-                                        (originalValue ? '$' + originalValue : '$0') + ' → ' + 
-                                        (newValue ? '$' + newValue : '$0'));
-                                }
-                            }
+                        
+                        // Set all the field values
+                        if (authorityData.disbursement_ach)
+                            nonCreditGR.setValue('disbursement_ach', authorityData.disbursement_ach);
+                        if (authorityData.disbursement_wire_transfer_external)
+                            nonCreditGR.setValue('disbursement_wire_transfer_external', authorityData.disbursement_wire_transfer_external);
+                        if (authorityData.disbursement_wire_transfer_internal)
+                            nonCreditGR.setValue('disbursement_wire_transfer_internal', authorityData.disbursement_wire_transfer_internal);
+                        if (authorityData.disbursement_official_checks_external)
+                            nonCreditGR.setValue('disbursement_official_checks_external', authorityData.disbursement_official_checks_external);
+                        if (authorityData.disbursement_official_checks_internal)
+                            nonCreditGR.setValue('disbursement_official_checks_internal', authorityData.disbursement_official_checks_internal);
+                        if (authorityData.check_cashing_on_us)
+                            nonCreditGR.setValue('check_cashing_on_us', authorityData.check_cashing_on_us);
+                        if (authorityData.check_cashing_not_on_us)
+                            nonCreditGR.setValue('check_cashing_not_on_us', authorityData.check_cashing_not_on_us);
+                        if (authorityData.remote_deposit)
+                            nonCreditGR.setValue('remote_deposit', authorityData.remote_deposit);
+                        if (authorityData.treasury_solutions_company_wire_limits)
+                            nonCreditGR.setValue('treasury_solutions_company_wire_limits', authorityData.treasury_solutions_company_wire_limits);
+                        if (authorityData.fx_wire_limits)
+                            nonCreditGR.setValue('fx_wire_limits', authorityData.fx_wire_limits);
+                        
+                        // Add change summary to notes for change requests
+                        if (requestType === 'change_to_existing_authority') {
+                            nonCreditGR.setValue('notes', changeSummary + changeDetails);
                         }
-
-                        // Store changes summary for email notifications
-                        if (changesSummary.length > 0) {
-                            nonCreditGR.setValue('changes_summary', changesSummary.join('\n'));
-                        }
-
+                        
                         nonCreditGR.insert();
-
+                        
                     } else if (authorityType === 'credit') {
-                        // Create credit authority limit record with change tracking
+                        // Create credit authority limit record
                         var creditGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
                         creditGR.initialize();
                         creditGR.setValue('parent', parentId);
                         if (producer.job_code) {
                             creditGR.setValue('job_code', producer.job_code);
                         }
-
-                        // Track changes for each credit field
-                        var creditFieldMappings = {
-                            'overdraft_internal_accounts': 'Overdraft Internal Accounts',
-                            'overdraft_external_accounts': 'Overdraft External Accounts',
-                            'unavailable_funds_internal_accounts': 'Unavailable Funds Internal Accounts',
-                            'unavailable_funds_external_accounts': 'Unavailable Funds External Accounts'
-                        };
-
-                        var changesSummary = [];
-
-                        for (var fieldName in creditFieldMappings) {
-                            var newValue = authorityData[fieldName] || '';
-                            var originalValue = '';
-                            
-                            // Get original value if this is a change request
-                            if (requestType === 'change_to_existing_authority' && existingLimitsGr) {
-                                originalValue = existingLimitsGr.getValue(fieldName) || '';
-                            }
-
-                            // Set the new value
-                            if (newValue) {
-                                creditGR.setValue(fieldName, newValue);
-                            }
-
-                            // Set the original value for comparison
-                            creditGR.setValue('original_' + fieldName, originalValue);
-
-                            // Track the change
-                            if (requestType === 'change_to_existing_authority') {
-                                var changeTracker = createChangeTracker(originalValue, newValue, creditFieldMappings[fieldName]);
-                                if (changeTracker.has_changed) {
-                                    changesSummary.push(changeTracker.field_label + ': ' + 
-                                        (originalValue ? '$' + originalValue : '$0') + ' → ' + 
-                                        (newValue ? '$' + newValue : '$0'));
-                                }
-                            }
+                        
+                        // Set credit field values
+                        if (authorityData.overdraft_internal_accounts) {
+                            creditGR.setValue('overdraft_internal_accounts', authorityData.overdraft_internal_accounts);
                         }
-
-                        // Store changes summary for email notifications
-                        if (changesSummary.length > 0) {
-                            creditGR.setValue('changes_summary', changesSummary.join('\n'));
+                        if (authorityData.overdraft_external_accounts) {
+                            creditGR.setValue('overdraft_external_accounts', authorityData.overdraft_external_accounts);
                         }
-
+                        if (authorityData.unavailable_funds_internal_accounts) {
+                            creditGR.setValue('unavailable_funds_internal_accounts', authorityData.unavailable_funds_internal_accounts);
+                        }
+                        if (authorityData.unavailable_funds_external_accounts) {
+                            creditGR.setValue('unavailable_funds_external_accounts', authorityData.unavailable_funds_external_accounts);
+                        }
+                        
+                        // Add change summary to notes for change requests
+                        if (requestType === 'change_to_existing_authority') {
+                            creditGR.setValue('notes', changeSummary + changeDetails);
+                        }
+                        
                         creditGR.insert();
                     }
                 } catch (e) {
@@ -334,76 +383,46 @@ if (shouldProceed) {
                 }
             }
         }
-
-        // For change requests, create a consolidated changes summary on the parent record
-        if (requestType === 'change_to_existing_authority' && existingLimitsGr) {
-            var overallChangesSummary = [];
+        
+        // For change requests, store change summary on parent record for approval notifications
+        if (requestType === 'change_to_existing_authority' && existingLimits && producer.authority_types && producer.authority_data) {
+            var authority_types = producer.authority_types.toString().split('|');
+            var authority_data_strings = producer.authority_data.toString().split('|');
+            var fullChangeSummary = '';
             
-            // Check all authority fields for changes and create summary
-            var allFieldMappings = {
-                // Non-credit fields
-                'disbursement_ach': 'ACH Disbursement',
-                'disbursement_wire_transfer_external': 'Wire Transfer External',
-                'disbursement_wire_transfer_internal': 'Wire Transfer Internal', 
-                'disbursement_official_checks_external': 'Official Checks External',
-                'disbursement_official_checks_internal': 'Official Checks Internal',
-                'check_cashing_on_us': 'Check Cashing On-Us',
-                'check_cashing_not_on_us': 'Check Cashing Not On-Us',
-                'remote_deposit': 'Remote Deposit',
-                'treasury_solutions_company_wire_limits': 'Treasury Solutions Wire Limits',
-                'fx_wire_limits': 'FX Wire Limits',
-                // Credit fields
-                'overdraft_internal_accounts': 'Overdraft Internal Accounts',
-                'overdraft_external_accounts': 'Overdraft External Accounts',
-                'unavailable_funds_internal_accounts': 'Unavailable Funds Internal Accounts',
-                'unavailable_funds_external_accounts': 'Unavailable Funds External Accounts'
-            };
-
-            // Parse the authority data to get new values
-            if (producer.authority_data) {
-                var authDataArray = producer.authority_data.toString().split('|');
-                var allNewValues = {};
+            for (var k = 0; k < authority_types.length; k++) {
+                var authType = authority_types[k];
+                var authDataStr = authority_data_strings[k];
                 
-                for (var k = 0; k < authDataArray.length; k++) {
-                    try {
-                        var parsedData = JSON.parse(authDataArray[k]);
-                        for (var field in parsedData) {
-                            if (parsedData[field]) {
-                                allNewValues[field] = parsedData[field];
-                            }
-                        }
-                    } catch (e) {
-                        // Continue processing other data
-                    }
-                }
-
-                // Compare all fields
-                for (var fieldName in allFieldMappings) {
-                    var originalValue = existingLimitsGr.getValue(fieldName) || '';
-                    var newValue = allNewValues[fieldName] || '';
+                try {
+                    var authData = JSON.parse(authDataStr);
+                    var summary = generateChangeSummary(existingLimits, authData, authType);
                     
-                    if (hasValueChanged(originalValue, newValue)) {
-                        var changeType = '';
-                        if (!originalValue && newValue) {
-                            changeType = ' (NEW)';
-                        } else if (originalValue && !newValue) {
-                            changeType = ' (REMOVED)';
-                        } else {
-                            changeType = ' (MODIFIED)';
+                    if (authType === 'non_credit' && (summary.changes.length > 0 || summary.noChanges.length > 0)) {
+                        fullChangeSummary += '\n\n=== NON-CREDIT AUTHORITY CHANGES ===';
+                        if (summary.changes.length > 0) {
+                            fullChangeSummary += '\nChanges Requested:\n' + summary.changes.join('\n');
                         }
-                        
-                        overallChangesSummary.push(allFieldMappings[fieldName] + changeType + ': ' + 
-                            (originalValue ? '$' + originalValue : '$0') + ' → ' + 
-                            (newValue ? '$' + newValue : '$0'));
+                        if (summary.noChanges.length > 0) {
+                            fullChangeSummary += '\n\nUnchanged Values:\n' + summary.noChanges.join('\n');
+                        }
+                    } else if (authType === 'credit' && (summary.changes.length > 0 || summary.noChanges.length > 0)) {
+                        fullChangeSummary += '\n\n=== CREDIT AUTHORITY CHANGES ===';
+                        if (summary.changes.length > 0) {
+                            fullChangeSummary += '\nChanges Requested:\n' + summary.changes.join('\n');
+                        }
+                        if (summary.noChanges.length > 0) {
+                            fullChangeSummary += '\n\nUnchanged Values:\n' + summary.noChanges.join('\n');
+                        }
                     }
+                } catch (e) {
+                    gs.log('Error generating change summary: ' + e.message);
                 }
             }
-
-            // Store consolidated changes summary on parent record for email notifications
-            if (overallChangesSummary.length > 0) {
-                current.setValue('authority_changes_summary', overallChangesSummary.join('\n'));
-            } else {
-                current.setValue('authority_changes_summary', 'No changes detected in authority limits.');
+            
+            // Store the full change summary on the parent record
+            if (fullChangeSummary) {
+                current.setValue('change_summary', fullChangeSummary);
             }
         }
     }
