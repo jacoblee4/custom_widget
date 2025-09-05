@@ -764,7 +764,7 @@ api.controller = function($scope, spUtil, $timeout) {
       'input[type="submit"]',
       '.form_action_button',
       '#sysverb_submit',
-      'button:contains("Submit")',
+      'button[type="submit"]'
       'input[value*="Submit"]'
     ];
     
