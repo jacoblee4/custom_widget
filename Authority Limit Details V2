@@ -39,22 +39,65 @@
 
 //  client controller
 
-// Add these new variables at the top of initializeWidget()
-function initializeWidget() {
-    // Start monitoring request type
-    c.setupRequestTypeMonitoring();
-    
-    // Add this new variable to track original values
+api.controller = function($scope, $window) {
+    var c = this;
+    var g_form = $scope.page.g_form;
+
+    // Add request type tracking
+    c.requestType = '';
     c.originalAuthorityData = {}; // Stores the original values for comparison
 
-    // ... existing element references ...
-
-    // Widget data model - stores all form state
-    c.authorityData = {
-        // ... existing properties ...
+    c.$onInit = function() {
+        setTimeout(function() {
+            initializeWidget();
+        }, 500);
     };
 
-    // Add new function to fetch and populate existing limits
+    // Check if current request is remove authority
+    c.isRemoveAuthority = function() {
+        return c.requestType === 'remove_authority';
+    };
+
+    // Determine if widget should be visible
+    c.shouldShowWidget = function() {
+        return c.requestType && (c.requestType === 'new_authority' || c.requestType === 'change_to_existing_authority' || c.requestType === 'remove_authority');
+    };
+
+    // Get request type from g_form
+    c.getRequestType = function() {
+        try {
+            // Try multiple methods to get request type
+            var requestType = '';
+
+            if (typeof g_form !== 'undefined' && g_form.getValue) {
+                requestType = g_form.getValue('request_type');
+                if (requestType) return requestType;
+            }
+
+            if (window.parent && window.parent.g_form && window.parent.g_form.getValue) {
+                requestType = window.parent.g_form.getValue('request_type');
+                if (requestType) return requestType;
+            }
+
+            var requestTypeField = document.querySelector('select[name="request_type"], [data-name="request_type"] select');
+            if (requestTypeField && requestTypeField.value) {
+                return requestTypeField.value;
+            }
+
+            if (c.requestType) {
+                return c.requestType;
+            }
+
+        } catch (e) {
+            // Handle error silently, but try cached value
+            if (c.requestType) {
+                return c.requestType;
+            }
+        }
+        return '';
+    };
+
+    // Fetch and populate existing limits for change requests
     c.fetchAndPopulateExistingLimits = function() {
         var requestType = c.getRequestType();
         var jobCode = '';
@@ -86,6 +129,14 @@ function initializeWidget() {
                 
                 // Store original values for comparison
                 c.originalAuthorityData = angular.copy(limits);
+                
+                // Get references to elements
+                var nonCreditCheckbox = document.getElementById('nonCreditAuth');
+                var creditCheckbox = document.getElementById('creditAuth');
+                var nonCreditGroup = document.getElementById('nonCreditGroup');
+                var creditGroup = document.getElementById('creditGroup');
+                var nonCreditSection = document.getElementById('nonCreditSection');
+                var creditSection = document.getElementById('creditSection');
                 
                 // Determine if we have non-credit values
                 var hasNonCreditValues = false;
@@ -228,7 +279,7 @@ function initializeWidget() {
         });
     };
 
-    // Modify the setupRequestTypeMonitoring function to call fetch when job code changes
+    // Monitor request type changes
     c.setupRequestTypeMonitoring = function() {
         var lastRequestType = '';
         var lastJobCode = '';
@@ -267,63 +318,352 @@ function initializeWidget() {
         });
     };
 
-    // Update the updateRecordProducerVariables function to include change tracking
-    function updateRecordProducerVariables() {
-        g_form.setValue('overall_business_need', c.authorityData.overall_business_need);
-        
-        var currentRequestType = c.getRequestType();
-        c.requestType = currentRequestType;
+    function initializeWidget() {
+        // Start monitoring request type
+        c.setupRequestTypeMonitoring();
 
-        if (currentRequestType === 'remove_authority') {
-            g_form.setValue('authority_types', '');
-            g_form.setValue('authority_data', '');
+        // Get references to elements
+        var nonCreditCheckbox = document.getElementById('nonCreditAuth');
+        var creditCheckbox = document.getElementById('creditAuth');
+        var nonCreditGroup = document.getElementById('nonCreditGroup');
+        var creditGroup = document.getElementById('creditGroup');
+        var nonCreditSection = document.getElementById('nonCreditSection');
+        var creditSection = document.getElementById('creditSection');
+        var justificationSection = document.getElementById('justificationSection');
+
+        var wireTransferCheck = document.getElementById('wireTransferCheck');
+        var wireInternalOnlyContainer = document.getElementById('wireInternalOnlyContainer');
+        var wireInternalOnly = document.getElementById('wireInternalOnly');
+        var officialChecksCheck = document.getElementById('officialChecksCheck');
+        var checksInternalOnlyContainer = document.getElementById('checksInternalOnlyContainer');
+        var checksInternalOnly = document.getElementById('checksInternalOnly');
+
+        // Widget data model - stores all form state
+        c.authorityData = {
+            non_credit_checked: false,
+            credit_checked: false,
+            disbursement: '',
+            ach_checked: false,
+            wire_transfer_checked: false,
+            wire_internal_only: false,
+            official_checks_checked: false,
+            checks_internal_only: false,
+            check_cashing_on_us: '',
+            check_cashing_not_on_us: '',
+            remote_deposit: '',
+            treasury_solutions_company_wire_limits: '',
+            fx_wire_limits: '',
+            overdraft: '',
+            overdraft_internal_only: false,
+            unavailable_funds: '',
+            unavailable_internal_only: false,
+            overall_business_need: ''
+        };
+
+        // Currency formatting utilities
+        function formatCurrency(value) {
+            if (!value) return '';
+            var numStr = value.toString().replace(/[^\d.]/g, '');
+            var parts = numStr.split('.');
+            if (parts.length > 2) {
+                numStr = parts[0] + '.' + parts.slice(1).join('');
+            }
+            var [integerPart, decimalPart] = numStr.split('.');
+            var formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            if (decimalPart !== undefined) {
+                var limitedDecimal = decimalPart.substring(0, 2);
+                return formattedInteger + '.' + limitedDecimal;
+            }
+            return formattedInteger;
+        }
+
+        function getCurrencyValue(formattedValue) {
+            if (!formattedValue) return '';
+            return formattedValue.replace(/[^\d.]/g, '');
+        }
+
+        // Updated validation logic to handle remove authority
+        function validateForm() {
+            var errors = [];
+            var currentRequestType = c.getRequestType();
+
+            // Send debug info to server logs
+            try {
+                if (typeof g_form !== 'undefined' && g_form.setValue) {
+                    g_form.setValue('debug_request_type', currentRequestType || 'undefined');
+                    g_form.setValue('debug_c_request_type', c.requestType || 'undefined');
+                    g_form.setValue('debug_validation_step', 'starting');
+                }
+            } catch (e) {}
+
+            // For remove authority requests, skip client validation entirely - let server handle it
+            if (currentRequestType === 'remove_authority' || c.requestType === 'remove_authority') {
+                try {
+                    g_form.setValue('debug_validation_step', 'remove_authority_skip_client');
+                } catch (e) {}
+
+                // Set validation to true and let server handle the actual validation
+                g_form.setValue('form_validation_errors', '');
+                g_form.setValue('form_is_valid', 'true');
+                return true;
+            }
+
+            try {
+                g_form.setValue('debug_validation_step', 'full_validation_path');
+            } catch (e) {}
+
+            // For new_authority and change_to_existing_authority, run normal validation
+
+            // Business justification required for all request types
+            if (!c.authorityData.overall_business_need || c.authorityData.overall_business_need.trim() === '') {
+                errors.push('Overall Business Need is required');
+            }
+
+            // Must select at least one authority type (only for non-remove requests)
+            if (!c.authorityData.non_credit_checked && !c.authorityData.credit_checked) {
+                errors.push('You must select at least one authority type (Credit Authority or Non-Credit Authority)');
+            }
+
+            // Non-credit authority validation (only for non-remove requests)
+            if (c.authorityData.non_credit_checked) {
+                var hasNonCreditValue = c.authorityData.disbursement || c.authorityData.check_cashing_on_us ||
+                    c.authorityData.check_cashing_not_on_us || c.authorityData.remote_deposit ||
+                    c.authorityData.treasury_solutions_company_wire_limits || c.authorityData.fx_wire_limits;
+
+                if (!hasNonCreditValue) {
+                    errors.push('If Non-Credit Authority is selected, at least one currency field must have a value');
+                }
+
+                if (c.authorityData.disbursement &&
+                    !c.authorityData.ach_checked &&
+                    !c.authorityData.wire_transfer_checked &&
+                    !c.authorityData.official_checks_checked) {
+                    errors.push('If Disbursement amount is entered, you must select at least one option: ACH, Wire Transfer, or Official Checks');
+                }
+            }
+
+            // Credit authority validation (only for non-remove requests)
+            if (c.authorityData.credit_checked) {
+                var hasCreditValue = c.authorityData.overdraft || c.authorityData.unavailable_funds;
+                if (!hasCreditValue) {
+                    errors.push('If Credit Authority is selected, at least one currency field must have a value');
+                }
+            }
+
+            var isValid = errors.length === 0;
+
+            // Update Record Producer variables for server-side validation
+            g_form.setValue('form_validation_errors', errors.join('|'));
+            g_form.setValue('form_is_valid', isValid ? 'true' : 'false');
+
+            return isValid;
+        }
+
+        // Updated updateRecordProducerVariables function
+        function updateRecordProducerVariables() {
+            g_form.setValue('overall_business_need', c.authorityData.overall_business_need);
+
+            // Get current request type - use multiple methods
+            var currentRequestType = c.getRequestType();
+
+            // Also update our cached request type
+            c.requestType = currentRequestType;
+
+            // For remove authority requests, don't set authority data
+            if (currentRequestType === 'remove_authority') {
+                g_form.setValue('authority_types', '');
+                g_form.setValue('authority_data', '');
+                // Make sure validation runs
+                validateForm();
+                return;
+            }
+
+            var authority_types = [];
+            var authority_data = [];
+
+            // Process non-credit authority data (only for non-remove requests)
+            if (c.authorityData.non_credit_checked) {
+                authority_types.push('non_credit');
+                var nonCreditData = {
+                    disbursement_ach: (c.authorityData.ach_checked && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
+                    disbursement_wire_transfer_external: (c.authorityData.wire_transfer_checked && !c.authorityData.wire_internal_only && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
+                    disbursement_wire_transfer_internal: (c.authorityData.wire_transfer_checked && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
+                    disbursement_official_checks_external: (c.authorityData.official_checks_checked && !c.authorityData.checks_internal_only && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
+                    disbursement_official_checks_internal: (c.authorityData.official_checks_checked && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
+                    check_cashing_on_us: c.authorityData.check_cashing_on_us,
+                    check_cashing_not_on_us: c.authorityData.check_cashing_not_on_us,
+                    remote_deposit: c.authorityData.remote_deposit,
+                    treasury_solutions_company_wire_limits: c.authorityData.treasury_solutions_company_wire_limits,
+                    fx_wire_limits: c.authorityData.fx_wire_limits
+                };
+                authority_data.push(JSON.stringify(nonCreditData));
+            }
+
+            // Process credit authority data (only for non-remove requests)
+            if (c.authorityData.credit_checked) {
+                authority_types.push('credit');
+                var creditData = {
+                    overdraft_internal_accounts: c.authorityData.overdraft || '',
+                    overdraft_external_accounts: (c.authorityData.overdraft && !c.authorityData.overdraft_internal_only) ? c.authorityData.overdraft : '',
+                    unavailable_funds_internal_accounts: c.authorityData.unavailable_funds || '',
+                    unavailable_funds_external_accounts: (c.authorityData.unavailable_funds && !c.authorityData.unavailable_internal_only) ? c.authorityData.unavailable_funds : ''
+                };
+                authority_data.push(JSON.stringify(creditData));
+            }
+
+            g_form.setValue('authority_types', authority_types.join('|'));
+            g_form.setValue('authority_data', authority_data.join('|'));
+            
+            // Store original values for change tracking
+            if (currentRequestType === 'change_to_existing_authority' && c.originalAuthorityData) {
+                g_form.setValue('original_authority_data', JSON.stringify(c.originalAuthorityData));
+            }
+
+            // Run validation
             validateForm();
-            return;
         }
 
-        var authority_types = [];
-        var authority_data = [];
-
-        // Process non-credit authority data
-        if (c.authorityData.non_credit_checked) {
-            authority_types.push('non_credit');
-            var nonCreditData = {
-                disbursement_ach: (c.authorityData.ach_checked && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
-                disbursement_wire_transfer_external: (c.authorityData.wire_transfer_checked && !c.authorityData.wire_internal_only && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
-                disbursement_wire_transfer_internal: (c.authorityData.wire_transfer_checked && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
-                disbursement_official_checks_external: (c.authorityData.official_checks_checked && !c.authorityData.checks_internal_only && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
-                disbursement_official_checks_internal: (c.authorityData.official_checks_checked && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
-                check_cashing_on_us: c.authorityData.check_cashing_on_us,
-                check_cashing_not_on_us: c.authorityData.check_cashing_not_on_us,
-                remote_deposit: c.authorityData.remote_deposit,
-                treasury_solutions_company_wire_limits: c.authorityData.treasury_solutions_company_wire_limits,
-                fx_wire_limits: c.authorityData.fx_wire_limits
-            };
-            authority_data.push(JSON.stringify(nonCreditData));
+        // Update widget data and sync with Record Producer
+        function updateWidgetData(fieldName, value) {
+            c.authorityData[fieldName] = value;
+            updateRecordProducerVariables();
         }
 
-        // Process credit authority data
-        if (c.authorityData.credit_checked) {
-            authority_types.push('credit');
-            var creditData = {
-                overdraft_internal_accounts: c.authorityData.overdraft || '',
-                overdraft_external_accounts: (c.authorityData.overdraft && !c.authorityData.overdraft_internal_only) ? c.authorityData.overdraft : '',
-                unavailable_funds_internal_accounts: c.authorityData.unavailable_funds || '',
-                unavailable_funds_external_accounts: (c.authorityData.unavailable_funds && !c.authorityData.unavailable_internal_only) ? c.authorityData.unavailable_funds : ''
-            };
-            authority_data.push(JSON.stringify(creditData));
+        // Handle authority type selection (Credit/Non-Credit)
+        function handleAuthoritySelection() {
+            var nonCreditChecked = nonCreditCheckbox.checked;
+            var creditChecked = creditCheckbox.checked;
+
+            // Update visual states
+            nonCreditGroup.classList.toggle('active', nonCreditChecked);
+            creditGroup.classList.toggle('active', creditChecked);
+            nonCreditSection.classList.toggle('active', nonCreditChecked);
+            creditSection.classList.toggle('active', creditChecked);
+
+            // Update data model
+            updateWidgetData('non_credit_checked', nonCreditChecked);
+            updateWidgetData('credit_checked', creditChecked);
         }
 
-        g_form.setValue('authority_types', authority_types.join('|'));
-        g_form.setValue('authority_data', authority_data.join('|'));
-        
-        // Store original values for change tracking
-        if (currentRequestType === 'change_to_existing_authority' && c.originalAuthorityData) {
-            g_form.setValue('original_authority_data', JSON.stringify(c.originalAuthorityData));
+        // Handle Wire Transfer checkbox changes
+        function handleWireTransferChange() {
+            var isChecked = wireTransferCheck.checked;
+            wireInternalOnlyContainer.style.display = isChecked ? 'block' : 'none';
+            if (!isChecked) {
+                wireInternalOnly.checked = false;
+                updateWidgetData('wire_internal_only', false);
+            }
+            updateWidgetData('wire_transfer_checked', isChecked);
         }
 
-        validateForm();
+        // Handle Official Checks checkbox changes
+        function handleOfficialChecksChange() {
+            var isChecked = officialChecksCheck.checked;
+            checksInternalOnlyContainer.style.display = isChecked ? 'block' : 'none';
+            if (!isChecked) {
+                checksInternalOnly.checked = false;
+                updateWidgetData('checks_internal_only', false);
+            }
+            updateWidgetData('official_checks_checked', isChecked);
+        }
+
+        // Setup currency input field with formatting
+        function setupCurrencyField(inputId, fieldName) {
+            var input = document.getElementById(inputId);
+            if (!input) return;
+
+            var isUpdating = false;
+
+            function handleCurrencyInput(event) {
+                if (isUpdating) return;
+                isUpdating = true;
+
+                var cursorPosition = event.target.selectionStart;
+                var oldValue = event.target.value;
+                var oldLength = oldValue.length;
+                var formattedValue = formatCurrency(oldValue);
+
+                event.target.value = formattedValue;
+
+                // Maintain cursor position after formatting
+                var newLength = formattedValue.length;
+                var lengthDiff = newLength - oldLength;
+                var newCursorPosition = Math.max(0, cursorPosition + lengthDiff);
+                setTimeout(() => {
+                    event.target.setSelectionRange(newCursorPosition, newCursorPosition);
+                }, 0);
+
+                var rawValue = getCurrencyValue(formattedValue);
+                updateWidgetData(fieldName, rawValue);
+                isUpdating = false;
+            }
+            input.addEventListener('input', handleCurrencyInput);
+        }
+
+        // Setup checkbox field
+        function setupCheckboxField(inputId, fieldName) {
+            var input = document.getElementById(inputId);
+            if (!input) return;
+            input.addEventListener('change', function(event) {
+                updateWidgetData(fieldName, event.target.checked);
+            });
+        }
+
+        // Setup textarea field
+        function setupTextAreaField(inputId, fieldName) {
+            var input = document.getElementById(inputId);
+            if (!input) return;
+            input.addEventListener('input', function(event) {
+                updateWidgetData(fieldName, event.target.value);
+            });
+        }
+
+        // Bind all event listeners
+        if (nonCreditCheckbox) nonCreditCheckbox.addEventListener('change', handleAuthoritySelection);
+        if (creditCheckbox) creditCheckbox.addEventListener('change', handleAuthoritySelection);
+
+        // Allow clicking on the entire checkbox group to toggle
+        if (nonCreditGroup) {
+            nonCreditGroup.addEventListener('click', function(e) {
+                if (e.target.tagName !== 'INPUT') {
+                    nonCreditCheckbox.checked = !nonCreditCheckbox.checked;
+                    handleAuthoritySelection();
+                }
+            });
+        }
+        if (creditGroup) {
+            creditGroup.addEventListener('click', function(e) {
+                if (e.target.tagName !== 'INPUT') {
+                    creditCheckbox.checked = !creditCheckbox.checked;
+                    handleAuthoritySelection();
+                }
+            });
+        }
+
+        if (wireTransferCheck) wireTransferCheck.addEventListener('change', handleWireTransferChange);
+        if (officialChecksCheck) officialChecksCheck.addEventListener('change', handleOfficialChecksChange);
+
+        // Setup all currency fields
+        setupCurrencyField('disbursement', 'disbursement');
+        setupCurrencyField('checkCashingOnUs', 'check_cashing_on_us');
+        setupCurrencyField('checkCashingNotOnUs', 'check_cashing_not_on_us');
+        setupCurrencyField('remoteDeposit', 'remote_deposit');
+        setupCurrencyField('treasurySolutions', 'treasury_solutions_company_wire_limits');
+        setupCurrencyField('fxWireLimits', 'fx_wire_limits');
+        setupCurrencyField('overdraft', 'overdraft');
+        setupCurrencyField('unavailableFunds', 'unavailable_funds');
+
+        // Setup all checkbox fields
+        setupCheckboxField('achCheck', 'ach_checked');
+        setupCheckboxField('wireInternalOnly', 'wire_internal_only');
+        setupCheckboxField('checksInternalOnly', 'checks_internal_only');
+        setupCheckboxField('overdraftInternalOnly', 'overdraft_internal_only');
+        setupCheckboxField('unavailableInternalOnly', 'unavailable_internal_only');
+
+        // Setup textarea field
+        setupTextAreaField('businessNeed', 'overall_business_need');
+
+        // Initialize Record Producer variables
+        updateRecordProducerVariables();
     }
-
-    // ... rest of existing initialization code ...
-}
+};
