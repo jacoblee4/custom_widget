@@ -1,5 +1,5 @@
 <!-- ============================================ -->
-<!-- HTML (No changes needed) -->
+<!-- HTML -->
 <!-- ============================================ -->
 
 <div class="widget-container" ng-show="c.shouldShowWidget()">
@@ -184,7 +184,7 @@ If applicable: Enter the requested approval amount. If the authority type should
 
 
 <!-- ============================================ -->
-<!-- CSS (Same as before) -->
+<!-- CSS -->
 <!-- ============================================ -->
 
 .widget-container {
@@ -465,7 +465,7 @@ If applicable: Enter the requested approval amount. If the authority type should
 
 
 <!-- ============================================ -->
-<!-- CLIENT CONTROLLER - Updated with Pre-population Logic -->
+<!-- CLIENT CONTROLLER -->
 <!-- ============================================ -->
 
 api.controller = function($scope, $window, spUtil) {
@@ -1123,7 +1123,7 @@ api.controller = function($scope, $window, spUtil) {
 
 
 <!-- ============================================ -->
-<!-- SERVER SCRIPT - Updated to fetch existing limits -->
+<!-- SERVER SCRIPT  -->
 <!-- ============================================ -->
 
 (function() {
