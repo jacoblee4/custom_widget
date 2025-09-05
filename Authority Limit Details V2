@@ -828,7 +828,7 @@ api.controller = function($scope, $window) {
     };
 
     // Populate credit fields
-    c.populateCreditFields = function(limits) {
+    c.populateCreditFields = function(limits, formatCurrency, getCurrencyValue, hasValue) {
         // Overdraft - use the higher of external or internal, or combine logic
         var overdraftAmount = null;
         var overdraftInternalOnly = false;
@@ -871,7 +871,7 @@ api.controller = function($scope, $window) {
     };
 
     // Show current value displays for change requests
-    c.showCurrentValueDisplays = function(limits) {
+    c.showCurrentValueDisplays = function(limits, formatCurrency, hasValue) {
         if (!c.isChangeAuthority()) return;
 
         // Helper function to display current value
