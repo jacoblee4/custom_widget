@@ -508,6 +508,7 @@ api.controller = function($scope, $window, spUtil) {
     c.jobCode = '';
     c.existingLimits = null;
     c.originalLoadedValues = null;
+    c.lastValidationErrors = [];
     
     // Widget data model - stores all form state (updated with new fields)
     c.authorityData = {
