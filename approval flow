@@ -1,1 +1,435 @@
+Name: authority.ceo.identifiers
+Value: [CEO sys_id],[CEO Title],[CEO Job Title],[Employee Number]
+Type: String
+Description: Comma-separated list of CEO identifiers to check (sys_id, title, job_title, etc.)
+
+Example value: 
+6816f79cc0a8016401c5a33be04be441,Chief Executive Officer,CEO,EMP001
+
+
+
+// Script Include
+var SignatureHelper = Class.create();
+SignatureHelper.prototype = {
+    initialize: function() {
+        // Parse CEO identifiers from single comma-separated property
+        this.ceoIdentifiers = this._parseCEOIdentifiers();
+        
+        // Business line titles
+        this.businessLineTitles = [
+            'Executive Vice President',
+            'Sr Executive Vice President'
+        ];
+    },
+    
+    /**
+     * Parse CEO identifiers from system property
+     * Format: "sys_id,title,job_title" (comma-separated)
+     */
+    _parseCEOIdentifiers: function() {
+        var propertyValue = gs.getProperty('authority.ceo.identifiers', '');
+        var identifiers = [];
+        
+        if (propertyValue) {
+            var values = propertyValue.split(',');
+            for (var i = 0; i < values.length; i++) {
+                var trimmedValue = values[i].trim();
+                if (trimmedValue) {
+                    identifiers.push(trimmedValue.toLowerCase());
+                }
+            }
+        }
+        
+        return identifiers;
+    },
+    
+    /**
+     * Find the Business Line Approver by traversing up the management chain
+     * @param {String} requestedForSysId - sys_id of the requested for user
+     * @return {Object} - Contains approver sys_id, name, and status
+     */
+    findBusinessLineApprover: function(requestedForSysId) {
+        var result = {
+            found: false,
+            approver_sys_id: '',
+            approver_name: '',
+            approver_title: '',
+            is_ceo: false,
+            error_message: ''
+        };
+        
+        if (!requestedForSysId) {
+            result.error_message = 'No requested for user provided';
+            return result;
+        }
+        
+        var currentUser = new GlideRecord('sys_user');
+        if (!currentUser.get(requestedForSysId)) {
+            result.error_message = 'Requested for user not found';
+            return result;
+        }
+        
+        var maxLevels = 10; // Prevent infinite loops
+        var currentLevel = 0;
+        
+        while (currentUser && currentLevel < maxLevels) {
+            // Check if current user is CEO (should never approve)
+            if (this._isCEO(currentUser)) {
+                result.is_ceo = true;
+                result.error_message = 'CEO found in approval chain - cannot proceed';
+                gs.warn('AuthorityLimit: CEO found in approval chain for ' + requestedForSysId);
+                return result;
+            }
+            
+            // Check if current user has the required title
+            var currentTitle = currentUser.getValue('title') || '';
+            if (this.businessLineTitles.indexOf(currentTitle) > -1) {
+                result.found = true;
+                result.approver_sys_id = currentUser.getValue('sys_id');
+                result.approver_name = currentUser.getValue('name');
+                result.approver_title = currentTitle;
+                
+                gs.info('AuthorityLimit: Business Line Approver found - ' + result.approver_name + ' (' + result.approver_title + ')');
+                return result;
+            }
+            
+            // Move up to manager
+            var managerSysId = currentUser.getValue('manager');
+            if (!managerSysId) {
+                result.error_message = 'No Business Line Approver found - reached top of hierarchy';
+                break;
+            }
+            
+            if (!currentUser.get(managerSysId)) {
+                result.error_message = 'Manager record not found in chain';
+                break;
+            }
+            
+            currentLevel++;
+        }
+        
+        if (currentLevel >= maxLevels) {
+            result.error_message = 'Maximum hierarchy levels reached without finding approver';
+        }
+        
+        return result;
+    },
+    
+    /**
+     * Check if approval should be auto-approved
+     * @param {String} openedBySysId - sys_id of the opener
+     * @param {String} requestedForSysId - sys_id of requested for
+     * @param {String} approverSysId - sys_id of the found approver
+     * @return {Boolean} - true if should auto-approve
+     */
+    shouldAutoApproveBusinessLine: function(openedBySysId, requestedForSysId, approverSysId) {
+        // Auto-approve if:
+        // 1. Opened By == Requested For
+        // 2. AND the requester has the business line title
+        
+        if (openedBySysId !== requestedForSysId) {
+            return false;
+        }
+        
+        // Check if the requester/opener has the business line title
+        var userGr = new GlideRecord('sys_user');
+        if (userGr.get(openedBySysId)) {
+            var userTitle = userGr.getValue('title') || '';
+            if (this.businessLineTitles.indexOf(userTitle) > -1) {
+                gs.info('AuthorityLimit: Auto-approving Business Line - requester has authority title');
+                return true;
+            }
+        }
+        
+        return false;
+    },
+    
+    /**
+     * Check if a user is the CEO by comparing against any identifier
+     * @param {GlideRecord} userGr - User GlideRecord
+     * @return {Boolean}
+     */
+    _isCEO: function(userGr) {
+        if (!userGr || this.ceoIdentifiers.length === 0) {
+            return false;
+        }
+        
+        // Get user values to check
+        var userValues = [
+            userGr.getValue('sys_id'),
+            userGr.getValue('title'),
+            userGr.getValue('u_job_title'),
+            userGr.getValue('job_title'),
+            userGr.getValue('employee_number'),
+            userGr.getValue('user_name')
+        ];
+        
+        // Check if any user value matches any CEO identifier
+        for (var i = 0; i < userValues.length; i++) {
+            var userValue = userValues[i];
+            if (userValue) {
+                var lowerUserValue = userValue.toLowerCase().trim();
+                if (this.ceoIdentifiers.indexOf(lowerUserValue) > -1) {
+                    gs.info('AuthorityLimit: CEO match found - ' + userValue);
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    },
+    
+    type: 'x_banun_bunow_si_0.SignatureHelper'
+};
+
+
+
+
+
+
+
+
+// flow setting var
+var SignatureHelper = Class.create();
+SignatureHelper.prototype = {
+    initialize: function() {
+        // Parse CEO identifiers from single comma-separated property
+        this.ceoIdentifiers = this._parseCEOIdentifiers();
+        
+        // Parse business line titles from property
+        this.businessLineTitles = this._parseBusinessLineTitles();
+    },
+    
+    /**
+     * Parse CEO identifiers from system property
+     * Format: "sys_id,title,job_title" (comma-separated)
+     */
+    _parseCEOIdentifiers: function() {
+        var propertyValue = gs.getProperty('authority.ceo.identifiers', '');
+        var identifiers = [];
+        
+        if (propertyValue) {
+            var values = propertyValue.split(',');
+            for (var i = 0; i < values.length; i++) {
+                var trimmedValue = values[i].trim();
+                if (trimmedValue) {
+                    identifiers.push(trimmedValue.toLowerCase());
+                }
+            }
+        }
+        
+        return identifiers;
+    },
+    
+    /**
+     * Parse business line titles from system property
+     */
+    _parseBusinessLineTitles: function() {
+        var propertyValue = gs.getProperty('authority.business_line.titles', 
+            'Executive Vice President,Sr Executive Vice President');
+        var titles = [];
+        
+        if (propertyValue) {
+            var values = propertyValue.split(',');
+            for (var i = 0; i < values.length; i++) {
+                var trimmedValue = values[i].trim();
+                if (trimmedValue) {
+                    titles.push(trimmedValue);
+                }
+            }
+        }
+        
+        return titles;
+    },
+    
+    /**
+     * Find the Business Line Approver by traversing up the management chain
+     * @param {String} requestedForSysId - sys_id of the requested for user
+     * @return {Object} - Contains approver sys_id, name, and status
+     */
+    findBusinessLineApprover: function(requestedForSysId) {
+        var result = {
+            found: false,
+            approver_sys_id: '',
+            approver_name: '',
+            approver_title: '',
+            is_ceo: false,
+            error_message: ''
+        };
+        
+        if (!requestedForSysId) {
+            result.error_message = 'No requested for user provided';
+            return result;
+        }
+        
+        var currentUser = new GlideRecord('sys_user');
+        if (!currentUser.get(requestedForSysId)) {
+            result.error_message = 'Requested for user not found';
+            return result;
+        }
+        
+        var maxLevels = 10; // Prevent infinite loops
+        var currentLevel = 0;
+        
+        while (currentUser && currentLevel < maxLevels) {
+            // Check if current user is CEO (should never approve)
+            if (this._isCEO(currentUser)) {
+                result.is_ceo = true;
+                result.error_message = 'CEO found in approval chain - cannot proceed';
+                gs.warn('AuthorityLimit: CEO found in approval chain for ' + requestedForSysId);
+                return result;
+            }
+            
+            // Check if current user has the required title
+            var currentTitle = currentUser.getValue('title') || '';
+            if (this.businessLineTitles.indexOf(currentTitle) > -1) {
+                result.found = true;
+                result.approver_sys_id = currentUser.getValue('sys_id');
+                result.approver_name = currentUser.getValue('name');
+                result.approver_title = currentTitle;
+                
+                gs.info('AuthorityLimit: Business Line Approver found - ' + result.approver_name + ' (' + result.approver_title + ')');
+                return result;
+            }
+            
+            // Move up to manager
+            var managerSysId = currentUser.getValue('manager');
+            if (!managerSysId) {
+                result.error_message = 'No Business Line Approver found - reached top of hierarchy';
+                break;
+            }
+            
+            if (!currentUser.get(managerSysId)) {
+                result.error_message = 'Manager record not found in chain';
+                break;
+            }
+            
+            currentLevel++;
+        }
+        
+        if (currentLevel >= maxLevels) {
+            result.error_message = 'Maximum hierarchy levels reached without finding approver';
+        }
+        
+        return result;
+    },
+    
+    /**
+     * Check if approval should be auto-approved
+     * @param {String} openedBySysId - sys_id of the opener
+     * @param {String} requestedForSysId - sys_id of requested for
+     * @param {String} approverSysId - sys_id of the found approver  
+     * @return {Boolean} - true if should auto-approve
+     */
+    shouldAutoApproveBusinessLine: function(openedBySysId, requestedForSysId, approverSysId) {
+        // Auto-approve if:
+        // 1. Opened By == Requested For
+        // 2. AND the requester has the business line title
+        
+        if (openedBySysId !== requestedForSysId) {
+            return false;
+        }
+        
+        // Check if the requester/opener has the business line title
+        var userGr = new GlideRecord('sys_user');
+        if (userGr.get(openedBySysId)) {
+            var userTitle = userGr.getValue('title') || '';
+            if (this.businessLineTitles.indexOf(userTitle) > -1) {
+                gs.info('AuthorityLimit: Auto-approving Business Line - requester has authority title');
+                return true;
+            }
+        }
+        
+        return false;
+    },
+    
+    /**
+     * Check if a user is the CEO by comparing against any identifier
+     * @param {GlideRecord} userGr - User GlideRecord
+     * @return {Boolean}
+     */
+    _isCEO: function(userGr) {
+        if (!userGr || this.ceoIdentifiers.length === 0) {
+            return false;
+        }
+        
+        // Get user values to check
+        var userValues = [
+            userGr.getValue('sys_id'),
+            userGr.getValue('title'),
+            userGr.getValue('u_job_title'),
+            userGr.getValue('job_title'),
+            userGr.getValue('employee_number'),
+            userGr.getValue('user_name')
+        ];
+        
+        // Check if any user value matches any CEO identifier
+        for (var i = 0; i < userValues.length; i++) {
+            var userValue = userValues[i];
+            if (userValue) {
+                var lowerUserValue = userValue.toLowerCase().trim();
+                if (this.ceoIdentifiers.indexOf(lowerUserValue) > -1) {
+                    gs.info('AuthorityLimit: CEO match found - ' + userValue);
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    },
+    
+    /**
+     * Log approval chain for debugging
+     * @param {String} requestedForSysId - sys_id of the requested for user
+     * @return {Array} - Array of users in the chain
+     */
+    debugApprovalChain: function(requestedForSysId) {
+        var chain = [];
+        var currentUser = new GlideRecord('sys_user');
+        
+        if (!currentUser.get(requestedForSysId)) {
+            return chain;
+        }
+        
+        var maxLevels = 10;
+        var currentLevel = 0;
+        
+        while (currentUser && currentLevel < maxLevels) {
+            chain.push({
+                name: currentUser.getValue('name'),
+                title: currentUser.getValue('title'),
+                sys_id: currentUser.getValue('sys_id'),
+                is_ceo: this._isCEO(currentUser),
+                is_business_line: this.businessLineTitles.indexOf(currentUser.getValue('title') || '') > -1
+            });
+            
+            var managerSysId = currentUser.getValue('manager');
+            if (!managerSysId || !currentUser.get(managerSysId)) {
+                break;
+            }
+            
+            currentLevel++;
+        }
+        
+        return chain;
+    },
+    
+    type: 'x_banun_bunow_si_0.SignatureHelper'
+};
+
+
+
+
+1. Name: authority.ceo.identifiers
+   Value: [CEO sys_id],[CEO Title],[CEO Job Title],[Employee Number]
+   Type: String
+   Description: Comma-separated list of CEO identifiers (sys_id, title, job_title, etc.)
+   Example: 6816f79cc0a8016401c5a33be04be441,Chief Executive Officer,CEO,EMP001
+
+2. Name: authority.business_line.titles  
+   Value: Executive Vice President,Sr Executive Vice President
+   Type: String
+   Description: Comma-separated list of titles that qualify as Business Line Approvers
+
+
 
