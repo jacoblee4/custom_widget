@@ -617,14 +617,20 @@ api.controller = function($scope, $window, spUtil) {
                     var isValid = c.validateForm();
                     
                     if (!isValid) {
-                        // Show fresh errors
-                        setTimeout(function() {
+                        // Show fresh errors using the stored errors from validation
+                        if (c.lastValidationErrors && c.lastValidationErrors.length > 0) {
+                            c.showErrorMessages(c.lastValidationErrors);
+                        } else {
+                            // Fallback to trying to get from g_form
                             var formErrors = g_form.getValue('form_validation_errors');
                             if (formErrors) {
                                 var errors = formErrors.split('|');
                                 c.showErrorMessages(errors);
+                            } else {
+                                // Last resort - show generic message
+                                c.showErrorMessages(['Please correct the form errors and try again']);
                             }
-                        }, 100);
+                        }
                         return false;  // Prevent submission
                     }
                     
@@ -751,101 +757,104 @@ api.controller = function($scope, $window, spUtil) {
 
     // Validation logic - UPDATED with bidirectional credit validation
     c.validateForm = function() {
-        var errors = [];
-        var currentRequestType = c.getRequestType();
+    var errors = [];
+    var currentRequestType = c.getRequestType();
 
-        // For remove authority requests, skip client validation
-        if (currentRequestType === 'remove_authority' || c.requestType === 'remove_authority') {
-            g_form.setValue('form_validation_errors', '');
-            g_form.setValue('form_is_valid', 'true');
-            return true;
+    // For remove authority requests, skip client validation
+    if (currentRequestType === 'remove_authority' || c.requestType === 'remove_authority') {
+        g_form.setValue('form_validation_errors', '');
+        g_form.setValue('form_is_valid', 'true');
+        return true;
+    }
+
+    // Business justification required for all request types
+    if (!c.authorityData.overall_business_need || c.authorityData.overall_business_need.trim() === '') {
+        errors.push('Overall Business Need is required');
+    }
+
+    // Must select at least one authority type
+    if (!c.authorityData.non_credit_checked && !c.authorityData.credit_checked) {
+        errors.push('You must select at least one authority type (Credit Authority or Non-Credit Authority)');
+    }
+
+    // For change requests, ensure at least one value has changed
+    if (currentRequestType === 'change_to_existing_authority' && c.originalLoadedValues) {
+        if (!c.hasValuesChanged()) {
+            errors.push('At least one authority limit value must be changed for a Change to Existing Authority request');
+        }
+    }
+
+    // Non-credit authority validation
+    if (c.authorityData.non_credit_checked) {
+        var hasNonCreditValue = c.authorityData.disbursement || c.authorityData.check_cashing_on_us ||
+            c.authorityData.check_cashing_not_on_us || c.authorityData.remote_deposit ||
+            c.authorityData.treasury_solutions_company_wire_limits || c.authorityData.fx_wire_limits;
+
+        if (!hasNonCreditValue) {
+            errors.push('If Non-Credit Authority is selected, at least one currency field must have a value');
         }
 
-        // Business justification required for all request types
-        if (!c.authorityData.overall_business_need || c.authorityData.overall_business_need.trim() === '') {
-            errors.push('Overall Business Need is required');
-        }
-
-        // Must select at least one authority type
-        if (!c.authorityData.non_credit_checked && !c.authorityData.credit_checked) {
-            errors.push('You must select at least one authority type (Credit Authority or Non-Credit Authority)');
-        }
-
-        // For change requests, ensure at least one value has changed
-        if (currentRequestType === 'change_to_existing_authority' && c.originalLoadedValues) {
-            if (!c.hasValuesChanged()) {
-                errors.push('At least one authority limit value must be changed for a Change to Existing Authority request');
-            }
-        }
-
-        // Non-credit authority validation
-        if (c.authorityData.non_credit_checked) {
-            var hasNonCreditValue = c.authorityData.disbursement || c.authorityData.check_cashing_on_us ||
-                c.authorityData.check_cashing_not_on_us || c.authorityData.remote_deposit ||
-                c.authorityData.treasury_solutions_company_wire_limits || c.authorityData.fx_wire_limits;
-
-            if (!hasNonCreditValue) {
-                errors.push('If Non-Credit Authority is selected, at least one currency field must have a value');
-            }
-
-            if (c.authorityData.disbursement) {
-                if (!c.authorityData.ach_checked &&
-                    !c.authorityData.wire_transfer_checked &&
-                    !c.authorityData.official_checks_checked) {
-                    errors.push('If Disbursement amount is entered, you must select at least one option: ACH, Wire Transfer, or Official Checks');
-                }
-                
-                // Validate Wire Transfer account types
-                if (c.authorityData.wire_transfer_checked) {
-                    if (!c.authorityData.wire_internal && !c.authorityData.wire_external) {
-                        errors.push('If Wire Transfer is selected, you must choose at least one account type (Internal or External)');
-                    }
-                }
-                
-                // Validate Official Checks account types
-                if (c.authorityData.official_checks_checked) {
-                    if (!c.authorityData.checks_internal && !c.authorityData.checks_external) {
-                        errors.push('If Official Checks is selected, you must choose at least one account type (Internal or External)');
-                    }
-                }
-            }
-        }
-
-        // Credit authority validation - UPDATED WITH BIDIRECTIONAL VALIDATION
-        if (c.authorityData.credit_checked) {
-            var hasCreditValue = c.authorityData.overdraft || c.authorityData.unavailable_funds;
-            var hasOverdraftAccountType = c.authorityData.overdraft_internal || c.authorityData.overdraft_external;
-            var hasUnavailableAccountType = c.authorityData.unavailable_internal || c.authorityData.unavailable_external;
-            
-            if (!hasCreditValue && !hasOverdraftAccountType && !hasUnavailableAccountType) {
-                errors.push('If Credit Authority is selected, at least one currency field must have a value');
+        if (c.authorityData.disbursement) {
+            if (!c.authorityData.ach_checked &&
+                !c.authorityData.wire_transfer_checked &&
+                !c.authorityData.official_checks_checked) {
+                errors.push('If Disbursement amount is entered, you must select at least one option: ACH, Wire Transfer, or Official Checks');
             }
             
-            // Overdraft bidirectional validation
-            if (c.authorityData.overdraft && !hasOverdraftAccountType) {
-                errors.push('If Overdraft amount is entered, you must choose at least one account type (Internal or External)');
-            }
-            if (hasOverdraftAccountType && !c.authorityData.overdraft) {
-                errors.push('If Overdraft account type is selected, you must enter an Overdraft amount');
+            // Validate Wire Transfer account types
+            if (c.authorityData.wire_transfer_checked) {
+                if (!c.authorityData.wire_internal && !c.authorityData.wire_external) {
+                    errors.push('If Wire Transfer is selected, you must choose at least one account type (Internal or External)');
+                }
             }
             
-            // Unavailable Funds bidirectional validation
-            if (c.authorityData.unavailable_funds && !hasUnavailableAccountType) {
-                errors.push('If Unavailable Funds amount is entered, you must choose at least one account type (Internal or External)');
-            }
-            if (hasUnavailableAccountType && !c.authorityData.unavailable_funds) {
-                errors.push('If Unavailable Funds account type is selected, you must enter an Unavailable Funds amount');
+            // Validate Official Checks account types
+            if (c.authorityData.official_checks_checked) {
+                if (!c.authorityData.checks_internal && !c.authorityData.checks_external) {
+                    errors.push('If Official Checks is selected, you must choose at least one account type (Internal or External)');
+                }
             }
         }
+    }
 
-        var isValid = errors.length === 0;
+    // Credit authority validation - UPDATED WITH BIDIRECTIONAL VALIDATION
+    if (c.authorityData.credit_checked) {
+        var hasCreditValue = c.authorityData.overdraft || c.authorityData.unavailable_funds;
+        var hasOverdraftAccountType = c.authorityData.overdraft_internal || c.authorityData.overdraft_external;
+        var hasUnavailableAccountType = c.authorityData.unavailable_internal || c.authorityData.unavailable_external;
+        
+        if (!hasCreditValue && !hasOverdraftAccountType && !hasUnavailableAccountType) {
+            errors.push('If Credit Authority is selected, at least one currency field must have a value');
+        }
+        
+        // Overdraft bidirectional validation
+        if (c.authorityData.overdraft && !hasOverdraftAccountType) {
+            errors.push('If Overdraft amount is entered, you must choose at least one account type (Internal or External)');
+        }
+        if (hasOverdraftAccountType && !c.authorityData.overdraft) {
+            errors.push('If Overdraft account type is selected, you must enter an Overdraft amount');
+        }
+        
+        // Unavailable Funds bidirectional validation
+        if (c.authorityData.unavailable_funds && !hasUnavailableAccountType) {
+            errors.push('If Unavailable Funds amount is entered, you must choose at least one account type (Internal or External)');
+        }
+        if (hasUnavailableAccountType && !c.authorityData.unavailable_funds) {
+            errors.push('If Unavailable Funds account type is selected, you must enter an Unavailable Funds amount');
+        }
+    }
 
-        // Update Record Producer variables
-        g_form.setValue('form_validation_errors', errors.join('|'));
-        g_form.setValue('form_is_valid', isValid ? 'true' : 'false');
+    var isValid = errors.length === 0;
 
-        return isValid;
-    };
+    // Store the errors for later use
+    c.lastValidationErrors = errors;
+
+    // Update Record Producer variables
+    g_form.setValue('form_validation_errors', errors.join('|'));
+    g_form.setValue('form_is_valid', isValid ? 'true' : 'false');
+
+    return isValid;
+};
 
     // Update Record Producer variables - UPDATED with new checkbox logic
     c.updateRecordProducerVariables = function() {
