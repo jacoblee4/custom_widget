@@ -3,11 +3,11 @@ SignatureHelper.prototype = {
     initialize: function() {
         // Parse CEO identifiers from single comma-separated property
         this.ceoIdentifiers = this._parseCEOIdentifiers();
-        
+
         // Parse business line titles from property
         this.businessLineTitles = this._parseBusinessLineTitles();
     },
-    
+
     /**
      * Parse CEO identifiers from system property
      * Format: "sys_id,title,officer_title,keyword" (comma-separated)
@@ -18,7 +18,7 @@ SignatureHelper.prototype = {
             exactMatches: [],
             keywords: []
         };
-        
+
         if (propertyValue) {
             var values = propertyValue.split(',');
             for (var i = 0; i < values.length; i++) {
@@ -35,18 +35,17 @@ SignatureHelper.prototype = {
                 }
             }
         }
-        
+
         return identifiers;
     },
-    
+
     /**
      * Parse business line titles from system property
      */
     _parseBusinessLineTitles: function() {
-        var propertyValue = gs.getProperty('bunow.authoirty.business.line.titles', 
-            'Executive Vice President,Sr Executive Vice President');
+        var propertyValue = gs.getProperty('bunow.authoirty.business.line.titles', '');
         var titles = [];
-        
+
         if (propertyValue) {
             var values = propertyValue.split(',');
             for (var i = 0; i < values.length; i++) {
@@ -56,21 +55,17 @@ SignatureHelper.prototype = {
                 }
             }
         }
-        
+
         return titles;
     },
-    
-    /**
+
+	/**
      * Find the Business Line Approver by traversing up the management chain
-     * @param {String} requestedForSysId - sys_id of the requested for user
-     * @return {Object} - Contains approver sys_id, name, and status
      */
     findBusinessLineApprover: function(requestedForSysId) {
         var result = {
             found: false,
             approver_sys_id: '',
-            approver_name: '',
-            approver_title: '',
             is_ceo: false,
             error_message: ''
         };
@@ -86,7 +81,7 @@ SignatureHelper.prototype = {
             return result;
         }
         
-        var maxLevels = 10; // Prevent infinite loops
+        var maxLevels = 20; // Prevent infinite loops
         var currentLevel = 0;
         
         while (currentUser && currentLevel < maxLevels) {
@@ -94,26 +89,21 @@ SignatureHelper.prototype = {
             if (this._isCEO(currentUser)) {
                 result.is_ceo = true;
                 result.error_message = 'CEO found in approval chain - cannot proceed';
-                gs.warn('AuthorityLimit: CEO found in approval chain for ' + requestedForSysId);
                 return result;
             }
             
             // Check if current user has the required title
-            var currentTitle = currentUser.getValue('title') || '';
+            var currentTitle = currentUser.getValue('u_officer_title') || '';
             if (this.businessLineTitles.indexOf(currentTitle) > -1) {
                 result.found = true;
                 result.approver_sys_id = currentUser.getValue('sys_id');
-                result.approver_name = currentUser.getValue('name');
-                result.approver_title = currentTitle;
-                
-                gs.info('AuthorityLimit: Business Line Approver found - ' + result.approver_name + ' (' + result.approver_title + ')');
                 return result;
             }
             
             // Move up to manager
             var managerSysId = currentUser.getValue('manager');
             if (!managerSysId) {
-                result.error_message = 'No Business Line Approver found - reached top of hierarchy';
+                result.error_message = 'No Business Line Approver found.y';
                 break;
             }
             
