@@ -42,9 +42,15 @@ If applicable: Choose the appropriate transaction type(s) and enter the requeste
                         <label for="wireTransferCheck">Wire Transfer</label>
                     </div>
                     
-                    <div class="indented-checkbox" id="wireInternalOnlyContainer" style="display: none;">
-                        <input type="checkbox" id="wireInternalOnly">
-                        <label for="wireInternalOnly">Internal Accounts Only</label>
+                    <div class="account-type-checkboxes" id="wireAccountTypes" style="display: none;">
+                        <div class="indented-checkbox">
+                            <input type="checkbox" id="wireInternal">
+                            <label for="wireInternal">Internal Accounts</label>
+                        </div>
+                        <div class="indented-checkbox">
+                            <input type="checkbox" id="wireExternal">
+                            <label for="wireExternal">External Accounts</label>
+                        </div>
                     </div>
                     
                     <div class="checkbox-group-small">
@@ -52,9 +58,15 @@ If applicable: Choose the appropriate transaction type(s) and enter the requeste
                         <label for="officialChecksCheck">Official Checks</label>
                     </div>
                     
-                    <div class="indented-checkbox spaced-indent" id="checksInternalOnlyContainer" style="display: none;">
-                        <input type="checkbox" id="checksInternalOnly">
-                        <label for="checksInternalOnly">Internal Accounts Only</label>
+                    <div class="account-type-checkboxes spaced-indent" id="checksAccountTypes" style="display: none;">
+                        <div class="indented-checkbox">
+                            <input type="checkbox" id="checksInternal">
+                            <label for="checksInternal">Internal Accounts</label>
+                        </div>
+                        <div class="indented-checkbox">
+                            <input type="checkbox" id="checksExternal">
+                            <label for="checksExternal">External Accounts</label>
+                        </div>
                     </div>
                 </div>
                 
@@ -140,9 +152,15 @@ If applicable: Enter the requested approval amount. If the authority type should
                         <span class="currency-symbol">$</span>
                         <input type="text" id="overdraft" class="form-control" placeholder="">
                     </div>
-                    <div class="indented-checkbox">
-                        <input type="checkbox" id="overdraftInternalOnly">
-                        <label for="overdraftInternalOnly">Internal Accounts Only</label>
+                    <div class="account-type-checkboxes">
+                        <div class="indented-checkbox">
+                            <input type="checkbox" id="overdraftInternal">
+                            <label for="overdraftInternal">Internal Accounts</label>
+                        </div>
+                        <div class="indented-checkbox">
+                            <input type="checkbox" id="overdraftExternal">
+                            <label for="overdraftExternal">External Accounts</label>
+                        </div>
                     </div>
                 </div>
                 
@@ -157,9 +175,15 @@ If applicable: Enter the requested approval amount. If the authority type should
                         <span class="currency-symbol">$</span>
                         <input type="text" id="unavailableFunds" class="form-control" placeholder="">
                     </div>
-                    <div class="indented-checkbox">
-                        <input type="checkbox" id="unavailableInternalOnly">
-                        <label for="unavailableInternalOnly">Internal Accounts Only</label>
+                    <div class="account-type-checkboxes">
+                        <div class="indented-checkbox">
+                            <input type="checkbox" id="unavailableInternal">
+                            <label for="unavailableInternal">Internal Accounts</label>
+                        </div>
+                        <div class="indented-checkbox">
+                            <input type="checkbox" id="unavailableExternal">
+                            <label for="unavailableExternal">External Accounts</label>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -398,11 +422,15 @@ If applicable: Enter the requested approval amount. If the authority type should
     }
 }
 
-.indented-checkbox {
-    margin-left: 25px;
+.account-type-checkboxes {
     margin-top: 8px;
+    margin-left: 25px;
+}
+
+.indented-checkbox {
     display: flex;
     align-items: center;
+    margin-bottom: 6px;
     
     input[type="checkbox"] {
         margin-right: 8px;
@@ -415,6 +443,10 @@ If applicable: Enter the requested approval amount. If the authority type should
         color: #6c757d;
         margin: 0;
         cursor: pointer;
+    }
+    
+    &:last-child {
+        margin-bottom: 0;
     }
 }
 
@@ -475,27 +507,31 @@ api.controller = function($scope, $window, spUtil) {
     c.requestType = '';
     c.jobCode = '';
     c.existingLimits = null;
-    c.originalLoadedValues = null; // Add this to track original values
+    c.originalLoadedValues = null;
     
-    // Widget data model - stores all form state (initialize at controller level)
+    // Widget data model - stores all form state (updated with new fields)
     c.authorityData = {
         non_credit_checked: false,
         credit_checked: false,
         disbursement: '',
         ach_checked: false,
         wire_transfer_checked: false,
-        wire_internal_only: false,
+        wire_internal: false,
+        wire_external: false,
         official_checks_checked: false,
-        checks_internal_only: false,
+        checks_internal: false,
+        checks_external: false,
         check_cashing_on_us: '',
         check_cashing_not_on_us: '',
         remote_deposit: '',
         treasury_solutions_company_wire_limits: '',
         fx_wire_limits: '',
         overdraft: '',
-        overdraft_internal_only: false,
+        overdraft_internal: false,
+        overdraft_external: false,
         unavailable_funds: '',
-        unavailable_internal_only: false,
+        unavailable_internal: false,
+        unavailable_external: false,
         overall_business_need: ''
     };
 
@@ -573,26 +609,20 @@ api.controller = function($scope, $window, spUtil) {
         return '';
     };
 
-    // Currency formatting utilities
+    // Currency formatting utilities - UPDATED to remove decimals
     c.formatCurrency = function(value) {
         if (!value) return '';
-        var numStr = value.toString().replace(/[^\d.]/g, '');
-        var parts = numStr.split('.');
-        if (parts.length > 2) {
-            numStr = parts[0] + '.' + parts.slice(1).join('');
-        }
-        var [integerPart, decimalPart] = numStr.split('.');
-        var formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-        if (decimalPart !== undefined) {
-            var limitedDecimal = decimalPart.substring(0, 2);
-            return formattedInteger + '.' + limitedDecimal;
-        }
+        // Remove all non-digit characters
+        var numStr = value.toString().replace(/[^\d]/g, '');
+        // Add comma separators
+        var formattedInteger = numStr.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         return formattedInteger;
     };
 
     c.getCurrencyValue = function(formattedValue) {
         if (!formattedValue) return '';
-        return formattedValue.replace(/[^\d.]/g, '');
+        // Remove all non-digit characters
+        return formattedValue.replace(/[^\d]/g, '');
     };
 
     // Helper function to check if value is non-zero
@@ -604,24 +634,22 @@ api.controller = function($scope, $window, spUtil) {
 
     // Check if any values have changed from original
     c.hasValuesChanged = function() {
-        if (!c.originalLoadedValues) return true; // If no original values, assume changed
+        if (!c.originalLoadedValues) return true;
         
-        // Compare current values with original values
         for (var key in c.originalLoadedValues) {
             if (c.originalLoadedValues.hasOwnProperty(key)) {
-                // Skip the business need field from this comparison
                 if (key === 'overall_business_need') continue;
                 
                 if (c.authorityData[key] !== c.originalLoadedValues[key]) {
-                    return true; // Found a change
+                    return true;
                 }
             }
         }
         
-        return false; // No changes found
+        return false;
     };
 
-    // Validation logic - UPDATED
+    // Validation logic - UPDATED with new checkbox requirements
     c.validateForm = function() {
         var errors = [];
         var currentRequestType = c.getRequestType();
@@ -660,11 +688,26 @@ api.controller = function($scope, $window, spUtil) {
                 errors.push('If Non-Credit Authority is selected, at least one currency field must have a value');
             }
 
-            if (c.authorityData.disbursement &&
-                !c.authorityData.ach_checked &&
-                !c.authorityData.wire_transfer_checked &&
-                !c.authorityData.official_checks_checked) {
-                errors.push('If Disbursement amount is entered, you must select at least one option: ACH, Wire Transfer, or Official Checks');
+            if (c.authorityData.disbursement) {
+                if (!c.authorityData.ach_checked &&
+                    !c.authorityData.wire_transfer_checked &&
+                    !c.authorityData.official_checks_checked) {
+                    errors.push('If Disbursement amount is entered, you must select at least one option: ACH, Wire Transfer, or Official Checks');
+                }
+                
+                // Validate Wire Transfer account types
+                if (c.authorityData.wire_transfer_checked) {
+                    if (!c.authorityData.wire_internal && !c.authorityData.wire_external) {
+                        errors.push('If Wire Transfer is selected, you must choose at least one account type (Internal or External)');
+                    }
+                }
+                
+                // Validate Official Checks account types
+                if (c.authorityData.official_checks_checked) {
+                    if (!c.authorityData.checks_internal && !c.authorityData.checks_external) {
+                        errors.push('If Official Checks is selected, you must choose at least one account type (Internal or External)');
+                    }
+                }
             }
         }
 
@@ -673,6 +716,20 @@ api.controller = function($scope, $window, spUtil) {
             var hasCreditValue = c.authorityData.overdraft || c.authorityData.unavailable_funds;
             if (!hasCreditValue) {
                 errors.push('If Credit Authority is selected, at least one currency field must have a value');
+            }
+            
+            // Validate Overdraft account types if value is entered
+            if (c.authorityData.overdraft) {
+                if (!c.authorityData.overdraft_internal && !c.authorityData.overdraft_external) {
+                    errors.push('If Overdraft amount is entered, you must choose at least one account type (Internal or External)');
+                }
+            }
+            
+            // Validate Unavailable Funds account types if value is entered
+            if (c.authorityData.unavailable_funds) {
+                if (!c.authorityData.unavailable_internal && !c.authorityData.unavailable_external) {
+                    errors.push('If Unavailable Funds amount is entered, you must choose at least one account type (Internal or External)');
+                }
             }
         }
 
@@ -685,7 +742,7 @@ api.controller = function($scope, $window, spUtil) {
         return isValid;
     };
 
-    // Update Record Producer variables
+    // Update Record Producer variables - UPDATED with new checkbox logic
     c.updateRecordProducerVariables = function() {
         g_form.setValue('overall_business_need', c.authorityData.overall_business_need);
 
@@ -708,10 +765,10 @@ api.controller = function($scope, $window, spUtil) {
             authority_types.push('non_credit');
             var nonCreditData = {
                 disbursement_ach: (c.authorityData.ach_checked && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
-                disbursement_wire_transfer_external: (c.authorityData.wire_transfer_checked && !c.authorityData.wire_internal_only && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
-                disbursement_wire_transfer_internal: (c.authorityData.wire_transfer_checked && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
-                disbursement_official_checks_external: (c.authorityData.official_checks_checked && !c.authorityData.checks_internal_only && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
-                disbursement_official_checks_internal: (c.authorityData.official_checks_checked && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
+                disbursement_wire_transfer_external: (c.authorityData.wire_transfer_checked && c.authorityData.wire_external && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
+                disbursement_wire_transfer_internal: (c.authorityData.wire_transfer_checked && c.authorityData.wire_internal && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
+                disbursement_official_checks_external: (c.authorityData.official_checks_checked && c.authorityData.checks_external && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
+                disbursement_official_checks_internal: (c.authorityData.official_checks_checked && c.authorityData.checks_internal && c.authorityData.disbursement) ? c.authorityData.disbursement : '',
                 check_cashing_on_us: c.authorityData.check_cashing_on_us,
                 check_cashing_not_on_us: c.authorityData.check_cashing_not_on_us,
                 remote_deposit: c.authorityData.remote_deposit,
@@ -725,10 +782,10 @@ api.controller = function($scope, $window, spUtil) {
         if (c.authorityData.credit_checked) {
             authority_types.push('credit');
             var creditData = {
-                overdraft_internal_accounts: c.authorityData.overdraft || '',
-                overdraft_external_accounts: (c.authorityData.overdraft && !c.authorityData.overdraft_internal_only) ? c.authorityData.overdraft : '',
-                unavailable_funds_internal_accounts: c.authorityData.unavailable_funds || '',
-                unavailable_funds_external_accounts: (c.authorityData.unavailable_funds && !c.authorityData.unavailable_internal_only) ? c.authorityData.unavailable_funds : ''
+                overdraft_internal_accounts: (c.authorityData.overdraft && c.authorityData.overdraft_internal) ? c.authorityData.overdraft : '',
+                overdraft_external_accounts: (c.authorityData.overdraft && c.authorityData.overdraft_external) ? c.authorityData.overdraft : '',
+                unavailable_funds_internal_accounts: (c.authorityData.unavailable_funds && c.authorityData.unavailable_internal) ? c.authorityData.unavailable_funds : '',
+                unavailable_funds_external_accounts: (c.authorityData.unavailable_funds && c.authorityData.unavailable_external) ? c.authorityData.unavailable_funds : ''
             };
             authority_data.push(JSON.stringify(creditData));
         }
@@ -756,7 +813,7 @@ api.controller = function($scope, $window, spUtil) {
             job_code: c.jobCode
         }).then(function(response) {
             if (response.data.limits && response.data.limits.length > 0) {
-                c.existingLimits = response.data.limits[0]; // Get the first/most recent limit
+                c.existingLimits = response.data.limits[0];
                 c.populateFieldsFromExistingLimits();
             }
         }).catch(function(error) {
@@ -764,7 +821,7 @@ api.controller = function($scope, $window, spUtil) {
         });
     };
 
-    // Populate fields with existing limit values - UPDATED
+    // Populate fields with existing limit values - UPDATED for new checkboxes
     c.populateFieldsFromExistingLimits = function() {
         if (!c.existingLimits) return;
 
@@ -805,7 +862,7 @@ api.controller = function($scope, $window, spUtil) {
             document.getElementById('nonCreditSection').classList.add('active');
             c.authorityData.non_credit_checked = true;
 
-            // Handle Disbursement fields - all disbursement types should have same value
+            // Handle Disbursement fields
             var disbursementValue = '';
             
             // ACH
@@ -822,18 +879,19 @@ api.controller = function($scope, $window, spUtil) {
             if (hasWireInternal || hasWireExternal) {
                 document.getElementById('wireTransferCheck').checked = true;
                 c.authorityData.wire_transfer_checked = true;
-                document.getElementById('wireInternalOnlyContainer').style.display = 'block';
+                document.getElementById('wireAccountTypes').style.display = 'block';
                 
-                // Check if it's internal only (has internal but NOT external - even if external is 0)
-                if (hasWireInternal && !hasWireExternal) {
-                    document.getElementById('wireInternalOnly').checked = true;
-                    c.authorityData.wire_internal_only = true;
+                // Check appropriate account type boxes
+                if (hasWireInternal) {
+                    document.getElementById('wireInternal').checked = true;
+                    c.authorityData.wire_internal = true;
+                    disbursementValue = disbursementValue || limits.disbursement_wire_transfer_internal;
                 }
-                
-                // Use the non-zero value for disbursement
-                disbursementValue = disbursementValue || 
-                    (hasWireInternal ? limits.disbursement_wire_transfer_internal : '') ||
-                    (hasWireExternal ? limits.disbursement_wire_transfer_external : '');
+                if (hasWireExternal) {
+                    document.getElementById('wireExternal').checked = true;
+                    c.authorityData.wire_external = true;
+                    disbursementValue = disbursementValue || limits.disbursement_wire_transfer_external;
+                }
             }
 
             // Official Checks
@@ -843,18 +901,19 @@ api.controller = function($scope, $window, spUtil) {
             if (hasChecksInternal || hasChecksExternal) {
                 document.getElementById('officialChecksCheck').checked = true;
                 c.authorityData.official_checks_checked = true;
-                document.getElementById('checksInternalOnlyContainer').style.display = 'block';
+                document.getElementById('checksAccountTypes').style.display = 'block';
                 
-                // Check if it's internal only
-                if (hasChecksInternal && !hasChecksExternal) {
-                    document.getElementById('checksInternalOnly').checked = true;
-                    c.authorityData.checks_internal_only = true;
+                // Check appropriate account type boxes
+                if (hasChecksInternal) {
+                    document.getElementById('checksInternal').checked = true;
+                    c.authorityData.checks_internal = true;
+                    disbursementValue = disbursementValue || limits.disbursement_official_checks_internal;
                 }
-                
-                // Use the non-zero value for disbursement
-                disbursementValue = disbursementValue || 
-                    (hasChecksInternal ? limits.disbursement_official_checks_internal : '') ||
-                    (hasChecksExternal ? limits.disbursement_official_checks_external : '');
+                if (hasChecksExternal) {
+                    document.getElementById('checksExternal').checked = true;
+                    c.authorityData.checks_external = true;
+                    disbursementValue = disbursementValue || limits.disbursement_official_checks_external;
+                }
             }
 
             // Set disbursement value only if non-zero
@@ -877,7 +936,7 @@ api.controller = function($scope, $window, spUtil) {
                 c.authorityData.check_cashing_not_on_us = limits.check_cashing_not_on_us;
             }
 
-            // Other Non-Credit fields - only set if non-zero
+            // Other Non-Credit fields
             if (c.isNonZeroValue(limits.remote_deposit)) {
                 var remoteDeposit = document.getElementById('remoteDeposit');
                 remoteDeposit.value = c.formatCurrency(limits.remote_deposit);
@@ -910,16 +969,20 @@ api.controller = function($scope, $window, spUtil) {
             var hasOverdraftInternal = c.isNonZeroValue(limits.overdraft_internal_accounts);
             
             if (hasOverdraftInternal || hasOverdraftExternal) {
-                // Use the non-zero value
+                // Use the first non-zero value as the display value
                 var overdraftValue = hasOverdraftInternal ? limits.overdraft_internal_accounts : limits.overdraft_external_accounts;
                 var overdraftField = document.getElementById('overdraft');
                 overdraftField.value = c.formatCurrency(overdraftValue);
                 c.authorityData.overdraft = overdraftValue;
 
-                // Check if it's internal only (has internal but NOT external)
-                if (hasOverdraftInternal && !hasOverdraftExternal) {
-                    document.getElementById('overdraftInternalOnly').checked = true;
-                    c.authorityData.overdraft_internal_only = true;
+                // Check appropriate account type boxes
+                if (hasOverdraftInternal) {
+                    document.getElementById('overdraftInternal').checked = true;
+                    c.authorityData.overdraft_internal = true;
+                }
+                if (hasOverdraftExternal) {
+                    document.getElementById('overdraftExternal').checked = true;
+                    c.authorityData.overdraft_external = true;
                 }
             }
 
@@ -928,16 +991,20 @@ api.controller = function($scope, $window, spUtil) {
             var hasUnavailableInternal = c.isNonZeroValue(limits.unavailable_funds_internal_accounts);
             
             if (hasUnavailableInternal || hasUnavailableExternal) {
-                // Use the non-zero value
+                // Use the first non-zero value as the display value
                 var unavailableValue = hasUnavailableInternal ? limits.unavailable_funds_internal_accounts : limits.unavailable_funds_external_accounts;
                 var unavailableField = document.getElementById('unavailableFunds');
                 unavailableField.value = c.formatCurrency(unavailableValue);
                 c.authorityData.unavailable_funds = unavailableValue;
 
-                // Check if it's internal only (has internal but NOT external)
-                if (hasUnavailableInternal && !hasUnavailableExternal) {
-                    document.getElementById('unavailableInternalOnly').checked = true;
-                    c.authorityData.unavailable_internal_only = true;
+                // Check appropriate account type boxes
+                if (hasUnavailableInternal) {
+                    document.getElementById('unavailableInternal').checked = true;
+                    c.authorityData.unavailable_internal = true;
+                }
+                if (hasUnavailableExternal) {
+                    document.getElementById('unavailableExternal').checked = true;
+                    c.authorityData.unavailable_external = true;
                 }
             }
         }
@@ -949,7 +1016,7 @@ api.controller = function($scope, $window, spUtil) {
         c.updateRecordProducerVariables();
     };
 
-    // Monitor request type and job code changes - UPDATED
+    // Monitor request type and job code changes
     c.setupFieldMonitoring = function() {
         var lastRequestType = '';
         var lastJobCode = '';
@@ -960,7 +1027,6 @@ api.controller = function($scope, $window, spUtil) {
 
             // Check if either field has changed
             if (currentRequestType !== lastRequestType || currentJobCode !== lastJobCode) {
-                // Store previous values
                 var jobCodeChanged = (currentJobCode !== lastJobCode);
                 
                 lastRequestType = currentRequestType;
@@ -969,19 +1035,16 @@ api.controller = function($scope, $window, spUtil) {
                 c.jobCode = currentJobCode;
 
                 $scope.$apply(function() {
-                    // If job code changed or was cleared, clear all fields first
                     if (jobCodeChanged) {
                         c.clearAllFields();
-                        c.originalLoadedValues = null; // Clear original values
+                        c.originalLoadedValues = null;
                     }
                     
-                    // If switching to new authority, clear all fields
                     if (currentRequestType === 'new_authority') {
                         c.clearAllFields();
-                        c.originalLoadedValues = null; // Clear original values
+                        c.originalLoadedValues = null;
                     }
                     
-                    // Load existing limits if this is a change request with a job code
                     if (currentRequestType === 'change_to_existing_authority' && currentJobCode) {
                         c.loadExistingLimits();
                     }
@@ -1019,9 +1082,9 @@ api.controller = function($scope, $window, spUtil) {
         });
         
         // Hide conditional containers
-        var wireContainer = document.getElementById('wireInternalOnlyContainer');
+        var wireContainer = document.getElementById('wireAccountTypes');
         if (wireContainer) wireContainer.style.display = 'none';
-        var checksContainer = document.getElementById('checksInternalOnlyContainer');
+        var checksContainer = document.getElementById('checksAccountTypes');
         if (checksContainer) checksContainer.style.display = 'none';
         
         // Reset authority data
@@ -1031,18 +1094,22 @@ api.controller = function($scope, $window, spUtil) {
             disbursement: '',
             ach_checked: false,
             wire_transfer_checked: false,
-            wire_internal_only: false,
+            wire_internal: false,
+            wire_external: false,
             official_checks_checked: false,
-            checks_internal_only: false,
+            checks_internal: false,
+            checks_external: false,
             check_cashing_on_us: '',
             check_cashing_not_on_us: '',
             remote_deposit: '',
             treasury_solutions_company_wire_limits: '',
             fx_wire_limits: '',
             overdraft: '',
-            overdraft_internal_only: false,
+            overdraft_internal: false,
+            overdraft_external: false,
             unavailable_funds: '',
-            unavailable_internal_only: false,
+            unavailable_internal: false,
+            unavailable_external: false,
             overall_business_need: ''
         };
         
@@ -1063,11 +1130,14 @@ api.controller = function($scope, $window, spUtil) {
         var justificationSection = document.getElementById('justificationSection');
 
         var wireTransferCheck = document.getElementById('wireTransferCheck');
-        var wireInternalOnlyContainer = document.getElementById('wireInternalOnlyContainer');
-        var wireInternalOnly = document.getElementById('wireInternalOnly');
+        var wireAccountTypes = document.getElementById('wireAccountTypes');
+        var wireInternal = document.getElementById('wireInternal');
+        var wireExternal = document.getElementById('wireExternal');
+        
         var officialChecksCheck = document.getElementById('officialChecksCheck');
-        var checksInternalOnlyContainer = document.getElementById('checksInternalOnlyContainer');
-        var checksInternalOnly = document.getElementById('checksInternalOnly');
+        var checksAccountTypes = document.getElementById('checksAccountTypes');
+        var checksInternal = document.getElementById('checksInternal');
+        var checksExternal = document.getElementById('checksExternal');
 
         // Handle authority type selection
         function handleAuthoritySelection() {
@@ -1086,10 +1156,12 @@ api.controller = function($scope, $window, spUtil) {
         // Handle Wire Transfer checkbox changes
         function handleWireTransferChange() {
             var isChecked = wireTransferCheck.checked;
-            wireInternalOnlyContainer.style.display = isChecked ? 'block' : 'none';
+            wireAccountTypes.style.display = isChecked ? 'block' : 'none';
             if (!isChecked) {
-                wireInternalOnly.checked = false;
-                c.updateWidgetData('wire_internal_only', false);
+                wireInternal.checked = false;
+                wireExternal.checked = false;
+                c.updateWidgetData('wire_internal', false);
+                c.updateWidgetData('wire_external', false);
             }
             c.updateWidgetData('wire_transfer_checked', isChecked);
         }
@@ -1097,15 +1169,17 @@ api.controller = function($scope, $window, spUtil) {
         // Handle Official Checks checkbox changes
         function handleOfficialChecksChange() {
             var isChecked = officialChecksCheck.checked;
-            checksInternalOnlyContainer.style.display = isChecked ? 'block' : 'none';
+            checksAccountTypes.style.display = isChecked ? 'block' : 'none';
             if (!isChecked) {
-                checksInternalOnly.checked = false;
-                c.updateWidgetData('checks_internal_only', false);
+                checksInternal.checked = false;
+                checksExternal.checked = false;
+                c.updateWidgetData('checks_internal', false);
+                c.updateWidgetData('checks_external', false);
             }
             c.updateWidgetData('official_checks_checked', isChecked);
         }
 
-        // Setup currency input field with formatting
+        // Setup currency input field with formatting - UPDATED to prevent decimals
         function setupCurrencyField(inputId, fieldName) {
             var input = document.getElementById(inputId);
             if (!input) return;
@@ -1134,6 +1208,14 @@ api.controller = function($scope, $window, spUtil) {
                 c.updateWidgetData(fieldName, rawValue);
                 isUpdating = false;
             }
+            
+            // Prevent decimal point entry
+            input.addEventListener('keypress', function(event) {
+                if (event.key === '.' || event.key === ',') {
+                    event.preventDefault();
+                }
+            });
+            
             input.addEventListener('input', handleCurrencyInput);
         }
 
@@ -1192,10 +1274,14 @@ api.controller = function($scope, $window, spUtil) {
 
         // Setup all checkbox fields
         setupCheckboxField('achCheck', 'ach_checked');
-        setupCheckboxField('wireInternalOnly', 'wire_internal_only');
-        setupCheckboxField('checksInternalOnly', 'checks_internal_only');
-        setupCheckboxField('overdraftInternalOnly', 'overdraft_internal_only');
-        setupCheckboxField('unavailableInternalOnly', 'unavailable_internal_only');
+        setupCheckboxField('wireInternal', 'wire_internal');
+        setupCheckboxField('wireExternal', 'wire_external');
+        setupCheckboxField('checksInternal', 'checks_internal');
+        setupCheckboxField('checksExternal', 'checks_external');
+        setupCheckboxField('overdraftInternal', 'overdraft_internal');
+        setupCheckboxField('overdraftExternal', 'overdraft_external');
+        setupCheckboxField('unavailableInternal', 'unavailable_internal');
+        setupCheckboxField('unavailableExternal', 'unavailable_external');
 
         // Setup textarea field
         setupTextAreaField('businessNeed', 'overall_business_need');
