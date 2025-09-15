@@ -1,0 +1,50 @@
+I have a complicated app/approval process I need to brainstorm how to create it.
+
+The basic use case is that it's for authority limits. It's used to store existing limits per job code and also for submitting a new/change/remove request.
+
+What I have so far is a record producer for submitting the new/change/remove.
+
+After it's submit it creates a parent record with a few of the high level details, followed by either 1 or 2 child records both on seprate tables. If they chose credit and added values a child record will be created on the credit table. Same goes for if they chose non-credit. Finally after some approvals which I'll explain below it would update a final table that holds both credit and non-credit and allows users to query to find a job codes approval level.
+
+This is where it starts to get complicated.
+
+The parent record has it's own approvals and based on those approvals being approved each child record will request it's own approvals. For example a credit record could be rejected but the non-credit could be approved and the final table would be updated with just non-credit details. If both are rejected then the parent record has some sort of closed incomplete state. If both were approved then the final table gets both credit and non-credit updated.
+
+Somehow from the parent record (maybe using states/stages) it should indicate that the parent was approved and then if the child records are approved or rejected? I'm not sure what this would look like.
+
+Now for the actual approvals... I'm not sure if this is 1 flow for the parent, 1 flow for each child, if it should utilize subflows, or if there is some use case outside of flows all together for this, I'm looking for the best appraoch. Here is the approval process...:
+
+1. Get approval from Business line. Find a user with job title 'Executive Vice President' or 'Sr Executive Vice President'. Do this by staring with the 'Requested for', check their title, if their title does not match check the requested for's manager and so on until you find a matching title. This is an orverall approval of both credit/non-credit on the parent level. (auto approve if the 'opened by' and 'requested for' is the same user AND they have one of the titles above. If they are not the same, request their approval if they have the title. This is allowing someone with the title to submit the request and get this stage auto approved but if someone submitted on their bhealf, it would still request their approval.) If for some reason it can't find a Business Line APprover it should cancel the request and send a notification to the opened by.
+
+
+2. Now we split into child requests. One request for non-credit and one for credit (based on what was requested in the record producer and will be known if the child records already exist since they will be in a draft state until the business line approval is approved. If step 1 is rejected then the credit or non-credit will be cancalled.)
+
+3. The next few steps will be exactly the same for both credit/non-credit. There are just a few small differences I will point out.
+
+4. Check if the Business Line Approver has authority limits within their delegated authoirty. This is done by getting the business line approver, and querying the table "credit_officers" for their "authority_threshold" (for non-credit we check the "non_credit_officers" table for the same value). We are looking for the highest credit and non-credit values to compare to this threshold. If the largest value is within their limits we move on to the YES section, if it's higher we move on to the NO section.
+
+4. Yes Section, here we check if the Business Line Approver is the same as the requested for.
+
+5. If yes, they are the same, We need to get approval from a group called "ORMC" for non-credit and "CRMC" for credit.
+
+6. If no, auto approve the child record (Credit or non-credit)
+
+7. Now is the NO section from step 3. First step is to check if the Business Line Approver is the Division Head. We do this by comparing the business line approver to the reqesuted for's "u_division_head".
+
+8. If the aswner to 7 is NO we kick off a new sections of flows. The first step is to check the next level manager within organizations hierachy. For this we get that requested fors "u_division_head" but then get that division heads manager.
+
+9. After we have the division heads manager we check if their limits are within their delegated authority. This is done again by checking the highest value from the credit or non credit side depending on which child task we are working with and comparing it to the credit or non-credit officers table.
+
+10. If 9 is NO, meanining it either didn't find them in the table (they don't have deligated authoirty) or their limit was not enough, we move on to the next step which is checking if they are the requested fors division head. If no they are not the division head we go back to step 8 and loop through 8/9/10 getting the last person we hads manager, checking their limits, and if no checking if they are the division head.
+
+11. If step 9 ever evaulates to YES we ask that person for an approval which will either approver or reject the child credit/non-credit record.
+
+12. If step 10 ever evulatues to YES meaning the manager is the division head but they did not have the proper limit we move on to step 13.
+
+13. This step takes place from a YES after step 10/12 OR we go back to step 7 and if that step was Yes we also end up at this same outcome. This outcome is checking to see if comitee members are defined. What this means is we look at the credit officeres or non-credit officers table depending on which child task we are working with. We will have a system property for credit and non-credit member threshold like '5'. If we query that table and there are 5 or more members that means comittee members are defined and we can proceed to step 15. If it's no we move on to step 14.
+
+14. We end up here because not enough comittee members were defined. What happens here is for non-credit we send an approval to the "ORMC" group for approve and for credit we send to "CRMC" group.
+
+15. if enough comittee members were defined we send an approval to all members of the comittee and we are looking for a majority approval. so if 5 members are on the table, we need 3 to return approved. 
+
+Something else to consider is we never want to send an approval to the CEO. We will have a system property with their sys_id, title, job title and we should compare the approvers sys_id, title, job title to those fields and if any match we need to cancel the request and not send an approval.
