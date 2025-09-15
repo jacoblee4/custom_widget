@@ -649,7 +649,7 @@ api.controller = function($scope, $window, spUtil) {
         return false;
     };
 
-    // Validation logic - UPDATED with new checkbox requirements
+    // Validation logic - UPDATED with bidirectional credit validation
     c.validateForm = function() {
         var errors = [];
         var currentRequestType = c.getRequestType();
@@ -711,25 +711,30 @@ api.controller = function($scope, $window, spUtil) {
             }
         }
 
-        // Credit authority validation
+        // Credit authority validation - UPDATED WITH BIDIRECTIONAL VALIDATION
         if (c.authorityData.credit_checked) {
             var hasCreditValue = c.authorityData.overdraft || c.authorityData.unavailable_funds;
-            if (!hasCreditValue) {
+            var hasOverdraftAccountType = c.authorityData.overdraft_internal || c.authorityData.overdraft_external;
+            var hasUnavailableAccountType = c.authorityData.unavailable_internal || c.authorityData.unavailable_external;
+            
+            if (!hasCreditValue && !hasOverdraftAccountType && !hasUnavailableAccountType) {
                 errors.push('If Credit Authority is selected, at least one currency field must have a value');
             }
             
-            // Validate Overdraft account types if value is entered
-            if (c.authorityData.overdraft) {
-                if (!c.authorityData.overdraft_internal && !c.authorityData.overdraft_external) {
-                    errors.push('If Overdraft amount is entered, you must choose at least one account type (Internal or External)');
-                }
+            // Overdraft bidirectional validation
+            if (c.authorityData.overdraft && !hasOverdraftAccountType) {
+                errors.push('If Overdraft amount is entered, you must choose at least one account type (Internal or External)');
+            }
+            if (hasOverdraftAccountType && !c.authorityData.overdraft) {
+                errors.push('If Overdraft account type is selected, you must enter an Overdraft amount');
             }
             
-            // Validate Unavailable Funds account types if value is entered
-            if (c.authorityData.unavailable_funds) {
-                if (!c.authorityData.unavailable_internal && !c.authorityData.unavailable_external) {
-                    errors.push('If Unavailable Funds amount is entered, you must choose at least one account type (Internal or External)');
-                }
+            // Unavailable Funds bidirectional validation
+            if (c.authorityData.unavailable_funds && !hasUnavailableAccountType) {
+                errors.push('If Unavailable Funds amount is entered, you must choose at least one account type (Internal or External)');
+            }
+            if (hasUnavailableAccountType && !c.authorityData.unavailable_funds) {
+                errors.push('If Unavailable Funds account type is selected, you must enter an Unavailable Funds amount');
             }
         }
 
