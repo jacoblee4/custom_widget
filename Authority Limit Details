@@ -508,7 +508,6 @@ api.controller = function($scope, $window, spUtil) {
     c.jobCode = '';
     c.existingLimits = null;
     c.originalLoadedValues = null;
-    c.lastValidationErrors = [];
     
     // Widget data model - stores all form state (updated with new fields)
     c.authorityData = {
@@ -537,116 +536,10 @@ api.controller = function($scope, $window, spUtil) {
     };
 
     c.$onInit = function() {
-    setTimeout(function() {
-        initializeWidget();
-        setupSubmitInterceptor(); 
-    }, 500);
-};
-
-    // Clear all error messages
-    c.clearErrorMessages = function() {
-    try {
-        // Clear ServiceNow form errors
-        if (typeof g_form !== 'undefined' && g_form.clearMessages) {
-            g_form.clearMessages();
-        }
-        
-        // Clear parent frame errors
-        if (window.parent && window.parent.g_form && window.parent.g_form.clearMessages) {
-            window.parent.g_form.clearMessages();
-        }
-        
-        // Clear Service Portal errors
-        if (typeof spUtil !== 'undefined' && spUtil.clearMessages) {
-            spUtil.clearMessages();
-        }
-        
-        // Clear any visible error message elements
-        var errorElements = document.querySelectorAll('.alert-danger, .error-message, .outputmsg_error');
-        errorElements.forEach(function(element) {
-            element.style.display = 'none';
-        });
-        
-    } catch (e) {
-        console.log('Error clearing messages:', e);
-    }
-};
-
-    // Show error messages
-    c.showErrorMessages = function(errors) {
-    if (!errors || errors.length === 0) return;
-    
-    var errorMessage = 'Please correct the following errors:\n' + errors.join('\n');
-    
-    try {
-        // Try Service Portal first
-        if (typeof spUtil !== 'undefined' && spUtil.addErrorMessage) {
-            errors.forEach(function(error) {
-                spUtil.addErrorMessage(error);
-            });
-        } 
-        // Try g_form
-        else if (typeof g_form !== 'undefined' && g_form.addErrorMessage) {
-            g_form.addErrorMessage(errorMessage);
-        }
-        // Try parent g_form
-        else if (window.parent && window.parent.g_form && window.parent.g_form.addErrorMessage) {
-            window.parent.g_form.addErrorMessage(errorMessage);
-        }
-        // Fallback to alert
-        else {
-            alert(errorMessage);
-        }
-    } catch (e) {
-        console.log('Error showing messages:', e);
-        alert(errorMessage);
-    }
-};
-
-    // Setup submit button interceptor
-    function setupSubmitInterceptor() {
-    // Hook into g_form onSubmit if available
-    setTimeout(function() {
-        try {
-            if (typeof g_form !== 'undefined') {
-                var originalOnSubmit = g_form.onSubmit;
-                g_form.onSubmit = function() {
-                    // Clear errors first
-                    c.clearErrorMessages();
-                    
-                    // Validate
-                    var isValid = c.validateForm();
-                    
-                    if (!isValid) {
-                        // Show fresh errors using the stored errors from validation
-                        if (c.lastValidationErrors && c.lastValidationErrors.length > 0) {
-                            c.showErrorMessages(c.lastValidationErrors);
-                        } else {
-                            // Fallback to trying to get from g_form
-                            var formErrors = g_form.getValue('form_validation_errors');
-                            if (formErrors) {
-                                var errors = formErrors.split('|');
-                                c.showErrorMessages(errors);
-                            } else {
-                                // Last resort - show generic message
-                                c.showErrorMessages(['Please correct the form errors and try again']);
-                            }
-                        }
-                        return false;  // Prevent submission
-                    }
-                    
-                    // Call original onSubmit if it exists and we're valid
-                    if (originalOnSubmit) {
-                        return originalOnSubmit.call(this);
-                    }
-                    return true;  // Allow submission
-                };
-            }
-        } catch (e) {
-            console.log('Could not override g_form.onSubmit:', e);
-        }
-    }, 1000);
-}
+        setTimeout(function() {
+            initializeWidget();
+        }, 500);
+    };
 
     // Check if current request is remove authority
     c.isRemoveAuthority = function() {
@@ -758,104 +651,101 @@ api.controller = function($scope, $window, spUtil) {
 
     // Validation logic - UPDATED with bidirectional credit validation
     c.validateForm = function() {
-    var errors = [];
-    var currentRequestType = c.getRequestType();
+        var errors = [];
+        var currentRequestType = c.getRequestType();
 
-    // For remove authority requests, skip client validation
-    if (currentRequestType === 'remove_authority' || c.requestType === 'remove_authority') {
-        g_form.setValue('form_validation_errors', '');
-        g_form.setValue('form_is_valid', 'true');
-        return true;
-    }
-
-    // Business justification required for all request types
-    if (!c.authorityData.overall_business_need || c.authorityData.overall_business_need.trim() === '') {
-        errors.push('Overall Business Need is required');
-    }
-
-    // Must select at least one authority type
-    if (!c.authorityData.non_credit_checked && !c.authorityData.credit_checked) {
-        errors.push('You must select at least one authority type (Credit Authority or Non-Credit Authority)');
-    }
-
-    // For change requests, ensure at least one value has changed
-    if (currentRequestType === 'change_to_existing_authority' && c.originalLoadedValues) {
-        if (!c.hasValuesChanged()) {
-            errors.push('At least one authority limit value must be changed for a Change to Existing Authority request');
-        }
-    }
-
-    // Non-credit authority validation
-    if (c.authorityData.non_credit_checked) {
-        var hasNonCreditValue = c.authorityData.disbursement || c.authorityData.check_cashing_on_us ||
-            c.authorityData.check_cashing_not_on_us || c.authorityData.remote_deposit ||
-            c.authorityData.treasury_solutions_company_wire_limits || c.authorityData.fx_wire_limits;
-
-        if (!hasNonCreditValue) {
-            errors.push('If Non-Credit Authority is selected, at least one currency field must have a value');
+        // For remove authority requests, skip client validation
+        if (currentRequestType === 'remove_authority' || c.requestType === 'remove_authority') {
+            g_form.setValue('form_validation_errors', '');
+            g_form.setValue('form_is_valid', 'true');
+            return true;
         }
 
-        if (c.authorityData.disbursement) {
-            if (!c.authorityData.ach_checked &&
-                !c.authorityData.wire_transfer_checked &&
-                !c.authorityData.official_checks_checked) {
-                errors.push('If Disbursement amount is entered, you must select at least one option: ACH, Wire Transfer, or Official Checks');
+        // Business justification required for all request types
+        if (!c.authorityData.overall_business_need || c.authorityData.overall_business_need.trim() === '') {
+            errors.push('Overall Business Need is required');
+        }
+
+        // Must select at least one authority type
+        if (!c.authorityData.non_credit_checked && !c.authorityData.credit_checked) {
+            errors.push('You must select at least one authority type (Credit Authority or Non-Credit Authority)');
+        }
+
+        // For change requests, ensure at least one value has changed
+        if (currentRequestType === 'change_to_existing_authority' && c.originalLoadedValues) {
+            if (!c.hasValuesChanged()) {
+                errors.push('At least one authority limit value must be changed for a Change to Existing Authority request');
             }
-            
-            // Validate Wire Transfer account types
-            if (c.authorityData.wire_transfer_checked) {
-                if (!c.authorityData.wire_internal && !c.authorityData.wire_external) {
-                    errors.push('If Wire Transfer is selected, you must choose at least one account type (Internal or External)');
+        }
+
+        // Non-credit authority validation
+        if (c.authorityData.non_credit_checked) {
+            var hasNonCreditValue = c.authorityData.disbursement || c.authorityData.check_cashing_on_us ||
+                c.authorityData.check_cashing_not_on_us || c.authorityData.remote_deposit ||
+                c.authorityData.treasury_solutions_company_wire_limits || c.authorityData.fx_wire_limits;
+
+            if (!hasNonCreditValue) {
+                errors.push('If Non-Credit Authority is selected, at least one currency field must have a value');
+            }
+
+            if (c.authorityData.disbursement) {
+                if (!c.authorityData.ach_checked &&
+                    !c.authorityData.wire_transfer_checked &&
+                    !c.authorityData.official_checks_checked) {
+                    errors.push('If Disbursement amount is entered, you must select at least one option: ACH, Wire Transfer, or Official Checks');
+                }
+                
+                // Validate Wire Transfer account types
+                if (c.authorityData.wire_transfer_checked) {
+                    if (!c.authorityData.wire_internal && !c.authorityData.wire_external) {
+                        errors.push('If Wire Transfer is selected, you must choose at least one account type (Internal or External)');
+                    }
+                }
+                
+                // Validate Official Checks account types
+                if (c.authorityData.official_checks_checked) {
+                    if (!c.authorityData.checks_internal && !c.authorityData.checks_external) {
+                        errors.push('If Official Checks is selected, you must choose at least one account type (Internal or External)');
+                    }
                 }
             }
+        }
+
+        // Credit authority validation - UPDATED WITH BIDIRECTIONAL VALIDATION
+        if (c.authorityData.credit_checked) {
+            var hasCreditValue = c.authorityData.overdraft || c.authorityData.unavailable_funds;
+            var hasOverdraftAccountType = c.authorityData.overdraft_internal || c.authorityData.overdraft_external;
+            var hasUnavailableAccountType = c.authorityData.unavailable_internal || c.authorityData.unavailable_external;
             
-            // Validate Official Checks account types
-            if (c.authorityData.official_checks_checked) {
-                if (!c.authorityData.checks_internal && !c.authorityData.checks_external) {
-                    errors.push('If Official Checks is selected, you must choose at least one account type (Internal or External)');
-                }
+            if (!hasCreditValue && !hasOverdraftAccountType && !hasUnavailableAccountType) {
+                errors.push('If Credit Authority is selected, at least one currency field must have a value');
+            }
+            
+            // Overdraft bidirectional validation
+            if (c.authorityData.overdraft && !hasOverdraftAccountType) {
+                errors.push('If Overdraft amount is entered, you must choose at least one account type (Internal or External)');
+            }
+            if (hasOverdraftAccountType && !c.authorityData.overdraft) {
+                errors.push('If Overdraft account type is selected, you must enter an Overdraft amount');
+            }
+            
+            // Unavailable Funds bidirectional validation
+            if (c.authorityData.unavailable_funds && !hasUnavailableAccountType) {
+                errors.push('If Unavailable Funds amount is entered, you must choose at least one account type (Internal or External)');
+            }
+            if (hasUnavailableAccountType && !c.authorityData.unavailable_funds) {
+                errors.push('If Unavailable Funds account type is selected, you must enter an Unavailable Funds amount');
             }
         }
-    }
 
-    // Credit authority validation - UPDATED WITH BIDIRECTIONAL VALIDATION
-    if (c.authorityData.credit_checked) {
-        var hasCreditValue = c.authorityData.overdraft || c.authorityData.unavailable_funds;
-        var hasOverdraftAccountType = c.authorityData.overdraft_internal || c.authorityData.overdraft_external;
-        var hasUnavailableAccountType = c.authorityData.unavailable_internal || c.authorityData.unavailable_external;
-        
-        if (!hasCreditValue && !hasOverdraftAccountType && !hasUnavailableAccountType) {
-            errors.push('If Credit Authority is selected, at least one currency field must have a value');
-        }
-        
-        // Overdraft bidirectional validation
-        if (c.authorityData.overdraft && !hasOverdraftAccountType) {
-            errors.push('If Overdraft amount is entered, you must choose at least one account type (Internal or External)');
-        }
-        if (hasOverdraftAccountType && !c.authorityData.overdraft) {
-            errors.push('If Overdraft account type is selected, you must enter an Overdraft amount');
-        }
-        
-        // Unavailable Funds bidirectional validation
-        if (c.authorityData.unavailable_funds && !hasUnavailableAccountType) {
-            errors.push('If Unavailable Funds amount is entered, you must choose at least one account type (Internal or External)');
-        }
-        if (hasUnavailableAccountType && !c.authorityData.unavailable_funds) {
-            errors.push('If Unavailable Funds account type is selected, you must enter an Unavailable Funds amount');
-        }
-    }
+        var isValid = errors.length === 0;
 
-    var isValid = errors.length === 0;
+        // Update Record Producer variables
+        g_form.setValue('form_validation_errors', errors.join('|'));
+        g_form.setValue('form_is_valid', isValid ? 'true' : 'false');
 
-    // Store the errors for later use
-    c.lastValidationErrors = errors;
-
-    // Update Record Producer variables
-    g_form.setValue('form_validation_errors', errors.join('|'));
-    g_form.setValue('form_is_valid', isValid ? 'true' : 'false');
-
-    return isValid;
-};
+        return isValid;
+    };
 
     // Update Record Producer variables - UPDATED with new checkbox logic
     c.updateRecordProducerVariables = function() {
@@ -908,8 +798,7 @@ api.controller = function($scope, $window, spUtil) {
         g_form.setValue('authority_types', authority_types.join('|'));
         g_form.setValue('authority_data', authority_data.join('|'));
 
-        // Don't automatically validate here - let submit button handle it
-        // c.validateForm();
+        c.validateForm();
     };
 
     // Update widget data and sync with Record Producer
@@ -1165,8 +1054,7 @@ api.controller = function($scope, $window, spUtil) {
                         c.loadExistingLimits();
                     }
                     
-                    // Don't validate automatically here
-                    // c.validateForm();
+                    c.validateForm();
                 });
             }
         }, 500);
@@ -1407,7 +1295,6 @@ api.controller = function($scope, $window, spUtil) {
         c.updateRecordProducerVariables();
     }
 };
-
 
 <!-- ============================================ -->
 <!-- SERVER SCRIPT -->
