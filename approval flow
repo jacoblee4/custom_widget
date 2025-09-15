@@ -60,7 +60,7 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         return titles;
     },
 
-	/**
+    /**
      * Find the Business Line Approver by traversing up the management chain
      */
     findBusinessLineApprover: function(requestedForSysId) {
@@ -104,7 +104,7 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
             // Move up to manager
             var managerSysId = currentUser.getValue('manager');
             if (!managerSysId) {
-                result.error_message = 'No Business Line Approver found.y';
+                result.error_message = 'No Business Line Approver found';
                 break;
             }
             
@@ -123,11 +123,10 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         return result;
     },
 
-
     /**
      * Check if approval should be auto-approved
      */
-    shouldAutoApproveBusinessLine: function(openedBySysId, requestedForSysId, approverSysId) {
+    shouldAutoApproveBusinessLine: function(openedBySysId, requestedForSysId) {
         // Auto-approve if:
         // 1. Opened By == Requested For AND the requester has the business line title
         
@@ -176,9 +175,7 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         for (var j = 0; j < keywords.length; j++) {
             var keyword = keywords[j];
             if ((title && title.indexOf(keyword) > -1) || 
-                (officerTitle && officerTitle.indexOf(keyword) > -1) ||
-                (jobTitle && jobTitle.indexOf(keyword) > -1)) {
-                gs.info('AuthorityLimit: CEO keyword "' + keyword + '" found in user titles');
+                (officerTitle && officerTitle.indexOf(keyword) > -1)) {
                 return true;
             }
         }
