@@ -1,42 +1,50 @@
-2C. Add Flow Variables
-Click Flow Variables (⚙️ icon) and add these:
-Variable NameTypeDefault Valuebusiness_line_approver_sys_idString(empty)auto_approve_business_lineBooleanfalsehas_errorBooleanfalseerror_messageString(empty)request_cancelledBooleanfalsebusiness_line_approval_resultString(empty)
-2D. Build the Flow Actions
-Here's the exact sequence of actions to add:
+Corrected Action 1: Set Flow Variables
 Action 1: Set Flow Variables - Find Business Line Approver
 
 Add Action → Flow Logic → Set Flow Variables
-Click Script toggle
-Add this script:
+Select ONE variable to set: business_line_approver_sys_id
+Choose Script option
+Use this script:
 
 javascript(function() {
     var helper = new x_banun_bunow_si_0.SignatureHelper();
     
-    // Get the requested for user from the trigger record
     var requestedForSysId = fd_data.trigger.current.requested_for.sys_id;
     var openedBySysId = fd_data.trigger.current.opened_by.sys_id;
     
     // Find the business line approver
     var approverResult = helper.findBusinessLineApprover(requestedForSysId);
     
-    // Set flow variables based on result
     if (approverResult.found) {
-        fd_data.business_line_approver_sys_id = approverResult.approver_sys_id;
+        // Set other flow variables directly
+        fd_data.has_error = false;
+        fd_data.error_message = '';
+        fd_data.request_cancelled = false;
         
         // Check if should auto-approve
         var shouldAutoApprove = helper.shouldAutoApproveBusinessLine(
             openedBySysId,
             requestedForSysId
         );
-        
         fd_data.auto_approve_business_line = shouldAutoApprove;
         
+        // Return the approver sys_id for this variable
+        return approverResult.approver_sys_id;
+        
     } else {
+        // Set error flow variables
         fd_data.has_error = true;
         fd_data.error_message = approverResult.error_message;
         fd_data.request_cancelled = approverResult.is_ceo;
+        fd_data.auto_approve_business_line = false;
+        
+        // Return empty string for approver_sys_id
+        return '';
     }
 })();
+
+
+
 Action 2: If - Check for Errors
 
 Add Action → Flow Logic → If
