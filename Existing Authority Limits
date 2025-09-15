@@ -764,7 +764,7 @@ api.controller = function($scope, spUtil, $timeout) {
       'input[type="submit"]',
       '.form_action_button',
       '#sysverb_submit',
-      'button[type="submit"]'
+      'button[type="submit"]',
       'input[value*="Submit"]'
     ];
     
@@ -864,3 +864,4 @@ api.controller = function($scope, spUtil, $timeout) {
     }, 1500);
   }, 500);
 };
+
