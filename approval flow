@@ -1,5 +1,6 @@
 var SignatureHelper = Class.create();
-SignatureHelper.prototype = {
+SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
+
     initialize: function() {
         // Parse CEO identifiers from single comma-separated property
         this.ceoIdentifiers = this._parseCEOIdentifiers();
@@ -121,18 +122,14 @@ SignatureHelper.prototype = {
         
         return result;
     },
-    
+
+
     /**
      * Check if approval should be auto-approved
-     * @param {String} openedBySysId - sys_id of the opener
-     * @param {String} requestedForSysId - sys_id of requested for
-     * @param {String} approverSysId - sys_id of the found approver  
-     * @return {Boolean} - true if should auto-approve
      */
     shouldAutoApproveBusinessLine: function(openedBySysId, requestedForSysId, approverSysId) {
         // Auto-approve if:
-        // 1. Opened By == Requested For
-        // 2. AND the requester has the business line title
+        // 1. Opened By == Requested For AND the requester has the business line title
         
         if (openedBySysId !== requestedForSysId) {
             return false;
@@ -141,9 +138,8 @@ SignatureHelper.prototype = {
         // Check if the requester/opener has the business line title
         var userGr = new GlideRecord('sys_user');
         if (userGr.get(openedBySysId)) {
-            var userTitle = userGr.getValue('title') || '';
+            var userTitle = userGr.getValue('u_officer_title') || '';
             if (this.businessLineTitles.indexOf(userTitle) > -1) {
-                gs.info('AuthorityLimit: Auto-approving Business Line - requester has authority title');
                 return true;
             }
         }
@@ -153,9 +149,6 @@ SignatureHelper.prototype = {
     
     /**
      * Check if a user is the CEO by comparing against identifiers
-     * Handles both exact matches and keyword contains searches
-     * @param {GlideRecord} userGr - User GlideRecord
-     * @return {Boolean}
      */
     _isCEO: function(userGr) {
         if (!userGr || !this.ceoIdentifiers) {
@@ -166,7 +159,6 @@ SignatureHelper.prototype = {
         var sysId = (userGr.getValue('sys_id') || '').toLowerCase().trim();
         var title = (userGr.getValue('title') || '').toLowerCase().trim();
         var officerTitle = (userGr.getValue('u_officer_title') || '').toLowerCase().trim();
-        var jobTitle = (userGr.getValue('u_job_title') || userGr.getValue('job_title') || '').toLowerCase().trim();
         
         // Check exact matches first (sys_id, full titles)
         var exactMatches = this.ceoIdentifiers.exactMatches || [];
@@ -174,9 +166,7 @@ SignatureHelper.prototype = {
             var identifier = exactMatches[i];
             if (sysId === identifier || 
                 title === identifier || 
-                officerTitle === identifier || 
-                jobTitle === identifier) {
-                gs.info('AuthorityLimit: CEO exact match found - ' + identifier);
+                officerTitle === identifier) {
                 return true;
             }
         }
@@ -195,43 +185,6 @@ SignatureHelper.prototype = {
         
         return false;
     },
-    
-    /**
-     * Log approval chain for debugging
-     * @param {String} requestedForSysId - sys_id of the requested for user
-     * @return {Array} - Array of users in the chain
-     */
-    debugApprovalChain: function(requestedForSysId) {
-        var chain = [];
-        var currentUser = new GlideRecord('sys_user');
-        
-        if (!currentUser.get(requestedForSysId)) {
-            return chain;
-        }
-        
-        var maxLevels = 10;
-        var currentLevel = 0;
-        
-        while (currentUser && currentLevel < maxLevels) {
-            chain.push({
-                name: currentUser.getValue('name'),
-                title: currentUser.getValue('title'),
-                officer_title: currentUser.getValue('u_officer_title'),
-                sys_id: currentUser.getValue('sys_id'),
-                is_ceo: this._isCEO(currentUser),
-                is_business_line: this.businessLineTitles.indexOf(currentUser.getValue('title') || '') > -1
-            });
-            
-            var managerSysId = currentUser.getValue('manager');
-            if (!managerSysId || !currentUser.get(managerSysId)) {
-                break;
-            }
-            
-            currentLevel++;
-        }
-        
-        return chain;
-    },
-    
-    type: 'x_banun_bunow_si_0.SignatureHelper'
-};
+
+    type: 'SignatureHelper'
+});
