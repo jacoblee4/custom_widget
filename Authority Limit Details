@@ -538,8 +538,158 @@ api.controller = function($scope, $window, spUtil) {
     c.$onInit = function() {
         setTimeout(function() {
             initializeWidget();
+            setupSubmitInterceptor();
         }, 500);
     };
+
+    // Clear all error messages
+    c.clearErrorMessages = function() {
+        try {
+            // Clear ServiceNow form errors
+            if (typeof g_form !== 'undefined' && g_form.clearMessages) {
+                g_form.clearMessages();
+            }
+            
+            // Clear parent frame errors
+            if (window.parent && window.parent.g_form && window.parent.g_form.clearMessages) {
+                window.parent.g_form.clearMessages();
+            }
+            
+            // Clear Service Portal errors
+            if (typeof spUtil !== 'undefined' && spUtil.clearMessages) {
+                spUtil.clearMessages();
+            }
+            
+            // Clear any visible error message elements
+            var errorElements = document.querySelectorAll('.alert-danger, .error-message, .outputmsg_error');
+            errorElements.forEach(function(element) {
+                element.style.display = 'none';
+            });
+            
+        } catch (e) {
+            console.log('Error clearing messages:', e);
+        }
+    };
+
+    // Show error messages
+    c.showErrorMessages = function(errors) {
+        if (!errors || errors.length === 0) return;
+        
+        var errorMessage = 'Please correct the following errors:\n' + errors.join('\n');
+        
+        try {
+            // Try Service Portal first
+            if (typeof spUtil !== 'undefined' && spUtil.addErrorMessage) {
+                errors.forEach(function(error) {
+                    spUtil.addErrorMessage(error);
+                });
+            } 
+            // Try g_form
+            else if (typeof g_form !== 'undefined' && g_form.addErrorMessage) {
+                g_form.addErrorMessage(errorMessage);
+            }
+            // Try parent g_form
+            else if (window.parent && window.parent.g_form && window.parent.g_form.addErrorMessage) {
+                window.parent.g_form.addErrorMessage(errorMessage);
+            }
+            // Fallback to alert
+            else {
+                alert(errorMessage);
+            }
+        } catch (e) {
+            console.log('Error showing messages:', e);
+            alert(errorMessage);
+        }
+    };
+
+    // Setup submit button interceptor
+    function setupSubmitInterceptor() {
+        // Wait a bit for form to be fully loaded
+        setTimeout(function() {
+            // Find all submit buttons
+            var submitSelectors = [
+                'button[name="submit"]',
+                'input[name="submit"]',
+                'button[type="submit"]',
+                'input[type="submit"]',
+                '.form_action_button',
+                '#sysverb_submit',
+                'button[ng-click*="submit"]',
+                'input[value*="Submit"]',
+                'button:contains("Submit")'
+            ];
+            
+            submitSelectors.forEach(function(selector) {
+                var buttons = document.querySelectorAll(selector);
+                buttons.forEach(function(button) {
+                    // Remove any existing handlers to avoid duplicates
+                    var newButton = button.cloneNode(true);
+                    button.parentNode.replaceChild(newButton, button);
+                    
+                    // Add new click handler
+                    newButton.addEventListener('click', function(e) {
+                        // Clear all existing error messages first
+                        c.clearErrorMessages();
+                        
+                        // Give UI a moment to clear
+                        setTimeout(function() {
+                            // Re-validate the form
+                            var isValid = c.validateForm();
+                            
+                            if (!isValid) {
+                                // Prevent submission
+                                e.preventDefault();
+                                e.stopPropagation();
+                                e.stopImmediatePropagation();
+                                
+                                // Get the errors from the form
+                                var formErrors = g_form.getValue('form_validation_errors');
+                                if (formErrors) {
+                                    var errors = formErrors.split('|');
+                                    c.showErrorMessages(errors);
+                                }
+                                
+                                return false;
+                            }
+                            // If valid, let the form submit naturally
+                        }, 50);
+                    }, true); // Use capture phase
+                });
+            });
+            
+            // Also try to hook into g_form onSubmit
+            try {
+                if (typeof g_form !== 'undefined') {
+                    var originalOnSubmit = g_form.onSubmit;
+                    g_form.onSubmit = function() {
+                        // Clear errors first
+                        c.clearErrorMessages();
+                        
+                        // Validate
+                        var isValid = c.validateForm();
+                        
+                        if (!isValid) {
+                            // Show fresh errors
+                            var formErrors = g_form.getValue('form_validation_errors');
+                            if (formErrors) {
+                                var errors = formErrors.split('|');
+                                c.showErrorMessages(errors);
+                            }
+                            return false;
+                        }
+                        
+                        // Call original onSubmit if it exists and we're valid
+                        if (originalOnSubmit) {
+                            return originalOnSubmit.call(this);
+                        }
+                        return true;
+                    };
+                }
+            } catch (e) {
+                console.log('Could not override g_form.onSubmit:', e);
+            }
+        }, 1000);
+    }
 
     // Check if current request is remove authority
     c.isRemoveAuthority = function() {
@@ -798,7 +948,8 @@ api.controller = function($scope, $window, spUtil) {
         g_form.setValue('authority_types', authority_types.join('|'));
         g_form.setValue('authority_data', authority_data.join('|'));
 
-        c.validateForm();
+        // Don't automatically validate here - let submit button handle it
+        // c.validateForm();
     };
 
     // Update widget data and sync with Record Producer
@@ -1054,7 +1205,8 @@ api.controller = function($scope, $window, spUtil) {
                         c.loadExistingLimits();
                     }
                     
-                    c.validateForm();
+                    // Don't validate automatically here
+                    // c.validateForm();
                 });
             }
         }, 500);
