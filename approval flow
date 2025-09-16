@@ -15,6 +15,8 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
      */
     _parseCEOIdentifiers: function() {
         var propertyValue = gs.getProperty('bunow.ceo.identifiers', '');
+        gs.info('=== CEO Property Value: ' + propertyValue);
+        
         var identifiers = {
             exactMatches: [],
             keywords: []
@@ -29,14 +31,17 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
                     // If it's a short keyword like "CEO", add to keywords for contains search
                     if (trimmedValue.length <= 5 && trimmedValue.toUpperCase() === trimmedValue) {
                         identifiers.keywords.push(lowerValue);
+                        gs.info('=== Added CEO keyword: ' + lowerValue);
                     } else {
                         // Otherwise treat as exact match (sys_id, full titles, etc.)
                         identifiers.exactMatches.push(lowerValue);
+                        gs.info('=== Added CEO exact match: ' + lowerValue);
                     }
                 }
             }
         }
 
+        gs.info('=== CEO Identifiers parsed - Keywords: ' + identifiers.keywords.join(', ') + ' | Exact: ' + identifiers.exactMatches.join(', '));
         return identifiers;
     },
 
@@ -45,6 +50,8 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
      */
     _parseBusinessLineTitles: function() {
         var propertyValue = gs.getProperty('bunow.authoirty.business.line.titles', '');
+        gs.info('=== Business Line Titles Property: ' + propertyValue);
+        
         var titles = [];
 
         if (propertyValue) {
@@ -57,6 +64,7 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
             }
         }
 
+        gs.info('=== Business Line Titles parsed: ' + titles.join(', '));
         return titles;
     },
 
@@ -64,6 +72,8 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
      * Find the Business Line Approver by traversing up the management chain
      */
     findBusinessLineApprover: function(requestedForSysId) {
+        gs.info('=== Starting findBusinessLineApprover for: ' + requestedForSysId);
+        
         var result = {
             found: false,
             approver_sys_id: '',
@@ -86,18 +96,32 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         var currentLevel = 0;
         
         while (currentUser && currentLevel < maxLevels) {
+            var userName = currentUser.getValue('name');
+            var userTitle = currentUser.getValue('title');
+            var userOfficerTitle = currentUser.getValue('u_officer_title');
+            var userSysId = currentUser.getValue('sys_id');
+            
+            gs.info('=== Level ' + currentLevel + ' - Checking user: ' + userName + 
+                    ' | Title: ' + userTitle + 
+                    ' | Officer Title: ' + userOfficerTitle + 
+                    ' | SysId: ' + userSysId);
+            
             // Check if current user is CEO (should never approve)
             if (this._isCEO(currentUser)) {
                 result.is_ceo = true;
                 result.error_message = 'CEO found in approval chain - cannot proceed';
+                gs.info('=== CEO DETECTED! User: ' + userName);
                 return result;
             }
             
             // Check if current user has the required title
             var currentTitle = currentUser.getValue('u_officer_title') || '';
+            gs.info('=== Checking if officer title "' + currentTitle + '" is in business line titles');
+            
             if (this.businessLineTitles.indexOf(currentTitle) > -1) {
                 result.found = true;
                 result.approver_sys_id = currentUser.getValue('sys_id');
+                gs.info('=== Business Line Approver FOUND: ' + userName + ' with title: ' + currentTitle);
                 return result;
             }
             
@@ -105,11 +129,14 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
             var managerSysId = currentUser.getValue('manager');
             if (!managerSysId) {
                 result.error_message = 'No Business Line Approver found: ' + currentUser.getValue('name');
+                gs.info('=== No manager found for ' + userName + ' - stopping');
                 break;
             }
             
+            gs.info('=== Moving up to manager: ' + managerSysId);
             if (!currentUser.get(managerSysId)) {
                 result.error_message = 'Manager record not found in chain';
+                gs.info('=== Could not retrieve manager record');
                 break;
             }
             
@@ -118,6 +145,7 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         
         if (currentLevel >= maxLevels) {
             result.error_message = 'Maximum hierarchy levels reached without finding approver';
+            gs.info('=== Hit maximum levels limit');
         }
         
         return result;
@@ -151,6 +179,7 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
      */
     _isCEO: function(userGr) {
         if (!userGr || !this.ceoIdentifiers) {
+            gs.info('=== _isCEO: No user or no identifiers configured');
             return false;
         }
         
@@ -159,27 +188,38 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         var title = (userGr.getValue('title') || '').toLowerCase().trim();
         var officerTitle = (userGr.getValue('u_officer_title') || '').toLowerCase().trim();
 
+        gs.info('=== _isCEO checking - SysId: ' + sysId + ' | Title: ' + title + ' | Officer Title: ' + officerTitle);
+
         // Check exact matches first (sys_id, full titles)
         var exactMatches = this.ceoIdentifiers.exactMatches || [];
+        gs.info('=== Checking against exact matches: ' + exactMatches.join(', '));
+        
         for (var i = 0; i < exactMatches.length; i++) {
             var identifier = exactMatches[i];
             if (sysId === identifier || 
                 title === identifier || 
                 officerTitle === identifier) {
+                gs.info('=== CEO MATCH on exact: ' + identifier);
                 return true;
             }
         }
         
         // Check keyword contains (like "CEO" appearing anywhere in title fields)
         var keywords = this.ceoIdentifiers.keywords || [];
+        gs.info('=== Checking against keywords: ' + keywords.join(', '));
+        
         for (var j = 0; j < keywords.length; j++) {
             var keyword = keywords[j];
+            gs.info('=== Checking keyword "' + keyword + '" in Title: ' + (title.indexOf(keyword) > -1) + ' | Officer Title: ' + (officerTitle.indexOf(keyword) > -1));
+            
             if ((title && title.indexOf(keyword) > -1) || 
                 (officerTitle && officerTitle.indexOf(keyword) > -1)) {
+                gs.info('=== CEO MATCH on keyword: ' + keyword);
                 return true;
             }
         }
         
+        gs.info('=== Not a CEO');
         return false;
     },
 
