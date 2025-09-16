@@ -2,7 +2,7 @@ var SignatureHelper = Class.create();
 SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
 
     initialize: function() {
-        // Parse CEO identifiers from single comma-separated property
+        // Parse CEO identifiers from single pipe-separated property
         this.ceoIdentifiers = this._parseCEOIdentifiers();
 
         // Parse business line titles from property
@@ -11,7 +11,7 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
 
     /**
      * Parse CEO identifiers from system property
-     * Format: "sys_id,title,officer_title,keyword" (comma-separated)
+     * Format: "sys_id|title|officer_title|keyword" (pipe-separated)
      */
     _parseCEOIdentifiers: function() {
         var propertyValue = gs.getProperty('bunow.ceo.identifiers', '');
@@ -23,7 +23,7 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         };
 
         if (propertyValue) {
-            var values = propertyValue.split(',');
+            var values = propertyValue.split('|');  // Using pipe delimiter
             for (var i = 0; i < values.length; i++) {
                 var trimmedValue = values[i].trim();
                 if (trimmedValue) {
@@ -55,7 +55,7 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         var titles = [];
 
         if (propertyValue) {
-            var values = propertyValue.split(',');
+            var values = propertyValue.split('|');  // Using pipe delimiter
             for (var i = 0; i < values.length; i++) {
                 var trimmedValue = values[i].trim();
                 if (trimmedValue) {
@@ -72,7 +72,7 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
      * Find the Business Line Approver by traversing up the management chain
      */
     findBusinessLineApprover: function(requestedForSysId) {
-        gs.info('=== Starting findBusinessLineApprover for: ' + requestedForSysId);
+        gs.info('=== Starting findBusinessLineApprover');
         
         var result = {
             found: false,
@@ -96,44 +96,42 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         var currentLevel = 0;
         
         while (currentUser && currentLevel < maxLevels) {
-            var userName = currentUser.getValue('name');
-            var userTitle = currentUser.getValue('title');
-            var userOfficerTitle = currentUser.getValue('u_officer_title');
+            var userTitle = currentUser.getValue('title') || '';
+            var userOfficerTitle = currentUser.getValue('u_officer_title') || '';
             var userSysId = currentUser.getValue('sys_id');
             
-            gs.info('=== Level ' + currentLevel + ' - Checking user: ' + userName + 
+            gs.info('=== Level ' + currentLevel + 
                     ' | Title: ' + userTitle + 
-                    ' | Officer Title: ' + userOfficerTitle + 
-                    ' | SysId: ' + userSysId);
+                    ' | Officer Title: ' + userOfficerTitle);
             
             // Check if current user is CEO (should never approve)
             if (this._isCEO(currentUser)) {
                 result.is_ceo = true;
                 result.error_message = 'CEO found in approval chain - cannot proceed';
-                gs.info('=== CEO DETECTED! User: ' + userName);
+                gs.info('=== CEO DETECTED!');
                 return result;
             }
             
             // Check if current user has the required title
-            var currentTitle = currentUser.getValue('u_officer_title') || '';
-            gs.info('=== Checking if officer title "' + currentTitle + '" is in business line titles');
+            var currentOfficerTitle = currentUser.getValue('u_officer_title') || '';
+            gs.info('=== Checking if officer title "' + currentOfficerTitle + '" is in business line titles');
             
-            if (this.businessLineTitles.indexOf(currentTitle) > -1) {
+            if (this.businessLineTitles.indexOf(currentOfficerTitle) > -1) {
                 result.found = true;
                 result.approver_sys_id = currentUser.getValue('sys_id');
-                gs.info('=== Business Line Approver FOUND: ' + userName + ' with title: ' + currentTitle);
+                gs.info('=== Business Line Approver FOUND with title: ' + currentOfficerTitle);
                 return result;
             }
             
             // Move up to manager
             var managerSysId = currentUser.getValue('manager');
             if (!managerSysId) {
-                result.error_message = 'No Business Line Approver found: ' + currentUser.getValue('name');
-                gs.info('=== No manager found for ' + userName + ' - stopping');
+                result.error_message = 'No Business Line Approver found - reached top of hierarchy';
+                gs.info('=== No manager found - reached top of hierarchy');
                 break;
             }
             
-            gs.info('=== Moving up to manager: ' + managerSysId);
+            gs.info('=== Moving up to next manager');
             if (!currentUser.get(managerSysId)) {
                 result.error_message = 'Manager record not found in chain';
                 gs.info('=== Could not retrieve manager record');
@@ -188,11 +186,10 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         var title = (userGr.getValue('title') || '').toLowerCase().trim();
         var officerTitle = (userGr.getValue('u_officer_title') || '').toLowerCase().trim();
 
-        gs.info('=== _isCEO checking - SysId: ' + sysId + ' | Title: ' + title + ' | Officer Title: ' + officerTitle);
+        gs.info('=== _isCEO checking - Title: ' + title + ' | Officer Title: ' + officerTitle);
 
         // Check exact matches first (sys_id, full titles)
         var exactMatches = this.ceoIdentifiers.exactMatches || [];
-        gs.info('=== Checking against exact matches: ' + exactMatches.join(', '));
         
         for (var i = 0; i < exactMatches.length; i++) {
             var identifier = exactMatches[i];
@@ -206,11 +203,9 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         
         // Check keyword contains (like "CEO" appearing anywhere in title fields)
         var keywords = this.ceoIdentifiers.keywords || [];
-        gs.info('=== Checking against keywords: ' + keywords.join(', '));
         
         for (var j = 0; j < keywords.length; j++) {
             var keyword = keywords[j];
-            gs.info('=== Checking keyword "' + keyword + '" in Title: ' + (title.indexOf(keyword) > -1) + ' | Officer Title: ' + (officerTitle.indexOf(keyword) > -1));
             
             if ((title && title.indexOf(keyword) > -1) || 
                 (officerTitle && officerTitle.indexOf(keyword) > -1)) {
@@ -225,3 +220,15 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
 
     type: 'SignatureHelper'
 });
+
+
+
+
+
+
+
+
+
+bunow.ceo.identifiers: 58299a41db2e574071cc71fa8c961908|Chairman, President and CEO|President/COO|CEO
+
+bunow.authoirty.business.line.titles: Executive Vice President|Senior Executive Vice President|Sr Executive Vice President
