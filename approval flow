@@ -14,7 +14,7 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
      * Format: "sys_id|title|officer_title|keyword" (pipe-separated)
      */
     _parseCEOIdentifiers: function() {
-        var propertyValue = gs.getProperty('bunow.ceo.identifiers', '');
+        var propertyValue = gs.getProperty('x_banun_bunow_si_0.bunow.ceo.identifiers', '');
         gs.info('=== CEO Property Value: ' + propertyValue);
         
         var identifiers = {
@@ -49,7 +49,7 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
      * Parse business line titles from system property
      */
     _parseBusinessLineTitles: function() {
-        var propertyValue = gs.getProperty('bunow.authoirty.business.line.titles', '');
+        var propertyValue = gs.getProperty('x_banun_bunow_si_0.bunow.authority.business.line.titles', '');
         gs.info('=== Business Line Titles Property: ' + propertyValue);
         
         var titles = [];
@@ -220,15 +220,3 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
 
     type: 'SignatureHelper'
 });
-
-
-
-
-
-
-
-
-
-bunow.ceo.identifiers: 58299a41db2e574071cc71fa8c961908|Chairman, President and CEO|President/COO|CEO
-
-bunow.authoirty.business.line.titles: Executive Vice President|Senior Executive Vice President|Sr Executive Vice President
