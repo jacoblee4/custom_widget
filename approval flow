@@ -67,11 +67,11 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
      */
     findBusinessLineApprover: function(requestedForSysId) {
         var result = {
-            found: false,
-            approver_sys_id: '',
-            is_ceo: false,
-            error_message: ''
-        };
+        found: false,
+        approver_sys_id: '',
+        is_ceo: false,
+        error_message: ''
+    };
 
         if (!requestedForSysId) {
             result.error_message = 'No requested for user provided';
@@ -87,13 +87,15 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         var maxLevels = 20; // Prevent infinite loops
         var currentLevel = 0;
 
-        while (currentUser && currentLevel < maxLevels) {
-            // Check if current user is CEO (should never approve)
-            if (this._isCEO(currentUser)) {
-                result.is_ceo = true;
-                result.error_message = 'CEO found in approval chain - cannot proceed';
-                return result;
-            }
+         while (currentUser && currentLevel < maxLevels) {
+        // Check if current user is CEO
+        if (this._isCEO(currentUser)) {
+            result.is_ceo = true;
+            result.found = true;  // Mark as found
+            result.approver_sys_id = currentUser.getValue('sys_id'); // Still set the sys_id
+            result.error_message = ''; // Clear error
+            return result;  // Return with is_ceo flag
+        }
 
             // Check if current user has the required title
             var currentOfficerTitle = currentUser.getValue('u_officer_title') || '';
@@ -331,23 +333,25 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
      */
     findHierarchicalApprover: function(startingApproverSysId, divisionHeadSysId, amount, type) {
         var result = {
-            found_approver: false,
-            approver_sys_id: '',
-            is_division_head: false,
-            reached_division_head: false,
-            message: ''
-        };
-
-        var currentApprover = startingApproverSysId;
-        var maxLevels = 10;
-        var currentLevel = 0;
-
-        while (currentApprover && currentLevel < maxLevels) {
-            // Check if this is the CEO
-            if (this._isCEO_check(currentApprover)) {
-                result.message = 'CEO found in hierarchy - cannot proceed';
-                return result;
-            }
+        found_approver: false,
+        approver_sys_id: '',
+        is_division_head: false,
+        reached_division_head: false,
+        reached_ceo: false,  // Add this flag
+        message: ''
+    };
+    
+    var currentApprover = startingApproverSysId;
+    var maxLevels = 10;
+    var currentLevel = 0;
+    
+    while (currentApprover && currentLevel < maxLevels) {
+        // Check if this is the CEO - now we flag it instead of erroring
+        if (this._isCEO_check(currentApprover)) {
+            result.reached_ceo = true;
+            result.message = 'CEO found in hierarchy - escalating to committee';
+            return result;  // Return with CEO flag
+        }
 
             // Check if this is the division head
             if (currentApprover === divisionHeadSysId) {
@@ -422,3 +426,61 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
 
     type: 'SignatureHelper'
 });
+
+
+
+
+
+
+Parent Flow Update
+In your parent flow, after finding Business Line Approver:
+javascript// In Set Flow Variables action
+(function() {
+    var helper = new x_banun_bunow_si_0.SignatureHelper();
+    var approverResult = helper.findBusinessLineApprover(requestedForSysId);
+    
+    if (approverResult.found) {
+        fd_data.business_line_approver_sys_id = approverResult.approver_sys_id;
+        
+        // Check if it's CEO - if so, auto-approve
+        if (approverResult.is_ceo) {
+            fd_data.auto_approve_business_line = true;
+            fd_data.ceo_found = true;
+            // Add work note
+            var parentGr = new GlideRecord('x_banun_bunow_si_0_authority_request');
+            if (parentGr.get(fd_data.trigger.current.sys_id)) {
+                parentGr.work_notes = 'CEO found in chain - auto-approving business line and escalating to committees';
+                parentGr.update();
+            }
+        } else {
+            // Normal auto-approval check
+            var shouldAutoApprove = helper.shouldAutoApproveBusinessLine(
+                openedBySysId,
+                requestedForSysId
+            );
+            fd_data.auto_approve_business_line = shouldAutoApprove;
+        }
+    } else {
+        fd_data.has_error = true;
+        fd_data.error_message = approverResult.error_message;
+    }
+})();
+Child Flow Update
+In the hierarchical approval section:
+javascript// After calling findHierarchicalApprover
+var helper = new x_banun_bunow_si_0.SignatureHelper();
+var hierarchicalResult = helper.findHierarchicalApprover(
+    startingApprover,
+    divisionHead,
+    maxAmount,
+    'credit'  // or 'non_credit'
+);
+
+if (hierarchicalResult.reached_ceo || hierarchicalResult.reached_division_head) {
+    // Both scenarios go to committee
+    // Continue to committee check logic
+} else if (hierarchicalResult.found_approver) {
+    // Create approval for the found approver
+    // ...
+}
+Does this match what you're looking for? The CEO is never asked for approval but triggers auto-approval at business line level and committee escalation at child level.
