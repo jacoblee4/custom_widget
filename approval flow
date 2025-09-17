@@ -437,15 +437,21 @@ In your parent flow, after finding Business Line Approver:
 javascript// In Set Flow Variables action
 (function() {
     var helper = new x_banun_bunow_si_0.SignatureHelper();
+    
+    var requestedForSysId = fd_data.trigger.current.requested_for.sys_id;
+    var openedBySysId = fd_data.trigger.current.opened_by.sys_id;
+    
+    // Find the business line approver
     var approverResult = helper.findBusinessLineApprover(requestedForSysId);
     
     if (approverResult.found) {
-        fd_data.business_line_approver_sys_id = approverResult.approver_sys_id;
-        
         // Check if it's CEO - if so, auto-approve
         if (approverResult.is_ceo) {
             fd_data.auto_approve_business_line = true;
             fd_data.ceo_found = true;
+            fd_data.has_error = false;
+            fd_data.error_message = '';
+            
             // Add work note
             var parentGr = new GlideRecord('x_banun_bunow_si_0_authority_request');
             if (parentGr.get(fd_data.trigger.current.sys_id)) {
@@ -459,12 +465,24 @@ javascript// In Set Flow Variables action
                 requestedForSysId
             );
             fd_data.auto_approve_business_line = shouldAutoApprove;
+            fd_data.has_error = false;
+            fd_data.error_message = '';
         }
+        
+        // Return the approver sys_id for this variable
+        return approverResult.approver_sys_id;
+        
     } else {
+        // Error case
         fd_data.has_error = true;
         fd_data.error_message = approverResult.error_message;
+        fd_data.auto_approve_business_line = false;
+        
+        return '';
     }
 })();
+
+
 Child Flow Update
 In the hierarchical approval section:
 javascript// After calling findHierarchicalApprover
