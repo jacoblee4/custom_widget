@@ -1,1 +1,236 @@
-NameTypeDefaulthas_delegated_authorityBooleanfalsemax_credit_valueFloat0approver_thresholdFloat0is_division_headBooleanfalsecurrent_approver_sys_idString(empty)committee_membersString List(empty)approval_count_neededInteger0crmc_group_sys_idString(empty)
+Action 2: Set Flow Variables - Get Max Credit Value
+
+Variable to set: max_credit_value
+Script:
+
+javascript(function() {
+    var childGr = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
+    if (!childGr.get(inputs.child_record.sys_id)) {
+        return 0;
+    }
+    
+    // Get all credit values and find the maximum
+    var values = [
+        parseFloat(childGr.getValue('overdraft_internal_accounts') || 0),
+        parseFloat(childGr.getValue('overdraft_external_accounts') || 0),
+        parseFloat(childGr.getValue('unavailable_funds_internal_accounts') || 0),
+        parseFloat(childGr.getValue('unavailable_funds_external_accounts') || 0)
+    ];
+    
+    var maxValue = Math.max.apply(null, values);
+    
+    // Add to work notes
+    childGr.work_notes = 'Maximum credit value: $' + maxValue.toLocaleString();
+    childGr.update();
+    
+    return maxValue;
+})();
+Action 3: Set Flow Variables - Check BL Approver Authority
+
+Variable to set: has_delegated_authority
+Script:
+
+javascript(function() {
+    // Check if Business Line Approver has sufficient credit authority
+    var officerGr = new GlideRecord('x_banun_bunow_si_0_credit_officers');
+    officerGr.addQuery('user', inputs.business_line_approver.sys_id);
+    officerGr.addQuery('active', true);
+    officerGr.query();
+    
+    if (officerGr.next()) {
+        var threshold = parseFloat(officerGr.getValue('authority_threshold') || 0);
+        fd_data.approver_threshold = threshold;
+        
+        // Check if max value is within threshold
+        if (fd_data.max_credit_value <= threshold && threshold > 0) {
+            // Log to work notes
+            var childGr = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
+            if (childGr.get(inputs.child_record.sys_id)) {
+                childGr.work_notes = 'Business Line Approver has delegated authority. Threshold: $' + 
+                    threshold.toLocaleString() + ' >= Request: $' + fd_data.max_credit_value.toLocaleString();
+                childGr.update();
+            }
+            return true;
+        }
+    }
+    
+    // Log insufficient authority
+    var childGr = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
+    if (childGr.get(inputs.child_record.sys_id)) {
+        childGr.work_notes = 'Business Line Approver authority insufficient or not found. Need higher approval.';
+        childGr.update();
+    }
+    
+    return false;
+})();
+Action 4: If - Has Delegated Authority
+Condition: Flow Variable has_delegated_authority is true
+THEN Branch - Has Authority:
+Action 4.1: If - Check if BL Approver = Requested For
+Condition:
+
+Inputs → business_line_approver → Sys ID is Inputs → requested_for → Sys ID
+
+THEN - Same Person (Need CRMC):
+Action 4.1.1: Get CRMC Group
+
+Action: ServiceNow Core → Look Up Records
+Table: sys_user_group
+Condition: Name is CRMC
+Store: First record as crmc_group
+
+Action 4.1.2: Ask for Approval - CRMC
+
+Action: ServiceNow Core → Ask for Approval
+Table/Record: Inputs → child_record
+Groups: Record from 4.1.1
+Anyone Approves: Yes
+
+Action 4.1.3: If - CRMC Approved
+Condition: Approval State is Approved
+THEN: Update child_record → state = approved, outputs.approved = true
+ELSE: Update child_record → state = rejected, outputs.approved = false
+ELSE - Different Person (Auto-Approve):
+Action 4.1.4: Update Record - Auto Approve
+
+Record: Inputs → child_record
+Fields:
+
+state: approved
+work_notes: Auto-approved: Business Line Approver has delegated authority
+
+
+Set outputs.approved = true
+
+ELSE Branch - No Authority (Complex Logic):
+Action 5: Script - Start Hierarchical Check
+This is where it gets complex. We need to add the looping logic:
+Action 5.1: Set Flow Variables - Check Division Head
+
+Variable: is_division_head
+Script:
+
+javascript(function() {
+    var requestedFor = inputs.requested_for.sys_id;
+    var blApprover = inputs.business_line_approver.sys_id;
+    
+    // Get requested for's division head
+    var userGr = new GlideRecord('sys_user');
+    if (userGr.get(requestedFor)) {
+        var divisionHead = userGr.getValue('u_division_head');
+        if (divisionHead == blApprover) {
+            return true;
+        }
+    }
+    
+    // Set current approver to division head's manager for loop
+    if (userGr.get(divisionHead)) {
+        fd_data.current_approver_sys_id = userGr.getValue('manager');
+    }
+    
+    return false;
+})();
+Action 5.2: If - Is Division Head
+Condition: Flow Variable is_division_head is true
+THEN: → Jump to Committee Check (Action 7)
+ELSE: → Continue to Hierarchical Loop (Action 6)
+Action 6: For Each Loop - Hierarchical Approval
+Note: ServiceNow doesn't have while loops, so we'll use a different approach:
+Action 6.1: Subflow - Hierarchical Authority Check
+Create a SECOND subflow called Check Hierarchical Authority that:
+
+Takes current_approver as input
+Checks their authority
+If sufficient → creates approval
+If not → checks if division head
+Returns: found_approver (boolean), approver_sys_id
+
+Or alternatively, use a series of IF statements for a max depth (usually 5-10 levels)
+Action 7: Script - Check Committee Members
+
+Variable: committee_members
+Script:
+
+javascript(function() {
+    var minMembers = parseInt(gs.getProperty('x_banun_bunow_si_0.credit.committee.min_members', '5'));
+    var members = [];
+    
+    var committeeGr = new GlideRecord('x_banun_bunow_si_0_credit_officers');
+    committeeGr.addQuery('active', true);
+    committeeGr.addQuery('is_committee_member', true); // Assuming this field exists
+    committeeGr.query();
+    
+    while (committeeGr.next()) {
+        members.push(committeeGr.getValue('user'));
+    }
+    
+    fd_data.committee_members = members;
+    fd_data.approval_count_needed = Math.ceil(members.length / 2); // Majority
+    
+    if (members.length >= minMembers) {
+        return true; // Has enough members
+    }
+    
+    return false; // Not enough, go to CRMC
+})();
+Action 8: If - Enough Committee Members
+THEN - Committee Approval:
+Action 8.1: Create Approval Set
+javascript// Script to create approval group with majority voting
+(function() {
+    var approvalGr = new GlideRecord('sysapproval_group');
+    approvalGr.initialize();
+    approvalGr.name = 'Credit Committee - ' + inputs.child_record.number;
+    approvalGr.parent = inputs.child_record.sys_id;
+    approvalGr.approval_type = 'majority';
+    var groupId = approvalGr.insert();
+    
+    // Create individual approvals
+    fd_data.committee_members.forEach(function(memberSysId) {
+        var approval = new GlideRecord('sysapproval_approver');
+        approval.initialize();
+        approval.source_table = 'x_banun_bunow_si_0_credit_authority_limits';
+        approval.sysapproval = inputs.child_record.sys_id;
+        approval.approver = memberSysId;
+        approval.group = groupId;
+        approval.state = 'requested';
+        approval.insert();
+    });
+    
+    return groupId;
+})();
+ELSE - CRMC Group:
+[Same as Action 4.1.2 - Ask CRMC for approval]
+Step 6: CEO Check Throughout
+Add this Script Include method to SignatureHelper:
+javascriptcheckApproverNotCEO: function(approverSysId) {
+    var userGr = new GlideRecord('sys_user');
+    if (userGr.get(approverSysId)) {
+        if (this._isCEO(userGr)) {
+            return {
+                is_ceo: true,
+                error: 'Cannot send approval to CEO'
+            };
+        }
+    }
+    return {
+        is_ceo: false,
+        error: ''
+    };
+}
+Then before EVERY approval creation, check:
+javascriptvar helper = new x_banun_bunow_si_0.SignatureHelper();
+var ceoCheck = helper.checkApproverNotCEO(approverSysId);
+if (ceoCheck.is_ceo) {
+    // Cancel the child record
+    // Set error state
+    // Exit subflow
+}
+Questions for You:
+
+Do you have the committee member tables (x_banun_bunow_si_0_credit_officers) set up?
+How do you want to handle the hierarchical loop - create another subflow or use sequential IF statements?
+Should the CRMC group approval be "anyone approves" or "everyone must approve"?
+What timeout should approvals have (7 days, 14 days)?
+
+Would you like me to detail the hierarchical loop handling options before you build this?
