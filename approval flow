@@ -222,100 +222,36 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         return false;
     },
     
-    /**
-     * Get committee members for credit or non-credit
-     * @param {String} type - 'credit' or 'non_credit'
-     * @return {Object} - Contains has_quorum, members array, count_needed
-     */
-    getCommitteeMembers: function(type) {
-        var result = {
-            has_quorum: false,
-            members: [],
-            member_count: 0,
-            approval_count_needed: 0,
-            message: ''
-        };
-        
-        var minMembers = (type === 'credit') ?
-            parseInt(gs.getProperty('x_banun_bunow_si_0.credit.committee.min_members', '5')) :
-            parseInt(gs.getProperty('x_banun_bunow_si_0.non_credit.committee.min_members', '5'));
-            
-        var table = (type === 'credit') ? 
-            'x_banun_bunow_si_0_credit_officers' : 
-            'x_banun_bunow_si_0_non_credit_officers';
-            
-        var gr = new GlideRecord(table);
-        gr.addQuery('active', true);
-        gr.addQuery('is_committee_member', true);
-        gr.query();
-        
-        while (gr.next()) {
-            var userSysId = gr.getValue('user');
-            // Check not CEO before adding
-            if (!this._isCEO_check(userSysId)) {
-                result.members.push(userSysId);
-            }
-        }
-        
-        result.member_count = result.members.length;
-        result.approval_count_needed = Math.ceil(result.member_count / 2); // Majority
-        
-        if (result.member_count >= minMembers) {
-            result.has_quorum = true;
-            result.message = 'Committee has quorum: ' + result.member_count + ' members';
-        } else {
-            result.message = 'Committee lacks quorum: ' + result.member_count + ' of ' + minMembers + ' required';
-        }
-        
-        return result;
-    },
+   /**
+ * Check if we should use committee voting
+ * @param {String} type - 'credit' or 'non_credit'
+ * @return {Object} - Contains use_committee and approval_count_needed
+ */
+shouldUseCommittee: function(type) {
+    var result = {
+        use_committee: false,
+        member_count: 0,
+        approval_count_needed: 0
+    };
+    
+    var table = (type === 'credit') ? 
+        'x_banun_bunow_si_0_credit_officers' : 
+        'x_banun_bunow_si_0_non_credit_officers';
+    
+    // Just count active members
+    var gr = new GlideRecord(table);
+    gr.addQuery('active', true);
+    gr.query();
+    
+    result.member_count = gr.getRowCount();
+    
+    if (result.member_count >= 3) {
+        result.use_committee = true;
+        result.approval_count_needed = Math.ceil(result.member_count / 2);
+    }
+    
+    return result;
+},
 
     type: 'SignatureHelper'
 });
-Child Subflow - Using the Script Include
-Action 1: Update Child to Processing
-
-Update Record → state = in_progress
-
-Action 2: Set Flow Variables - Get Max Value
-Variable: max_credit_value
-Script:
-javascript(function() {
-    var helper = new x_banun_bunow_si_0.SignatureHelper();
-    var result = helper.getMaxAuthorityValue(
-        inputs.child_record.sys_id,
-        'credit'  // or 'non_credit' for the other subflow
-    );
-    
-    // Log to work notes
-    var childGr = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
-    if (childGr.get(inputs.child_record.sys_id)) {
-        childGr.work_notes = 'Maximum value: $' + result.max_value.toLocaleString() + 
-            ' (Field: ' + result.field_name + ')';
-        childGr.update();
-    }
-    
-    return result.max_value;
-})();
-Action 3: Set Flow Variables - Check BL Authority
-Variable: has_delegated_authority
-Script:
-javascript(function() {
-    var helper = new x_banun_bunow_si_0.SignatureHelper();
-    var result = helper.checkDelegatedAuthority(
-        inputs.business_line_approver.sys_id,
-        fd_data.max_credit_value,
-        'credit'  // or 'non_credit'
-    );
-    
-    // Log to work notes
-    var childGr = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
-    if (childGr.get(inputs.child_record.sys_id)) {
-        childGr.work_notes = result.message;
-        childGr.update();
-    }
-    
-    fd_data.approver_threshold = result.threshold;
-    return result.has_authority;
-})();
-This approach keeps your flows clean and all logic centralized in the Script Include. Continue with the rest of the flow?
