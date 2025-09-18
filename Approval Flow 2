@@ -1,118 +1,126 @@
-result.division_head_sys_id = divisionHead;
+/**
+ * Check if we should use committee voting and get member sys_ids
+ */
+shouldUseCommittee: function(type) {
+    var result = {
+        use_committee: false,
+        member_count: 0,
+        approval_count_needed: 0,
+        member_sys_ids: []  // Added this
+    };
 
-var helper = new x_banun_bunow_si_0.SignatureHelper();
+    var table = (type === 'credit') ?
+        'x_banun_bunow_si_0_crmc_delegated_authority' :
+        'x_banun_bunow_si_0_ormc_delegated_authority';
+
+    // Get active members
+    var gr = new GlideRecord(table);
+    gr.addQuery('active', true);
+    gr.query();
+
+    while (gr.next()) {
+        result.member_sys_ids.push(gr.getValue('user'));
+    }
     
-    // Get max amount
-    var valueResult = helper.getMaxAuthorityValue(
-        fd_data.subflow_inputs.credit_record.sys_id,
-        'credit'
-    );
-    fd_data.flow_var.max_amount = valueResult.max_value;
-    
-    // Check authority
-    var authResult = helper.checkDelegatedAuthority(
-        fd_data.subflow_inputs.business_line_approver,
-        valueResult.max_value,
-        'credit'
-    );
-    fd_data.flow_var.has_authority = authResult.has_authority;
-    
-    // Log both results
+    result.member_count = result.member_sys_ids.length;
+
+    if (result.member_count >= 3) {
+        result.use_committee = true;
+        result.approval_count_needed = Math.ceil(result.member_count / 2);
+    }
+
+    return result;
+},
+
+
+
+Add Flow Variable
+Add this to your flow variables:
+
+committee_member_sys_ids (String) - We'll store as comma-separated string
+
+Updated Flow Script (Step 5.10)
+javascriptvar helper = new x_banun_bunow_si_0.SignatureHelper();
+var result = helper.shouldUseCommittee('credit');
+
+// Store all the committee info
+fd_data.flow_var.approval_count_needed = result.approval_count_needed;
+fd_data.flow_var.committee_member_sys_ids = result.member_sys_ids.join(',');  // Store as comma-separated
+
+// Log to work notes
+if (result.use_committee) {
     var childGr = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
     if (childGr.get(fd_data.subflow_inputs.credit_record.sys_id)) {
-        childGr.work_notes = 'Max value: $' + valueResult.max_value.toLocaleString() + 
-            ' (' + valueResult.field_name + ')\n' + authResult.message;
+        childGr.work_notes = 'Committee has ' + result.member_count + ' members. Need ' + 
+                            result.approval_count_needed + ' approvals for majority.';
         childGr.update();
     }
+}
+
+return result.use_committee;
+Using the Member Sys IDs in Ask for Approval (Step 5.12)
+When you create the "Ask for Approval" action for committee voting:
+
+Action Type: Ask for Approval
+Record: Input → credit_record
+Approval Type: You'll need to handle majority voting
+Users: Use a script to convert the string back to user references:
+
+javascript// In the "Users" field of Ask for Approval, use script:
+(function() {
+    var memberIds = fd_data.flow_var.committee_member_sys_ids.split(',');
+    var users = [];
     
-    return authResult.has_authority; // for the main variable
-
-
-
-
-
-B. Simplify Flow Structure
-Instead of 45 steps, restructure to ~20 steps:
-1. Update to In Progress
-2. Check Authority (combined script)
-3. If Has Authority
-   - If Same Person → CRMC
-   - Else → Auto-approve
-4. Else (No Authority)
-   - Check Division Head
-   - If Not Division Head → Find Hierarchical
-     - If Found → Get Approval
-     - If Not Found → Continue to Committee
-   - If Division Head → Continue to Committee
-5. Committee Check (single path)
-   - If Enough Members → Vote
-   - Else → CRMC Group
-6. Update Final Status (single place)
-
-
-
-
-
-
-C. Use a Script Include Method for Final Update
-Add to SignatureHelper:
-javascriptupdateChildRecordFinal: function(childSysId, approved, type, method) {
-    var table = (type === 'credit') ?
-        'x_banun_bunow_si_0_credit_authority_limits' :
-        'x_banun_bunow_si_0_non_credit_authority_limits';
-        
-    var gr = new GlideRecord(table);
-    if (gr.get(childSysId)) {
-        gr.state = approved ? 'closed_complete' : 'closed_incomplete';
-        gr.approval = approved ? 'approved' : 'rejected';
-        gr.stage = '5';  // Closed
-        gr.work_notes = 'Final decision: ' + (approved ? 'Approved' : 'Rejected') + 
-                       ' via ' + method;
-        gr.update();
+    for (var i = 0; i < memberIds.length; i++) {
+        if (memberIds[i]) {
+            users.push(memberIds[i]);
+        }
     }
-}
+    
+    return users;
+})();
+Alternative: Return GlideRecord List
+If ServiceNow Flow Designer supports it in your version, you could return the users directly:
+javascript/**
+ * Check if we should use committee voting and get members
+ */
+shouldUseCommittee: function(type) {
+    var result = {
+        use_committee: false,
+        member_count: 0,
+        approval_count_needed: 0,
+        member_sys_ids: [],
+        members: []  // Array of user references
+    };
 
+    var table = (type === 'credit') ?
+        'x_banun_bunow_si_0_crmc_delegated_authority' :
+        'x_banun_bunow_si_0_ormc_delegated_authority';
 
-D. Consolidated Flow Structure
-Here's a cleaner structure with fewer steps:
-Main Flow
-├── Get Values & Check Authority (1 action)
-├── Authority Path
-│   ├── Same Person Check
-│   │   ├── Yes → CRMC Group
-│   │   └── No → Auto-Approve
-│   └── [Set outputs, end]
-│
-└── No Authority Path
-    ├── Division Head Check
-    ├── If Not DH: Hierarchical Search
-    │   ├── Found → Get Approval
-    │   └── Not Found ↓
-    │
-    └── Committee Path (single implementation)
-        ├── Check Committee Count
-        ├── If 3+ → Committee Vote
-        └── If <3 → CRMC Group
-E. Script Optimizations
-Your scripts look good! Minor suggestions:
+    // Get active members
+    var gr = new GlideRecord(table);
+    gr.addQuery('active', true);
+    gr.query();
 
-Cache the child record instead of multiple lookups:
+    while (gr.next()) {
+        var userSysId = gr.getValue('user');
+        result.member_sys_ids.push(userSysId);
+        
+        // Create user reference object
+        var userRef = {
+            sys_id: userSysId,
+            table: 'sys_user'
+        };
+        result.members.push(userRef);
+    }
+    
+    result.member_count = result.member_sys_ids.length;
 
-javascript// At start of flow, store the record
-fd_data._childRecord = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
-fd_data._childRecord.get(fd_data.subflow_inputs.credit_record.sys_id);
+    if (result.member_count >= 3) {
+        result.use_committee = true;
+        result.approval_count_needed = Math.ceil(result.member_count / 2);
+    }
 
-// Then reuse it
-fd_data._childRecord.work_notes = 'Something';
-fd_data._childRecord.update();
-
-Use constants for stage numbers:
-
-javascript// In Script Include
-STAGES: {
-    DRAFT: '1',
-    AUTHORITY_REVIEW: '2',
-    EXECUTIVE_REVIEW: '3',
-    COMMITTEE_REVIEW: '4',
-    CLOSED: '5'
-}
+    return result;
+},
+This way you have the sys_ids ready to use for creating the approval request with all committee members!RetryClaude can make mistakes. Please double-check responses.ResearchSignature Opus 4.1Project contentSignatureCreated by youjacoblee4/custom_widgetmainGITHUBContentjacoblee4/custom_widgetmainGITHUBjacoblee4/custom_widgetmainGITHUBjacoblee4/custom_widgetmainGITHUB
