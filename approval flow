@@ -1,279 +1,550 @@
-Step 5: Build the Flow Logic
-Now let's add the actions in order:
+Do you see any issues or ways to improve this child flow
 
-Action 1: Update Child to In Progress
+Step 1: Update credit authority record (Sets State to In Progress and Stage to Division Executive Review)
 
-Add Action → ServiceNow Core → Update Record
-Record: Inputs → child_record
-Fields to Update:
-
-state: in_progress
-stage: 2 (Authority Review)
-
-
-
-
-Action 2: Get Maximum Amount
-
-Add Action → Flow Logic → Set Flow Variables
-Variable: max_amount
-Script:
-
-javascript(function() {
-    var helper = new x_banun_bunow_si_0.SignatureHelper();
-    var result = helper.getMaxAuthorityValue(
-        inputs.child_record.sys_id,
-        'credit'
-    );
+Step 2 - set Max Amount with this script:
+var helper = new x_banun_bunow_si_0.SignatureHelper();
+var result = helper.getMaxAuthorityValue(
+    fd_data.subflow_inputs.credit_record.sys_id,
+    'credit'
+);
     
-    // Log to work notes
-    var childGr = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
-    if (childGr.get(inputs.child_record.sys_id)) {
-        childGr.work_notes = 'Maximum credit value: $' + result.max_value.toLocaleString() + 
-            ' (Field: ' + result.field_name + ')';
-        childGr.update();
-    }
+// Log to work notes
+var childGr = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
+if (childGr.get(fd_data.subflow_inputs.credit_record.sys_id)) {
+    childGr.work_notes = 'Maximum credit value: $' + result.max_value.toLocaleString() + 
+        ' (Field: ' + result.field_name + ')';
+    childGr.update();
+}
     
-    return result.max_value;
-})();
+return result.max_value;
 
-Action 3: Check Business Line Approver Authority
 
-Add Action → Flow Logic → Set Flow Variables
-Variable: has_authority
-Script:
-
-javascript(function() {
-    var helper = new x_banun_bunow_si_0.SignatureHelper();
-    var result = helper.checkDelegatedAuthority(
-        inputs.business_line_approver.sys_id,
-        fd_data.max_amount,
-        'credit'
-    );
+Step 3 - set has authority with this script:
+var helper = new x_banun_bunow_si_0.SignatureHelper();
+var result = helper.checkDelegatedAuthority(
+    fd_data.subflow_inputs.business_line_approver,
+    fd_data.flow_var.max_amount,
+    'credit'
+);
     
-    // Log result
-    var childGr = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
-    if (childGr.get(inputs.child_record.sys_id)) {
-        childGr.work_notes = result.message;
-        childGr.update();
-    }
+// Log result
+var childGr = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
+if (childGr.get(fd_data.subflow_inputs.credit_record.sys_id)) {
+    childGr.work_notes = result.message;
+    childGr.update();
+}
     
-    return result.has_authority;
-})();
+return result.has_authority;
 
-Action 4: If - Has Authority
+step 4 - if has authority is true
+4.1 if business line approver is requested for
+4.2 ask for approval from CRMC group
+4.3 if approved
+4.4 update record to closed complete and stage to closed
+4.5 end subflow
+4.6 else to 4.3
+4.7 update record to closed incomplete/closed
+4.8 end subflow
+4.9 else for 4.1 update stage to closec complete, stage to closed, approval to approved
+4.10 end subflow
 
-Add Action → Flow Logic → If
-Condition: Flow Variables → has_authority is true
+5 - else to 4 / does not have authoirty 
+5.1 set is division head with this script:
 
-THEN Branch (Has Authority):
-Action 4.1: Check if Same Person
+var helper = new x_banun_bunow_si_0.SignatureHelper();
+var result = helper.checkIfDivisionHead(
+    fd_data.subflow_inputs.business_line_approver,
+    fd_data.subflow_inputs.requested_for.sys_id
+);
 
-Add Action → Flow Logic → Set Flow Variables
-Variable: is_same_person
-Script:
-
-javascriptreturn (inputs.business_line_approver.sys_id === inputs.requested_for.sys_id);
-Action 4.2: If - Same Person Check
-
-Add Action → Flow Logic → If
-Condition: Flow Variables → is_same_person is true
-
-THEN (Same Person - Need CRMC):
-Action 4.2.1: Look Up CRMC Group
-
-Add Action → ServiceNow Core → Look Up Records
-Table: sys_user_group
-Conditions: Name is CRMC
-Store first record as: crmc_group
-
-Action 4.2.2: Ask for Approval - CRMC
-
-Add Action → ServiceNow Core → Ask for Approval
-Record: Inputs → child_record
-Groups from: Data pill → crmc_group (from 4.2.1)
-Rules: Anyone approves
-
-Action 4.2.3: Update Based on Approval
-
-Add Action → Flow Logic → If
-Condition: 4.2.2 - Ask for Approval → State is Approved
-
-THEN:
-
-Update Record → child_record → state = closed_complete, approval = approved
-Set Flow Variables → outputs.approved = true, outputs.approval_method = CRMC
-
-ELSE:
-
-Update Record → child_record → state = closed_incomplete, approval = rejected
-Set Flow Variables → outputs.approved = false
-
-ELSE (Different Person - Auto Approve):
-Action 4.2.4: Auto Approve
-
-Add Action → ServiceNow Core → Update Record
-Record: Inputs → child_record
-Fields:
-
-state: closed_complete
-approval: approved
-work_notes: Auto-approved: Business Line Approver has sufficient delegated authority
-
-
-Then Set Flow Variables → outputs.approved = true, outputs.approval_method = auto
-
-
-ELSE Branch (No Authority - Complex Path):
-Action 5: Check Division Head
-
-Add Action → Flow Logic → Set Flow Variables
-Variable: is_division_head
-Script:
-
-javascript(function() {
-    var helper = new x_banun_bunow_si_0.SignatureHelper();
-    var result = helper.checkIfDivisionHead(
-        inputs.business_line_approver.sys_id,
-        inputs.requested_for.sys_id
-    );
+fd_data.flow_var.division_head_sys_id = result.division_head_sys_id;
+fd_data.flow_var.current_approver_sys_id = result.next_approver_sys_id;
     
-    fd_data.division_head_sys_id = result.division_head_sys_id;
-    fd_data.current_approver_sys_id = result.next_approver_sys_id;
-    
-    return result.is_division_head;
-})();
-Action 6: If - Is Division Head
+return result.is_division_head;
 
-Add Action → Flow Logic → If
-Condition: Flow Variables → is_division_head is true
 
-THEN (Is Division Head - Go to Committee):
-Skip to Action 8 (Committee logic)
-ELSE (Not Division Head - Hierarchical Search):
-Action 7: Find Hierarchical Approver
+5.2 if is not division head / is division head is false
+5.3 set current approver sys Id ussing this script:
 
-Add Action → Flow Logic → Set Flow Variables
-Variable: current_approver_sys_id
-Script:
-
-javascript(function() {
-    var helper = new x_banun_bunow_si_0.SignatureHelper();
-    var result = helper.findHierarchicalApprover(
-        fd_data.current_approver_sys_id,  // Starting from division head's manager
-        fd_data.division_head_sys_id,
-        fd_data.max_amount,
-        'credit'
-    );
+var helper = new x_banun_bunow_si_0.SignatureHelper();
+var result = helper.findHierarchicalApprover(
+    fd_data.flow_var.current_approver_sys_id,  // Starting from division head's manager
+    fd_data.flow_var.division_head_sys_id,
+    fd_data.flow_var.max_amount, 'credit'
+);
     
-    // Update stage to show escalation
-    var childGr = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
-    if (childGr.get(inputs.child_record.sys_id)) {
-        childGr.stage = '3'; // Division Executive Review
-        childGr.work_notes = result.message;
-        childGr.update();
-    }
-    
-    if (result.reached_ceo || result.reached_division_head) {
-        // Need committee
-        return '';
-    } else if (result.found_approver) {
-        // Found someone to approve
-        return result.approver_sys_id;
-    }
-    
+if (result.reached_ceo || result.reached_division_head) {
+    // Need committee
     return '';
-})();
-Action 7.1: If - Found Approver
-
-Add Action → Flow Logic → If
-Condition: Flow Variables → current_approver_sys_id is not empty
-
-THEN:
-
-Look Up User (current_approver_sys_id)
-Ask for Approval from that user
-Update based on response (like in 4.2.3)
-
-ELSE:
-Continue to Committee (Action 8)
-
-Action 8: Committee Check
-
-Add Action → Flow Logic → Set Flow Variables
-Variable: use_committee
-Script:
-
-javascript(function() {
-    var helper = new x_banun_bunow_si_0.SignatureHelper();
-    var result = helper.shouldUseCommittee('credit');
+} else if (result.found_approver) {
+    // Found someone to approve
+    return result.approver_sys_id;
+}
     
-    fd_data.approval_count_needed = result.approval_count_needed;
+return '';
+
+
+5.4 - if current approver sys id is not empty (found an approver)
+5.5 ask for approval from current approver sys id
+5.6 if approved in 5.5 update the record to closed complete/closed and end the subflow
+5.7 else (not approved) update to closed incomplete and closed and end subflow
+5.8 I currenlty have the else to 5.4 blank I need to know what goes here
+
+5.9 else to 5.2
+5.10 - set use committee using this script:
+
+var helper = new x_banun_bunow_si_0.SignatureHelper();
+var result = helper.shouldUseCommittee('credit');
     
-    // Update stage
-    var childGr = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
-    if (childGr.get(inputs.child_record.sys_id)) {
-        childGr.stage = '4'; // CRMC Review
-        childGr.update();
-    }
+fd_data.flow_var.approval_count_needed = result.approval_count_needed;
     
-    return result.use_committee;
-})();
-Action 9: If - Use Committee
+return result.use_committee;
 
-Add Action → Flow Logic → If
-Condition: Flow Variables → use_committee is true
+5.11 if comittee members defined (use committee is true)
+5.12 - get majority approval from committee, if approved update to closed complete/closed/end subflow
+if rejected closed incomplete/closed/end subflow
 
-THEN (Committee Voting):
-Action 9.1: Create Committee Approvals
+5.13 else to 5.11 get approval from CRMC group, if approved closed complete/closed if rejected closed incomplete you know the drill end subflow here...
 
-Add Action → Flow Logic → Run Script
+Here is the current script icnlude too:
+var SignatureHelper = Class.create();
+SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
 
-javascript(function() {
-    // Get all committee members
-    var gr = new GlideRecord('x_banun_bunow_si_0_crmc_delegated_authority');
-    gr.addQuery('active', true);
-    gr.query();
-    
-    var approvalGroup = new GlideRecord('sysapproval_group');
-    approvalGroup.initialize();
-    approvalGroup.name = 'CRMC Committee - ' + inputs.child_record.number;
-    approvalGroup.parent = inputs.child_record.sys_id;
-    var groupId = approvalGroup.insert();
-    
-    while (gr.next()) {
-        var approval = new GlideRecord('sysapproval_approver');
-        approval.initialize();
-        approval.source_table = 'x_banun_bunow_si_0_credit_authority_limits';
-        approval.document_id = inputs.child_record.sys_id;
-        approval.approver = gr.getValue('user');
-        approval.state = 'requested';
-        approval.approval_group = groupId;
-        approval.insert();
-    }
-    
-    return groupId;
-})();
-Then wait for majority approval...
-ELSE (Send to CRMC Group):
-Same as Action 4.2.1 and 4.2.2
+    initialize: function() {
+        // Parse CEO identifiers from single pipe-separated property
+        this.ceoIdentifiers = this._parseCEOIdentifiers();
 
-Step 6: Test the Subflow
+        // Parse business line titles from property
+        this.businessLineTitles = this._parseBusinessLineTitles();
+    },
 
-Click Test
-Select test inputs
-Run and verify each path
+    /**
+     * Parse CEO identifiers from system property
+     * Format: "sys_id|title|officer_title|keyword" (pipe-separated)
+     */
+    _parseCEOIdentifiers: function() {
+        var propertyValue = gs.getProperty('x_banun_bunow_si_0.bunow.ceo.identifiers', '');
 
-Step 7: Create Non-Credit Version
+        var identifiers = {
+            exactMatches: [],
+            keywords: []
+        };
 
-Duplicate this subflow
-Rename to Authority Limit - Non-Credit Approval
-Change:
+        if (propertyValue) {
+            var values = propertyValue.split('|'); // Using pipe delimiter
+            for (var i = 0; i < values.length; i++) {
+                var trimmedValue = values[i].trim();
+                if (trimmedValue) {
+                    var lowerValue = trimmedValue.toLowerCase();
+                    // If it's a short keyword like "CEO", add to keywords for contains search
+                    if (trimmedValue.length <= 5 && trimmedValue.toUpperCase() === trimmedValue) {
+                        identifiers.keywords.push(lowerValue);
+                    } else {
+                        // Otherwise treat as exact match (sys_id, full titles, etc.)
+                        identifiers.exactMatches.push(lowerValue);
+                    }
+                }
+            }
+        }
 
-Input table references to non_credit tables
-'credit' to 'non_credit' in script calls
-'CRMC' to 'ORMC' in group lookups
+        return identifiers;
+    },
+
+    /**
+     * Parse business line titles from system property
+     */
+    _parseBusinessLineTitles: function() {
+        var propertyValue = gs.getProperty('x_banun_bunow_si_0.bunow.authority.business.line.titles', '');
+
+        var titles = [];
+
+        if (propertyValue) {
+            var values = propertyValue.split('|'); // Using pipe delimiter
+            for (var i = 0; i < values.length; i++) {
+                var trimmedValue = values[i].trim();
+                if (trimmedValue) {
+                    titles.push(trimmedValue);
+                }
+            }
+        }
+
+        return titles;
+    },
+
+    /**
+     * Find the Business Line Approver by traversing up the management chain
+     */
+    findBusinessLineApprover: function(requestedForSysId) {
+        var result = {
+            found: false,
+            approver_sys_id: '',
+            is_ceo: false,
+            error_message: ''
+        };
+
+        if (!requestedForSysId) {
+            result.error_message = 'No requested for user provided';
+            return result;
+        }
+
+        var currentUser = new GlideRecord('sys_user');
+        if (!currentUser.get(requestedForSysId)) {
+            result.error_message = 'Requested for user not found';
+            return result;
+        }
+
+        var maxLevels = 20; // Prevent infinite loops
+        var currentLevel = 0;
+
+        while (currentUser && currentLevel < maxLevels) {
+            // Check if current user is CEO
+            if (this._isCEO(currentUser)) {
+                result.is_ceo = true;
+                result.found = true; // Mark as found
+                result.approver_sys_id = currentUser.getValue('sys_id'); // Still set the sys_id
+                result.error_message = ''; // Clear error
+                return result; // Return with is_ceo flag
+            }
+
+            // Check if current user has the required title
+            var currentOfficerTitle = currentUser.getValue('u_officer_title') || '';
+
+            if (this.businessLineTitles.indexOf(currentOfficerTitle) > -1) {
+                result.found = true;
+                result.approver_sys_id = currentUser.getValue('sys_id');
+                return result;
+            }
+
+            // Move up to manager
+            var managerSysId = currentUser.getValue('manager');
+            if (!managerSysId) {
+                result.error_message = 'No Business Line Approver found - reached top of hierarchy';
+                break;
+            }
+
+            if (!currentUser.get(managerSysId)) {
+                result.error_message = 'Manager record not found in chain';
+                break;
+            }
+
+            currentLevel++;
+        }
+
+        if (currentLevel >= maxLevels) {
+            result.error_message = 'Maximum hierarchy levels reached without finding approver';
+        }
+
+        return result;
+    },
+
+    /**
+     * Check if approval should be auto-approved
+     */
+    shouldAutoApproveBusinessLine: function(openedBySysId, requestedForSysId) {
+        // Auto-approve if:
+        // 1. Opened By == Requested For AND the requester has the business line title
+
+        if (openedBySysId !== requestedForSysId) {
+            return false;
+        }
+
+        // Check if the requester/opener has the business line title
+        var userGr = new GlideRecord('sys_user');
+        if (userGr.get(openedBySysId)) {
+            var userTitle = userGr.getValue('u_officer_title') || '';
+            if (this.businessLineTitles.indexOf(userTitle) > -1) {
+                return true;
+            }
+        }
+
+        return false;
+    },
+
+    /**
+     * Check if a user is the CEO by comparing against identifiers
+     */
+    _isCEO: function(userGr) {
+        if (!userGr || !this.ceoIdentifiers) {
+            return false;
+        }
+
+        // Get user values for exact match checking
+        var sysId = (userGr.getValue('sys_id') || '').toLowerCase().trim();
+        var title = (userGr.getValue('title') || '').toLowerCase().trim();
+        var officerTitle = (userGr.getValue('u_officer_title') || '').toLowerCase().trim();
+
+        // Check exact matches first (sys_id, full titles)
+        var exactMatches = this.ceoIdentifiers.exactMatches || [];
+
+        for (var i = 0; i < exactMatches.length; i++) {
+            var identifier = exactMatches[i];
+            if (sysId === identifier ||
+                title === identifier ||
+                officerTitle === identifier) {
+                return true;
+            }
+        }
+
+        // Check keyword contains (like "CEO" appearing anywhere in title fields)
+        var keywords = this.ceoIdentifiers.keywords || [];
+
+        for (var j = 0; j < keywords.length; j++) {
+            var keyword = keywords[j];
+
+            if ((title && title.indexOf(keyword) > -1) ||
+                (officerTitle && officerTitle.indexOf(keyword) > -1)) {
+                return true;
+            }
+        }
+
+        return false;
+    },
+
+    /**
+     * Get the maximum value from credit or non-credit child record
+     */
+    getMaxAuthorityValue: function(childSysId, type) {
+        var result = {
+            max_value: 0,
+            field_name: '',
+            all_values: {}
+        };
+
+        if (!childSysId) return result;
+
+        var table = (type === 'credit') ?
+            'x_banun_bunow_si_0_credit_authority_limits' :
+            'x_banun_bunow_si_0_non_credit_authority_limits';
+
+        var gr = new GlideRecord(table);
+        if (!gr.get(childSysId)) return result;
+
+        var values = {};
+        var maxValue = 0;
+        var maxFieldName = '';
+
+        if (type === 'credit') {
+            // Credit fields
+            values = {
+                'Overdraft Internal': parseFloat(gr.getValue('overdraft_internal_accounts') || 0),
+                'Overdraft External': parseFloat(gr.getValue('overdraft_external_accounts') || 0),
+                'Unavailable Funds Internal': parseFloat(gr.getValue('unavailable_funds_internal_accounts') || 0),
+                'Unavailable Funds External': parseFloat(gr.getValue('unavailable_funds_external_accounts') || 0)
+            };
+        } else {
+            // Non-credit fields
+            values = {
+                'ACH Disbursement': parseFloat(gr.getValue('disbursement_ach') || 0),
+                'Wire Transfer External': parseFloat(gr.getValue('disbursement_wire_transfer_external') || 0),
+                'Wire Transfer Internal': parseFloat(gr.getValue('disbursement_wire_transfer_internal') || 0),
+                'Official Checks External': parseFloat(gr.getValue('disbursement_official_checks_external') || 0),
+                'Official Checks Internal': parseFloat(gr.getValue('disbursement_official_checks_internal') || 0),
+                'Check Cashing On-Us': parseFloat(gr.getValue('check_cashing_on_us') || 0),
+                'Check Cashing Not On-Us': parseFloat(gr.getValue('check_cashing_not_on_us') || 0),
+                'Remote Deposit': parseFloat(gr.getValue('remote_deposit') || 0),
+                'Treasury Solutions': parseFloat(gr.getValue('treasury_solutions_company_wire_limits') || 0),
+                'FX Wire Limits': parseFloat(gr.getValue('fx_wire_limits') || 0)
+            };
+        }
+
+        // Find maximum value
+        for (var fieldName in values) {
+            if (values[fieldName] > maxValue) {
+                maxValue = values[fieldName];
+                maxFieldName = fieldName;
+            }
+        }
+
+        result.max_value = maxValue;
+        result.field_name = maxFieldName;
+        result.all_values = values;
+
+        return result;
+    },
+
+    /**
+     * Check if approver has delegated authority for the amount
+     */
+    checkDelegatedAuthority: function(approverSysId, amount, type) {
+        var result = {
+            has_authority: false,
+            threshold: 0,
+            message: ''
+        };
+
+        if (!approverSysId || !amount) {
+            result.message = 'Missing approver or amount';
+            return result;
+        }
+
+        var table = (type === 'credit') ?
+            'x_banun_bunow_si_0_crmc_delegated_authority' :
+            'x_banun_bunow_si_0_ormc_delegated_authority';
+
+        var gr = new GlideRecord(table);
+        gr.addQuery('user', approverSysId);
+        gr.addQuery('active', true);
+        gr.query();
+
+        if (gr.next()) {
+            result.threshold = parseFloat(gr.getValue('authority_limit') || 0);
+
+            if (result.threshold > 0 && amount <= result.threshold) {
+                result.has_authority = true;
+                result.message = 'Approver has delegated authority. Threshold: $' +
+                    result.threshold.toLocaleString() + ' >= Request: $' + amount.toLocaleString();
+            } else {
+                result.message = 'Authority insufficient. Threshold: $' +
+                    result.threshold.toLocaleString() + ' < Request: $' + amount.toLocaleString();
+            }
+        } else {
+            result.message = 'No delegated authority found for approver';
+        }
+
+        return result;
+    },
+
+    /**
+     * Check if approver is the division head
+     */
+    checkIfDivisionHead: function(approverSysId, requestedForSysId) {
+        var result = {
+            is_division_head: false,
+            division_head_sys_id: '',
+            next_approver_sys_id: ''
+        };
+
+        var userGr = new GlideRecord('sys_user');
+        if (!userGr.get(requestedForSysId)) {
+            return result;
+        }
+
+        var divisionHead = userGr.getValue('u_division_head');
+        result.division_head_sys_id = divisionHead.sys_id;
+
+        if (divisionHead === approverSysId) {
+            result.is_division_head = true;
+        } else {
+            // Get the division head's manager for next iteration
+            if (divisionHead) {
+                var dhGr = new GlideRecord('sys_user');
+                if (dhGr.get(divisionHead)) {
+                    result.next_approver_sys_id = dhGr.getValue('manager');
+                }
+            }
+        }
+
+        return result;
+    },
+
+    /**
+     * Find next approver in hierarchy with sufficient authority
+     */
+    findHierarchicalApprover: function(startingApproverSysId, divisionHeadSysId, amount, type) {
+        var result = {
+            found_approver: false,
+            approver_sys_id: '',
+            is_division_head: false,
+            reached_division_head: false,
+            reached_ceo: false, // Add this flag
+            message: ''
+        };
+
+        var currentApprover = startingApproverSysId;
+        var maxLevels = 10;
+        var currentLevel = 0;
+
+        while (currentApprover && currentLevel < maxLevels) {
+            // Check if this is the CEO - now we flag it instead of erroring
+            if (this._isCEO_check(currentApprover)) {
+                result.reached_ceo = true;
+                result.message = 'CEO found in hierarchy - escalating to committee';
+                return result; // Return with CEO flag
+            }
+
+            // Check if this is the division head
+            if (currentApprover === divisionHeadSysId) {
+                result.reached_division_head = true;
+                result.is_division_head = true;
+                result.message = 'Reached division head without finding approver with authority';
+                return result;
+            }
+
+            // Check if this person has authority
+            var authCheck = this.checkDelegatedAuthority(currentApprover, amount, type);
+            if (authCheck.has_authority) {
+                result.found_approver = true;
+                result.approver_sys_id = currentApprover;
+                result.message = authCheck.message;
+                return result;
+            }
+
+            // Move to next manager
+            var userGr = new GlideRecord('sys_user');
+            if (!userGr.get(currentApprover)) {
+                break;
+            }
+
+            currentApprover = userGr.getValue('manager');
+            currentLevel++;
+        }
+
+        result.message = 'No approver found in hierarchy';
+        return result;
+    },
+
+    /**
+     * Helper to check if a sys_id is the CEO
+     */
+    _isCEO_check: function(userSysId) {
+        var userGr = new GlideRecord('sys_user');
+        if (userGr.get(userSysId)) {
+            return this._isCEO(userGr);
+        }
+        return false;
+    },
+
+    /**
+     * Check if we should use committee voting
+     */
+    shouldUseCommittee: function(type) {
+        var result = {
+            use_committee: false,
+            member_count: 0,
+            approval_count_needed: 0
+        };
+
+        var table = (type === 'credit') ?
+            'x_banun_bunow_si_0_crmc_delegated_authority' :
+            'x_banun_bunow_si_0_ormc_delegated_authority';
+
+        // Just count active members
+        var gr = new GlideRecord(table);
+        gr.addQuery('active', true);
+        gr.query();
+
+        result.member_count = gr.getRowCount();
+
+        if (result.member_count >= 3) {
+            result.use_committee = true;
+            result.approval_count_needed = Math.ceil(result.member_count / 2);
+        }
+
+        return result;
+    },
+
+    type: 'SignatureHelper'
+});
 
 
 
-Does this help? Which action would you like me to clarify further?
+
+
+
+
+So the main questiojn is (I have not tested everything but I believe this is working now)
+Is there a way to possibly optimize this subflow as it's currently like 45 steps. Do all the scripts look good or is there optimization there too..?
+
+
+
