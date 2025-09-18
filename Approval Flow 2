@@ -1,0 +1,118 @@
+result.division_head_sys_id = divisionHead;
+
+var helper = new x_banun_bunow_si_0.SignatureHelper();
+    
+    // Get max amount
+    var valueResult = helper.getMaxAuthorityValue(
+        fd_data.subflow_inputs.credit_record.sys_id,
+        'credit'
+    );
+    fd_data.flow_var.max_amount = valueResult.max_value;
+    
+    // Check authority
+    var authResult = helper.checkDelegatedAuthority(
+        fd_data.subflow_inputs.business_line_approver,
+        valueResult.max_value,
+        'credit'
+    );
+    fd_data.flow_var.has_authority = authResult.has_authority;
+    
+    // Log both results
+    var childGr = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
+    if (childGr.get(fd_data.subflow_inputs.credit_record.sys_id)) {
+        childGr.work_notes = 'Max value: $' + valueResult.max_value.toLocaleString() + 
+            ' (' + valueResult.field_name + ')\n' + authResult.message;
+        childGr.update();
+    }
+    
+    return authResult.has_authority; // for the main variable
+
+
+
+
+
+B. Simplify Flow Structure
+Instead of 45 steps, restructure to ~20 steps:
+1. Update to In Progress
+2. Check Authority (combined script)
+3. If Has Authority
+   - If Same Person → CRMC
+   - Else → Auto-approve
+4. Else (No Authority)
+   - Check Division Head
+   - If Not Division Head → Find Hierarchical
+     - If Found → Get Approval
+     - If Not Found → Continue to Committee
+   - If Division Head → Continue to Committee
+5. Committee Check (single path)
+   - If Enough Members → Vote
+   - Else → CRMC Group
+6. Update Final Status (single place)
+
+
+
+
+
+
+C. Use a Script Include Method for Final Update
+Add to SignatureHelper:
+javascriptupdateChildRecordFinal: function(childSysId, approved, type, method) {
+    var table = (type === 'credit') ?
+        'x_banun_bunow_si_0_credit_authority_limits' :
+        'x_banun_bunow_si_0_non_credit_authority_limits';
+        
+    var gr = new GlideRecord(table);
+    if (gr.get(childSysId)) {
+        gr.state = approved ? 'closed_complete' : 'closed_incomplete';
+        gr.approval = approved ? 'approved' : 'rejected';
+        gr.stage = '5';  // Closed
+        gr.work_notes = 'Final decision: ' + (approved ? 'Approved' : 'Rejected') + 
+                       ' via ' + method;
+        gr.update();
+    }
+}
+
+
+D. Consolidated Flow Structure
+Here's a cleaner structure with fewer steps:
+Main Flow
+├── Get Values & Check Authority (1 action)
+├── Authority Path
+│   ├── Same Person Check
+│   │   ├── Yes → CRMC Group
+│   │   └── No → Auto-Approve
+│   └── [Set outputs, end]
+│
+└── No Authority Path
+    ├── Division Head Check
+    ├── If Not DH: Hierarchical Search
+    │   ├── Found → Get Approval
+    │   └── Not Found ↓
+    │
+    └── Committee Path (single implementation)
+        ├── Check Committee Count
+        ├── If 3+ → Committee Vote
+        └── If <3 → CRMC Group
+E. Script Optimizations
+Your scripts look good! Minor suggestions:
+
+Cache the child record instead of multiple lookups:
+
+javascript// At start of flow, store the record
+fd_data._childRecord = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
+fd_data._childRecord.get(fd_data.subflow_inputs.credit_record.sys_id);
+
+// Then reuse it
+fd_data._childRecord.work_notes = 'Something';
+fd_data._childRecord.update();
+
+Use constants for stage numbers:
+
+javascript// In Script Include
+STAGES: {
+    DRAFT: '1',
+    AUTHORITY_REVIEW: '2',
+    EXECUTIVE_REVIEW: '3',
+    COMMITTEE_REVIEW: '4',
+    CLOSED: '5'
+}
