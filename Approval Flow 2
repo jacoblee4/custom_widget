@@ -1,126 +1,63 @@
-/**
- * Check if we should use committee voting and get member sys_ids
- */
-shouldUseCommittee: function(type) {
-    var result = {
-        use_committee: false,
-        member_count: 0,
-        approval_count_needed: 0,
-        member_sys_ids: []  // Added this
-    };
-
-    var table = (type === 'credit') ?
-        'x_banun_bunow_si_0_crmc_delegated_authority' :
-        'x_banun_bunow_si_0_ormc_delegated_authority';
-
-    // Get active members
-    var gr = new GlideRecord(table);
-    gr.addQuery('active', true);
-    gr.query();
-
-    while (gr.next()) {
-        result.member_sys_ids.push(gr.getValue('user'));
-    }
-    
-    result.member_count = result.member_sys_ids.length;
-
-    if (result.member_count >= 3) {
-        result.use_committee = true;
-        result.approval_count_needed = Math.ceil(result.member_count / 2);
-    }
-
-    return result;
-},
-
-
-
-Add Flow Variable
-Add this to your flow variables:
-
-committee_member_sys_ids (String) - We'll store as comma-separated string
-
-Updated Flow Script (Step 5.10)
-javascriptvar helper = new x_banun_bunow_si_0.SignatureHelper();
-var result = helper.shouldUseCommittee('credit');
-
-// Store all the committee info
-fd_data.flow_var.approval_count_needed = result.approval_count_needed;
-fd_data.flow_var.committee_member_sys_ids = result.member_sys_ids.join(',');  // Store as comma-separated
-
-// Log to work notes
-if (result.use_committee) {
-    var childGr = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
-    if (childGr.get(fd_data.subflow_inputs.credit_record.sys_id)) {
-        childGr.work_notes = 'Committee has ' + result.member_count + ' members. Need ' + 
-                            result.approval_count_needed + ' approvals for majority.';
-        childGr.update();
-    }
-}
-
-return result.use_committee;
-Using the Member Sys IDs in Ask for Approval (Step 5.12)
-When you create the "Ask for Approval" action for committee voting:
-
-Action Type: Ask for Approval
-Record: Input → credit_record
-Approval Type: You'll need to handle majority voting
-Users: Use a script to convert the string back to user references:
-
-javascript// In the "Users" field of Ask for Approval, use script:
-(function() {
-    var memberIds = fd_data.flow_var.committee_member_sys_ids.split(',');
-    var users = [];
-    
-    for (var i = 0; i < memberIds.length; i++) {
-        if (memberIds[i]) {
-            users.push(memberIds[i]);
-        }
-    }
-    
-    return users;
-})();
-Alternative: Return GlideRecord List
-If ServiceNow Flow Designer supports it in your version, you could return the users directly:
-javascript/**
- * Check if we should use committee voting and get members
- */
-shouldUseCommittee: function(type) {
-    var result = {
-        use_committee: false,
-        member_count: 0,
-        approval_count_needed: 0,
-        member_sys_ids: [],
-        members: []  // Array of user references
-    };
-
-    var table = (type === 'credit') ?
-        'x_banun_bunow_si_0_crmc_delegated_authority' :
-        'x_banun_bunow_si_0_ormc_delegated_authority';
-
-    // Get active members
-    var gr = new GlideRecord(table);
-    gr.addQuery('active', true);
-    gr.query();
-
-    while (gr.next()) {
-        var userSysId = gr.getValue('user');
-        result.member_sys_ids.push(userSysId);
-        
-        // Create user reference object
-        var userRef = {
-            sys_id: userSysId,
-            table: 'sys_user'
+ // Find the Business Line Approver by traversing up the management chain
+    findBusinessLineApprover: function(requestedForSysId) {
+        var result = {
+            found: false,
+            approver_sys_id: '',
+            is_ceo: false,
+            error_message: ''
         };
-        result.members.push(userRef);
-    }
-    
-    result.member_count = result.member_sys_ids.length;
 
-    if (result.member_count >= 3) {
-        result.use_committee = true;
-        result.approval_count_needed = Math.ceil(result.member_count / 2);
-    }
+        if (!requestedForSysId) {
+            result.error_message = 'No requested for user provided';
+            return result;
+        }
 
-    return result;
-},
-This way you have the sys_ids ready to use for creating the approval request with all committee members!RetryClaude can make mistakes. Please double-check responses.ResearchSignature Opus 4.1Project contentSignatureCreated by youjacoblee4/custom_widgetmainGITHUBContentjacoblee4/custom_widgetmainGITHUBjacoblee4/custom_widgetmainGITHUBjacoblee4/custom_widgetmainGITHUB
+        var currentUser = new GlideRecord('sys_user');
+        if (!currentUser.get(requestedForSysId)) {
+            result.error_message = 'Requested for user not found';
+            return result;
+        }
+
+        var maxLevels = 20; // Prevent infinite loops
+        var currentLevel = 0;
+
+        while (currentUser && currentLevel < maxLevels) {
+            // Check if current user is CEO
+            if (this._isCEO(currentUser)) {
+                result.is_ceo = true;
+                result.found = true;
+                result.approver_sys_id = currentUser.getValue('sys_id');
+                result.error_message = '';
+                return result;
+            }
+
+            // Check if current user has the required title
+            var currentOfficerTitle = currentUser.getValue('u_officer_title') || '';
+
+            if (this.businessLineTitles.indexOf(currentOfficerTitle) > -1) {
+                result.found = true;
+                result.approver_sys_id = currentUser.getValue('sys_id');
+                return result;
+            }
+
+            // Move up to manager
+            var managerSysId = currentUser.getValue('manager');
+            if (!managerSysId) {
+                result.error_message = 'No Business Line Approver found - reached top of hierarchy';
+                break;
+            }
+
+            if (!currentUser.get(managerSysId)) {
+                result.error_message = 'Manager record not found in chain';
+                break;
+            }
+
+            currentLevel++;
+        }
+
+        if (currentLevel >= maxLevels) {
+            result.error_message = 'Maximum hierarchy levels reached without finding approver';
+        }
+
+        return result;
+    },
