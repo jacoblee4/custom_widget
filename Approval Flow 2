@@ -81,44 +81,49 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         var currentLevel = 0;
 
         while (currentUser && currentLevel < maxLevels) {
+        // Check if current user is active
+        if (currentUser.getValue('active') !== 'true') {
+            result.error_message = 'Inactive user found in approval chain: ' + currentUser.getValue('name');
+            return result;
+        }
 
-            // Check if current user is active
-            if (currentUser.getValue('active') !== 'true') {
-                result.error_message = 'Inactive user found in approval chain: ' + currentUser.getValue('name');
-                return result;
-            }
+        // Check if current user is CEO
+        if (this._isCEO(currentUser)) {
+            result.is_ceo = true;
+            result.found = true;
+            result.approver_sys_id = currentUser.getValue('sys_id');
+            result.error_message = '';
+            return result;
+        }
 
-            // Check if current user is CEO
-            if (this._isCEO(currentUser)) {
-                result.is_ceo = true;
-                result.found = true;
-                result.approver_sys_id = currentUser.getValue('sys_id');
-                result.error_message = '';
-                return result;
-            }
+        // Check if current user has the required title
+        var currentOfficerTitle = currentUser.getValue('u_officer_title') || '';
+        if (this.businessLineTitles.indexOf(currentOfficerTitle) > -1) {
+            result.found = true;
+            result.approver_sys_id = currentUser.getValue('sys_id');
+            return result;
+        }
 
-            // Check if current user has the required title
-            var currentOfficerTitle = currentUser.getValue('u_officer_title') || '';
+        // Get manager sys_id FIRST
+        var managerSysId = currentUser.getValue('manager');
+        if (!managerSysId) {
+            result.error_message = 'No Business Line Approver found - reached top of hierarchy';
+            break;
+        }
 
-            if (this.businessLineTitles.indexOf(currentOfficerTitle) > -1) {
-                result.found = true;
-                result.approver_sys_id = currentUser.getValue('sys_id');
-                return result;
-            }
+        // Then move to manager
+        if (!currentUser.get(managerSysId)) {
+            result.error_message = 'Manager record not found in chain';
+            break;
+        }
 
-            // Move to manager
-            if (!currentUser.get(managerSysId)) {
-                result.error_message = 'Manager record not found in chain';
-                break;
-            }
+        // Check if manager is active
+        if (currentUser.getValue('active') !== 'true') {
+            result.error_message = 'Inactive manager found in chain: ' + currentUser.getValue('name');
+            break;
+        }
 
-            // Check if manager is active
-            if (currentUser.getValue('active') !== 'true') {
-                result.error_message = 'Inactive manager found in chain: ' + currentUser.getValue('name');
-                break;
-            }
-
-            currentLevel++;
+        currentLevel++;
         }
 
         if (currentLevel >= maxLevels) {
@@ -321,72 +326,65 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
     // },
 
     // Find next approver in hierarchy with sufficient authority
-    findHierarchicalApprover: function(startingApproverSysId, divisionHeadSysId, amount, type) {
-        var result = {
-            found_approver: false,
-            approver_sys_id: '',
-            is_division_head: false,
-            reached_division_head: false,
-            reached_ceo: false,
-            message: ''
-        };
+   findHierarchicalApprover: function(startingApproverSysId, divisionHeadSysId, amount, type) {
+    var result = {
+        found_approver: false,
+        approver_sys_id: '',
+        is_division_head: false,
+        reached_division_head: false,
+        reached_ceo: false,
+        message: ''
+    };
 
-        // Avoid endless loop with counter
-        var currentApprover = startingApproverSysId;
-        var maxLevels = 20;
-        var currentLevel = 0;
+    var currentApprover = startingApproverSysId;
+    var maxLevels = 20;
+    var currentLevel = 0;
 
-        while (currentApprover && currentLevel < maxLevels) {
-            // Check if approver exists and is active
-            var userGr = new GlideRecord('sys_user');
-            if (!userGr.get(currentApprover)) {
-                result.message = 'User not found in hierarchy';
-                break;
-            }
-
-            if (userGr.getValue('active') !== 'true') {
-                result.message = 'Inactive user found in hierarchy: ' + userGr.getValue('name');
-                break;
-            }
-
-            // Check if this is the CEO - now we flag it instead of erroring
-            if (this._isCEO_check(currentApprover)) {
-                result.reached_ceo = true;
-                result.message = 'CEO found in hierarchy - escalating to committee';
-                return result; // Return with CEO flag
-            }
-
-            // Check if this person has authority
-            var authCheck = this.checkDelegatedAuthority(currentApprover, amount, type);
-            if (authCheck.has_authority) {
-                result.found_approver = true;
-                result.approver_sys_id = currentApprover;
-                result.message = authCheck.message;
-                return result;
-            }
-
-            // Check if this is the division head
-            if (currentApprover === divisionHeadSysId) {
-                result.reached_division_head = true;
-                result.is_division_head = true;
-                result.message = 'Reached division head without finding approver with authority';
-                return result;
-            }
-
-            // Move to next manager
-            var userGr = new GlideRecord('sys_user');
-            if (!userGr.get(currentApprover)) {
-                break;
-            }
-
-            currentApprover = userGr.getValue('manager');
-            currentLevel++;
+    while (currentApprover && currentLevel < maxLevels) {
+        // Check if approver exists and is active
+        var userGr = new GlideRecord('sys_user');
+        if (!userGr.get(currentApprover)) {
+            result.message = 'User not found in hierarchy';
+            break;
         }
 
-        result.message = 'No approver found in hierarchy';
-        return result;
-    },
+        if (userGr.getValue('active') !== 'true') {
+            result.message = 'Inactive user found in hierarchy: ' + userGr.getValue('name');
+            break;
+        }
 
+        // Check if this is the CEO
+        if (this._isCEO_check(currentApprover)) {
+            result.reached_ceo = true;
+            result.message = 'CEO found in hierarchy - escalating to committee';
+            return result;
+        }
+
+        // Check if this person has authority
+        var authCheck = this.checkDelegatedAuthority(currentApprover, amount, type);
+        if (authCheck.has_authority) {
+            result.found_approver = true;
+            result.approver_sys_id = currentApprover;
+            result.message = authCheck.message;
+            return result;
+        }
+
+        // Check if this is the division head
+        if (currentApprover === divisionHeadSysId) {
+            result.reached_division_head = true;
+            result.is_division_head = true;
+            result.message = 'Reached division head without finding approver with authority';
+            return result;
+        }
+
+        // Move to next manager - no need to redeclare userGr
+        currentApprover = userGr.getValue('manager');
+        currentLevel++;
+    }
+
+    result.message = 'No approver found in hierarchy';
+    return result;
+},
     /**
      * Helper to check if a sys_id is the CEO
      */
