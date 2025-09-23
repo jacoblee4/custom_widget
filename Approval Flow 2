@@ -1,72 +1,88 @@
 // Find next approver in hierarchy with sufficient authority
-    findHierarchicalApprover: function(startingApproverSysId, divisionHeadSysId, amount, type) {
-        var result = {
-            found_approver: false,
-            approver_sys_id: '',
-            is_division_head: false,
-            reached_division_head: false,
-            reached_ceo: false,
-            message: ''
-        };
+findHierarchicalApprover: function(businessLineApproverSysId, divisionHeadSysId, amount, type) {
+    var result = {
+        found_approver: false,
+        approver_sys_id: '',
+        is_division_head: false,
+        reached_division_head: false,
+        reached_ceo: false,
+        message: ''
+    };
 
-        var currentApprover = startingApproverSysId;
-        var maxLevels = 20;
-        var currentLevel = 0;
-
-        while (currentApprover && currentLevel < maxLevels) {
-            // Check if approver exists and is active
-            var userGr = new GlideRecord('sys_user');
-            if (!userGr.get(currentApprover)) {
-                result.message = 'User not found in hierarchy';
-                break;
-            }
-
-            if (!userGr.active) {
-                result.message = 'Inactive user found in hierarchy: ' + userGr.getValue('name');
-                break;
-            }
-
-            // Check if this is the CEO
-            if (this._isCEO_check(currentApprover)) {
-                result.reached_ceo = true;
-                result.message = 'CEO found in hierarchy - escalating to committee';
-                return result;
-            }
-
-            // Check if this person has authority
-            var authCheck = this.checkDelegatedAuthority(currentApprover, amount, type);
-
-            if (authCheck.has_authority) {
-                result.found_approver = true;
-                result.approver_sys_id = currentApprover;
-                result.message = authCheck.message;
-                return result;
-            }
-
-            if (currentApprover === divisionHeadSysId) {
-                result.reached_division_head = true;
-                result.is_division_head = true;
-                result.message = 'Reached division head without finding approver with authority';
-                return result;
-            }
-
-            // Move to next manager
-            var nextManager = userGr.getValue('manager');
-
-            if (!nextManager) {
-                result.message = 'End of hierarchy - no manager found';
-                break;
-            }
-
-            currentApprover = nextManager;
-            currentLevel++;
-        }
-
-        if (currentLevel >= maxLevels) {
-            result.message = 'Maximum hierarchy levels reached';
-        } else if (!result.message) {
-            result.message = 'No approver found in hierarchy';
-        }
-
+    // STEP 1: Start by getting the Business Line Approver's MANAGER
+    var blApprover = new GlideRecord('sys_user');
+    if (!blApprover.get(businessLineApproverSysId)) {
+        result.message = 'Business Line Approver not found';
         return result;
-    },
+    }
+    
+    var currentApprover = blApprover.getValue('manager');
+    if (!currentApprover) {
+        result.message = 'Business Line Approver has no manager';
+        return result;
+    }
+    
+    var maxLevels = 20;
+    var currentLevel = 0;
+
+    while (currentApprover && currentLevel < maxLevels) {
+        // Check if approver exists and is active
+        var userGr = new GlideRecord('sys_user');
+        if (!userGr.get(currentApprover)) {
+            result.message = 'User not found in hierarchy';
+            break;
+        }
+
+        if (!userGr.active) {
+            result.message = 'Inactive user found in hierarchy: ' + userGr.getValue('name');
+            break;
+        }
+
+        // STEP 2: Check if this is the CEO - if so, we've gone too far
+        if (this._isCEO_check(currentApprover)) {
+            result.reached_ceo = true;
+            result.message = 'CEO found in hierarchy - escalating to committee';
+            return result;  // EXIT METHOD - CEO never approves directly
+        }
+
+        // STEP 3: Check if this person has authority to approve
+        var authCheck = this.checkDelegatedAuthority(currentApprover, amount, type);
+
+        if (authCheck.has_authority) {
+            // STEP 4: They can approve! Return them as the approver
+            result.found_approver = true;
+            result.approver_sys_id = currentApprover;
+            result.message = authCheck.message;
+            return result;  // EXIT METHOD - Found someone who can approve
+        }
+
+        // STEP 5: They can't approve - check if they're the division head
+        // Division head = last stop before CEO, send to committee
+        if (currentApprover === divisionHeadSysId) {
+            result.reached_division_head = true;
+            result.is_division_head = true;
+            result.message = 'Reached division head without finding approver with authority - send to committee';
+            return result;  // EXIT METHOD - Division head can't approve this amount, go to committee
+        }
+
+        // STEP 6: Not division head, not enough authority - move up to their manager
+        var nextManager = userGr.getValue('manager');
+
+        if (!nextManager) {
+            result.message = 'End of hierarchy - no manager found';
+            break;
+        }
+
+        currentApprover = nextManager;
+        currentLevel++;
+    }
+
+    // We should rarely get here - only if something is wrong with the hierarchy
+    if (currentLevel >= maxLevels) {
+        result.message = 'Maximum hierarchy levels reached';
+    } else if (!result.message) {
+        result.message = 'No approver found in hierarchy';
+    }
+
+    return result;
+},
