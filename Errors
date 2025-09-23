@@ -1,43 +1,104 @@
-x_banun_bunow_si_0 (SignatureHelper): === CEO Property Value: 58299a41db2e574071cc71fa8c961908,Chairman, President and CEO,President/COO,CEO
-x_banun_bunow_si_0 (SignatureHelper): === Added CEO exact match: 58299a41db2e574071cc71fa8c961908
-x_banun_bunow_si_0 (SignatureHelper): === Added CEO exact match: chairman
-x_banun_bunow_si_0 (SignatureHelper): === Added CEO exact match: president and ceo
-x_banun_bunow_si_0 (SignatureHelper): === Added CEO exact match: president/coo
-x_banun_bunow_si_0 (SignatureHelper): === Added CEO keyword: ceo
-x_banun_bunow_si_0 (SignatureHelper): === CEO Identifiers parsed - Keywords: ceo | Exact: 58299a41db2e574071cc71fa8c961908, chairman, president and ceo, president/coo
-x_banun_bunow_si_0 (SignatureHelper): === Business Line Titles Property: Executive Vice President,Senior Executive Vice President,Sr Executive Vice President
-x_banun_bunow_si_0 (SignatureHelper): === Business Line Titles parsed: Executive Vice President, Senior Executive Vice President, Sr Executive Vice President
-x_banun_bunow_si_0 (SignatureHelper): === Starting findBusinessLineApprover for: f192a409db455d90df4f2308489619d8
-x_banun_bunow_si_0 (SignatureHelper): === Level 0 - Checking user: 0 | Title: Sr. ServiceNow Developer | Officer Title: Assistant Vice President | SysId: f192a409db455d90df4f2308489619d8
-x_banun_bunow_si_0 (SignatureHelper): === _isCEO checking - SysId: f192a409db455d90df4f2308489619d8 | Title: sr. servicenow developer | Officer Title: assistant vice president
-x_banun_bunow_si_0 (SignatureHelper): === Checking against exact matches: 58299a41db2e574071cc71fa8c961908, chairman, president and ceo, president/coo
-x_banun_bunow_si_0 (SignatureHelper): === Checking against keywords: ceo
-x_banun_bunow_si_0 (SignatureHelper): === Checking keyword "ceo" in Title: false | Officer Title: false
-x_banun_bunow_si_0 (SignatureHelper): === Not a CEO
-x_banun_bunow_si_0 (SignatureHelper): === Checking if officer title "Assistant Vice President" is in business line titles
-x_banun_bunow_si_0 (SignatureHelper): === Moving up to manager: 21195641db2e574071cc71fa8c96197e
-x_banun_bunow_si_0 (SignatureHelper): === Level 1 - Checking user: 1 | Title: Senior Application Delivery Mg | Officer Title: Vice President | SysId: 21195641db2e574071cc71fa8c96197e
-x_banun_bunow_si_0 (SignatureHelper): === _isCEO checking - SysId: 21195641db2e574071cc71fa8c96197e | Title: senior application delivery mg | Officer Title: vice president
-x_banun_bunow_si_0 (SignatureHelper): === Checking against exact matches: 58299a41db2e574071cc71fa8c961908, chairman, president and ceo, president/coo
-x_banun_bunow_si_0 (SignatureHelper): === Checking against keywords: ceo
-x_banun_bunow_si_0 (SignatureHelper): === Checking keyword "ceo" in Title: false | Officer Title: false
-x_banun_bunow_si_0 (SignatureHelper): === Not a CEO
-x_banun_bunow_si_0 (SignatureHelper): === Checking if officer title "Vice President" is in business line titles
-x_banun_bunow_si_0 (SignatureHelper): === Moving up to manager: 1b091241db2e574071cc71fa8c961949
-x_banun_bunow_si_0 (SignatureHelper): === Level 2 - Checking user: 2 | Title: Dir of IT Service Mgmt | Officer Title: Senior Vice President | SysId: 1b091241db2e574071cc71fa8c961949
-x_banun_bunow_si_0 (SignatureHelper): === _isCEO checking - SysId: 1b091241db2e574071cc71fa8c961949 | Title: dir of it service mgmt | Officer Title: senior vice president
-x_banun_bunow_si_0 (SignatureHelper): === Checking against exact matches: 58299a41db2e574071cc71fa8c961908, chairman, president and ceo, president/coo
-x_banun_bunow_si_0 (SignatureHelper): === Checking against keywords: ceo
-x_banun_bunow_si_0 (SignatureHelper): === Checking keyword "ceo" in Title: false | Officer Title: false
-x_banun_bunow_si_0 (SignatureHelper): === Not a CEO
-x_banun_bunow_si_0 (SignatureHelper): === Checking if officer title "Senior Vice President" is in business line titles
-x_banun_bunow_si_0 (SignatureHelper): === Moving up to manager: a3095241db2e574071cc71fa8c961957
-x_banun_bunow_si_0 (SignatureHelper): === Level 3 - Checking user: 3 | Title: Chief Information Officer | Officer Title: Executive Vice President | SysId: a3095241db2e574071cc71fa8c961957
-x_banun_bunow_si_0 (SignatureHelper): === _isCEO checking - SysId: a3095241db2e574071cc71fa8c961957 | Title: chief information officer | Officer Title: executive vice president
-x_banun_bunow_si_0 (SignatureHelper): === Checking against exact matches: 58299a41db2e574071cc71fa8c961908, chairman, president and ceo, president/coo
-x_banun_bunow_si_0 (SignatureHelper): === Checking against keywords: ceo
-x_banun_bunow_si_0 (SignatureHelper): === Checking keyword "ceo" in Title: false | Officer Title: false
-x_banun_bunow_si_0 (SignatureHelper): === Not a CEO
-x_banun_bunow_si_0 (SignatureHelper): === Checking if officer title "Executive Vice President" is in business line titles
-x_banun_bunow_si_0 (SignatureHelper): === Business Line Approver FOUND:  with title: Executive Vice President
-x_banun_bunow_si_0: 
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | Comparing currentApprover (8c295a41db2e574071cc71fa8c9619de) === divisionHeadSysId (8c295a41db2e574071cc71fa8c9619de)
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | User is active, continuing checks...
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | User does NOT have sufficient authority
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | Found user: 1 (user_name: 1)
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | User is active, continuing checks...
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | Active status - getValue(): '1', boolean: true
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | Message undefined
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | Comparing currentApprover (a3095241db2e574071cc71fa8c961957) === divisionHeadSysId (8c295a41db2e574071cc71fa8c9619de)
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | amount: 234234234
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | User does NOT have sufficient authority
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | startingApproverSysId: a3095241db2e574071cc71fa8c961957
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | Checking delegated authority for amount: 234234234, type: credit
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | ----- Level 1 -----
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | Current approver sys_id: a3095241db2e574071cc71fa8c961957
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | Next manager sys_id: 8c295a41db2e574071cc71fa8c9619de
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | Checking delegated authority for amount: 234234234, type: credit
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | Starting hierarchy traversal, maxLevels: 20
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | Checking if user is division head...
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | Active status - getValue(): '1', boolean: true
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | Checking if user is CEO...
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | Authority check result - has_authority: false, message: No delegated authority found for approver
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | Found user: 2 (user_name: 2)
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | User IS division head - stopping traversal
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | Checking if user is CEO...
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | Checking if user is division head...
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | divisionHeadSysId: 8c295a41db2e574071cc71fa8c9619de
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | Current approver sys_id: 8c295a41db2e574071cc71fa8c9619de
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | Authority check result - has_authority: false, message: Authority insufficient. Threshold: $25000000 < Request: $234234234
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | ===== Starting findHierarchicalApprover =====
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | User is NOT CEO
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | Moving to level 1
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | ----- Level 0 -----
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | User is NOT division head
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | User is NOT CEO
+
+09-23-2025 09:46:02
+Information	x_banun_bunow_si_0	SIGNATURE LOG | type: credit
