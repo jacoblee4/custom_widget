@@ -1,64 +1,128 @@
 findHierarchicalApprover: function(startingApproverSysId, divisionHeadSysId, amount, type) {
-        var result = {
-            found_approver: false,
-            approver_sys_id: '',
-            is_division_head: false,
-            reached_division_head: false,
-            reached_ceo: false,
-            message: ''
-        };
+    var result = {
+        found_approver: false,
+        approver_sys_id: '',
+        is_division_head: false,
+        reached_division_head: false,
+        reached_ceo: false,
+        message: ''
+    };
 
-		gs.info("SIGNATURE LOG | startingApproverSysId: " + startingApproverSysId);
-		gs.info("SIGNATURE LOG | divisionHeadSysId: " + divisionHeadSysId);
-		gs.info("SIGNATURE LOG | amount: " + amount);
-		gs.info("SIGNATURE LOG | type: " + type);
+    gs.info("SIGNATURE LOG | ===== Starting findHierarchicalApprover =====");
+    gs.info("SIGNATURE LOG | startingApproverSysId: " + startingApproverSysId);
+    gs.info("SIGNATURE LOG | divisionHeadSysId: " + divisionHeadSysId);
+    gs.info("SIGNATURE LOG | amount: " + amount);
+    gs.info("SIGNATURE LOG | type: " + type);
 
-        var currentApprover = startingApproverSysId;
-        var maxLevels = 20;
-        var currentLevel = 0;
+    var currentApprover = startingApproverSysId;
+    var maxLevels = 20;
+    var currentLevel = 0;
+    
+    gs.info("SIGNATURE LOG | Starting hierarchy traversal, maxLevels: " + maxLevels);
 
-        while (currentApprover && currentLevel < maxLevels) {
-            // Check if approver exists and is active
-            var userGr = new GlideRecord('sys_user');
-            if (!userGr.get(currentApprover)) {
-                result.message = 'User not found in hierarchy';
-                break;
-            }
+    while (currentApprover && currentLevel < maxLevels) {
+        gs.info("SIGNATURE LOG | ----- Level " + currentLevel + " -----");
+        gs.info("SIGNATURE LOG | Current approver sys_id: " + currentApprover);
+        
+        // Check if approver exists and is active
+        var userGr = new GlideRecord('sys_user');
+        if (!userGr.get(currentApprover)) {
+            gs.info("SIGNATURE LOG | ERROR: User not found for sys_id: " + currentApprover);
+            result.message = 'User not found in hierarchy';
+            break;
+        }
+        
+        gs.info("SIGNATURE LOG | Found user: " + userGr.getValue('name') + " (user_name: " + userGr.getValue('user_name') + ")");
+        
+        // Log active status - check both string and boolean
+        var activeValue = userGr.getValue('active');
+        var activeBoolean = userGr.active;
+        gs.info("SIGNATURE LOG | Active status - getValue(): '" + activeValue + "', boolean: " + activeBoolean);
+        
+        // Fixed: Check for both boolean and string representations
+        if (activeValue !== 'true' && activeValue !== '1' && activeBoolean != true) {
+            gs.info("SIGNATURE LOG | User is INACTIVE - stopping traversal");
+            result.message = 'Inactive user found in hierarchy: ' + userGr.getValue('name');
+            break;
+        }
+        
+        gs.info("SIGNATURE LOG | User is active, continuing checks...");
 
-            if (userGr.getValue('active') !== 'true') {
-                result.message = 'Inactive user found in hierarchy: ' + userGr.getValue('name');
-                break;
-            }
-
-            // Check if this is the CEO
+        // Check if this is the CEO
+        gs.info("SIGNATURE LOG | Checking if user is CEO...");
+        try {
             if (this._isCEO_check(currentApprover)) {
+                gs.info("SIGNATURE LOG | User IS CEO - escalating to committee");
                 result.reached_ceo = true;
                 result.message = 'CEO found in hierarchy - escalating to committee';
                 return result;
             }
+            gs.info("SIGNATURE LOG | User is NOT CEO");
+        } catch (e) {
+            gs.error("SIGNATURE LOG | ERROR in _isCEO_check: " + e.message);
+        }
 
-            // Check if this person has authority
+        // Check if this person has authority
+        gs.info("SIGNATURE LOG | Checking delegated authority for amount: " + amount + ", type: " + type);
+        try {
             var authCheck = this.checkDelegatedAuthority(currentApprover, amount, type);
+            gs.info("SIGNATURE LOG | Authority check result - has_authority: " + authCheck.has_authority + ", message: " + authCheck.message);
+            
             if (authCheck.has_authority) {
+                gs.info("SIGNATURE LOG | FOUND APPROVER with authority!");
                 result.found_approver = true;
                 result.approver_sys_id = currentApprover;
                 result.message = authCheck.message;
                 return result;
             }
-
-            // Check if this is the division head
-            if (currentApprover === divisionHeadSysId) {
-                result.reached_division_head = true;
-                result.is_division_head = true;
-                result.message = 'Reached division head without finding approver with authority';
-                return result;
-            }
-
-            // Move to next manager - no need to redeclare userGr
-            currentApprover = userGr.getValue('manager');
-            currentLevel++;
+            gs.info("SIGNATURE LOG | User does NOT have sufficient authority");
+        } catch (e) {
+            gs.error("SIGNATURE LOG | ERROR in checkDelegatedAuthority: " + e.message);
         }
 
+        // Check if this is the division head
+        gs.info("SIGNATURE LOG | Checking if user is division head...");
+        gs.info("SIGNATURE LOG | Comparing currentApprover (" + currentApprover + ") === divisionHeadSysId (" + divisionHeadSysId + ")");
+        
+        if (currentApprover === divisionHeadSysId) {
+            gs.info("SIGNATURE LOG | User IS division head - stopping traversal");
+            result.reached_division_head = true;
+            result.is_division_head = true;
+            result.message = 'Reached division head without finding approver with authority';
+            return result;
+        }
+        gs.info("SIGNATURE LOG | User is NOT division head");
+
+        // Move to next manager
+        var nextManager = userGr.getValue('manager');
+        gs.info("SIGNATURE LOG | Next manager sys_id: " + (nextManager || "NULL/EMPTY"));
+        
+        if (!nextManager) {
+            gs.info("SIGNATURE LOG | No manager found - end of hierarchy chain");
+            result.message = 'End of hierarchy - no manager found';
+            break;
+        }
+        
+        currentApprover = nextManager;
+        currentLevel++;
+        gs.info("SIGNATURE LOG | Moving to level " + currentLevel);
+    }
+    
+    if (currentLevel >= maxLevels) {
+        gs.info("SIGNATURE LOG | REACHED MAX LEVELS (" + maxLevels + ") - stopping to prevent infinite loop");
+        result.message = 'Maximum hierarchy levels reached';
+    } else if (!result.message) {
         result.message = 'No approver found in hierarchy';
-        return result;
-    },
+    }
+    
+    gs.info("SIGNATURE LOG | ===== Final Result =====");
+    gs.info("SIGNATURE LOG | found_approver: " + result.found_approver);
+    gs.info("SIGNATURE LOG | approver_sys_id: " + result.approver_sys_id);
+    gs.info("SIGNATURE LOG | is_division_head: " + result.is_division_head);
+    gs.info("SIGNATURE LOG | reached_division_head: " + result.reached_division_head);
+    gs.info("SIGNATURE LOG | reached_ceo: " + result.reached_ceo);
+    gs.info("SIGNATURE LOG | message: " + result.message);
+    gs.info("SIGNATURE LOG | ===== End findHierarchicalApprover =====");
+    
+    return result;
+},
