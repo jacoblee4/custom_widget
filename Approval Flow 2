@@ -1,39 +1,64 @@
-checkDelegatedAuthority: function(approverSysId, amount, type) {
+findHierarchicalApprover: function(startingApproverSysId, divisionHeadSysId, amount, type) {
         var result = {
-            has_authority: false,
-            threshold: 0,
+            found_approver: false,
+            approver_sys_id: '',
+            is_division_head: false,
+            reached_division_head: false,
+            reached_ceo: false,
             message: ''
         };
 
-        if (!approverSysId || !amount) {
-            result.message = 'Missing approver or amount';
-            return result;
-        }
+		gs.info("SIGNATURE LOG | startingApproverSysId: " + startingApproverSysId);
+		gs.info("SIGNATURE LOG | divisionHeadSysId: " + divisionHeadSysId);
+		gs.info("SIGNATURE LOG | amount: " + amount);
+		gs.info("SIGNATURE LOG | type: " + type);
 
-        var table = (type === 'credit') ?
-            'x_banun_bunow_si_0_crmc_delegated_authority' :
-            'x_banun_bunow_si_0_ormc_delegated_authority';
+        var currentApprover = startingApproverSysId;
+        var maxLevels = 20;
+        var currentLevel = 0;
 
-        var gr = new GlideRecord(table);
-        gr.addQuery('delegate_name', approverSysId);
-		gr.addEncodedQuery('active=true^delegate_name.active=true'); // Make sure the delegate record is active AND the user record for the delegate
-        gr.query();
-
-        if (gr.next()) {
-
-            result.threshold = gr.getValue('authority_limit') || 0;
-			
-            if (result.threshold > 0 && amount <= result.threshold) {
-                result.has_authority = true;
-                result.message = 'Approver has delegated authority. Threshold: $' +
-                    result.threshold.toLocaleString() + ' >= Request: $' + amount.toLocaleString();
-            } else {
-                result.message = 'Authority insufficient. Threshold: $' +
-                    result.threshold.toLocaleString() + ' < Request: $' + amount.toLocaleString();
+        while (currentApprover && currentLevel < maxLevels) {
+            // Check if approver exists and is active
+            var userGr = new GlideRecord('sys_user');
+            if (!userGr.get(currentApprover)) {
+                result.message = 'User not found in hierarchy';
+                break;
             }
-        } else {
-            result.message = 'No delegated authority found for approver';
+
+            if (userGr.getValue('active') !== 'true') {
+                result.message = 'Inactive user found in hierarchy: ' + userGr.getValue('name');
+                break;
+            }
+
+            // Check if this is the CEO
+            if (this._isCEO_check(currentApprover)) {
+                result.reached_ceo = true;
+                result.message = 'CEO found in hierarchy - escalating to committee';
+                return result;
+            }
+
+            // Check if this person has authority
+            var authCheck = this.checkDelegatedAuthority(currentApprover, amount, type);
+            if (authCheck.has_authority) {
+                result.found_approver = true;
+                result.approver_sys_id = currentApprover;
+                result.message = authCheck.message;
+                return result;
+            }
+
+            // Check if this is the division head
+            if (currentApprover === divisionHeadSysId) {
+                result.reached_division_head = true;
+                result.is_division_head = true;
+                result.message = 'Reached division head without finding approver with authority';
+                return result;
+            }
+
+            // Move to next manager - no need to redeclare userGr
+            currentApprover = userGr.getValue('manager');
+            currentLevel++;
         }
 
+        result.message = 'No approver found in hierarchy';
         return result;
     },
