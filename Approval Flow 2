@@ -1,4 +1,189 @@
-var gr = new GlideRecord('sys_user');
-gr.get(fd_data.subflow_inputs.business_line_approver);
+/**
+ * Get the Division Head - defined as someone who reports directly to the CEO
+ * @param {String} requestedForSysId - The sys_id of the requested for user
+ * @returns {Object} Result object with division head details
+ */
+getDivisionHead: function(requestedForSysId) {
+    var result = {
+        found: false,
+        division_head_sys_id: '',
+        division_head_name: '',
+        is_ceo: false,
+        error_message: ''
+    };
+    
+    // Step 1: Get the Business Line Approver first
+    var blApproverResult = this.findBusinessLineApprover(requestedForSysId);
+    
+    if (!blApproverResult.found) {
+        result.error_message = 'Could not find Business Line Approver: ' + blApproverResult.error_message;
+        return result;
+    }
+    
+    if (blApproverResult.is_ceo) {
+        result.is_ceo = true;
+        result.error_message = 'Business Line Approver is the CEO';
+        return result;
+    }
+    
+    // Step 2: Starting from Business Line Approver, traverse up to find who reports to CEO
+    var currentUser = new GlideRecord('sys_user');
+    if (!currentUser.get(blApproverResult.approver_sys_id)) {
+        result.error_message = 'Business Line Approver record not found';
+        return result;
+    }
+    
+    var maxLevels = 20; // Prevent infinite loops
+    var currentLevel = 0;
+    
+    while (currentUser && currentLevel < maxLevels) {
+        // Check if current user is active
+        if (!currentUser.active) {
+            result.error_message = 'Inactive user found in chain: ' + currentUser.getValue('name');
+            return result;
+        }
+        
+        // Get the current user's manager
+        var managerSysId = currentUser.getValue('manager');
+        if (!managerSysId) {
+            result.error_message = 'End of hierarchy reached without finding division head';
+            return result;
+        }
+        
+        // Check if the manager is the CEO
+        var managerGr = new GlideRecord('sys_user');
+        if (managerGr.get(managerSysId)) {
+            if (this._isCEO(managerGr)) {
+                // Found it! Current user reports to CEO, so they are the Division Head
+                result.found = true;
+                result.division_head_sys_id = currentUser.getValue('sys_id');
+                result.division_head_name = currentUser.getValue('name');
+                return result;
+            }
+        }
+        
+        // Move up to the current user's manager for next iteration
+        if (!currentUser.get(managerSysId)) {
+            result.error_message = 'Manager record not found in chain';
+            return result;
+        }
+        
+        currentLevel++;
+    }
+    
+    if (currentLevel >= maxLevels) {
+        result.error_message = 'Maximum hierarchy levels reached without finding division head';
+    }
+    
+    return result;
+},
 
-return gr.u_division_head;
+/**
+ * Alternative version that starts from a specific user instead of finding BL Approver first
+ * Useful if you already have the Business Line Approver sys_id
+ */
+getDivisionHeadFromUser: function(userSysId) {
+    var result = {
+        found: false,
+        division_head_sys_id: '',
+        division_head_name: '',
+        is_ceo: false,
+        error_message: ''
+    };
+    
+    if (!userSysId) {
+        result.error_message = 'No user sys_id provided';
+        return result;
+    }
+    
+    var currentUser = new GlideRecord('sys_user');
+    if (!currentUser.get(userSysId)) {
+        result.error_message = 'User not found';
+        return result;
+    }
+    
+    var maxLevels = 20;
+    var currentLevel = 0;
+    
+    while (currentUser && currentLevel < maxLevels) {
+        // Check if current user is active
+        if (!currentUser.active) {
+            result.error_message = 'Inactive user found in chain: ' + currentUser.getValue('name');
+            return result;
+        }
+        
+        // Check if current user IS the CEO
+        if (this._isCEO(currentUser)) {
+            result.is_ceo = true;
+            result.error_message = 'User is the CEO';
+            return result;
+        }
+        
+        // Get the current user's manager
+        var managerSysId = currentUser.getValue('manager');
+        if (!managerSysId) {
+            result.error_message = 'End of hierarchy reached without finding division head';
+            return result;
+        }
+        
+        // Check if the manager is the CEO
+        var managerGr = new GlideRecord('sys_user');
+        if (managerGr.get(managerSysId)) {
+            if (this._isCEO(managerGr)) {
+                // Found it! Current user reports to CEO, so they are the Division Head
+                result.found = true;
+                result.division_head_sys_id = currentUser.getValue('sys_id');
+                result.division_head_name = currentUser.getValue('name');
+                return result;
+            }
+        }
+        
+        // Move up to the current user's manager for next iteration
+        if (!currentUser.get(managerSysId)) {
+            result.error_message = 'Manager record not found in chain';
+            return result;
+        }
+        
+        currentLevel++;
+    }
+    
+    if (currentLevel >= maxLevels) {
+        result.error_message = 'Maximum hierarchy levels reached without finding division head';
+    }
+    
+    return result;
+}
+
+
+
+
+
+
+
+
+
+
+
+And here's how you would use it in your flow instead of the simple code in "Approval Flow 2":
+javascript// In your flow script, replace the simple lookup with:
+var signatureHelper = new SignatureHelper();
+var divisionHeadResult = signatureHelper.getDivisionHead(fd_data.subflow_inputs.requested_for);
+
+if (divisionHeadResult.found) {
+    return divisionHeadResult.division_head_sys_id;
+} else {
+    // Handle error case - maybe log it or return empty string
+    gs.error("Could not find Division Head: " + divisionHeadResult.error_message);
+    return '';
+}
+Or if you already have the Business Line Approver sys_id and want to use that directly:
+javascript// If you already have the business line approver sys_id
+var signatureHelper = new SignatureHelper();
+var divisionHeadResult = signatureHelper.getDivisionHeadFromUser(fd_data.subflow_inputs.business_line_approver);
+
+if (divisionHeadResult.found) {
+    return divisionHeadResult.division_head_sys_id;
+} else {
+    gs.error("Could not find Division Head: " + divisionHeadResult.error_message);
+    return '';
+}
