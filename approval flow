@@ -1,113 +1,3 @@
-Do you see any issues or ways to improve this child flow
-
-Step 1: Update credit authority record (Sets State to In Progress and Stage to Division Executive Review)
-
-Step 2 - set Max Amount with this script:
-var helper = new x_banun_bunow_si_0.SignatureHelper();
-var result = helper.getMaxAuthorityValue(
-    fd_data.subflow_inputs.credit_record.sys_id,
-    'credit'
-);
-    
-// Log to work notes
-var childGr = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
-if (childGr.get(fd_data.subflow_inputs.credit_record.sys_id)) {
-    childGr.work_notes = 'Maximum credit value: $' + result.max_value.toLocaleString() + 
-        ' (Field: ' + result.field_name + ')';
-    childGr.update();
-}
-    
-return result.max_value;
-
-
-Step 3 - set has authority with this script:
-var helper = new x_banun_bunow_si_0.SignatureHelper();
-var result = helper.checkDelegatedAuthority(
-    fd_data.subflow_inputs.business_line_approver,
-    fd_data.flow_var.max_amount,
-    'credit'
-);
-    
-// Log result
-var childGr = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
-if (childGr.get(fd_data.subflow_inputs.credit_record.sys_id)) {
-    childGr.work_notes = result.message;
-    childGr.update();
-}
-    
-return result.has_authority;
-
-step 4 - if has authority is true
-4.1 if business line approver is requested for
-4.2 ask for approval from CRMC group
-4.3 if approved
-4.4 update record to closed complete and stage to closed
-4.5 end subflow
-4.6 else to 4.3
-4.7 update record to closed incomplete/closed
-4.8 end subflow
-4.9 else for 4.1 update stage to closec complete, stage to closed, approval to approved
-4.10 end subflow
-
-5 - else to 4 / does not have authoirty 
-5.1 set is division head with this script:
-
-var helper = new x_banun_bunow_si_0.SignatureHelper();
-var result = helper.checkIfDivisionHead(
-    fd_data.subflow_inputs.business_line_approver,
-    fd_data.subflow_inputs.requested_for.sys_id
-);
-
-fd_data.flow_var.division_head_sys_id = result.division_head_sys_id;
-fd_data.flow_var.current_approver_sys_id = result.next_approver_sys_id;
-    
-return result.is_division_head;
-
-
-5.2 if is not division head / is division head is false
-5.3 set current approver sys Id ussing this script:
-
-var helper = new x_banun_bunow_si_0.SignatureHelper();
-var result = helper.findHierarchicalApprover(
-    fd_data.flow_var.current_approver_sys_id,  // Starting from division head's manager
-    fd_data.flow_var.division_head_sys_id,
-    fd_data.flow_var.max_amount, 'credit'
-);
-    
-if (result.reached_ceo || result.reached_division_head) {
-    // Need committee
-    return '';
-} else if (result.found_approver) {
-    // Found someone to approve
-    return result.approver_sys_id;
-}
-    
-return '';
-
-
-5.4 - if current approver sys id is not empty (found an approver)
-5.5 ask for approval from current approver sys id
-5.6 if approved in 5.5 update the record to closed complete/closed and end the subflow
-5.7 else (not approved) update to closed incomplete and closed and end subflow
-5.8 I currenlty have the else to 5.4 blank I need to know what goes here
-
-5.9 else to 5.2
-5.10 - set use committee using this script:
-
-var helper = new x_banun_bunow_si_0.SignatureHelper();
-var result = helper.shouldUseCommittee('credit');
-    
-fd_data.flow_var.approval_count_needed = result.approval_count_needed;
-    
-return result.use_committee;
-
-5.11 if comittee members defined (use committee is true)
-5.12 - get majority approval from committee, if approved update to closed complete/closed/end subflow
-if rejected closed incomplete/closed/end subflow
-
-5.13 else to 5.11 get approval from CRMC group, if approved closed complete/closed if rejected closed incomplete you know the drill end subflow here...
-
-Here is the current script icnlude too:
 var SignatureHelper = Class.create();
 SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
 
@@ -119,10 +9,7 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         this.businessLineTitles = this._parseBusinessLineTitles();
     },
 
-    /**
-     * Parse CEO identifiers from system property
-     * Format: "sys_id|title|officer_title|keyword" (pipe-separated)
-     */
+    // Parse CEO identifiers from system property
     _parseCEOIdentifiers: function() {
         var propertyValue = gs.getProperty('x_banun_bunow_si_0.bunow.ceo.identifiers', '');
 
@@ -132,7 +19,7 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         };
 
         if (propertyValue) {
-            var values = propertyValue.split('|'); // Using pipe delimiter
+            var values = propertyValue.split('|');
             for (var i = 0; i < values.length; i++) {
                 var trimmedValue = values[i].trim();
                 if (trimmedValue) {
@@ -151,16 +38,14 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         return identifiers;
     },
 
-    /**
-     * Parse business line titles from system property
-     */
+    // Parse business line titles from system property
     _parseBusinessLineTitles: function() {
         var propertyValue = gs.getProperty('x_banun_bunow_si_0.bunow.authority.business.line.titles', '');
 
         var titles = [];
 
         if (propertyValue) {
-            var values = propertyValue.split('|'); // Using pipe delimiter
+            var values = propertyValue.split('|');
             for (var i = 0; i < values.length; i++) {
                 var trimmedValue = values[i].trim();
                 if (trimmedValue) {
@@ -172,9 +57,7 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         return titles;
     },
 
-    /**
-     * Find the Business Line Approver by traversing up the management chain
-     */
+    // Find the Business Line Approver by traversing up the management chain
     findBusinessLineApprover: function(requestedForSysId) {
         var result = {
             found: false,
@@ -198,33 +81,45 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         var currentLevel = 0;
 
         while (currentUser && currentLevel < maxLevels) {
+            // Check if current user is active
+            if (!currentUser.active) {
+                result.error_message = 'Inactive user found in approval chain: ' + currentUser.getValue('name');
+                return result;
+            }
+
             // Check if current user is CEO
             if (this._isCEO(currentUser)) {
                 result.is_ceo = true;
-                result.found = true; // Mark as found
-                result.approver_sys_id = currentUser.getValue('sys_id'); // Still set the sys_id
-                result.error_message = ''; // Clear error
-                return result; // Return with is_ceo flag
+                result.found = true;
+                result.approver_sys_id = currentUser.getValue('sys_id');
+                result.error_message = 'Found CEO, cenceling request';
+                return result;
             }
 
             // Check if current user has the required title
             var currentOfficerTitle = currentUser.getValue('u_officer_title') || '';
-
             if (this.businessLineTitles.indexOf(currentOfficerTitle) > -1) {
                 result.found = true;
                 result.approver_sys_id = currentUser.getValue('sys_id');
                 return result;
             }
 
-            // Move up to manager
+            // Get manager sys_id FIRST
             var managerSysId = currentUser.getValue('manager');
             if (!managerSysId) {
                 result.error_message = 'No Business Line Approver found - reached top of hierarchy';
                 break;
             }
 
+            // Then move to manager
             if (!currentUser.get(managerSysId)) {
                 result.error_message = 'Manager record not found in chain';
+                break;
+            }
+
+            // Check if manager is active
+            if (!currentUser.active) {
+                result.error_message = 'Inactive manager found in chain: ' + currentUser.getValue('name');
                 break;
             }
 
@@ -238,32 +133,30 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         return result;
     },
 
-    /**
-     * Check if approval should be auto-approved
-     */
-    shouldAutoApproveBusinessLine: function(openedBySysId, requestedForSysId) {
-        // Auto-approve if:
-        // 1. Opened By == Requested For AND the requester has the business line title
+    // /**
+    //  * Check if approval should be auto-approved
+    //  */
+    // shouldAutoApproveBusinessLine: function(openedBySysId, requestedForSysId) {
+    //     // Auto-approve if:
+    //     // 1. Opened By == Requested For AND the requester has the business line title
 
-        if (openedBySysId !== requestedForSysId) {
-            return false;
-        }
+    //     if (openedBySysId !== requestedForSysId) {
+    //         return false;
+    //     }
 
-        // Check if the requester/opener has the business line title
-        var userGr = new GlideRecord('sys_user');
-        if (userGr.get(openedBySysId)) {
-            var userTitle = userGr.getValue('u_officer_title') || '';
-            if (this.businessLineTitles.indexOf(userTitle) > -1) {
-                return true;
-            }
-        }
+    //     // Check if the requester/opener has the business line title
+    //     var userGr = new GlideRecord('sys_user');
+    //     if (userGr.get(openedBySysId)) {
+    //         var userTitle = userGr.getValue('u_officer_title') || '';
+    //         if (this.businessLineTitles.indexOf(userTitle) > -1) {
+    //             return true;
+    //         }
+    //     }
 
-        return false;
-    },
+    //     return false;
+    // },
 
-    /**
-     * Check if a user is the CEO by comparing against identifiers
-     */
+    // Check if a user is the CEO by comparing against identifiers
     _isCEO: function(userGr) {
         if (!userGr || !this.ceoIdentifiers) {
             return false;
@@ -286,7 +179,7 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
             }
         }
 
-        // Check keyword contains (like "CEO" appearing anywhere in title fields)
+        // Check keyword contains ("CEO" appearing anywhere in title fields)
         var keywords = this.ceoIdentifiers.keywords || [];
 
         for (var j = 0; j < keywords.length; j++) {
@@ -301,9 +194,7 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         return false;
     },
 
-    /**
-     * Get the maximum value from credit or non-credit child record
-     */
+    // Get the maximum value from credit or non-credit child record
     getMaxAuthorityValue: function(childSysId, type) {
         var result = {
             max_value: 0,
@@ -363,9 +254,7 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         return result;
     },
 
-    /**
-     * Check if approver has delegated authority for the amount
-     */
+    // Check if approver has delegated authority for the amount
     checkDelegatedAuthority: function(approverSysId, amount, type) {
         var result = {
             has_authority: false,
@@ -378,25 +267,28 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
             return result;
         }
 
+        var amountNum = parseFloat(amount);
+
         var table = (type === 'credit') ?
             'x_banun_bunow_si_0_crmc_delegated_authority' :
             'x_banun_bunow_si_0_ormc_delegated_authority';
 
         var gr = new GlideRecord(table);
-        gr.addQuery('user', approverSysId);
-        gr.addQuery('active', true);
+        gr.addQuery('delegate_name', approverSysId);
+        gr.addEncodedQuery('active=true^delegate_name.active=true'); // Make sure the delegate record is active AND the user record for the delegate
         gr.query();
 
         if (gr.next()) {
+
             result.threshold = parseFloat(gr.getValue('authority_limit') || 0);
 
-            if (result.threshold > 0 && amount <= result.threshold) {
+            if (result.threshold > 0 && amountNum <= result.threshold) {
                 result.has_authority = true;
                 result.message = 'Approver has delegated authority. Threshold: $' +
-                    result.threshold.toLocaleString() + ' >= Request: $' + amount.toLocaleString();
+                    result.threshold.toLocaleString() + ' >= Request: $' + amountNum.toLocaleString();
             } else {
                 result.message = 'Authority insufficient. Threshold: $' +
-                    result.threshold.toLocaleString() + ' < Request: $' + amount.toLocaleString();
+                    result.threshold.toLocaleString() + ' < Request: $' + amountNum.toLocaleString();
             }
         } else {
             result.message = 'No delegated authority found for approver';
@@ -405,65 +297,97 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         return result;
     },
 
-    /**
-     * Check if approver is the division head
-     */
-    checkIfDivisionHead: function(approverSysId, requestedForSysId) {
-        var result = {
-            is_division_head: false,
-            division_head_sys_id: '',
-            next_approver_sys_id: ''
-        };
+    // Check if approver is the division head
+    // checkIfDivisionHead: function(approverSysId, requestedForSysId) {
+    //     var result = {
+    //         is_division_head: false,
+    //         division_head_sys_id: '',
+    //         next_approver_sys_id: ''
+    //     };
 
-        var userGr = new GlideRecord('sys_user');
-        if (!userGr.get(requestedForSysId)) {
-            return result;
-        }
+    //     var requestedFor = new GlideRecord('sys_user');
+    //     if (!requestedFor.get(requestedForSysId)) {
+    //         return result;
+    //     }
 
-        var divisionHead = userGr.getValue('u_division_head');
-        result.division_head_sys_id = divisionHead.sys_id;
+    //     var divisionHead = requestedFor.getValue('u_division_head');
+    //     result.division_head_sys_id = divisionHead;
 
-        if (divisionHead === approverSysId) {
-            result.is_division_head = true;
-        } else {
-            // Get the division head's manager for next iteration
-            if (divisionHead) {
-                var dhGr = new GlideRecord('sys_user');
-                if (dhGr.get(divisionHead)) {
-                    result.next_approver_sys_id = dhGr.getValue('manager');
-                }
-            }
-        }
+    //     if (divisionHead === approverSysId) {
+    //         result.is_division_head = true;
+    //     } else {
+    //         // Get the division head's manager for next iteration
+    //         if (divisionHead) {
+    //             var dhGr = new GlideRecord('sys_user');
+    //             if (dhGr.get(divisionHead)) {
+    //                 result.next_approver_sys_id = dhGr.getValue('manager');
+    //             }
+    //         }
+    //     }
 
-        return result;
-    },
+    //     return result;
+    // },
 
-    /**
-     * Find next approver in hierarchy with sufficient authority
-     */
+    // Find next approver in hierarchy with sufficient authority
+
     findHierarchicalApprover: function(startingApproverSysId, divisionHeadSysId, amount, type) {
         var result = {
             found_approver: false,
             approver_sys_id: '',
             is_division_head: false,
             reached_division_head: false,
-            reached_ceo: false, // Add this flag
+            reached_ceo: false,
             message: ''
         };
 
         var currentApprover = startingApproverSysId;
-        var maxLevels = 10;
+        var maxLevels = 20;
         var currentLevel = 0;
 
+
         while (currentApprover && currentLevel < maxLevels) {
-            // Check if this is the CEO - now we flag it instead of erroring
-            if (this._isCEO_check(currentApprover)) {
-                result.reached_ceo = true;
-                result.message = 'CEO found in hierarchy - escalating to committee';
-                return result; // Return with CEO flag
+            // Check if approver exists and is active
+            var userGr = new GlideRecord('sys_user');
+            if (!userGr.get(currentApprover)) {
+                result.message = 'User not found in hierarchy';
+                break;
             }
 
-            // Check if this is the division head
+            // Log active status - check both string and boolean
+            var activeValue = userGr.getValue('active');
+            var activeBoolean = userGr.active;
+
+            // Fixed: Check for both boolean and string representations
+            if (activeValue !== 'true' && activeValue !== '1' && activeBoolean != true) {
+                result.message = 'Inactive user found in hierarchy: ' + userGr.getValue('name');
+                break;
+            }
+
+            // Check if this is the CEO
+            try {
+                if (this._isCEO_check(currentApprover)) {
+                    result.reached_ceo = true;
+                    result.message = 'CEO found in hierarchy - escalating to committee';
+                    return result;
+                }
+            } catch (e) {
+                gs.error("SIGNATURE LOG | ERROR in _isCEO_check: " + e.message);
+            }
+
+            // Check if this person has authority
+            try {
+                var authCheck = this.checkDelegatedAuthority(currentApprover, amount, type);
+
+                if (authCheck.has_authority) {
+                    result.found_approver = true;
+                    result.approver_sys_id = currentApprover;
+                    result.message = authCheck.message;
+                    return result;
+                }
+            } catch (e) {
+                gs.error("SIGNATURE LOG | ERROR in checkDelegatedAuthority: " + e.message);
+            }
+
             if (currentApprover === divisionHeadSysId) {
                 result.reached_division_head = true;
                 result.is_division_head = true;
@@ -471,26 +395,24 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
                 return result;
             }
 
-            // Check if this person has authority
-            var authCheck = this.checkDelegatedAuthority(currentApprover, amount, type);
-            if (authCheck.has_authority) {
-                result.found_approver = true;
-                result.approver_sys_id = currentApprover;
-                result.message = authCheck.message;
-                return result;
-            }
-
             // Move to next manager
-            var userGr = new GlideRecord('sys_user');
-            if (!userGr.get(currentApprover)) {
+            var nextManager = userGr.getValue('manager');
+
+            if (!nextManager) {
+                result.message = 'End of hierarchy - no manager found';
                 break;
             }
 
-            currentApprover = userGr.getValue('manager');
+            currentApprover = nextManager;
             currentLevel++;
         }
 
-        result.message = 'No approver found in hierarchy';
+        if (currentLevel >= maxLevels) {
+            result.message = 'Maximum hierarchy levels reached';
+        } else if (!result.message) {
+            result.message = 'No approver found in hierarchy';
+        }
+
         return result;
     },
 
@@ -505,46 +427,5 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         return false;
     },
 
-    /**
-     * Check if we should use committee voting
-     */
-    shouldUseCommittee: function(type) {
-        var result = {
-            use_committee: false,
-            member_count: 0,
-            approval_count_needed: 0
-        };
-
-        var table = (type === 'credit') ?
-            'x_banun_bunow_si_0_crmc_delegated_authority' :
-            'x_banun_bunow_si_0_ormc_delegated_authority';
-
-        // Just count active members
-        var gr = new GlideRecord(table);
-        gr.addQuery('active', true);
-        gr.query();
-
-        result.member_count = gr.getRowCount();
-
-        if (result.member_count >= 3) {
-            result.use_committee = true;
-            result.approval_count_needed = Math.ceil(result.member_count / 2);
-        }
-
-        return result;
-    },
-
     type: 'SignatureHelper'
 });
-
-
-
-
-
-
-
-So the main questiojn is (I have not tested everything but I believe this is working now)
-Is there a way to possibly optimize this subflow as it's currently like 45 steps. Do all the scripts look good or is there optimization there too..?
-
-
-
