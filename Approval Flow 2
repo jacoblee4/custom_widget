@@ -1,88 +1,188 @@
-// Find next approver in hierarchy with sufficient authority
-findHierarchicalApprover: function(businessLineApproverSysId, divisionHeadSysId, amount, type) {
-    var result = {
-        found_approver: false,
-        approver_sys_id: '',
-        is_division_head: false,
-        reached_division_head: false,
-        reached_ceo: false,
-        message: ''
-    };
+Simplified Flow Structure
+Trigger
 
-    // STEP 1: Start by getting the Business Line Approver's MANAGER
-    var blApprover = new GlideRecord('sys_user');
-    if (!blApprover.get(businessLineApproverSysId)) {
-        result.message = 'Business Line Approver not found';
-        return result;
-    }
+Parent table when State = Closed Complete
+
+Flow Steps:
+1. Decision - Check Request Type
+
+If current.request_type = "remove_authority" → Go to Remove Branch
+Else (new/change) → Go to Process Branch
+
+
+REMOVE BRANCH:
+2A. Run Script in Set Flow Variable
+
+Variable: removal_success (Boolean)
+
+javascript(function() {
+    var processor = new AuthorityLimitsProcessor();
+    return processor.removeAuthorityLimit(current.job_code.toString());
+})();
+
+PROCESS BRANCH (New/Change):
+2B. Parallel Flow - Get Both Child Records
+
+Branch 1: Look Up Credit Child
+
+Table: x_banun_bunow_si_0_credit_authority_limits
+Condition: parent = current AND state = closed_complete
+
+
+Branch 2: Look Up Non-Credit Child
+
+Table: x_banun_bunow_si_0_non_credit_authority_limits
+Condition: parent = current AND state = closed_complete
+
+
+
+3B. Set Flow Variable with Script - Process Records
+
+Variable: update_success (Boolean)
+
+javascript(function() {
+    var processor = new AuthorityLimitsProcessor();
     
-    var currentApprover = blApprover.getValue('manager');
-    if (!currentApprover) {
-        result.message = 'Business Line Approver has no manager';
-        return result;
-    }
+    // fd_data contains the records from the parallel lookups
+    var creditChildSysId = fd_data.lookup_credit_result ? fd_data.lookup_credit_result.sys_id : null;
+    var nonCreditChildSysId = fd_data.lookup_non_credit_result ? fd_data.lookup_non_credit_result.sys_id : null;
     
-    var maxLevels = 20;
-    var currentLevel = 0;
+    return processor.processAuthorityLimits(
+        current.job_code.toString(),
+        current.request_type.toString(),
+        creditChildSysId,
+        nonCreditChildSysId,
+        current.sys_id
+    );
+})();
 
-    while (currentApprover && currentLevel < maxLevels) {
-        // Check if approver exists and is active
-        var userGr = new GlideRecord('sys_user');
-        if (!userGr.get(currentApprover)) {
-            result.message = 'User not found in hierarchy';
-            break;
+Script Include: AuthorityLimitsProcessor
+javascriptvar AuthorityLimitsProcessor = Class.create();
+AuthorityLimitsProcessor.prototype = {
+    initialize: function() {},
+    
+    processAuthorityLimits: function(jobCode, requestType, creditChildId, nonCreditChildId, parentId) {
+        try {
+            // Get values from child records
+            var creditValues = this._getCreditValues(creditChildId);
+            var nonCreditValues = this._getNonCreditValues(nonCreditChildId);
+            
+            // Check if limit already exists
+            var existingGr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
+            existingGr.addQuery('job_code', jobCode);
+            existingGr.addQuery('active', true);
+            existingGr.query();
+            
+            if (existingGr.next()) {
+                // Update existing
+                return this._updateLimit(existingGr, creditValues, nonCreditValues, parentId, requestType);
+            } else {
+                // Create new
+                return this._createLimit(jobCode, creditValues, nonCreditValues, parentId, requestType);
+            }
+        } catch (e) {
+            gs.error('AuthorityLimitsProcessor Error: ' + e.message);
+            return false;
         }
-
-        if (!userGr.active) {
-            result.message = 'Inactive user found in hierarchy: ' + userGr.getValue('name');
-            break;
+    },
+    
+    removeAuthorityLimit: function(jobCode) {
+        try {
+            var gr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
+            gr.addQuery('job_code', jobCode);
+            gr.addQuery('active', true);
+            gr.query();
+            
+            while (gr.next()) {
+                gr.active = false; // Soft delete
+                gr.update();
+            }
+            return true;
+        } catch (e) {
+            gs.error('Remove Authority Limit Error: ' + e.message);
+            return false;
         }
-
-        // STEP 2: Check if this is the CEO - if so, we've gone too far
-        if (this._isCEO_check(currentApprover)) {
-            result.reached_ceo = true;
-            result.message = 'CEO found in hierarchy - escalating to committee';
-            return result;  // EXIT METHOD - CEO never approves directly
+    },
+    
+    _getCreditValues: function(creditChildId) {
+        if (!creditChildId) return null;
+        
+        var gr = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
+        if (gr.get(creditChildId)) {
+            return {
+                overdraft_external_accounts: gr.getValue('overdraft_external_accounts'),
+                overdraft_internal_accounts: gr.getValue('overdraft_internal_accounts'),
+                unavailable_funds_external_accounts: gr.getValue('unavailable_funds_external_accounts'),
+                unavailable_funds_internal_accounts: gr.getValue('unavailable_funds_internal_accounts')
+            };
         }
-
-        // STEP 3: Check if this person has authority to approve
-        var authCheck = this.checkDelegatedAuthority(currentApprover, amount, type);
-
-        if (authCheck.has_authority) {
-            // STEP 4: They can approve! Return them as the approver
-            result.found_approver = true;
-            result.approver_sys_id = currentApprover;
-            result.message = authCheck.message;
-            return result;  // EXIT METHOD - Found someone who can approve
+        return null;
+    },
+    
+    _getNonCreditValues: function(nonCreditChildId) {
+        if (!nonCreditChildId) return null;
+        
+        var gr = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
+        if (gr.get(nonCreditChildId)) {
+            return {
+                disbursement_ach: gr.getValue('disbursement_ach'),
+                disbursement_wire_transfer_external: gr.getValue('disbursement_wire_transfer_external'),
+                disbursement_wire_transfer_internal: gr.getValue('disbursement_wire_transfer_internal'),
+                disbursement_official_checks_external: gr.getValue('disbursement_official_checks_external'),
+                disbursement_official_checks_internal: gr.getValue('disbursement_official_checks_internal'),
+                check_cashing_on_us: gr.getValue('check_cashing_on_us'),
+                check_cashing_not_on_us: gr.getValue('check_cashing_not_on_us'),
+                remote_deposit: gr.getValue('remote_deposit'),
+                treasury_solutions_company_wire_limits: gr.getValue('treasury_solutions_company_wire_limits'),
+                fx_wire_limits: gr.getValue('fx_wire_limits')
+            };
         }
-
-        // STEP 5: They can't approve - check if they're the division head
-        // Division head = last stop before CEO, send to committee
-        if (currentApprover === divisionHeadSysId) {
-            result.reached_division_head = true;
-            result.is_division_head = true;
-            result.message = 'Reached division head without finding approver with authority - send to committee';
-            return result;  // EXIT METHOD - Division head can't approve this amount, go to committee
+        return null;
+    },
+    
+    _updateLimit: function(existingGr, creditValues, nonCreditValues, parentId, requestType) {
+        if (creditValues) {
+            for (var key in creditValues) {
+                existingGr[key] = creditValues[key];
+            }
         }
-
-        // STEP 6: Not division head, not enough authority - move up to their manager
-        var nextManager = userGr.getValue('manager');
-
-        if (!nextManager) {
-            result.message = 'End of hierarchy - no manager found';
-            break;
+        
+        if (nonCreditValues) {
+            for (var key in nonCreditValues) {
+                existingGr[key] = nonCreditValues[key];
+            }
         }
-
-        currentApprover = nextManager;
-        currentLevel++;
+        
+        existingGr.last_updated_from_request = parentId;
+        existingGr.last_update_type = requestType;
+        existingGr.update();
+        
+        return true;
+    },
+    
+    _createLimit: function(jobCode, creditValues, nonCreditValues, parentId, requestType) {
+        var newGr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
+        newGr.initialize();
+        newGr.job_code = jobCode;
+        newGr.active = true;
+        
+        if (creditValues) {
+            for (var key in creditValues) {
+                newGr[key] = creditValues[key];
+            }
+        }
+        
+        if (nonCreditValues) {
+            for (var key in nonCreditValues) {
+                newGr[key] = nonCreditValues[key];
+            }
+        }
+        
+        newGr.created_from_request = parentId;
+        newGr.last_update_type = requestType;
+        var sysId = newGr.insert();
+        
+        return sysId ? true : false;
     }
-
-    // We should rarely get here - only if something is wrong with the hierarchy
-    if (currentLevel >= maxLevels) {
-        result.message = 'Maximum hierarchy levels reached';
-    } else if (!result.message) {
-        result.message = 'No approver found in hierarchy';
-    }
-
-    return result;
-},
+};
+Much cleaner! The flow is simple, and all the logic is in the Script Include. What do you think?
