@@ -508,7 +508,7 @@ api.controller = function($scope, $window, spUtil) {
     c.jobCode = '';
     c.existingLimits = null;
     c.originalLoadedValues = null;
-    
+
     // Widget data model - stores all form state (updated with new fields)
     c.authorityData = {
         non_credit_checked: false,
@@ -635,17 +635,17 @@ api.controller = function($scope, $window, spUtil) {
     // Check if any values have changed from original
     c.hasValuesChanged = function() {
         if (!c.originalLoadedValues) return true;
-        
+
         for (var key in c.originalLoadedValues) {
             if (c.originalLoadedValues.hasOwnProperty(key)) {
                 if (key === 'overall_business_need') continue;
-                
+
                 if (c.authorityData[key] !== c.originalLoadedValues[key]) {
                     return true;
                 }
             }
         }
-        
+
         return false;
     };
 
@@ -694,14 +694,14 @@ api.controller = function($scope, $window, spUtil) {
                     !c.authorityData.official_checks_checked) {
                     errors.push('If Disbursement amount is entered, you must select at least one option: ACH, Wire Transfer, or Official Checks');
                 }
-                
+
                 // Validate Wire Transfer account types
                 if (c.authorityData.wire_transfer_checked) {
                     if (!c.authorityData.wire_internal && !c.authorityData.wire_external) {
                         errors.push('If Wire Transfer is selected, you must choose at least one account type (Internal or External)');
                     }
                 }
-                
+
                 // Validate Official Checks account types
                 if (c.authorityData.official_checks_checked) {
                     if (!c.authorityData.checks_internal && !c.authorityData.checks_external) {
@@ -716,11 +716,11 @@ api.controller = function($scope, $window, spUtil) {
             var hasCreditValue = c.authorityData.overdraft || c.authorityData.unavailable_funds;
             var hasOverdraftAccountType = c.authorityData.overdraft_internal || c.authorityData.overdraft_external;
             var hasUnavailableAccountType = c.authorityData.unavailable_internal || c.authorityData.unavailable_external;
-            
+
             if (!hasCreditValue && !hasOverdraftAccountType && !hasUnavailableAccountType) {
                 errors.push('If Credit Authority is selected, at least one currency field must have a value');
             }
-            
+
             // Overdraft bidirectional validation
             if (c.authorityData.overdraft && !hasOverdraftAccountType) {
                 errors.push('If Overdraft amount is entered, you must choose at least one account type (Internal or External)');
@@ -728,7 +728,7 @@ api.controller = function($scope, $window, spUtil) {
             if (hasOverdraftAccountType && !c.authorityData.overdraft) {
                 errors.push('If Overdraft account type is selected, you must enter an Overdraft amount');
             }
-            
+
             // Unavailable Funds bidirectional validation
             if (c.authorityData.unavailable_funds && !hasUnavailableAccountType) {
                 errors.push('If Unavailable Funds amount is entered, you must choose at least one account type (Internal or External)');
@@ -838,23 +838,23 @@ api.controller = function($scope, $window, spUtil) {
         var hasCreditValues = false;
 
         // Check if there are any non-zero non-credit values
-        if (c.isNonZeroValue(limits.disbursement_ach) || 
-            c.isNonZeroValue(limits.disbursement_wire_transfer_external) || 
-            c.isNonZeroValue(limits.disbursement_wire_transfer_internal) || 
+        if (c.isNonZeroValue(limits.disbursement_ach) ||
+            c.isNonZeroValue(limits.disbursement_wire_transfer_external) ||
+            c.isNonZeroValue(limits.disbursement_wire_transfer_internal) ||
             c.isNonZeroValue(limits.disbursement_official_checks_external) ||
-            c.isNonZeroValue(limits.disbursement_official_checks_internal) || 
+            c.isNonZeroValue(limits.disbursement_official_checks_internal) ||
             c.isNonZeroValue(limits.check_cashing_on_us) ||
-            c.isNonZeroValue(limits.check_cashing_not_on_us) || 
+            c.isNonZeroValue(limits.check_cashing_not_on_us) ||
             c.isNonZeroValue(limits.remote_deposit) ||
-            c.isNonZeroValue(limits.treasury_solutions_company_wire_limits) || 
+            c.isNonZeroValue(limits.treasury_solutions_company_wire_limits) ||
             c.isNonZeroValue(limits.fx_wire_limits)) {
             hasNonCreditValues = true;
         }
 
         // Check if there are any non-zero credit values
-        if (c.isNonZeroValue(limits.overdraft_external_accounts) || 
+        if (c.isNonZeroValue(limits.overdraft_external_accounts) ||
             c.isNonZeroValue(limits.overdraft_internal_accounts) ||
-            c.isNonZeroValue(limits.unavailable_funds_external_accounts) || 
+            c.isNonZeroValue(limits.unavailable_funds_external_accounts) ||
             c.isNonZeroValue(limits.unavailable_funds_internal_accounts)) {
             hasCreditValues = true;
         }
@@ -869,7 +869,7 @@ api.controller = function($scope, $window, spUtil) {
 
             // Handle Disbursement fields
             var disbursementValue = '';
-            
+
             // ACH
             if (c.isNonZeroValue(limits.disbursement_ach)) {
                 document.getElementById('achCheck').checked = true;
@@ -880,12 +880,12 @@ api.controller = function($scope, $window, spUtil) {
             // Wire Transfer - check both internal and external
             var hasWireExternal = c.isNonZeroValue(limits.disbursement_wire_transfer_external);
             var hasWireInternal = c.isNonZeroValue(limits.disbursement_wire_transfer_internal);
-            
+
             if (hasWireInternal || hasWireExternal) {
                 document.getElementById('wireTransferCheck').checked = true;
                 c.authorityData.wire_transfer_checked = true;
                 document.getElementById('wireAccountTypes').style.display = 'block';
-                
+
                 // Check appropriate account type boxes
                 if (hasWireInternal) {
                     document.getElementById('wireInternal').checked = true;
@@ -902,12 +902,12 @@ api.controller = function($scope, $window, spUtil) {
             // Official Checks
             var hasChecksExternal = c.isNonZeroValue(limits.disbursement_official_checks_external);
             var hasChecksInternal = c.isNonZeroValue(limits.disbursement_official_checks_internal);
-            
+
             if (hasChecksInternal || hasChecksExternal) {
                 document.getElementById('officialChecksCheck').checked = true;
                 c.authorityData.official_checks_checked = true;
                 document.getElementById('checksAccountTypes').style.display = 'block';
-                
+
                 // Check appropriate account type boxes
                 if (hasChecksInternal) {
                     document.getElementById('checksInternal').checked = true;
@@ -972,7 +972,7 @@ api.controller = function($scope, $window, spUtil) {
             // Overdraft fields
             var hasOverdraftExternal = c.isNonZeroValue(limits.overdraft_external_accounts);
             var hasOverdraftInternal = c.isNonZeroValue(limits.overdraft_internal_accounts);
-            
+
             if (hasOverdraftInternal || hasOverdraftExternal) {
                 // Use the first non-zero value as the display value
                 var overdraftValue = hasOverdraftInternal ? limits.overdraft_internal_accounts : limits.overdraft_external_accounts;
@@ -994,7 +994,7 @@ api.controller = function($scope, $window, spUtil) {
             // Unavailable Funds fields
             var hasUnavailableExternal = c.isNonZeroValue(limits.unavailable_funds_external_accounts);
             var hasUnavailableInternal = c.isNonZeroValue(limits.unavailable_funds_internal_accounts);
-            
+
             if (hasUnavailableInternal || hasUnavailableExternal) {
                 // Use the first non-zero value as the display value
                 var unavailableValue = hasUnavailableInternal ? limits.unavailable_funds_internal_accounts : limits.unavailable_funds_external_accounts;
@@ -1033,7 +1033,7 @@ api.controller = function($scope, $window, spUtil) {
             // Check if either field has changed
             if (currentRequestType !== lastRequestType || currentJobCode !== lastJobCode) {
                 var jobCodeChanged = (currentJobCode !== lastJobCode);
-                
+
                 lastRequestType = currentRequestType;
                 lastJobCode = currentJobCode;
                 c.requestType = currentRequestType;
@@ -1044,16 +1044,16 @@ api.controller = function($scope, $window, spUtil) {
                         c.clearAllFields();
                         c.originalLoadedValues = null;
                     }
-                    
+
                     if (currentRequestType === 'new_authority') {
                         c.clearAllFields();
                         c.originalLoadedValues = null;
                     }
-                    
+
                     if (currentRequestType === 'change_to_existing_authority' && currentJobCode) {
                         c.loadExistingLimits();
                     }
-                    
+
                     c.validateForm();
                 });
             }
@@ -1073,25 +1073,25 @@ api.controller = function($scope, $window, spUtil) {
         document.getElementById('creditGroup').classList.remove('active');
         document.getElementById('nonCreditSection').classList.remove('active');
         document.getElementById('creditSection').classList.remove('active');
-        
+
         // Clear all input fields
         var inputs = document.querySelectorAll('.widget-container input[type="text"], .widget-container textarea');
         inputs.forEach(function(input) {
             input.value = '';
         });
-        
+
         // Clear all checkboxes
         var checkboxes = document.querySelectorAll('.widget-container input[type="checkbox"]');
         checkboxes.forEach(function(checkbox) {
             checkbox.checked = false;
         });
-        
+
         // Hide conditional containers
         var wireContainer = document.getElementById('wireAccountTypes');
         if (wireContainer) wireContainer.style.display = 'none';
         var checksContainer = document.getElementById('checksAccountTypes');
         if (checksContainer) checksContainer.style.display = 'none';
-        
+
         // Reset authority data
         c.authorityData = {
             non_credit_checked: false,
@@ -1117,7 +1117,7 @@ api.controller = function($scope, $window, spUtil) {
             unavailable_external: false,
             overall_business_need: ''
         };
-        
+
         c.updateRecordProducerVariables();
     };
 
@@ -1138,7 +1138,7 @@ api.controller = function($scope, $window, spUtil) {
         var wireAccountTypes = document.getElementById('wireAccountTypes');
         var wireInternal = document.getElementById('wireInternal');
         var wireExternal = document.getElementById('wireExternal');
-        
+
         var officialChecksCheck = document.getElementById('officialChecksCheck');
         var checksAccountTypes = document.getElementById('checksAccountTypes');
         var checksInternal = document.getElementById('checksInternal');
@@ -1213,14 +1213,14 @@ api.controller = function($scope, $window, spUtil) {
                 c.updateWidgetData(fieldName, rawValue);
                 isUpdating = false;
             }
-            
+
             // Prevent decimal point entry
             input.addEventListener('keypress', function(event) {
                 if (event.key === '.' || event.key === ',') {
                     event.preventDefault();
                 }
             });
-            
+
             input.addEventListener('input', handleCurrencyInput);
         }
 
