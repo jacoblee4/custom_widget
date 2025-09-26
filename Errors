@@ -1,104 +1,62 @@
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | Comparing currentApprover (8c295a41db2e574071cc71fa8c9619de) === divisionHeadSysId (8c295a41db2e574071cc71fa8c9619de)
+09-26-2025 10:33:49
+Information	x_banun_bunow_si_0	SIGNATURE LOG: Field disbursement_wire_transfer_external has changed!
 
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | User is active, continuing checks...
+09-26-2025 10:33:49
+Information	x_banun_bunow_si_0	SIGNATURE LOG: This is a CHANGE request with existing limits - checking for credit changes
 
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | User does NOT have sufficient authority
+09-26-2025 10:33:49
+Information	x_banun_bunow_si_0	SIGNATURE LOG: Creating non-credit record
 
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | Found user: 1 (user_name: 1)
+09-26-2025 10:33:49
+Information	x_banun_bunow_si_0	SIGNATURE LOG: Starting script - Request Type: change_to_existing_authority, Job Code: 2c909cc31b474a10cd80ffbe034bcb69
 
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | User is active, continuing checks...
+09-26-2025 10:33:49
+Information	x_banun_bunow_si_0	SIGNATURE LOG: Processing NEW or CHANGE request
 
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | Active status - getValue(): '1', boolean: true
+09-26-2025 10:33:49
+Information	x_banun_bunow_si_0	SIGNATURE LOG: Changes detected for credit, normal insert
 
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | Message undefined
+09-26-2025 10:33:49
+Information	x_banun_bunow_si_0	SIGNATURE LOG: Comparing field disbursement_wire_transfer_external - New: "" vs Original: "0"
 
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | Comparing currentApprover (a3095241db2e574071cc71fa8c961957) === divisionHeadSysId (8c295a41db2e574071cc71fa8c9619de)
+09-26-2025 10:33:49
+Information	x_banun_bunow_si_0	SIGNATURE LOG: Creating credit record
 
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | amount: 234234234
+09-26-2025 10:33:49
+Information	x_banun_bunow_si_0	SIGNATURE LOG: Processing authority type: non_credit
 
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | User does NOT have sufficient authority
+09-26-2025 10:33:49
+Information	x_banun_bunow_si_0	SIGNATURE LOG: Existing Credit - Overdraft Internal: 2
 
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | startingApproverSysId: a3095241db2e574071cc71fa8c961957
+09-26-2025 10:33:49
+Information	x_banun_bunow_si_0	SIGNATURE LOG: Credit field overdraft_internal_accounts has changed!
 
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | Checking delegated authority for amount: 234234234, type: credit
+09-26-2025 10:33:49
+Information	x_banun_bunow_si_0	SIGNATURE LOG: Comparing field disbursement_ach - New: "20" vs Original: "20"
 
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | ----- Level 1 -----
+09-26-2025 10:33:49
+Information	x_banun_bunow_si_0	SIGNATURE LOG: Processing authority type: credit
 
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | Current approver sys_id: a3095241db2e574071cc71fa8c961957
+09-26-2025 10:33:49
+Information	x_banun_bunow_si_0	SIGNATURE LOG: Authority data: {"disbursement_ach":"20","disbursement_wire_transfer_external":"","disbursement_wire_transfer_internal":"","disbursement_official_checks_external":"","disbursement_official_checks_internal":"","check_cashing_on_us":"","check_cashing_not_on_us":"","remote_deposit":"","treasury_solutions_company_wire_limits":"","fx_wire_limits":""}|{"overdraft_internal_accounts":"22","overdraft_external_accounts":"22","unavailable_funds_internal_accounts":"","unavailable_funds_external_accounts":""}
 
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | Next manager sys_id: 8c295a41db2e574071cc71fa8c9619de
+09-26-2025 10:33:49
+Information	x_banun_bunow_si_0	SIGNATURE LOG: Existing Non-Credit - ACH: 20
 
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | Checking delegated authority for amount: 234234234, type: credit
+09-26-2025 10:33:49
+Information	x_banun_bunow_si_0	SIGNATURE LOG: Changes detected for non-credit, normal insert
 
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | Starting hierarchy traversal, maxLevels: 20
+09-26-2025 10:33:49
+Information	x_banun_bunow_si_0	SIGNATURE LOG: Script completed
 
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | Checking if user is division head...
+09-26-2025 10:33:49
+Information	x_banun_bunow_si_0	SIGNATURE LOG: Comparing credit field overdraft_internal_accounts - New: "22" vs Original: "2"
 
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | Active status - getValue(): '1', boolean: true
+09-26-2025 10:33:49
+Information	x_banun_bunow_si_0	SIGNATURE LOG: This is a CHANGE request with existing limits - checking for changes
 
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | Checking if user is CEO...
+09-26-2025 10:33:49
+Information	x_banun_bunow_si_0	SIGNATURE LOG: Authority types: non_credit|credit
 
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | Authority check result - has_authority: false, message: No delegated authority found for approver
-
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | Found user: 2 (user_name: 2)
-
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | User IS division head - stopping traversal
-
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | Checking if user is CEO...
-
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | Checking if user is division head...
-
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | divisionHeadSysId: 8c295a41db2e574071cc71fa8c9619de
-
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | Current approver sys_id: 8c295a41db2e574071cc71fa8c9619de
-
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | Authority check result - has_authority: false, message: Authority insufficient. Threshold: $25000000 < Request: $234234234
-
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | ===== Starting findHierarchicalApprover =====
-
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | User is NOT CEO
-
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | Moving to level 1
-
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | ----- Level 0 -----
-
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | User is NOT division head
-
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | User is NOT CEO
-
-09-23-2025 09:46:02
-Information	x_banun_bunow_si_0	SIGNATURE LOG | type: credit
+09-26-2025 10:33:49
+Information	x_banun_bunow_si_0	SIGNATURE LOG: Found existing limits for job code 2c909cc31b474a10cd80ffbe034bcb69
