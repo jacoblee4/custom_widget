@@ -306,7 +306,7 @@ if (shouldProceed) {
                             // If no changes detected, set to Closed Complete
                             if (!hasNonCreditChanges) {
                                 nonCreditGR.setValue('state', 3);
-                                nonCreditGR.setValue('state', 'closed');
+                                nonCreditGR.setValue('stage', 'closed');
                                 nonCreditGR.setValue('approval', 'approved');
                                 nonCreditGR.setValue('work_notes', 'Auto-closed: No changes detected from existing values');
                             }
@@ -370,7 +370,7 @@ if (shouldProceed) {
                             // If no changes detected, set to Closed Complete
                             if (!hasCreditChanges) {
                                 creditGR.setValue('state', 3);
-                                creditGR.setValue('state', 'closed');
+                                creditGR.setValue('stage', 'closed');
                                 creditGR.setValue('approval', 'approved');
                                 creditGR.setValue('work_notes', 'Auto-closed: No changes detected from existing values');
                             }
