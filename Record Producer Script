@@ -159,8 +159,8 @@ if (shouldProceed) {
             if (hasNonCreditValues) {
                 var nonCreditGR = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
                 nonCreditGR.initialize();
-                nonCreditGR.setValue('parent', parentId);
-                nonCreditGR.setValue('job_code', producer.job_code);
+                nonCreditGR.parent = parentId;
+                nonCreditGR.job_code = producer.job_code;
 
                 // Copy all non-credit values from existing limit
                 var nonCreditFields = [
@@ -181,7 +181,7 @@ if (shouldProceed) {
                     var fieldValue = existingLimits[fieldName];
                     if (fieldValue) {
                         // For REMOVE: Only set regular fields (NOT original fields)
-                        nonCreditGR.setValue(fieldName, fieldValue);
+                        nonCreditGR[fieldName] = fieldValue;
                         // NOT setting original_ fields for REMOVE requests
                     }
                 }
@@ -193,8 +193,8 @@ if (shouldProceed) {
             if (hasCreditValues) {
                 var creditGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
                 creditGR.initialize();
-                creditGR.setValue('parent', parentId);
-                creditGR.setValue('job_code', producer.job_code);
+                creditGR.parent = parentId;
+                creditGR.job_code = producer.job_code;
 
                 // Copy all credit values from existing limit
                 var creditFields = [
@@ -209,7 +209,7 @@ if (shouldProceed) {
                     var creditFieldValue = existingLimits[creditFieldName];
                     if (creditFieldValue) {
                         // For REMOVE: Only set regular fields (NOT original fields)
-                        creditGR.setValue(creditFieldName, creditFieldValue);
+                        creditGR[creditFieldName] = creditFieldValue;
                         // NOT setting original_ fields for REMOVE requests
                     }
                 }
@@ -234,9 +234,9 @@ if (shouldProceed) {
                         // Create non-credit authority limit record
                         var nonCreditGR = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
                         nonCreditGR.initialize();
-                        nonCreditGR.setValue('parent', parentId);
+                        nonCreditGR.parent = parentId;
                         if (producer.job_code) {
-                            nonCreditGR.setValue('job_code', producer.job_code);
+                            nonCreditGR.job_code = producer.job_code;
                         }
 
                         // Track if any values changed
@@ -244,39 +244,39 @@ if (shouldProceed) {
 
                         // Set the REQUESTED values (what the user submitted)
                         if (authorityData.disbursement_ach)
-                            nonCreditGR.setValue('disbursement_ach', authorityData.disbursement_ach);
+                            nonCreditGR.disbursement_ach = authorityData.disbursement_ach;
                         if (authorityData.disbursement_wire_transfer_external)
-                            nonCreditGR.setValue('disbursement_wire_transfer_external', authorityData.disbursement_wire_transfer_external);
+                            nonCreditGR.disbursement_wire_transfer_external = authorityData.disbursement_wire_transfer_external;
                         if (authorityData.disbursement_wire_transfer_internal)
-                            nonCreditGR.setValue('disbursement_wire_transfer_internal', authorityData.disbursement_wire_transfer_internal);
+                            nonCreditGR.disbursement_wire_transfer_internal = authorityData.disbursement_wire_transfer_internal;
                         if (authorityData.disbursement_official_checks_external)
-                            nonCreditGR.setValue('disbursement_official_checks_external', authorityData.disbursement_official_checks_external);
+                            nonCreditGR.disbursement_official_checks_external = authorityData.disbursement_official_checks_external;
                         if (authorityData.disbursement_official_checks_internal)
-                            nonCreditGR.setValue('disbursement_official_checks_internal', authorityData.disbursement_official_checks_internal);
+                            nonCreditGR.disbursement_official_checks_internal = authorityData.disbursement_official_checks_internal;
                         if (authorityData.check_cashing_on_us)
-                            nonCreditGR.setValue('check_cashing_on_us', authorityData.check_cashing_on_us);
+                            nonCreditGR.check_cashing_on_us = authorityData.check_cashing_on_us;
                         if (authorityData.check_cashing_not_on_us)
-                            nonCreditGR.setValue('check_cashing_not_on_us', authorityData.check_cashing_not_on_us);
+                            nonCreditGR.check_cashing_not_on_us = authorityData.check_cashing_not_on_us;
                         if (authorityData.remote_deposit)
-                            nonCreditGR.setValue('remote_deposit', authorityData.remote_deposit);
+                            nonCreditGR.remote_deposit = authorityData.remote_deposit;
                         if (authorityData.treasury_solutions_company_wire_limits)
-                            nonCreditGR.setValue('treasury_solutions_company_wire_limits', authorityData.treasury_solutions_company_wire_limits);
+                            nonCreditGR.treasury_solutions_company_wire_limits = authorityData.treasury_solutions_company_wire_limits;
                         if (authorityData.fx_wire_limits)
-                            nonCreditGR.setValue('fx_wire_limits', authorityData.fx_wire_limits);
+                            nonCreditGR.fx_wire_limits = authorityData.fx_wire_limits;
 
                         // Set the ORIGINAL values for CHANGE requests and check for changes
                         if (requestType === 'change_to_existing_authority' && existingLimitsFound) {
                             // Set all original values
-                            nonCreditGR.setValue('original_disbursement_ach', existingLimits.disbursement_ach || '');
-                            nonCreditGR.setValue('original_disbursement_wire_transfer_external', existingLimits.disbursement_wire_transfer_external || '');
-                            nonCreditGR.setValue('original_disbursement_wire_transfer_internal', existingLimits.disbursement_wire_transfer_internal || '');
-                            nonCreditGR.setValue('original_disbursement_official_checks_external', existingLimits.disbursement_official_checks_external || '');
-                            nonCreditGR.setValue('original_disbursement_official_checks_internal', existingLimits.disbursement_official_checks_internal || '');
-                            nonCreditGR.setValue('original_check_cashing_on_us', existingLimits.check_cashing_on_us || '');
-                            nonCreditGR.setValue('original_check_cashing_not_on_us', existingLimits.check_cashing_not_on_us || '');
-                            nonCreditGR.setValue('original_remote_deposit', existingLimits.remote_deposit || '');
-                            nonCreditGR.setValue('original_treasury_solutions_company_wire_limits', existingLimits.treasury_solutions_company_wire_limits || '');
-                            nonCreditGR.setValue('original_fx_wire_limits', existingLimits.fx_wire_limits || '');
+                            nonCreditGR.original_disbursement_ach = existingLimits.disbursement_ach || '';
+                            nonCreditGR.original_disbursement_wire_transfer_external = existingLimits.disbursement_wire_transfer_external || '';
+                            nonCreditGR.original_disbursement_wire_transfer_internal = existingLimits.disbursement_wire_transfer_internal || '';
+                            nonCreditGR.original_disbursement_official_checks_external = existingLimits.disbursement_official_checks_external || '';
+                            nonCreditGR.original_disbursement_official_checks_internal = existingLimits.disbursement_official_checks_internal || '';
+                            nonCreditGR.original_check_cashing_on_us = existingLimits.check_cashing_on_us || '';
+                            nonCreditGR.original_check_cashing_not_on_us = existingLimits.check_cashing_not_on_us || '';
+                            nonCreditGR.original_remote_deposit = existingLimits.remote_deposit || '';
+                            nonCreditGR.original_treasury_solutions_company_wire_limits = existingLimits.treasury_solutions_company_wire_limits || '';
+                            nonCreditGR.original_fx_wire_limits = existingLimits.fx_wire_limits || '';
 
                             // Check if any values actually changed
                             var nonCreditFieldsToCheck = [
@@ -306,10 +306,12 @@ if (shouldProceed) {
                             // If no changes detected, set to Closed Complete BEFORE insert
                             if (!hasNonCreditChanges) {
                                 gs.info('Authority Widget: No changes detected for non-credit, auto-closing');
-                                nonCreditGR.setValue('state', 3);
-                                nonCreditGR.setValue('stage', 'closed_complete');
-                                nonCreditGR.setValue('approval', 'approved');
-                                nonCreditGR.setValue('work_notes', 'Auto-closed: No changes detected from existing values');
+                                
+                                // Use direct property assignment since record isn't inserted yet
+                                nonCreditGR.state = 3;
+                                nonCreditGR.stage = 'closed_complete';
+                                nonCreditGR.approval = 'approved';
+                                nonCreditGR.work_notes = 'Auto-closed: No changes detected from existing values';
                                 
                                 var nonCreditSysId = nonCreditGR.insert();
                                 gs.info('Authority Widget: Created non-credit record ' + nonCreditSysId + ' with auto-close');
@@ -317,10 +319,11 @@ if (shouldProceed) {
                                 // Double-check and update if needed
                                 var checkGR = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
                                 if (checkGR.get(nonCreditSysId)) {
-                                    if (checkGR.getValue('state') != '3' && checkGR.getValue('stage') != 'closed_complete') {
+                                    gs.info('Authority Widget: Checking state - current state: ' + checkGR.getValue('state') + ', stage: ' + checkGR.getValue('stage'));
+                                    if (checkGR.getValue('state') != '3' || checkGR.getValue('stage') != 'closed_complete') {
                                         gs.info('Authority Widget: State not set correctly, updating now');
-                                        checkGR.setValue('state', 3);
-                                        checkGR.setValue('stage', 'closed_complete');
+                                        checkGR.state = 3;
+                                        checkGR.stage = 'closed_complete';
                                         checkGR.update();
                                     }
                                 }
@@ -337,35 +340,31 @@ if (shouldProceed) {
                         // Create credit authority limit record
                         var creditGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
                         creditGR.initialize();
-                        creditGR.setValue('parent', parentId);
+                        creditGR.parent = parentId;
                         if (producer.job_code) {
-                            creditGR.setValue('job_code', producer.job_code);
+                            creditGR.job_code = producer.job_code;
                         }
 
                         // Track if any values changed
                         var hasCreditChanges = false;
 
                         // Set the REQUESTED values (what the user submitted)
-                        if (authorityData.overdraft_internal_accounts) {
-                            creditGR.setValue('overdraft_internal_accounts', authorityData.overdraft_internal_accounts);
-                        }
-                        if (authorityData.overdraft_external_accounts) {
-                            creditGR.setValue('overdraft_external_accounts', authorityData.overdraft_external_accounts);
-                        }
-                        if (authorityData.unavailable_funds_internal_accounts) {
-                            creditGR.setValue('unavailable_funds_internal_accounts', authorityData.unavailable_funds_internal_accounts);
-                        }
-                        if (authorityData.unavailable_funds_external_accounts) {
-                            creditGR.setValue('unavailable_funds_external_accounts', authorityData.unavailable_funds_external_accounts);
-                        }
+                        if (authorityData.overdraft_internal_accounts)
+                            creditGR.overdraft_internal_accounts = authorityData.overdraft_internal_accounts;
+                        if (authorityData.overdraft_external_accounts)
+                            creditGR.overdraft_external_accounts = authorityData.overdraft_external_accounts;
+                        if (authorityData.unavailable_funds_internal_accounts)
+                            creditGR.unavailable_funds_internal_accounts = authorityData.unavailable_funds_internal_accounts;
+                        if (authorityData.unavailable_funds_external_accounts)
+                            creditGR.unavailable_funds_external_accounts = authorityData.unavailable_funds_external_accounts;
 
                         // Set the ORIGINAL values for CHANGE requests and check for changes
                         if (requestType === 'change_to_existing_authority' && existingLimitsFound) {
                             // Set all original values
-                            creditGR.setValue('original_overdraft_internal_accounts', existingLimits.overdraft_internal_accounts || '');
-                            creditGR.setValue('original_overdraft_external_accounts', existingLimits.overdraft_external_accounts || '');
-                            creditGR.setValue('original_unavailable_funds_internal_accounts', existingLimits.unavailable_funds_internal_accounts || '');
-                            creditGR.setValue('original_unavailable_funds_external_accounts', existingLimits.unavailable_funds_external_accounts || '');
+                            creditGR.original_overdraft_internal_accounts = existingLimits.overdraft_internal_accounts || '';
+                            creditGR.original_overdraft_external_accounts = existingLimits.overdraft_external_accounts || '';
+                            creditGR.original_unavailable_funds_internal_accounts = existingLimits.unavailable_funds_internal_accounts || '';
+                            creditGR.original_unavailable_funds_external_accounts = existingLimits.unavailable_funds_external_accounts || '';
 
                             // Check if any values actually changed
                             var creditFieldsToCheck = [
@@ -389,10 +388,12 @@ if (shouldProceed) {
                             // If no changes detected, set to Closed Complete BEFORE insert
                             if (!hasCreditChanges) {
                                 gs.info('Authority Widget: No changes detected for credit, auto-closing');
-                                creditGR.setValue('state', 3);
-                                creditGR.setValue('stage', 'closed_complete');
-                                creditGR.setValue('approval', 'approved');
-                                creditGR.setValue('work_notes', 'Auto-closed: No changes detected from existing values');
+                                
+                                // Use direct property assignment since record isn't inserted yet
+                                creditGR.state = 3;
+                                creditGR.stage = 'closed_complete';
+                                creditGR.approval = 'approved';
+                                creditGR.work_notes = 'Auto-closed: No changes detected from existing values';
                                 
                                 var creditSysId = creditGR.insert();
                                 gs.info('Authority Widget: Created credit record ' + creditSysId + ' with auto-close');
@@ -400,10 +401,11 @@ if (shouldProceed) {
                                 // Double-check and update if needed
                                 var checkGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
                                 if (checkGR.get(creditSysId)) {
-                                    if (checkGR.getValue('state') != '3' && checkGR.getValue('stage') != 'closed_complete') {
+                                    gs.info('Authority Widget: Checking state - current state: ' + checkGR.getValue('state') + ', stage: ' + checkGR.getValue('stage'));
+                                    if (checkGR.getValue('state') != '3' || checkGR.getValue('stage') != 'closed_complete') {
                                         gs.info('Authority Widget: State not set correctly, updating now');
-                                        checkGR.setValue('state', 3);
-                                        checkGR.setValue('stage', 'closed_complete');
+                                        checkGR.state = 3;
+                                        checkGR.stage = 'closed_complete';
                                         checkGR.update();
                                     }
                                 }
