@@ -309,7 +309,7 @@ if (shouldProceed) {
                                 
                                 // Use direct property assignment since record isn't inserted yet
                                 nonCreditGR.state = 3;
-                                nonCreditGR.stage = 'closed_complete';
+                                nonCreditGR.stage = 'closed';
                                 nonCreditGR.approval = 'approved';
                                 nonCreditGR.work_notes = 'Auto-closed: No changes detected from existing values';
                                 
@@ -320,10 +320,11 @@ if (shouldProceed) {
                                 var checkGR = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
                                 if (checkGR.get(nonCreditSysId)) {
                                     gs.info('Authority Widget: Checking state - current state: ' + checkGR.getValue('state') + ', stage: ' + checkGR.getValue('stage'));
-                                    if (checkGR.getValue('state') != '3' || checkGR.getValue('stage') != 'closed_complete') {
+                                    if (checkGR.getValue('state') != '3' || checkGR.getValue('stage') != 'closed') {
                                         gs.info('Authority Widget: State not set correctly, updating now');
                                         checkGR.state = 3;
-                                        checkGR.stage = 'closed_complete';
+                                        checkGR.stage = 'closed';
+                                        checkGR.approval = 'approved';
                                         checkGR.update();
                                     }
                                 }
@@ -391,7 +392,7 @@ if (shouldProceed) {
                                 
                                 // Use direct property assignment since record isn't inserted yet
                                 creditGR.state = 3;
-                                creditGR.stage = 'closed_complete';
+                                creditGR.stage = 'closed';
                                 creditGR.approval = 'approved';
                                 creditGR.work_notes = 'Auto-closed: No changes detected from existing values';
                                 
@@ -402,10 +403,11 @@ if (shouldProceed) {
                                 var checkGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
                                 if (checkGR.get(creditSysId)) {
                                     gs.info('Authority Widget: Checking state - current state: ' + checkGR.getValue('state') + ', stage: ' + checkGR.getValue('stage'));
-                                    if (checkGR.getValue('state') != '3' || checkGR.getValue('stage') != 'closed_complete') {
+                                    if (checkGR.getValue('state') != '3' || checkGR.getValue('stage') != 'closed') {
                                         gs.info('Authority Widget: State not set correctly, updating now');
                                         checkGR.state = 3;
-                                        checkGR.stage = 'closed_complete';
+                                        checkGR.stage = 'closed';
+                                        checkGR.approval = 'approved';
                                         checkGR.update();
                                     }
                                 }
