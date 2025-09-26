@@ -303,16 +303,35 @@ if (shouldProceed) {
                                 }
                             }
 
-                            // If no changes detected, set to Closed Complete
+                            // If no changes detected, set to Closed Complete BEFORE insert
                             if (!hasNonCreditChanges) {
+                                gs.info('Authority Widget: No changes detected for non-credit, auto-closing');
                                 nonCreditGR.setValue('state', 3);
-                                nonCreditGR.setValue('stage', 'closed');
+                                nonCreditGR.setValue('stage', 'closed_complete');
                                 nonCreditGR.setValue('approval', 'approved');
                                 nonCreditGR.setValue('work_notes', 'Auto-closed: No changes detected from existing values');
+                                
+                                var nonCreditSysId = nonCreditGR.insert();
+                                gs.info('Authority Widget: Created non-credit record ' + nonCreditSysId + ' with auto-close');
+                                
+                                // Double-check and update if needed
+                                var checkGR = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
+                                if (checkGR.get(nonCreditSysId)) {
+                                    if (checkGR.getValue('state') != '3' && checkGR.getValue('stage') != 'closed_complete') {
+                                        gs.info('Authority Widget: State not set correctly, updating now');
+                                        checkGR.setValue('state', 3);
+                                        checkGR.setValue('stage', 'closed_complete');
+                                        checkGR.update();
+                                    }
+                                }
+                            } else {
+                                // Normal insert for records with changes
+                                nonCreditGR.insert();
                             }
+                        } else {
+                            // Normal insert for NEW requests
+                            nonCreditGR.insert();
                         }
-
-                        nonCreditGR.insert();
 
                     } else if (authorityType === 'credit') {
                         // Create credit authority limit record
@@ -367,16 +386,35 @@ if (shouldProceed) {
                                 }
                             }
 
-                            // If no changes detected, set to Closed Complete
+                            // If no changes detected, set to Closed Complete BEFORE insert
                             if (!hasCreditChanges) {
+                                gs.info('Authority Widget: No changes detected for credit, auto-closing');
                                 creditGR.setValue('state', 3);
-                                creditGR.setValue('stage', 'closed');
+                                creditGR.setValue('stage', 'closed_complete');
                                 creditGR.setValue('approval', 'approved');
                                 creditGR.setValue('work_notes', 'Auto-closed: No changes detected from existing values');
+                                
+                                var creditSysId = creditGR.insert();
+                                gs.info('Authority Widget: Created credit record ' + creditSysId + ' with auto-close');
+                                
+                                // Double-check and update if needed
+                                var checkGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
+                                if (checkGR.get(creditSysId)) {
+                                    if (checkGR.getValue('state') != '3' && checkGR.getValue('stage') != 'closed_complete') {
+                                        gs.info('Authority Widget: State not set correctly, updating now');
+                                        checkGR.setValue('state', 3);
+                                        checkGR.setValue('stage', 'closed_complete');
+                                        checkGR.update();
+                                    }
+                                }
+                            } else {
+                                // Normal insert for records with changes
+                                creditGR.insert();
                             }
+                        } else {
+                            // Normal insert for NEW requests
+                            creditGR.insert();
                         }
-
-                        creditGR.insert();
                     }
                 } catch (e) {
                     gs.addErrorMessage('Error processing authority data: ' + e.message);
