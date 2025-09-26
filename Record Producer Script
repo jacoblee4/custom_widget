@@ -126,8 +126,6 @@ if (shouldProceed) {
                 };
                 
                 gs.info('SIGNATURE LOG: Found existing limits for job code ' + producer.job_code);
-                gs.info('SIGNATURE LOG: Existing Non-Credit - ACH: ' + existingLimits.disbursement_ach);
-                gs.info('SIGNATURE LOG: Existing Credit - Overdraft Internal: ' + existingLimits.overdraft_internal_accounts);
             }
         }
 
@@ -226,7 +224,6 @@ if (shouldProceed) {
         } else if (requestType !== 'remove_authority' && producer.authority_types && producer.authority_data) {
             gs.info('SIGNATURE LOG: Processing NEW or CHANGE request');
             gs.info('SIGNATURE LOG: Authority types: ' + producer.authority_types);
-            gs.info('SIGNATURE LOG: Authority data: ' + producer.authority_data);
             
             // Process authority data for NEW and CHANGE requests (existing logic)
             var authority_types = producer.authority_types.toString().split('|');
@@ -307,12 +304,21 @@ if (shouldProceed) {
                                 'fx_wire_limits'
                             ];
 
+                            // Helper function to normalize values for comparison
+                            // Treats 0, "0", "", null, undefined as equivalent
+                            function normalizeValue(val) {
+                                if (!val || val === '0' || val === 0) {
+                                    return '0';  // Normalize all empty/zero values to '0'
+                                }
+                                return val.toString();
+                            }
+
                             for (var ncf = 0; ncf < nonCreditFieldsToCheck.length; ncf++) {
                                 var fieldName = nonCreditFieldsToCheck[ncf];
-                                var newValue = (authorityData[fieldName] || '').toString();
-                                var originalValue = (existingLimits[fieldName] || '').toString();
+                                var newValue = normalizeValue(authorityData[fieldName]);
+                                var originalValue = normalizeValue(existingLimits[fieldName]);
                                 
-                                gs.info('SIGNATURE LOG: Comparing field ' + fieldName + ' - New: "' + newValue + '" vs Original: "' + originalValue + '"');
+                                gs.info('SIGNATURE LOG: Comparing field ' + fieldName + ' - New (normalized): "' + newValue + '" vs Original (normalized): "' + originalValue + '"');
 
                                 if (newValue !== originalValue) {
                                     hasNonCreditChanges = true;
@@ -405,12 +411,21 @@ if (shouldProceed) {
                                 'unavailable_funds_external_accounts'
                             ];
 
+                            // Helper function to normalize values for comparison
+                            // Treats 0, "0", "", null, undefined as equivalent
+                            function normalizeValueCredit(val) {
+                                if (!val || val === '0' || val === 0) {
+                                    return '0';  // Normalize all empty/zero values to '0'
+                                }
+                                return val.toString();
+                            }
+
                             for (var cf = 0; cf < creditFieldsToCheck.length; cf++) {
                                 var fieldName = creditFieldsToCheck[cf];
-                                var newValue = (authorityData[fieldName] || '').toString();
-                                var originalValue = (existingLimits[fieldName] || '').toString();
+                                var newValue = normalizeValueCredit(authorityData[fieldName]);
+                                var originalValue = normalizeValueCredit(existingLimits[fieldName]);
                                 
-                                gs.info('SIGNATURE LOG: Comparing credit field ' + fieldName + ' - New: "' + newValue + '" vs Original: "' + originalValue + '"');
+                                gs.info('SIGNATURE LOG: Comparing credit field ' + fieldName + ' - New (normalized): "' + newValue + '" vs Original (normalized): "' + originalValue + '"');
 
                                 if (newValue !== originalValue) {
                                     hasCreditChanges = true;
