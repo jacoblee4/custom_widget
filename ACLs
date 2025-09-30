@@ -1,0 +1,18 @@
+(function executeRule(current, previous) {
+    // Get current user
+    var userID = gs.getUserID();
+    
+    // Query for pending approvals for this record where user is the approver
+    var approvalGR = new GlideRecord('sysapproval_approver');
+    approvalGR.addQuery('sysapproval', current.sys_id);
+    approvalGR.addQuery('approver', userID);
+    approvalGR.addQuery('state', 'requested'); // 'requested' = pending
+    approvalGR.query();
+    
+    // If user has a pending approval, allow edit
+    if (approvalGR.hasNext()) {
+        return true;
+    }
+    
+    return false;
+})(current, previous);
