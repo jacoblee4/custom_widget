@@ -1,12 +1,31 @@
 // Get current user
 var userID = gs.getUserID();
 
-// Query for pending approvals for this record where user is the approver
+// Check if user has pending approval on THIS record (child)
 var approvalGR = new GlideRecord('sysapproval_approver');
 approvalGR.addQuery('sysapproval', current.sys_id);
 approvalGR.addQuery('approver', userID);
 approvalGR.addQuery('state', 'requested');
 approvalGR.query();
 
-// If user has a pending approval, allow edit
-answer = approvalGR.hasNext();
+// If user has pending approval on child record, allow edit
+if (approvalGR.hasNext()) {
+    answer = true;
+    return;
+}
+
+// Check if user has pending approval on PARENT record
+var parentSysId = current.getValue('parent_field_name'); // CHANGE THIS to your actual parent reference field
+
+if (parentSysId) {
+    var parentApprovalGR = new GlideRecord('sysapproval_approver');
+    parentApprovalGR.addQuery('sysapproval', parentSysId);
+    parentApprovalGR.addQuery('approver', userID);
+    parentApprovalGR.addQuery('state', 'requested');
+    parentApprovalGR.query();
+    
+    // If user has pending approval on parent record, allow edit
+    answer = parentApprovalGR.hasNext();
+} else {
+    answer = false;
+}
