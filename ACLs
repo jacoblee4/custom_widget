@@ -11,21 +11,20 @@ approvalGR.query();
 // If user has pending approval on child record, allow edit
 if (approvalGR.hasNext()) {
     answer = true;
-    return;
-}
-
-// Check if user has pending approval on PARENT record
-var parentSysId = current.getValue('parent_field_name'); // CHANGE THIS to your actual parent reference field
-
-if (parentSysId) {
-    var parentApprovalGR = new GlideRecord('sysapproval_approver');
-    parentApprovalGR.addQuery('sysapproval', parentSysId);
-    parentApprovalGR.addQuery('approver', userID);
-    parentApprovalGR.addQuery('state', 'requested');
-    parentApprovalGR.query();
-    
-    // If user has pending approval on parent record, allow edit
-    answer = parentApprovalGR.hasNext();
 } else {
-    answer = false;
+    // Check if user has pending approval on PARENT record
+    var parentSysId = current.getValue('parent_field_name'); // CHANGE THIS to your actual parent reference field
+    
+    if (parentSysId) {
+        var parentApprovalGR = new GlideRecord('sysapproval_approver');
+        parentApprovalGR.addQuery('sysapproval', parentSysId);
+        parentApprovalGR.addQuery('approver', userID);
+        parentApprovalGR.addQuery('state', 'requested');
+        parentApprovalGR.query();
+        
+        // If user has pending approval on parent record, allow edit
+        answer = parentApprovalGR.hasNext();
+    } else {
+        answer = false;
+    }
 }
