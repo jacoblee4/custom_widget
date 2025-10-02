@@ -1,0 +1,1145 @@
+<!-- ============================================ -->
+<!-- HTML TEMPLATE -->
+<!-- ============================================ -->
+
+<div class="authority-lookup-widget">
+  <div class="widget-header">
+    <h2>
+      <i class="fa fa-search"></i>
+      Authority Limits Lookup
+    </h2>
+    <p class="header-description">Search and view authority limits by job code, title, function, employee, or limit amount</p>
+  </div>
+  
+  <!-- Search Controls -->
+  <div class="search-controls">
+    <div class="search-type-selector">
+      <label class="search-type-label">Search By:</label>
+      <div class="radio-group">
+        <div class="radio-option">
+          <input type="radio" id="searchByJobCode" name="searchType" value="job_code" checked>
+          <label for="searchByJobCode">Job Code</label>
+        </div>
+        <div class="radio-option">
+          <input type="radio" id="searchByJobTitle" name="searchType" value="job_title">
+          <label for="searchByJobTitle">Job Title</label>
+        </div>
+        <div class="radio-option">
+          <input type="radio" id="searchByJobFunction" name="searchType" value="job_function">
+          <label for="searchByJobFunction">Job Function</label>
+        </div>
+        <div class="radio-option">
+          <input type="radio" id="searchByEmployee" name="searchType" value="employee">
+          <label for="searchByEmployee">Employee Name</label>
+        </div>
+        <div class="radio-option">
+          <input type="radio" id="searchByAmount" name="searchType" value="amount">
+          <label for="searchByAmount">Limit Amount</label>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Text Search Input (for job code, title, function, employee) -->
+    <div class="search-input-container" id="textSearchContainer">
+      <label for="searchInput" id="searchInputLabel">Search Job Code:</label>
+      <input type="text" id="searchInput" class="search-input" placeholder="Enter job code...">
+    </div>
+    
+    <!-- Amount Search Inputs (for limit amount search) -->
+    <div class="amount-search-container" id="amountSearchContainer" style="display: none;">
+      <div class="amount-search-row">
+        <div class="amount-field-selector">
+          <label for="limitTypeSelect">Limit Type:</label>
+          <select id="limitTypeSelect" class="form-select">
+            <optgroup label="Non-Credit Authority">
+              <option value="disbursement_ach">Disbursement - ACH</option>
+              <option value="disbursement_wire_transfer_external">Disbursement - Wire Transfer External</option>
+              <option value="disbursement_wire_transfer_internal">Disbursement - Wire Transfer Internal</option>
+              <option value="disbursement_official_checks_external">Disbursement - Official Checks External</option>
+              <option value="disbursement_official_checks_internal">Disbursement - Official Checks Internal</option>
+              <option value="check_cashing_on_us">Check Cashing - On-Us</option>
+              <option value="check_cashing_not_on_us">Check Cashing - Not On-Us</option>
+              <option value="remote_deposit">Remote Deposit</option>
+              <option value="treasury_solutions_company_wire_limits">Treasury Solutions Company Wire Limits</option>
+              <option value="fx_wire_limits">FX Wire Limits</option>
+            </optgroup>
+            <optgroup label="Credit Authority">
+              <option value="overdraft_external_accounts">Overdraft - External Accounts</option>
+              <option value="overdraft_internal_accounts">Overdraft - Internal Accounts</option>
+              <option value="unavailable_funds_external_accounts">Unavailable Funds - External Accounts</option>
+              <option value="unavailable_funds_internal_accounts">Unavailable Funds - Internal Accounts</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="amount-input-field">
+          <label for="amountInput">Maximum Amount:</label>
+          <div class="currency-wrapper">
+            <span class="currency-symbol">$</span>
+            <input type="text" id="amountInput" class="form-control" placeholder="e.g., 50000">
+          </div>
+          <small class="help-text">Shows all limits from $0 to entered amount</small>
+        </div>
+      </div>
+    </div>
+    
+    <div class="search-actions">
+      <button id="searchButton" class="btn btn-primary">
+        <i class="fa fa-search"></i>
+        Search
+      </button>
+      <button id="clearButton" class="btn btn-secondary">
+        <i class="fa fa-times"></i>
+        Clear
+      </button>
+    </div>
+  </div>
+  
+  <!-- Loading Indicator -->
+  <div ng-if="c.loading" class="text-center loading-container">
+    <i class="fa fa-spinner fa-spin fa-2x"></i>
+    <p>Loading authority limits...</p>
+  </div>
+  
+  <!-- No Results Message -->
+  <div ng-if="!c.loading && c.searchPerformed && c.limits.length === 0" class="alert alert-info">
+    <i class="fa fa-info-circle"></i>
+    No authority limits found matching your search criteria.
+  </div>
+  
+  <!-- Results Table -->
+  <div ng-if="!c.loading && c.limits.length > 0" class="results-container">
+    <div class="results-header">
+      <h4>
+        <i class="fa fa-list"></i>
+        Authority Limits
+        <span class="results-count">({{c.limits.length}} total)</span>
+      </h4>
+    </div>
+    
+    <div class="table-container">
+      <table class="limits-table">
+        <thead>
+          <tr>
+            <th colspan="3" class="section-header info-section">Job Information</th>
+            <th colspan="10" class="section-header non-credit-section">Non-Credit Authority</th>
+            <th colspan="4" class="section-header credit-section">Credit Authority</th>
+          </tr>
+          <tr>
+            <!-- Job Info Columns -->
+            <th class="sticky-col">Job Code</th>
+            <th>Job Title</th>
+            <th>Job Function</th>
+            
+            <!-- Non-Credit Columns -->
+            <th class="non-credit-col">ACH</th>
+            <th class="non-credit-col">Wire External</th>
+            <th class="non-credit-col">Wire Internal</th>
+            <th class="non-credit-col">Checks External</th>
+            <th class="non-credit-col">Checks Internal</th>
+            <th class="non-credit-col">Check Cash On-Us</th>
+            <th class="non-credit-col">Check Cash Not On-Us</th>
+            <th class="non-credit-col">Remote Deposit</th>
+            <th class="non-credit-col">Treasury Solutions</th>
+            <th class="non-credit-col">FX Wire</th>
+            
+            <!-- Credit Columns -->
+            <th class="credit-col">Overdraft External</th>
+            <th class="credit-col">Overdraft Internal</th>
+            <th class="credit-col">Unavailable External</th>
+            <th class="credit-col">Unavailable Internal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="limit in c.getCurrentPageLimits()" ng-class="{'highlight-row': limit.highlighted}">
+            <td class="sticky-col job-code-cell">
+              <strong>{{limit.job_code_display}}</strong>
+            </td>
+            <td class="job-info-cell">{{limit.job_title || '-'}}</td>
+            <td class="job-info-cell">{{limit.job_function || '-'}}</td>
+            
+            <!-- Non-Credit Values -->
+            <td class="amount-cell non-credit-cell" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_ach'}">
+              {{limit.disbursement_ach | currency:'$':0}}
+            </td>
+            <td class="amount-cell non-credit-cell" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_wire_transfer_external'}">
+              {{limit.disbursement_wire_transfer_external | currency:'$':0}}
+            </td>
+            <td class="amount-cell non-credit-cell" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_wire_transfer_internal'}">
+              {{limit.disbursement_wire_transfer_internal | currency:'$':0}}
+            </td>
+            <td class="amount-cell non-credit-cell" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_official_checks_external'}">
+              {{limit.disbursement_official_checks_external | currency:'$':0}}
+            </td>
+            <td class="amount-cell non-credit-cell" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_official_checks_internal'}">
+              {{limit.disbursement_official_checks_internal | currency:'$':0}}
+            </td>
+            <td class="amount-cell non-credit-cell" ng-class="{'highlight-cell': limit.highlightField === 'check_cashing_on_us'}">
+              {{limit.check_cashing_on_us | currency:'$':0}}
+            </td>
+            <td class="amount-cell non-credit-cell" ng-class="{'highlight-cell': limit.highlightField === 'check_cashing_not_on_us'}">
+              {{limit.check_cashing_not_on_us | currency:'$':0}}
+            </td>
+            <td class="amount-cell non-credit-cell" ng-class="{'highlight-cell': limit.highlightField === 'remote_deposit'}">
+              {{limit.remote_deposit | currency:'$':0}}
+            </td>
+            <td class="amount-cell non-credit-cell" ng-class="{'highlight-cell': limit.highlightField === 'treasury_solutions_company_wire_limits'}">
+              {{limit.treasury_solutions_company_wire_limits | currency:'$':0}}
+            </td>
+            <td class="amount-cell non-credit-cell" ng-class="{'highlight-cell': limit.highlightField === 'fx_wire_limits'}">
+              {{limit.fx_wire_limits | currency:'$':0}}
+            </td>
+            
+            <!-- Credit Values -->
+            <td class="amount-cell credit-cell" ng-class="{'highlight-cell': limit.highlightField === 'overdraft_external_accounts'}">
+              {{limit.overdraft_external_accounts | currency:'$':0}}
+            </td>
+            <td class="amount-cell credit-cell" ng-class="{'highlight-cell': limit.highlightField === 'overdraft_internal_accounts'}">
+              {{limit.overdraft_internal_accounts | currency:'$':0}}
+            </td>
+            <td class="amount-cell credit-cell" ng-class="{'highlight-cell': limit.highlightField === 'unavailable_funds_external_accounts'}">
+              {{limit.unavailable_funds_external_accounts | currency:'$':0}}
+            </td>
+            <td class="amount-cell credit-cell" ng-class="{'highlight-cell': limit.highlightField === 'unavailable_funds_internal_accounts'}">
+              {{limit.unavailable_funds_internal_accounts | currency:'$':0}}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Pagination -->
+    <div ng-if="c.totalPages > 1" class="pagination-controls">
+      <nav aria-label="Limits pagination">
+        <ul class="pagination">
+          <li class="page-item" ng-class="{disabled: c.currentPage === 1}">
+            <a class="page-link" href="javascript:void(0)" ng-click="c.previousPage()" aria-label="Previous">
+              <span aria-hidden="true">&laquo;</span>
+            </a>
+          </li>
+          <li class="page-item" ng-repeat="page in c.getPageNumbers()" 
+              ng-class="{active: page === c.currentPage}">
+            <a class="page-link" href="javascript:void(0)" ng-click="c.goToPage(page)">{{page}}</a>
+          </li>
+          <li class="page-item" ng-class="{disabled: c.currentPage === c.totalPages}">
+            <a class="page-link" href="javascript:void(0)" ng-click="c.nextPage()" aria-label="Next">
+              <span aria-hidden="true">&raquo;</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+      <div class="pagination-info">
+        Showing {{c.getStartIndex() + 1}}-{{c.getEndIndex()}} of {{c.limits.length}} records
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+<!-- ============================================ -->
+<!-- CSS -->
+<!-- ============================================ -->
+
+<style>
+.authority-lookup-widget {
+  padding: 20px;
+  font-family: 'Source Sans Pro', Arial, sans-serif;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.widget-header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e8e8e8;
+}
+
+.widget-header h2 {
+  color: #333;
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+}
+
+.header-description {
+  color: #6c757d;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Search Controls */
+.search-controls {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.search-type-selector {
+  margin-bottom: 20px;
+}
+
+.search-type-label {
+  display: block;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 12px;
+  font-size: 15px;
+}
+
+.radio-group {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.radio-option input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.radio-option label {
+  cursor: pointer;
+  color: #495057;
+  font-size: 14px;
+  margin: 0;
+  user-select: none;
+}
+
+.search-input-container {
+  margin-bottom: 16px;
+}
+
+.search-input-container label {
+  display: block;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.search-input {
+  width: 100%;
+  max-width: 500px;
+  padding: 10px 14px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.15s ease-in-out;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #339af0;
+  box-shadow: 0 0 0 2px rgba(51, 154, 240, 0.1);
+}
+
+/* Amount Search Specific */
+.amount-search-container {
+  margin-bottom: 16px;
+}
+
+.amount-search-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.amount-field-selector label,
+.amount-input-field label {
+  display: block;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.form-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: white;
+  cursor: pointer;
+  transition: border-color 0.15s ease-in-out;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: #339af0;
+  box-shadow: 0 0 0 2px rgba(51, 154, 240, 0.1);
+}
+
+.currency-wrapper {
+  position: relative;
+}
+
+.currency-symbol {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
+  font-weight: 500;
+  z-index: 1;
+}
+
+.currency-wrapper .form-control {
+  width: 100%;
+  padding: 10px 14px 10px 28px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.15s ease-in-out;
+}
+
+.currency-wrapper .form-control:focus {
+  outline: none;
+  border-color: #339af0;
+  box-shadow: 0 0 0 2px rgba(51, 154, 240, 0.1);
+}
+
+.help-text {
+  display: block;
+  color: #6c757d;
+  font-size: 12px;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+/* Search Actions */
+.search-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-primary {
+  background-color: #339af0;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #2180d8;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+}
+
+/* Loading and Messages */
+.loading-container {
+  text-align: center;
+  padding: 40px;
+}
+
+.fa-spinner {
+  color: #3498db;
+}
+
+.alert {
+  padding: 12px 15px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  border: 1px solid transparent;
+}
+
+.alert-info {
+  background-color: #d9edf7;
+  border-color: #bce8f1;
+  color: #31708f;
+}
+
+/* Results Container */
+.results-container {
+  margin-top: 24px;
+}
+
+.results-header {
+  margin-bottom: 16px;
+}
+
+.results-header h4 {
+  color: #2c3e50;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.results-count {
+  font-size: 14px;
+  color: #7f8c8d;
+  font-weight: normal;
+}
+
+/* Table Styling */
+.table-container {
+  overflow-x: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  background: white;
+  margin-bottom: 20px;
+}
+
+.limits-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.limits-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: white;
+}
+
+.section-header {
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 12px 8px;
+  text-align: center;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.info-section {
+  background-color: #e7f3ff;
+  color: #0066cc;
+}
+
+.non-credit-section {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.credit-section {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.limits-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #495057;
+  padding: 10px 8px;
+  text-align: left;
+  border-bottom: 2px solid #dee2e6;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  background-color: #f8f9fa !important;
+  box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+}
+
+.non-credit-col {
+  background-color: #f1f8f4;
+  border-left: 1px solid #c8e6c9;
+}
+
+.credit-col {
+  background-color: #fff5f5;
+  border-left: 1px solid #ffcdd2;
+}
+
+.limits-table tbody td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #ecf0f1;
+  vertical-align: middle;
+}
+
+.limits-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.limits-table tbody tr.highlight-row {
+  background-color: #fff3cd !important;
+}
+
+.job-code-cell {
+  position: sticky;
+  left: 0;
+  z-index: 4;
+  background-color: white;
+  box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.limits-table tbody tr:hover .job-code-cell {
+  background-color: #f8f9fa;
+}
+
+.limits-table tbody tr.highlight-row .job-code-cell {
+  background-color: #fff3cd !important;
+}
+
+.job-info-cell {
+  color: #495057;
+  font-size: 13px;
+}
+
+.amount-cell {
+  text-align: right;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+.non-credit-cell {
+  background-color: #f9fdf9;
+}
+
+.credit-cell {
+  background-color: #fffbfb;
+}
+
+.highlight-cell {
+  background-color: #ffc107 !important;
+  font-weight: 700 !important;
+  color: #000 !important;
+}
+
+/* Pagination */
+.pagination-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  padding-top: 16px;
+}
+
+.pagination {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  gap: 5px;
+}
+
+.page-item {
+  display: inline-block;
+}
+
+.page-link {
+  display: block;
+  padding: 6px 12px;
+  color: #3498db;
+  text-decoration: none;
+  background-color: white;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.page-link:hover {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.page-item.active .page-link {
+  background-color: #3498db;
+  border-color: #3498db;
+  color: white;
+}
+
+.page-item.disabled .page-link {
+  color: #6c757d;
+  pointer-events: none;
+  cursor: not-allowed;
+  background-color: #fff;
+  border-color: #dee2e6;
+  opacity: 0.5;
+}
+
+.pagination-info {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.fa {
+  margin-right: 4px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .radio-group {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .amount-search-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .search-actions {
+    flex-direction: column;
+  }
+  
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .pagination-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .pagination {
+    justify-content: center;
+  }
+  
+  .pagination-info {
+    text-align: center;
+  }
+}
+</style>
+
+
+
+
+<!-- ============================================ -->
+<!-- SERVER SCRIPT -->
+<!-- ============================================ -->
+
+<script>
+(function() {
+  'use strict';
+
+  if (input && input.action === 'searchLimits') {
+    var searchType = input.search_type;
+    var searchValue = input.search_value;
+    var limitType = input.limit_type; // For amount searches
+    var maxAmount = input.max_amount; // For amount searches
+    
+    var limits = [];
+    
+    var gr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
+    gr.addQuery('active', true);
+    
+    // Apply filters based on search type
+    if (searchType === 'job_code' && searchValue) {
+      // Search by job code display value (contains)
+      gr.addQuery('job_code.job_code', 'CONTAINS', searchValue);
+      
+    } else if (searchType === 'job_title' && searchValue) {
+      // Search by job description (contains)
+      gr.addQuery('job_code.job_description', 'CONTAINS', searchValue);
+      
+    } else if (searchType === 'job_function' && searchValue) {
+      // Search by job function description (contains)
+      gr.addQuery('job_code.job_function_description', 'CONTAINS', searchValue);
+      
+    } else if (searchType === 'employee' && searchValue) {
+      // Search by employee name - need to find their job code first
+      var userGr = new GlideRecord('sys_user');
+      userGr.addQuery('name', 'CONTAINS', searchValue);
+      userGr.addQuery('active', true);
+      userGr.query();
+      
+      var jobCodes = [];
+      while (userGr.next()) {
+        var userJobCode = userGr.getValue('u_job_code');
+        if (userJobCode && jobCodes.indexOf(userJobCode) === -1) {
+          jobCodes.push(userJobCode);
+        }
+      }
+      
+      if (jobCodes.length > 0) {
+        // Find job code sys_ids that match these job code strings
+        var jobCodeGr = new GlideRecord('x_banun_rbac_job_code');
+        jobCodeGr.addQuery('job_code', 'IN', jobCodes.join(','));
+        jobCodeGr.query();
+        
+        var jobCodeSysIds = [];
+        while (jobCodeGr.next()) {
+          jobCodeSysIds.push(jobCodeGr.getUniqueValue());
+        }
+        
+        if (jobCodeSysIds.length > 0) {
+          gr.addQuery('job_code', 'IN', jobCodeSysIds.join(','));
+        } else {
+          // No matching job codes found
+          data.limits = [];
+          return;
+        }
+      } else {
+        // No matching employees found
+        data.limits = [];
+        return;
+      }
+      
+    } else if (searchType === 'amount' && limitType && maxAmount) {
+      // Search by limit amount - find all records where the specified field is between 0 and maxAmount
+      var maxAmountNum = parseFloat(maxAmount);
+      if (!isNaN(maxAmountNum) && maxAmountNum >= 0) {
+        gr.addQuery(limitType, '<=', maxAmountNum);
+        gr.addQuery(limitType, '>=', 0);
+      }
+    }
+    
+    gr.orderBy('job_code.job_code');
+    gr.query();
+    
+    while (gr.next()) {
+      var jobCodeRef = gr.job_code;
+      
+      var limit = {
+        sys_id: gr.getUniqueValue(),
+        job_code_sys_id: gr.getValue('job_code'),
+        job_code_display: jobCodeRef.getDisplayValue(),
+        job_title: jobCodeRef.getValue('job_description'),
+        job_function: jobCodeRef.getValue('job_function_description'),
+        
+        // Non-credit limits
+        disbursement_ach: gr.getValue('disbursement_ach') || '0',
+        disbursement_wire_transfer_external: gr.getValue('disbursement_wire_transfer_external') || '0',
+        disbursement_wire_transfer_internal: gr.getValue('disbursement_wire_transfer_internal') || '0',
+        disbursement_official_checks_external: gr.getValue('disbursement_official_checks_external') || '0',
+        disbursement_official_checks_internal: gr.getValue('disbursement_official_checks_internal') || '0',
+        check_cashing_on_us: gr.getValue('check_cashing_on_us') || '0',
+        check_cashing_not_on_us: gr.getValue('check_cashing_not_on_us') || '0',
+        remote_deposit: gr.getValue('remote_deposit') || '0',
+        treasury_solutions_company_wire_limits: gr.getValue('treasury_solutions_company_wire_limits') || '0',
+        fx_wire_limits: gr.getValue('fx_wire_limits') || '0',
+        
+        // Credit limits
+        overdraft_external_accounts: gr.getValue('overdraft_external_accounts') || '0',
+        overdraft_internal_accounts: gr.getValue('overdraft_internal_accounts') || '0',
+        unavailable_funds_external_accounts: gr.getValue('unavailable_funds_external_accounts') || '0',
+        unavailable_funds_internal_accounts: gr.getValue('unavailable_funds_internal_accounts') || '0',
+        
+        // For highlighting in amount searches
+        highlightField: (searchType === 'amount') ? limitType : '',
+        highlighted: false
+      };
+      
+      limits.push(limit);
+    }
+    
+    data.limits = limits;
+  }
+})();
+</script>
+
+
+
+
+<!-- ============================================ -->
+<!-- CLIENT CONTROLLER -->
+<!-- ============================================ -->
+
+<script>
+api.controller = function($scope, $timeout, spUtil) {
+  var c = this;
+  
+  // Initialize variables
+  c.limits = [];
+  c.loading = false;
+  c.searchPerformed = false;
+  c.currentSearchType = 'job_code';
+  
+  // Pagination
+  c.currentPage = 1;
+  c.pageSize = 20;
+  c.totalPages = 1;
+  
+  c.$onInit = function() {
+    $timeout(function() {
+      initializeWidget();
+      // Perform initial search to show all limits
+      performSearch();
+    }, 500);
+  };
+  
+  // Format currency for display
+  c.formatCurrency = function(value) {
+    if (!value) return '';
+    var numStr = value.toString().replace(/[^\d]/g, '');
+    return numStr.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  };
+  
+  c.getCurrencyValue = function(formattedValue) {
+    if (!formattedValue) return '';
+    return formattedValue.replace(/[^\d]/g, '');
+  };
+  
+  // Pagination functions
+  c.getCurrentPageLimits = function() {
+    var start = (c.currentPage - 1) * c.pageSize;
+    var end = start + c.pageSize;
+    return c.limits.slice(start, end);
+  };
+  
+  c.getStartIndex = function() {
+    return (c.currentPage - 1) * c.pageSize;
+  };
+  
+  c.getEndIndex = function() {
+    var end = c.currentPage * c.pageSize;
+    return end > c.limits.length ? c.limits.length : end;
+  };
+  
+  c.previousPage = function() {
+    if (c.currentPage > 1) {
+      c.currentPage--;
+    }
+  };
+  
+  c.nextPage = function() {
+    if (c.currentPage < c.totalPages) {
+      c.currentPage++;
+    }
+  };
+  
+  c.goToPage = function(page) {
+    if (page >= 1 && page <= c.totalPages) {
+      c.currentPage = page;
+    }
+  };
+  
+  c.getPageNumbers = function() {
+    var pages = [];
+    var maxPagesToShow = 5;
+    var startPage = 1;
+    var endPage = c.totalPages;
+    
+    if (c.totalPages > maxPagesToShow) {
+      var middlePage = Math.floor(maxPagesToShow / 2);
+      if (c.currentPage <= middlePage) {
+        endPage = maxPagesToShow;
+      } else if (c.currentPage >= c.totalPages - middlePage) {
+        startPage = c.totalPages - maxPagesToShow + 1;
+      } else {
+        startPage = c.currentPage - middlePage;
+        endPage = c.currentPage + middlePage;
+      }
+    }
+    
+    for (var i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    
+    return pages;
+  };
+  
+  // Perform search
+  function performSearch() {
+    var searchType = c.currentSearchType;
+    var searchValue = '';
+    var limitType = '';
+    var maxAmount = '';
+    
+    if (searchType === 'amount') {
+      limitType = document.getElementById('limitTypeSelect').value;
+      var amountInput = document.getElementById('amountInput');
+      maxAmount = c.getCurrencyValue(amountInput.value);
+      
+      if (!maxAmount) {
+        spUtil.addErrorMessage('Please enter a maximum amount');
+        return;
+      }
+    } else {
+      var searchInput = document.getElementById('searchInput');
+      searchValue = searchInput.value.trim();
+    }
+    
+    c.loading = true;
+    c.searchPerformed = true;
+    
+    // Call server to get limits
+    c.server.get({
+      action: 'searchLimits',
+      search_type: searchType,
+      search_value: searchValue,
+      limit_type: limitType,
+      max_amount: maxAmount
+    }).then(function(response) {
+      $timeout(function() {
+        c.limits = response.data.limits || [];
+        c.currentPage = 1;
+        c.totalPages = Math.ceil(c.limits.length / c.pageSize);
+        c.loading = false;
+      });
+    }).catch(function(error) {
+      console.error('Error loading limits:', error);
+      spUtil.addErrorMessage('Failed to load authority limits');
+      c.limits = [];
+      c.loading = false;
+    });
+  }
+  
+  // Clear search
+  function clearSearch() {
+    var searchInput = document.getElementById('searchInput');
+    var amountInput = document.getElementById('amountInput');
+    
+    if (searchInput) searchInput.value = '';
+    if (amountInput) amountInput.value = '';
+    
+    // Reset to job code search
+    document.getElementById('searchByJobCode').checked = true;
+    c.currentSearchType = 'job_code';
+    updateSearchInterface();
+    
+    // Perform search to show all limits
+    performSearch();
+  }
+  
+  // Update search interface based on selected type
+  function updateSearchInterface() {
+    var searchType = c.currentSearchType;
+    var textSearchContainer = document.getElementById('textSearchContainer');
+    var amountSearchContainer = document.getElementById('amountSearchContainer');
+    var searchInputLabel = document.getElementById('searchInputLabel');
+    var searchInput = document.getElementById('searchInput');
+    
+    // Show/hide appropriate containers
+    if (searchType === 'amount') {
+      textSearchContainer.style.display = 'none';
+      amountSearchContainer.style.display = 'block';
+    } else {
+      textSearchContainer.style.display = 'block';
+      amountSearchContainer.style.display = 'none';
+      
+      // Update label and placeholder based on search type
+      switch(searchType) {
+        case 'job_code':
+          searchInputLabel.textContent = 'Search Job Code:';
+          searchInput.placeholder = 'Enter job code...';
+          break;
+        case 'job_title':
+          searchInputLabel.textContent = 'Search Job Title:';
+          searchInput.placeholder = 'Enter job title...';
+          break;
+        case 'job_function':
+          searchInputLabel.textContent = 'Search Job Function:';
+          searchInput.placeholder = 'Enter job function...';
+          break;
+        case 'employee':
+          searchInputLabel.textContent = 'Search Employee Name:';
+          searchInput.placeholder = 'Enter employee name...';
+          break;
+      }
+    }
+  }
+  
+  // Initialize widget
+  function initializeWidget() {
+    // Setup search type radio buttons
+    var radioButtons = document.querySelectorAll('input[name="searchType"]');
+    radioButtons.forEach(function(radio) {
+      radio.addEventListener('change', function() {
+        c.currentSearchType = this.value;
+        updateSearchInterface();
+      });
+    });
+    
+    // Setup search button
+    var searchButton = document.getElementById('searchButton');
+    if (searchButton) {
+      searchButton.addEventListener('click', function() {
+        performSearch();
+      });
+    }
+    
+    // Setup clear button
+    var clearButton = document.getElementById('clearButton');
+    if (clearButton) {
+      clearButton.addEventListener('click', function() {
+        clearSearch();
+      });
+    }
+    
+    // Setup Enter key for text search
+    var searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+      searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          performSearch();
+        }
+      });
+    }
+    
+    // Setup Enter key for amount search
+    var amountInput = document.getElementById('amountInput');
+    if (amountInput) {
+      // Format currency as user types
+      var isUpdating = false;
+      amountInput.addEventListener('input', function(event) {
+        if (isUpdating) return;
+        isUpdating = true;
+        
+        var cursorPosition = event.target.selectionStart;
+        var oldValue = event.target.value;
+        var oldLength = oldValue.length;
+        var formattedValue = c.formatCurrency(oldValue);
+        
+        event.target.value = formattedValue;
+        
+        var newLength = formattedValue.length;
+        var lengthDiff = newLength - oldLength;
+        var newCursorPosition = Math.max(0, cursorPosition + lengthDiff);
+        setTimeout(() => {
+          event.target.setSelectionRange(newCursorPosition, newCursorPosition);
+        }, 0);
+        
+        isUpdating = false;
+      });
+      
+      amountInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          performSearch();
+        }
+        // Prevent decimal point entry
+        if (e.key === '.' || e.key === ',') {
+          e.preventDefault();
+        }
+      });
+    }
+    
+    // Initialize interface
+    updateSearchInterface();
+  }
+};
+</script>
