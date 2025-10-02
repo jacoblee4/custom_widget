@@ -39,10 +39,26 @@
       </div>
     </div>
     
-    <!-- Text Search Input (for job code, title, function, employee) -->
+    <!-- Reference Field Search Input (for job code, title, function, employee) -->
     <div class="search-input-container" id="textSearchContainer">
       <label for="searchInput" id="searchInputLabel">Search Job Code:</label>
-      <input type="text" id="searchInput" class="search-input" placeholder="Enter job code...">
+      <div class="reference-field-wrapper">
+        <input type="text" 
+               id="searchInput" 
+               class="search-input reference-input" 
+               placeholder="Start typing to search..."
+               autocomplete="off">
+        <input type="hidden" id="searchInputValue">
+        <div id="searchDropdown" class="reference-dropdown" style="display: none;">
+          <div class="dropdown-loading" style="display: none;">
+            <i class="fa fa-spinner fa-spin"></i> Loading...
+          </div>
+          <div class="dropdown-results"></div>
+          <div class="dropdown-no-results" style="display: none;">
+            No results found
+          </div>
+        </div>
+      </div>
     </div>
     
     <!-- Amount Search Inputs (for limit amount search) -->
@@ -72,12 +88,12 @@
           </select>
         </div>
         <div class="amount-input-field">
-          <label for="amountInput">Maximum Amount:</label>
+          <label for="amountInput">Minimum Amount:</label>
           <div class="currency-wrapper">
             <span class="currency-symbol">$</span>
             <input type="text" id="amountInput" class="form-control" placeholder="e.g., 50000">
           </div>
-          <small class="help-text">Shows all limits from $0 to entered amount</small>
+          <small class="help-text">Shows all limits from entered amount and above</small>
         </div>
       </div>
     </div>
@@ -244,7 +260,6 @@
 <style>
 .authority-lookup-widget {
   padding: 20px;
-  font-family: 'Source Sans Pro', Arial, sans-serif;
   max-width: 100%;
   margin: 0 auto;
 }
@@ -341,6 +356,73 @@
   outline: none;
   border-color: #339af0;
   box-shadow: 0 0 0 2px rgba(51, 154, 240, 0.1);
+}
+
+/* Reference Field Dropdown */
+.reference-field-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+}
+
+.reference-input {
+  width: 100%;
+}
+
+.reference-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ced4da;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.dropdown-loading,
+.dropdown-no-results {
+  padding: 12px;
+  text-align: center;
+  color: #6c757d;
+  font-size: 13px;
+}
+
+.dropdown-results {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.dropdown-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.15s;
+}
+
+.dropdown-item:hover,
+.dropdown-item.active {
+  background-color: #e7f3ff;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-item-primary {
+  color: #2c3e50;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.dropdown-item-secondary {
+  color: #6c757d;
+  font-size: 12px;
+  margin-top: 2px;
 }
 
 /* Amount Search Specific */
@@ -533,21 +615,23 @@
   padding: 12px 8px;
   text-align: center;
   border-bottom: 2px solid #dee2e6;
+  border-right: 2px solid #dee2e6;
 }
 
 .info-section {
-  background-color: #e7f3ff;
-  color: #0066cc;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
 }
 
 .non-credit-section {
-  background-color: #e8f5e9;
-  color: #2e7d32;
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  color: white;
 }
 
 .credit-section {
-  background-color: #ffebee;
-  color: #c62828;
+  background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);
+  color: white;
+  border-right: none;
 }
 
 .limits-table th {
@@ -618,8 +702,7 @@
 
 .amount-cell {
   text-align: right;
-  font-family: 'Courier New', monospace;
-  font-size: 12px;
+  font-size: 13px;
   color: #2c3e50;
   font-weight: 500;
 }
@@ -746,11 +829,89 @@
 (function() {
   'use strict';
 
+  // Handle reference field lookups
+  if (input && input.action === 'lookupReference') {
+    var searchType = input.search_type;
+    var searchValue = input.search_value;
+    var results = [];
+    
+    if (searchType === 'job_code') {
+      var gr = new GlideRecord('x_banun_rbac_job_code');
+      gr.addQuery('job_code', 'CONTAINS', searchValue);
+      gr.orderBy('job_code');
+      gr.setLimit(20);
+      gr.query();
+      
+      while (gr.next()) {
+        results.push({
+          value: gr.getUniqueValue(),
+          display: gr.getValue('job_code'),
+          secondary: gr.getValue('job_description')
+        });
+      }
+      
+    } else if (searchType === 'job_title') {
+      var titleGr = new GlideRecord('x_banun_rbac_job_code');
+      titleGr.addQuery('job_description', 'CONTAINS', searchValue);
+      titleGr.orderBy('job_description');
+      titleGr.setLimit(20);
+      titleGr.query();
+      
+      while (titleGr.next()) {
+        results.push({
+          value: titleGr.getValue('job_description'),
+          display: titleGr.getValue('job_description'),
+          secondary: titleGr.getValue('job_code')
+        });
+      }
+      
+    } else if (searchType === 'job_function') {
+      var funcGr = new GlideRecord('x_banun_rbac_job_code');
+      funcGr.addQuery('job_function_description', 'CONTAINS', searchValue);
+      funcGr.addQuery('job_function_description', '!=', '');
+      funcGr.orderBy('job_function_description');
+      funcGr.setLimit(20);
+      funcGr.query();
+      
+      var uniqueFunctions = {};
+      while (funcGr.next()) {
+        var funcValue = funcGr.getValue('job_function_description');
+        if (funcValue && !uniqueFunctions[funcValue]) {
+          uniqueFunctions[funcValue] = true;
+          results.push({
+            value: funcValue,
+            display: funcValue,
+            secondary: ''
+          });
+        }
+      }
+      
+    } else if (searchType === 'employee') {
+      var userGr = new GlideRecord('sys_user');
+      userGr.addQuery('name', 'CONTAINS', searchValue);
+      userGr.addQuery('active', true);
+      userGr.orderBy('name');
+      userGr.setLimit(20);
+      userGr.query();
+      
+      while (userGr.next()) {
+        results.push({
+          value: userGr.getUniqueValue(),
+          display: userGr.getValue('name'),
+          secondary: userGr.getValue('title') || userGr.getValue('u_job_code')
+        });
+      }
+    }
+    
+    data.results = results;
+    return;
+  }
+
   if (input && input.action === 'searchLimits') {
     var searchType = input.search_type;
     var searchValue = input.search_value;
-    var limitType = input.limit_type; // For amount searches
-    var maxAmount = input.max_amount; // For amount searches
+    var limitType = input.limit_type;
+    var minAmount = input.min_amount;
     
     var limits = [];
     
@@ -759,62 +920,47 @@
     
     // Apply filters based on search type
     if (searchType === 'job_code' && searchValue) {
-      // Search by job code display value (contains)
-      gr.addQuery('job_code.job_code', 'CONTAINS', searchValue);
+      gr.addQuery('job_code', searchValue);
       
     } else if (searchType === 'job_title' && searchValue) {
-      // Search by job description (contains)
-      gr.addQuery('job_code.job_description', 'CONTAINS', searchValue);
+      gr.addQuery('job_code.job_description', searchValue);
       
     } else if (searchType === 'job_function' && searchValue) {
-      // Search by job function description (contains)
-      gr.addQuery('job_code.job_function_description', 'CONTAINS', searchValue);
+      gr.addQuery('job_code.job_function_description', searchValue);
       
     } else if (searchType === 'employee' && searchValue) {
-      // Search by employee name - need to find their job code first
+      // Get the employee's job code
       var userGr = new GlideRecord('sys_user');
-      userGr.addQuery('name', 'CONTAINS', searchValue);
-      userGr.addQuery('active', true);
-      userGr.query();
-      
-      var jobCodes = [];
-      while (userGr.next()) {
+      if (userGr.get(searchValue)) {
         var userJobCode = userGr.getValue('u_job_code');
-        if (userJobCode && jobCodes.indexOf(userJobCode) === -1) {
-          jobCodes.push(userJobCode);
-        }
-      }
-      
-      if (jobCodes.length > 0) {
-        // Find job code sys_ids that match these job code strings
-        var jobCodeGr = new GlideRecord('x_banun_rbac_job_code');
-        jobCodeGr.addQuery('job_code', 'IN', jobCodes.join(','));
-        jobCodeGr.query();
-        
-        var jobCodeSysIds = [];
-        while (jobCodeGr.next()) {
-          jobCodeSysIds.push(jobCodeGr.getUniqueValue());
-        }
-        
-        if (jobCodeSysIds.length > 0) {
-          gr.addQuery('job_code', 'IN', jobCodeSysIds.join(','));
+        if (userJobCode) {
+          // Find job code sys_id that matches this job code string
+          var jobCodeGr = new GlideRecord('x_banun_rbac_job_code');
+          jobCodeGr.addQuery('job_code', userJobCode);
+          jobCodeGr.query();
+          
+          if (jobCodeGr.next()) {
+            gr.addQuery('job_code', jobCodeGr.getUniqueValue());
+          } else {
+            // No matching job code found
+            data.limits = [];
+            return;
+          }
         } else {
-          // No matching job codes found
+          // Employee has no job code
           data.limits = [];
           return;
         }
       } else {
-        // No matching employees found
         data.limits = [];
         return;
       }
       
-    } else if (searchType === 'amount' && limitType && maxAmount) {
-      // Search by limit amount - find all records where the specified field is between 0 and maxAmount
-      var maxAmountNum = parseFloat(maxAmount);
-      if (!isNaN(maxAmountNum) && maxAmountNum >= 0) {
-        gr.addQuery(limitType, '<=', maxAmountNum);
-        gr.addQuery(limitType, '>=', 0);
+    } else if (searchType === 'amount' && limitType && minAmount) {
+      // Search by limit amount - find all records where the specified field is >= minAmount
+      var minAmountNum = parseFloat(minAmount);
+      if (!isNaN(minAmountNum) && minAmountNum >= 0) {
+        gr.addQuery(limitType, '>=', minAmountNum);
       }
     }
     
@@ -827,9 +973,9 @@
       var limit = {
         sys_id: gr.getUniqueValue(),
         job_code_sys_id: gr.getValue('job_code'),
-        job_code_display: jobCodeRef.getDisplayValue(),
-        job_title: jobCodeRef.getValue('job_description'),
-        job_function: jobCodeRef.getValue('job_function_description'),
+        job_code_display: jobCodeRef.getValue('job_code') || '',
+        job_title: jobCodeRef.getValue('job_description') || '',
+        job_function: jobCodeRef.getValue('job_function_description') || '',
         
         // Non-credit limits
         disbursement_ach: gr.getValue('disbursement_ach') || '0',
@@ -878,11 +1024,18 @@ api.controller = function($scope, $timeout, spUtil) {
   c.loading = false;
   c.searchPerformed = false;
   c.currentSearchType = 'job_code';
+  c.selectedReferenceValue = null;
+  c.selectedReferenceDisplay = '';
   
   // Pagination
   c.currentPage = 1;
   c.pageSize = 20;
   c.totalPages = 1;
+  
+  // Reference field dropdown state
+  var dropdownVisible = false;
+  var currentResults = [];
+  var selectedIndex = -1;
   
   c.$onInit = function() {
     $timeout(function() {
@@ -963,25 +1116,135 @@ api.controller = function($scope, $timeout, spUtil) {
     return pages;
   };
   
+  // Reference field lookup
+  function performReferenceLookup(searchValue) {
+    if (!searchValue || searchValue.length < 2) {
+      hideDropdown();
+      return;
+    }
+    
+    var dropdown = document.getElementById('searchDropdown');
+    var loading = dropdown.querySelector('.dropdown-loading');
+    var results = dropdown.querySelector('.dropdown-results');
+    var noResults = dropdown.querySelector('.dropdown-no-results');
+    
+    // Show loading
+    loading.style.display = 'block';
+    results.innerHTML = '';
+    noResults.style.display = 'none';
+    dropdown.style.display = 'block';
+    dropdownVisible = true;
+    
+    c.server.get({
+      action: 'lookupReference',
+      search_type: c.currentSearchType,
+      search_value: searchValue
+    }).then(function(response) {
+      loading.style.display = 'none';
+      currentResults = response.data.results || [];
+      selectedIndex = -1;
+      
+      if (currentResults.length > 0) {
+        results.innerHTML = '';
+        currentResults.forEach(function(result, index) {
+          var item = document.createElement('div');
+          item.className = 'dropdown-item';
+          item.dataset.index = index;
+          
+          var primary = document.createElement('div');
+          primary.className = 'dropdown-item-primary';
+          primary.textContent = result.display;
+          item.appendChild(primary);
+          
+          if (result.secondary) {
+            var secondary = document.createElement('div');
+            secondary.className = 'dropdown-item-secondary';
+            secondary.textContent = result.secondary;
+            item.appendChild(secondary);
+          }
+          
+          item.addEventListener('click', function() {
+            selectDropdownItem(index);
+          });
+          
+          results.appendChild(item);
+        });
+        noResults.style.display = 'none';
+      } else {
+        noResults.style.display = 'block';
+      }
+    }).catch(function(error) {
+      console.error('Reference lookup error:', error);
+      loading.style.display = 'none';
+      hideDropdown();
+    });
+  }
+  
+  function selectDropdownItem(index) {
+    if (index >= 0 && index < currentResults.length) {
+      var result = currentResults[index];
+      c.selectedReferenceValue = result.value;
+      c.selectedReferenceDisplay = result.display;
+      
+      var searchInput = document.getElementById('searchInput');
+      var searchInputValue = document.getElementById('searchInputValue');
+      searchInput.value = result.display;
+      searchInputValue.value = result.value;
+      
+      hideDropdown();
+    }
+  }
+  
+  function hideDropdown() {
+    var dropdown = document.getElementById('searchDropdown');
+    dropdown.style.display = 'none';
+    dropdownVisible = false;
+    selectedIndex = -1;
+  }
+  
+  function updateDropdownSelection(direction) {
+    if (!dropdownVisible || currentResults.length === 0) return;
+    
+    var items = document.querySelectorAll('.dropdown-item');
+    
+    // Remove previous selection
+    if (selectedIndex >= 0 && selectedIndex < items.length) {
+      items[selectedIndex].classList.remove('active');
+    }
+    
+    // Update index
+    if (direction === 'down') {
+      selectedIndex = (selectedIndex + 1) % currentResults.length;
+    } else if (direction === 'up') {
+      selectedIndex = selectedIndex <= 0 ? currentResults.length - 1 : selectedIndex - 1;
+    }
+    
+    // Add new selection
+    if (selectedIndex >= 0 && selectedIndex < items.length) {
+      items[selectedIndex].classList.add('active');
+      items[selectedIndex].scrollIntoView({ block: 'nearest' });
+    }
+  }
+  
   // Perform search
   function performSearch() {
     var searchType = c.currentSearchType;
     var searchValue = '';
     var limitType = '';
-    var maxAmount = '';
+    var minAmount = '';
     
     if (searchType === 'amount') {
       limitType = document.getElementById('limitTypeSelect').value;
       var amountInput = document.getElementById('amountInput');
-      maxAmount = c.getCurrencyValue(amountInput.value);
+      minAmount = c.getCurrencyValue(amountInput.value);
       
-      if (!maxAmount) {
-        spUtil.addErrorMessage('Please enter a maximum amount');
+      if (!minAmount) {
+        spUtil.addErrorMessage('Please enter a minimum amount');
         return;
       }
     } else {
-      var searchInput = document.getElementById('searchInput');
-      searchValue = searchInput.value.trim();
+      var searchInputValue = document.getElementById('searchInputValue');
+      searchValue = searchInputValue.value;
     }
     
     c.loading = true;
@@ -993,7 +1256,7 @@ api.controller = function($scope, $timeout, spUtil) {
       search_type: searchType,
       search_value: searchValue,
       limit_type: limitType,
-      max_amount: maxAmount
+      min_amount: minAmount
     }).then(function(response) {
       $timeout(function() {
         c.limits = response.data.limits || [];
@@ -1012,10 +1275,15 @@ api.controller = function($scope, $timeout, spUtil) {
   // Clear search
   function clearSearch() {
     var searchInput = document.getElementById('searchInput');
+    var searchInputValue = document.getElementById('searchInputValue');
     var amountInput = document.getElementById('amountInput');
     
     if (searchInput) searchInput.value = '';
+    if (searchInputValue) searchInputValue.value = '';
     if (amountInput) amountInput.value = '';
+    
+    c.selectedReferenceValue = null;
+    c.selectedReferenceDisplay = '';
     
     // Reset to job code search
     document.getElementById('searchByJobCode').checked = true;
@@ -1033,6 +1301,14 @@ api.controller = function($scope, $timeout, spUtil) {
     var amountSearchContainer = document.getElementById('amountSearchContainer');
     var searchInputLabel = document.getElementById('searchInputLabel');
     var searchInput = document.getElementById('searchInput');
+    var searchInputValue = document.getElementById('searchInputValue');
+    
+    // Clear previous values
+    if (searchInput) searchInput.value = '';
+    if (searchInputValue) searchInputValue.value = '';
+    c.selectedReferenceValue = null;
+    c.selectedReferenceDisplay = '';
+    hideDropdown();
     
     // Show/hide appropriate containers
     if (searchType === 'amount') {
@@ -1046,19 +1322,19 @@ api.controller = function($scope, $timeout, spUtil) {
       switch(searchType) {
         case 'job_code':
           searchInputLabel.textContent = 'Search Job Code:';
-          searchInput.placeholder = 'Enter job code...';
+          searchInput.placeholder = 'Start typing to search job codes...';
           break;
         case 'job_title':
           searchInputLabel.textContent = 'Search Job Title:';
-          searchInput.placeholder = 'Enter job title...';
+          searchInput.placeholder = 'Start typing to search job titles...';
           break;
         case 'job_function':
           searchInputLabel.textContent = 'Search Job Function:';
-          searchInput.placeholder = 'Enter job function...';
+          searchInput.placeholder = 'Start typing to search job functions...';
           break;
         case 'employee':
           searchInputLabel.textContent = 'Search Employee Name:';
-          searchInput.placeholder = 'Enter employee name...';
+          searchInput.placeholder = 'Start typing to search employees...';
           break;
       }
     }
@@ -1073,6 +1349,56 @@ api.controller = function($scope, $timeout, spUtil) {
         c.currentSearchType = this.value;
         updateSearchInterface();
       });
+    });
+    
+    // Setup reference field input
+    var searchInput = document.getElementById('searchInput');
+    var searchDebounce;
+    
+    if (searchInput) {
+      searchInput.addEventListener('input', function(e) {
+        clearTimeout(searchDebounce);
+        searchDebounce = setTimeout(function() {
+          if (c.currentSearchType !== 'amount') {
+            performReferenceLookup(e.target.value);
+          }
+        }, 300);
+      });
+      
+      searchInput.addEventListener('keydown', function(e) {
+        if (dropdownVisible) {
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            updateDropdownSelection('down');
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            updateDropdownSelection('up');
+          } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (selectedIndex >= 0) {
+              selectDropdownItem(selectedIndex);
+            }
+          } else if (e.key === 'Escape') {
+            hideDropdown();
+          }
+        } else if (e.key === 'Enter') {
+          performSearch();
+        }
+      });
+      
+      searchInput.addEventListener('focus', function() {
+        if (this.value.length >= 2 && c.currentSearchType !== 'amount') {
+          performReferenceLookup(this.value);
+        }
+      });
+    }
+    
+    // Click outside to close dropdown
+    document.addEventListener('click', function(e) {
+      var refWrapper = document.querySelector('.reference-field-wrapper');
+      if (refWrapper && !refWrapper.contains(e.target)) {
+        hideDropdown();
+      }
     });
     
     // Setup search button
@@ -1091,17 +1417,7 @@ api.controller = function($scope, $timeout, spUtil) {
       });
     }
     
-    // Setup Enter key for text search
-    var searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-      searchInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-          performSearch();
-        }
-      });
-    }
-    
-    // Setup Enter key for amount search
+    // Setup amount input
     var amountInput = document.getElementById('amountInput');
     if (amountInput) {
       // Format currency as user types
