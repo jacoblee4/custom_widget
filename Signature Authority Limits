@@ -1235,6 +1235,16 @@ function clearSearch() {
   c.selectedReferenceValue = null;
   c.selectedReferenceDisplay = '';
   
+  // If on amount search, switch back to job_code search type first
+  if (c.currentSearchType === 'amount') {
+    c.currentSearchType = 'job_code';
+    var searchTypeSelect = document.getElementById('searchTypeSelect');
+    if (searchTypeSelect) {
+      searchTypeSelect.value = 'job_code';
+    }
+    updateSearchInterface();
+  }
+  
   // Perform search to show all limits (like initial load)
   performSearch();
 }
