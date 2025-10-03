@@ -78,9 +78,9 @@
     </div>
     
     <div class="button-group">
-      <button id="searchButton" class="btn btn-search" style="display: none;">Search</button>
-      <button id="clearButton" class="btn btn-clear">Clear</button>
-    </div>
+    <button id="searchButton" class="btn btn-search">Search</button>
+    <button id="clearButton" class="btn btn-clear">Clear</button>
+</div>
   </div>
   
   <!-- Loading Indicator -->
@@ -747,7 +747,6 @@
       var gr = new GlideRecord('x_banun_rbac_job_code');
       gr.addQuery('job_code', 'CONTAINS', searchValue);
       gr.orderBy('job_code');
-      gr.setLimit(20);
       gr.query();
       
       while (gr.next()) {
@@ -762,7 +761,6 @@
       var titleGr = new GlideRecord('x_banun_rbac_job_code');
       titleGr.addQuery('job_description', 'CONTAINS', searchValue);
       titleGr.orderBy('job_description');
-      titleGr.setLimit(20);
       titleGr.query();
       
       while (titleGr.next()) {
@@ -778,7 +776,6 @@
       funcGr.addQuery('job_function_description', 'CONTAINS', searchValue);
       funcGr.addQuery('job_function_description', '!=', '');
       funcGr.orderBy('job_function_description');
-      funcGr.setLimit(20);
       funcGr.query();
       
       var uniqueFunctions = {};
@@ -799,7 +796,6 @@
       userGr.addQuery('name', 'CONTAINS', searchValue);
       userGr.addQuery('active', true);
       userGr.orderBy('name');
-      userGr.setLimit(20);
       userGr.query();
       
       while (userGr.next()) {
@@ -961,7 +957,7 @@ api.controller = function($scope, $timeout, spUtil) {
   
   // Pagination
   c.currentPage = 1;
-  c.pageSize = 20;
+  c.pageSize = 10;
   c.totalPages = 1;
   
   // Reference field dropdown state
@@ -1171,56 +1167,58 @@ api.controller = function($scope, $timeout, spUtil) {
     }
   }
   
-  // Perform search
   function performSearch() {
-    var searchType = c.currentSearchType;
-    var searchValue = '';
-    var limitType = '';
-    var minAmount = '';
+  var searchType = c.currentSearchType;
+  var searchValue = '';
+  var limitType = '';
+  var minAmount = '';
+  
+  if (searchType === 'amount') {
+    limitType = document.getElementById('limitTypeSelect').value;
+    var amountInput = document.getElementById('amountInput');
+    minAmount = c.getCurrencyValue(amountInput.value);
     
-    if (searchType === 'amount') {
-      limitType = document.getElementById('limitTypeSelect').value;
-      var amountInput = document.getElementById('amountInput');
-      minAmount = c.getCurrencyValue(amountInput.value);
-      
-      if (!minAmount) {
-        spUtil.addErrorMessage('Please enter a minimum amount');
-        return;
-      }
-    } else {
-      var searchInputValue = document.getElementById('searchInputValue');
-      searchValue = searchInputValue.value;
+    if (!minAmount) {
+      spUtil.addErrorMessage('Please enter a minimum amount');
+      return;
     }
+  } else {
+    var searchInputValue = document.getElementById('searchInputValue');
+    var searchInput = document.getElementById('searchInput');
     
-    c.loading = true;
-    c.searchPerformed = true;
-    
-    // Call server to get limits
-    c.server.get({
-      action: 'searchLimits',
-      search_type: searchType,
-      search_value: searchValue,
-      limit_type: limitType,
-      min_amount: minAmount
-    }).then(function(response) {
-      $timeout(function() {
-        c.limits = response.data.limits || [];
-        c.currentPage = 1;
-        c.totalPages = Math.ceil(c.limits.length / c.pageSize);
-        c.loading = false;
-        
-        // Re-setup column filters after table renders
-        $timeout(function() {
-          setupColumnFilters();
-        }, 100);
-      });
-    }).catch(function(error) {
-      console.error('Error loading limits:', error);
-      spUtil.addErrorMessage('Failed to load authority limits');
-      c.limits = [];
-      c.loading = false;
-    });
+    // Use hidden field value if available, otherwise use the text input value for partial match
+    searchValue = searchInputValue.value || searchInput.value;
   }
+  
+  c.loading = true;
+  c.searchPerformed = true;
+  
+  // Call server to get limits
+  c.server.get({
+    action: 'searchLimits',
+    search_type: searchType,
+    search_value: searchValue,
+    limit_type: limitType,
+    min_amount: minAmount
+  }).then(function(response) {
+    $timeout(function() {
+      c.limits = response.data.limits || [];
+      c.currentPage = 1;
+      c.totalPages = Math.ceil(c.limits.length / c.pageSize);
+      c.loading = false;
+      
+      // Re-setup column filters after table renders
+      $timeout(function() {
+        setupColumnFilters();
+      }, 100);
+    });
+  }).catch(function(error) {
+    console.error('Error loading limits:', error);
+    spUtil.addErrorMessage('Failed to load authority limits');
+    c.limits = [];
+    c.loading = false;
+  });
+}
   
   // Clear search
 function clearSearch() {
@@ -1270,11 +1268,9 @@ function clearSearch() {
     if (searchType === 'amount') {
       textSearchContainer.style.display = 'none';
       amountSearchContainer.style.display = 'block';
-      searchButton.style.display = 'inline-block';
     } else {
       textSearchContainer.style.display = 'block';
       amountSearchContainer.style.display = 'none';
-      searchButton.style.display = 'none';
       
       // Update label and placeholder based on search type
       switch(searchType) {
