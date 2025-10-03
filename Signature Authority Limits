@@ -2,6 +2,10 @@
 <!-- HTML TEMPLATE -->
 <!-- ============================================ -->
 
+<!-- ============================================ -->
+<!-- HTML TEMPLATE -->
+<!-- ============================================ -->
+
 <div class="authority-lookup-widget">
   <div class="widget-header">
     <h2>Signature Authority Limits Lookup</h2>
@@ -29,7 +33,6 @@
                class="form-control reference-input" 
                placeholder="Start typing to search..."
                autocomplete="off">
-        <span class="dropdown-icon">▼</span>
         <input type="hidden" id="searchInputValue">
         <div id="searchDropdown" class="reference-dropdown" style="display: none;">
           <div class="dropdown-loading" style="display: none;">
@@ -79,7 +82,7 @@
     </div>
     
     <div class="button-group">
-      <button id="searchButton" class="btn btn-search">Search</button>
+      <button id="searchButton" class="btn btn-search" style="display: none;">Search</button>
       <button id="clearButton" class="btn btn-clear">Clear</button>
     </div>
   </div>
@@ -231,7 +234,6 @@
 <!-- CSS -->
 <!-- ============================================ -->
 
-<style>
 .authority-lookup-widget {
   padding: 20px;
   font-family: 'Source Sans Pro', Arial, sans-serif;
@@ -286,7 +288,6 @@
   font-size: 14px;
   background: white;
   transition: border-color 0.15s ease-in-out;
-  cursor: pointer;
   line-height: 1.5;
   height: auto;
   min-height: 40px;
@@ -312,18 +313,7 @@
 
 .reference-input {
   width: 100%;
-  padding-right: 30px;
-  cursor: pointer;
-}
-
-.dropdown-icon {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
-  color: #6c757d;
-  font-size: 12px;
+  cursor: text;
 }
 
 .reference-dropdown {
@@ -685,7 +675,6 @@
     text-align: center;
   }
 }
-</style>
 
 
 
@@ -1107,13 +1096,6 @@ api.controller = function($scope, $timeout, spUtil) {
     selectedIndex = -1;
   }
   
-  function showDropdown() {
-    var searchInput = document.getElementById('searchInput');
-    if (c.currentSearchType !== 'amount') {
-      performReferenceLookup(searchInput.value);
-    }
-  }
-  
   function updateDropdownSelection(direction) {
     if (!dropdownVisible || currentResults.length === 0) return;
     
@@ -1215,6 +1197,7 @@ api.controller = function($scope, $timeout, spUtil) {
     var searchInputLabel = document.getElementById('searchInputLabel');
     var searchInput = document.getElementById('searchInput');
     var searchInputValue = document.getElementById('searchInputValue');
+    var searchButton = document.getElementById('searchButton');
     
     // Clear previous values
     if (searchInput) searchInput.value = '';
@@ -1227,9 +1210,11 @@ api.controller = function($scope, $timeout, spUtil) {
     if (searchType === 'amount') {
       textSearchContainer.style.display = 'none';
       amountSearchContainer.style.display = 'block';
+      searchButton.style.display = 'inline-block';
     } else {
       textSearchContainer.style.display = 'block';
       amountSearchContainer.style.display = 'none';
+      searchButton.style.display = 'none';
       
       // Update label and placeholder based on search type
       switch(searchType) {
@@ -1269,8 +1254,6 @@ api.controller = function($scope, $timeout, spUtil) {
     var searchDebounce;
     
     if (searchInput) {
-      // Remove click handler - only show dropdown when typing
-      
       searchInput.addEventListener('input', function(e) {
         clearTimeout(searchDebounce);
         searchDebounce = setTimeout(function() {
@@ -1301,10 +1284,6 @@ api.controller = function($scope, $timeout, spUtil) {
         } else if (e.key === 'Enter') {
           performSearch();
         }
-      });
-      
-      searchInput.addEventListener('focus', function() {
-        // Don't show dropdown on focus - only when typing
       });
     }
     
