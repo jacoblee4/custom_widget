@@ -1260,31 +1260,21 @@ api.controller = function($scope, $timeout, spUtil) {
     }
 
     // Clear search
-    function clearSearch() {
-        var searchInput = document.getElementById('searchInput');
-        var searchInputValue = document.getElementById('searchInputValue');
-        var amountInput = document.getElementById('amountInput');
+function clearSearch() {
+    var searchInput = document.getElementById('searchInput');
+    var searchInputValue = document.getElementById('searchInputValue');
+    var amountInput = document.getElementById('amountInput');
 
-        if (searchInput) searchInput.value = '';
-        if (searchInputValue) searchInputValue.value = '';
-        if (amountInput) amountInput.value = '';
+    if (searchInput) searchInput.value = '';
+    if (searchInputValue) searchInputValue.value = '';
+    if (amountInput) amountInput.value = '';
 
-        c.selectedReferenceValue = null;
-        c.selectedReferenceDisplay = '';
+    c.selectedReferenceValue = null;
+    c.selectedReferenceDisplay = '';
 
-        // If on amount search, switch back to job_code search type first
-        if (c.currentSearchType === 'amount') {
-            c.currentSearchType = 'job_code';
-            var searchTypeSelect = document.getElementById('searchTypeSelect');
-            if (searchTypeSelect) {
-                searchTypeSelect.value = 'job_code';
-            }
-            updateSearchInterface();
-        }
-
-        // Perform search to show all limits (like initial load)
-        performSearch();
-    }
+    // Perform search to show all limits (like initial load)
+    performSearch();
+}
 
     // Update search interface based on selected type
     function updateSearchInterface() {
