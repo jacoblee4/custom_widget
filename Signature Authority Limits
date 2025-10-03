@@ -72,7 +72,7 @@
         <label for="amountInput">Minimum Amount</label>
         <div class="currency-wrapper">
           <span class="currency-symbol">$</span>
-          <input type="text" id="amountInput" class="form-control" placeholder="Enter a dollar amount e.g., 50,000">
+          <input type="text" id="amountInput" class="form-control" placeholder="Enter a dollar amount (e.g., 50,000)">
         </div>
         <small class="help-text">Shows all limits from entered amount and above</small>
       </div>
@@ -231,6 +231,7 @@
 <!-- CSS -->
 <!-- ============================================ -->
 
+<style>
 .authority-lookup-widget {
   padding: 20px;
   font-family: 'Source Sans Pro', Arial, sans-serif;
@@ -292,6 +293,12 @@
   outline: none;
   border-color: #3498db;
   box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+}
+
+.form-control::placeholder {
+  color: #adb5bd;
+  font-style: italic;
+  opacity: 1;
 }
 
 /* Reference Field Dropdown */
@@ -675,6 +682,7 @@
     text-align: center;
   }
 }
+</style>
 
 
 
@@ -683,6 +691,7 @@
 <!-- CLIENT CONTROLLER -->
 <!-- ============================================ -->
 
+<script>
 api.controller = function($scope, $timeout, spUtil) {
   var c = this;
   
@@ -795,11 +804,6 @@ api.controller = function($scope, $timeout, spUtil) {
   
   // Reference field lookup
   function performReferenceLookup(searchValue) {
-    if (!searchValue || searchValue.length < 2) {
-      hideDropdown();
-      return;
-    }
-    
     var dropdown = document.getElementById('searchDropdown');
     var loading = dropdown.querySelector('.dropdown-loading');
     var results = dropdown.querySelector('.dropdown-results');
@@ -815,7 +819,7 @@ api.controller = function($scope, $timeout, spUtil) {
     c.server.get({
       action: 'lookupReference',
       search_type: c.currentSearchType,
-      search_value: searchValue
+      search_value: searchValue || ''
     }).then(function(response) {
       loading.style.display = 'none';
       currentResults = response.data.results || [];
@@ -884,14 +888,8 @@ api.controller = function($scope, $timeout, spUtil) {
   
   function showDropdown() {
     var searchInput = document.getElementById('searchInput');
-    if (searchInput.value.length >= 2 && c.currentSearchType !== 'amount') {
+    if (c.currentSearchType !== 'amount') {
       performReferenceLookup(searchInput.value);
-    } else if (searchInput.value.length === 0 && c.currentSearchType !== 'amount') {
-      // Show empty state or trigger initial lookup
-      var dropdown = document.getElementById('searchDropdown');
-      dropdown.style.display = 'block';
-      dropdownVisible = true;
-      performReferenceLookup(''); // Search with empty string to show recent/all
     }
   }
   
@@ -1060,7 +1058,7 @@ api.controller = function($scope, $timeout, spUtil) {
       searchInput.addEventListener('input', function(e) {
         clearTimeout(searchDebounce);
         searchDebounce = setTimeout(function() {
-          if (c.currentSearchType !== 'amount') {
+          if (c.currentSearchType !== 'amount' && e.target.value.length >= 2) {
             performReferenceLookup(e.target.value);
           }
         }, 300);
@@ -1159,3 +1157,4 @@ api.controller = function($scope, $timeout, spUtil) {
     updateSearchInterface();
   }
 };
+</script>
