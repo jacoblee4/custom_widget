@@ -248,7 +248,522 @@
 <!-- CSS -->
 <!-- ============================================ -->
 
-/* ============================================ */
+.authority-lookup-widget {
+  padding: 20px;
+  font-family: 'Source Sans Pro', Arial, sans-serif;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.widget-header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e8e8e8;
+}
+
+.widget-header h2 {
+  color: #333;
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.search-controls {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 20px;
+  margin-bottom: 24px;
+  max-width: 50%;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group:last-of-type {
+  margin-bottom: 0;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+  background: white;
+  transition: border-color 0.15s ease-in-out;
+  line-height: 1.5;
+  height: auto;
+  min-height: 40px;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+}
+
+.form-control::placeholder {
+  color: #adb5bd;
+  font-style: italic;
+  opacity: 1;
+}
+
+.reference-field-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.reference-input {
+  width: 100%;
+  cursor: text;
+}
+
+.reference-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ced4da;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.dropdown-loading,
+.dropdown-no-results {
+  padding: 12px;
+  text-align: center;
+  color: #6c757d;
+  font-size: 13px;
+}
+
+.dropdown-results {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.dropdown-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.15s;
+}
+
+.dropdown-item:hover,
+.dropdown-item.active {
+  background-color: #e7f3ff;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-item-primary {
+  color: #2c3e50;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.dropdown-item-secondary {
+  color: #6c757d;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.currency-wrapper {
+  position: relative;
+}
+
+.currency-symbol {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
+  font-weight: 500;
+  z-index: 1;
+}
+
+.currency-wrapper .form-control {
+  padding-left: 28px;
+}
+
+.help-text {
+  display: block;
+  color: #6c757d;
+  font-size: 12px;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.btn-search {
+  background: #3498db;
+  color: white;
+}
+
+.btn-search:hover {
+  background: #2980b9;
+}
+
+.btn-clear {
+  background: #95a5a6;
+  color: white;
+}
+
+.btn-clear:hover {
+  background: #7f8c8d;
+}
+
+.loading-container {
+  text-align: center;
+  padding: 40px;
+}
+
+.fa-spinner {
+  color: #3498db;
+}
+
+.alert {
+  padding: 12px 15px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  border: 1px solid transparent;
+}
+
+.alert-info {
+  background-color: #d9edf7;
+  border-color: #bce8f1;
+  color: #31708f;
+}
+
+.results-container {
+  margin-top: 24px;
+}
+
+.results-header {
+  margin-bottom: 16px;
+}
+
+.results-header h4 {
+  color: #2c3e50;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.results-count {
+  font-size: 14px;
+  color: #7f8c8d;
+  font-weight: normal;
+}
+
+.table-container {
+  overflow-x: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  background: white;
+  margin-bottom: 20px;
+}
+
+.limits-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.limits-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: white;
+}
+
+.section-header {
+  padding: 16px 10px;
+  font-weight: 600;
+  font-size: 13px;
+  text-align: center;
+  border-bottom: 3px solid #dee2e6;
+  position: relative;
+}
+
+.limits-table .section-header.job-info-header {
+  background: #e9ecef !important;
+  color: #495057;
+}
+
+.limits-table .section-header.non-credit-header {
+  background: #d4edda !important;
+  color: #155724;
+  border-left: 4px solid #27ae60;
+}
+
+.limits-table .section-header.credit-header {
+  background: #f8d7da !important;
+  color: #721c24;
+  border-left: 4px solid #e74c3c;
+}
+
+.header-icon {
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+.limits-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #495057;
+  padding: 10px 8px;
+  text-align: left;
+  border-bottom: 2px solid #dee2e6;
+  white-space: nowrap;
+  font-size: 12px;
+  border-right: 1px solid #e9ecef;
+}
+
+.limits-table thead tr:last-child th {
+  background: #f8f9fa !important;
+}
+
+.limits-table thead tr:last-child th.non-credit-col {
+  background: #f1f9f4 !important;
+}
+
+.limits-table thead tr:last-child th.credit-col {
+  background: #fef5f6 !important;
+}
+
+.non-credit-col {
+  background: #f1f9f4;
+}
+
+.credit-col {
+  background: #fef5f6;
+}
+
+.sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  background-color: #f8f9fa !important;
+  box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+}
+
+.limits-table tbody td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #e9ecef;
+  vertical-align: middle;
+  border-right: 1px solid #f1f3f5;
+}
+
+.limits-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.limits-table tbody tr.highlight-row {
+  background-color: #fff3cd !important;
+}
+
+.job-code-cell {
+  position: sticky;
+  left: 0;
+  z-index: 4;
+  background-color: white;
+  box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.limits-table tbody tr:hover .job-code-cell {
+  background-color: #f8f9fa;
+}
+
+.limits-table tbody tr.highlight-row .job-code-cell {
+  background-color: #fff3cd !important;
+}
+
+.job-info-cell {
+  color: #6c757d;
+  font-size: 13px;
+}
+
+.amount-cell {
+  text-align: right;
+  font-size: 13px;
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+.highlight-cell {
+  background-color: #ffc107 !important;
+  font-weight: 700 !important;
+  color: #000 !important;
+}
+
+.pagination-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  padding-top: 16px;
+}
+
+.pagination {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  gap: 5px;
+}
+
+.page-item {
+  display: inline-block;
+}
+
+.page-link {
+  display: block;
+  padding: 6px 12px;
+  color: #3498db;
+  text-decoration: none;
+  background-color: white;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.page-link:hover {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.page-item.active .page-link {
+  background-color: #3498db;
+  border-color: #3498db;
+  color: white;
+}
+
+.page-item.disabled .page-link {
+  color: #6c757d;
+  pointer-events: none;
+  cursor: not-allowed;
+  background-color: #fff;
+  border-color: #dee2e6;
+  opacity: 0.5;
+}
+
+.pagination-info {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.fa {
+  margin-right: 4px;
+}
+
+.column-filter {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.filter-label {
+  font-size: 14px;
+  color: #495057;
+  font-weight: 600;
+}
+
+.filter-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #495057;
+  user-select: none;
+}
+
+.filter-checkbox input[type="checkbox"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+.filter-checkbox:hover {
+  color: #2c3e50;
+}
+
+.hide-non-credit .section-header.non-credit-header,
+.hide-non-credit th.non-credit-col,
+.hide-non-credit td.non-credit-col {
+  display: none !important;
+}
+
+.hide-credit .section-header.credit-header,
+.hide-credit th.credit-col,
+.hide-credit td.credit-col {
+  display: none !important;
+}
+
+@media (max-width: 1200px) {
+  .search-controls {
+    max-width: 70%;
+  }
+}
+
+@media (max-width: 768px) {
+  .search-controls {
+    max-width: 100%;
+  }
+  
+  .pagination-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .pagination {
+    justify-content: center;
+  }
+  
+  .pagination-info {
+    text-align: center;
+  }
+}/* ============================================ */
 /* SIGNATURE AUTHORITY LIMITS TABLE - DESIGN 1 */
 /* ============================================ */
 
