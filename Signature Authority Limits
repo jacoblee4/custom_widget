@@ -4,8 +4,7 @@
 
 <div class="authority-lookup-widget">
   <div class="widget-header">
-    <h2>Authority Limits Lookup</h2>
-    <p class="header-subtitle">Search and view authority limits by different criteria</p>
+    <h2>Signature Authority Limits Lookup</h2>
   </div>
   
   <!-- Search Controls -->
@@ -30,6 +29,7 @@
                class="form-control reference-input" 
                placeholder="Start typing to search..."
                autocomplete="off">
+        <span class="dropdown-icon">▼</span>
         <input type="hidden" id="searchInputValue">
         <div id="searchDropdown" class="reference-dropdown" style="display: none;">
           <div class="dropdown-loading" style="display: none;">
@@ -49,11 +49,11 @@
         <label for="limitTypeSelect">Limit Type</label>
         <select id="limitTypeSelect" class="form-control">
           <optgroup label="Non-Credit Authority">
-            <option value="disbursement_ach">Disbursement - ACH</option>
-            <option value="disbursement_wire_transfer_external">Disbursement - Wire Transfer External</option>
-            <option value="disbursement_wire_transfer_internal">Disbursement - Wire Transfer Internal</option>
-            <option value="disbursement_official_checks_external">Disbursement - Official Checks External</option>
-            <option value="disbursement_official_checks_internal">Disbursement - Official Checks Internal</option>
+            <option value="disbursement_ach">ACH</option>
+            <option value="disbursement_wire_transfer_internal">Wire Transfer Internal</option>
+            <option value="disbursement_wire_transfer_external">Wire Transfer External</option>
+            <option value="disbursement_official_checks_internal">Official Checks Internal</option>
+            <option value="disbursement_official_checks_external">Official Checks External</option>
             <option value="check_cashing_on_us">Check Cashing - On-Us</option>
             <option value="check_cashing_not_on_us">Check Cashing - Not On-Us</option>
             <option value="remote_deposit">Remote Deposit</option>
@@ -61,10 +61,10 @@
             <option value="fx_wire_limits">FX Wire Limits</option>
           </optgroup>
           <optgroup label="Credit Authority">
-            <option value="overdraft_external_accounts">Overdraft - External Accounts</option>
-            <option value="overdraft_internal_accounts">Overdraft - Internal Accounts</option>
-            <option value="unavailable_funds_external_accounts">Unavailable Funds - External Accounts</option>
-            <option value="unavailable_funds_internal_accounts">Unavailable Funds - Internal Accounts</option>
+            <option value="overdraft_internal_accounts">Overdraft Internal</option>
+            <option value="overdraft_external_accounts">Overdraft External</option>
+            <option value="unavailable_funds_internal_accounts">Unavailable Funds Internal</option>
+            <option value="unavailable_funds_external_accounts">Unavailable Funds External</option>
           </optgroup>
         </select>
       </div>
@@ -72,7 +72,7 @@
         <label for="amountInput">Minimum Amount</label>
         <div class="currency-wrapper">
           <span class="currency-symbol">$</span>
-          <input type="text" id="amountInput" class="form-control" placeholder="e.g., 50000">
+          <input type="text" id="amountInput" class="form-control" placeholder="Enter a dollar amount e.g., 50,000">
         </div>
         <small class="help-text">Shows all limits from entered amount and above</small>
       </div>
@@ -120,23 +120,23 @@
             <th>Job Title</th>
             <th>Job Function</th>
             
-            <!-- Non-Credit Columns -->
+            <!-- Non-Credit Columns (Internal first, then External) -->
             <th>ACH</th>
-            <th>Wire External</th>
             <th>Wire Internal</th>
-            <th>Checks External</th>
+            <th>Wire External</th>
             <th>Checks Internal</th>
+            <th>Checks External</th>
             <th>Check Cash On-Us</th>
             <th>Check Cash Not On-Us</th>
             <th>Remote Deposit</th>
             <th>Treasury Solutions</th>
             <th>FX Wire</th>
             
-            <!-- Credit Columns -->
-            <th>Overdraft External</th>
+            <!-- Credit Columns (Internal first, then External) -->
             <th>Overdraft Internal</th>
-            <th>Unavailable External</th>
+            <th>Overdraft External</th>
             <th>Unavailable Internal</th>
+            <th>Unavailable External</th>
           </tr>
         </thead>
         <tbody>
@@ -147,50 +147,50 @@
             <td class="job-info-cell">{{limit.job_title || '-'}}</td>
             <td class="job-info-cell">{{limit.job_function || '-'}}</td>
             
-            <!-- Non-Credit Values -->
+            <!-- Non-Credit Values (Internal first, then External) -->
             <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_ach'}">
-              {{limit.disbursement_ach | currency:'$':0}}
-            </td>
-            <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_wire_transfer_external'}">
-              {{limit.disbursement_wire_transfer_external | currency:'$':0}}
+              {{c.formatAmount(limit.disbursement_ach)}}
             </td>
             <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_wire_transfer_internal'}">
-              {{limit.disbursement_wire_transfer_internal | currency:'$':0}}
+              {{c.formatAmount(limit.disbursement_wire_transfer_internal)}}
             </td>
-            <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_official_checks_external'}">
-              {{limit.disbursement_official_checks_external | currency:'$':0}}
+            <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_wire_transfer_external'}">
+              {{c.formatAmount(limit.disbursement_wire_transfer_external)}}
             </td>
             <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_official_checks_internal'}">
-              {{limit.disbursement_official_checks_internal | currency:'$':0}}
+              {{c.formatAmount(limit.disbursement_official_checks_internal)}}
+            </td>
+            <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_official_checks_external'}">
+              {{c.formatAmount(limit.disbursement_official_checks_external)}}
             </td>
             <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'check_cashing_on_us'}">
-              {{limit.check_cashing_on_us | currency:'$':0}}
+              {{c.formatAmount(limit.check_cashing_on_us)}}
             </td>
             <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'check_cashing_not_on_us'}">
-              {{limit.check_cashing_not_on_us | currency:'$':0}}
+              {{c.formatAmount(limit.check_cashing_not_on_us)}}
             </td>
             <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'remote_deposit'}">
-              {{limit.remote_deposit | currency:'$':0}}
+              {{c.formatAmount(limit.remote_deposit)}}
             </td>
             <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'treasury_solutions_company_wire_limits'}">
-              {{limit.treasury_solutions_company_wire_limits | currency:'$':0}}
+              {{c.formatAmount(limit.treasury_solutions_company_wire_limits)}}
             </td>
             <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'fx_wire_limits'}">
-              {{limit.fx_wire_limits | currency:'$':0}}
+              {{c.formatAmount(limit.fx_wire_limits)}}
             </td>
             
-            <!-- Credit Values -->
-            <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'overdraft_external_accounts'}">
-              {{limit.overdraft_external_accounts | currency:'$':0}}
-            </td>
+            <!-- Credit Values (Internal first, then External) -->
             <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'overdraft_internal_accounts'}">
-              {{limit.overdraft_internal_accounts | currency:'$':0}}
+              {{c.formatAmount(limit.overdraft_internal_accounts)}}
             </td>
-            <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'unavailable_funds_external_accounts'}">
-              {{limit.unavailable_funds_external_accounts | currency:'$':0}}
+            <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'overdraft_external_accounts'}">
+              {{c.formatAmount(limit.overdraft_external_accounts)}}
             </td>
             <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'unavailable_funds_internal_accounts'}">
-              {{limit.unavailable_funds_internal_accounts | currency:'$':0}}
+              {{c.formatAmount(limit.unavailable_funds_internal_accounts)}}
+            </td>
+            <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'unavailable_funds_external_accounts'}">
+              {{c.formatAmount(limit.unavailable_funds_external_accounts)}}
             </td>
           </tr>
         </tbody>
@@ -231,7 +231,6 @@
 <!-- CSS -->
 <!-- ============================================ -->
 
-<style>
 .authority-lookup-widget {
   padding: 20px;
   font-family: 'Source Sans Pro', Arial, sans-serif;
@@ -249,22 +248,17 @@
   color: #333;
   font-size: 20px;
   font-weight: 600;
-  margin: 0 0 8px 0;
-}
-
-.header-subtitle {
-  color: #6c757d;
-  font-size: 14px;
   margin: 0;
 }
 
-/* Search Controls */
+/* Search Controls - Reduced width */
 .search-controls {
   background: #f8f9fa;
   border: 1px solid #dee2e6;
   border-radius: 6px;
   padding: 20px;
   margin-bottom: 24px;
+  max-width: 50%;
 }
 
 .form-group {
@@ -291,6 +285,7 @@
   font-size: 14px;
   background: white;
   transition: border-color 0.15s ease-in-out;
+  cursor: pointer;
 }
 
 .form-control:focus {
@@ -307,6 +302,18 @@
 
 .reference-input {
   width: 100%;
+  padding-right: 30px;
+  cursor: pointer;
+}
+
+.dropdown-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #6c757d;
+  font-size: 12px;
 }
 
 .reference-dropdown {
@@ -644,7 +651,17 @@
 }
 
 /* Responsive */
+@media (max-width: 1200px) {
+  .search-controls {
+    max-width: 70%;
+  }
+}
+
 @media (max-width: 768px) {
+  .search-controls {
+    max-width: 100%;
+  }
+  
   .pagination-controls {
     flex-direction: column;
     align-items: stretch;
@@ -658,209 +675,6 @@
     text-align: center;
   }
 }
-</style>
-
-
-
-
-<!-- ============================================ -->
-<!-- SERVER SCRIPT -->
-<!-- ============================================ -->
-
-<script>
-(function() {
-  'use strict';
-
-  // Handle reference field lookups
-  if (input && input.action === 'lookupReference') {
-    var searchType = input.search_type;
-    var searchValue = input.search_value;
-    var results = [];
-    
-    if (searchType === 'job_code') {
-      var gr = new GlideRecord('x_banun_rbac_job_code');
-      gr.addQuery('job_code', 'CONTAINS', searchValue);
-      gr.orderBy('job_code');
-      gr.setLimit(20);
-      gr.query();
-      
-      while (gr.next()) {
-        results.push({
-          value: gr.getUniqueValue(),
-          display: gr.getValue('job_code'),
-          secondary: gr.getValue('job_description')
-        });
-      }
-      
-    } else if (searchType === 'job_title') {
-      var titleGr = new GlideRecord('x_banun_rbac_job_code');
-      titleGr.addQuery('job_description', 'CONTAINS', searchValue);
-      titleGr.orderBy('job_description');
-      titleGr.setLimit(20);
-      titleGr.query();
-      
-      while (titleGr.next()) {
-        results.push({
-          value: titleGr.getValue('job_description'),
-          display: titleGr.getValue('job_description'),
-          secondary: titleGr.getValue('job_code')
-        });
-      }
-      
-    } else if (searchType === 'job_function') {
-      var funcGr = new GlideRecord('x_banun_rbac_job_code');
-      funcGr.addQuery('job_function_description', 'CONTAINS', searchValue);
-      funcGr.addQuery('job_function_description', '!=', '');
-      funcGr.orderBy('job_function_description');
-      funcGr.setLimit(20);
-      funcGr.query();
-      
-      var uniqueFunctions = {};
-      while (funcGr.next()) {
-        var funcValue = funcGr.getValue('job_function_description');
-        if (funcValue && !uniqueFunctions[funcValue]) {
-          uniqueFunctions[funcValue] = true;
-          results.push({
-            value: funcValue,
-            display: funcValue,
-            secondary: ''
-          });
-        }
-      }
-      
-    } else if (searchType === 'employee') {
-      var userGr = new GlideRecord('sys_user');
-      userGr.addQuery('name', 'CONTAINS', searchValue);
-      userGr.addQuery('active', true);
-      userGr.orderBy('name');
-      userGr.setLimit(20);
-      userGr.query();
-      
-      while (userGr.next()) {
-        results.push({
-          value: userGr.getUniqueValue(),
-          display: userGr.getValue('name'),
-          secondary: userGr.getValue('title') || userGr.getValue('u_job_code')
-        });
-      }
-    }
-    
-    data.results = results;
-    return;
-  }
-
-  if (input && input.action === 'searchLimits') {
-    var searchType = input.search_type;
-    var searchValue = input.search_value;
-    var limitType = input.limit_type;
-    var minAmount = input.min_amount;
-    
-    var limits = [];
-    
-    var gr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
-    gr.addQuery('active', true);
-    
-    // Apply filters based on search type
-    if (searchType === 'job_code' && searchValue) {
-      gr.addQuery('job_code', searchValue);
-      
-    } else if (searchType === 'job_title' && searchValue) {
-      gr.addQuery('job_code.job_description', searchValue);
-      
-    } else if (searchType === 'job_function' && searchValue) {
-      gr.addQuery('job_code.job_function_description', searchValue);
-      
-    } else if (searchType === 'employee' && searchValue) {
-      // Get the employee's job code
-      var userGr = new GlideRecord('sys_user');
-      if (userGr.get(searchValue)) {
-        var userJobCode = userGr.getValue('u_job_code');
-        if (userJobCode) {
-          // Find job code sys_id that matches this job code string
-          var jobCodeGr = new GlideRecord('x_banun_rbac_job_code');
-          jobCodeGr.addQuery('job_code', userJobCode);
-          jobCodeGr.query();
-          
-          if (jobCodeGr.next()) {
-            gr.addQuery('job_code', jobCodeGr.getUniqueValue());
-          } else {
-            // No matching job code found
-            data.limits = [];
-            return;
-          }
-        } else {
-          // Employee has no job code
-          data.limits = [];
-          return;
-        }
-      } else {
-        data.limits = [];
-        return;
-      }
-      
-    } else if (searchType === 'amount' && limitType && minAmount) {
-      // Search by limit amount - find all records where the specified field is >= minAmount
-      var minAmountNum = parseFloat(minAmount);
-      if (!isNaN(minAmountNum) && minAmountNum >= 0) {
-        gr.addQuery(limitType, '>=', minAmountNum);
-      }
-    }
-    
-    gr.orderBy('job_code.job_code');
-    gr.query();
-    
-    while (gr.next()) {
-      // Get the job code reference values
-      var jobCodeSysId = gr.getValue('job_code');
-      var jobCodeDisplay = '';
-      var jobTitle = '';
-      var jobFunction = '';
-      
-      // Query the job code table to get the actual values
-      var jobCodeGr = new GlideRecord('x_banun_rbac_job_code');
-      if (jobCodeGr.get(jobCodeSysId)) {
-        jobCodeDisplay = jobCodeGr.getValue('job_code') || '';
-        jobTitle = jobCodeGr.getValue('job_description') || '';
-        jobFunction = jobCodeGr.getValue('job_function_description') || '';
-      }
-      
-      var limit = {
-        sys_id: gr.getUniqueValue(),
-        job_code_sys_id: jobCodeSysId,
-        job_code_display: jobCodeDisplay,
-        job_title: jobTitle,
-        job_function: jobFunction,
-        
-        // Non-credit limits
-        disbursement_ach: gr.getValue('disbursement_ach') || '0',
-        disbursement_wire_transfer_external: gr.getValue('disbursement_wire_transfer_external') || '0',
-        disbursement_wire_transfer_internal: gr.getValue('disbursement_wire_transfer_internal') || '0',
-        disbursement_official_checks_external: gr.getValue('disbursement_official_checks_external') || '0',
-        disbursement_official_checks_internal: gr.getValue('disbursement_official_checks_internal') || '0',
-        check_cashing_on_us: gr.getValue('check_cashing_on_us') || '0',
-        check_cashing_not_on_us: gr.getValue('check_cashing_not_on_us') || '0',
-        remote_deposit: gr.getValue('remote_deposit') || '0',
-        treasury_solutions_company_wire_limits: gr.getValue('treasury_solutions_company_wire_limits') || '0',
-        fx_wire_limits: gr.getValue('fx_wire_limits') || '0',
-        
-        // Credit limits
-        overdraft_external_accounts: gr.getValue('overdraft_external_accounts') || '0',
-        overdraft_internal_accounts: gr.getValue('overdraft_internal_accounts') || '0',
-        unavailable_funds_external_accounts: gr.getValue('unavailable_funds_external_accounts') || '0',
-        unavailable_funds_internal_accounts: gr.getValue('unavailable_funds_internal_accounts') || '0',
-        
-        // For highlighting in amount searches
-        highlightField: (searchType === 'amount') ? limitType : '',
-        highlighted: false
-      };
-      
-      limits.push(limit);
-    }
-    
-    data.limits = limits;
-  }
-})();
-</script>
 
 
 
@@ -869,7 +683,6 @@
 <!-- CLIENT CONTROLLER -->
 <!-- ============================================ -->
 
-<script>
 api.controller = function($scope, $timeout, spUtil) {
   var c = this;
   
@@ -899,7 +712,17 @@ api.controller = function($scope, $timeout, spUtil) {
     }, 500);
   };
   
-  // Format currency for display
+  // Format amount for display - show dash for zero values
+  c.formatAmount = function(value) {
+    if (!value || value === '0' || parseFloat(value) === 0) {
+      return '-';
+    }
+    var numValue = parseFloat(value);
+    if (isNaN(numValue)) return '-';
+    return '$' + numValue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  };
+  
+  // Format currency for input
   c.formatCurrency = function(value) {
     if (!value) return '';
     var numStr = value.toString().replace(/[^\d]/g, '');
@@ -1046,6 +869,9 @@ api.controller = function($scope, $timeout, spUtil) {
       searchInputValue.value = result.value;
       
       hideDropdown();
+      
+      // Auto-search after selection
+      performSearch();
     }
   }
   
@@ -1054,6 +880,19 @@ api.controller = function($scope, $timeout, spUtil) {
     dropdown.style.display = 'none';
     dropdownVisible = false;
     selectedIndex = -1;
+  }
+  
+  function showDropdown() {
+    var searchInput = document.getElementById('searchInput');
+    if (searchInput.value.length >= 2 && c.currentSearchType !== 'amount') {
+      performReferenceLookup(searchInput.value);
+    } else if (searchInput.value.length === 0 && c.currentSearchType !== 'amount') {
+      // Show empty state or trigger initial lookup
+      var dropdown = document.getElementById('searchDropdown');
+      dropdown.style.display = 'block';
+      dropdownVisible = true;
+      performReferenceLookup(''); // Search with empty string to show recent/all
+    }
   }
   
   function updateDropdownSelection(direction) {
@@ -1211,6 +1050,13 @@ api.controller = function($scope, $timeout, spUtil) {
     var searchDebounce;
     
     if (searchInput) {
+      // Handle clicking on the input to show dropdown
+      searchInput.addEventListener('click', function() {
+        if (c.currentSearchType !== 'amount') {
+          showDropdown();
+        }
+      });
+      
       searchInput.addEventListener('input', function(e) {
         clearTimeout(searchDebounce);
         searchDebounce = setTimeout(function() {
@@ -1242,8 +1088,8 @@ api.controller = function($scope, $timeout, spUtil) {
       });
       
       searchInput.addEventListener('focus', function() {
-        if (this.value.length >= 2 && c.currentSearchType !== 'amount') {
-          performReferenceLookup(this.value);
+        if (c.currentSearchType !== 'amount') {
+          showDropdown();
         }
       });
     }
@@ -1313,4 +1159,3 @@ api.controller = function($scope, $timeout, spUtil) {
     updateSearchInterface();
   }
 };
-</script>
