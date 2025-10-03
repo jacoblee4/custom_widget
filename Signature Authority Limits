@@ -1197,23 +1197,23 @@ api.controller = function($scope, $timeout, spUtil) {
     
     // Call server to get limits
     c.server.get({
-  action: 'searchLimits',
-  search_type: searchType,
-  search_value: searchValue,
-  limit_type: limitType,
-  min_amount: minAmount
-}).then(function(response) {
-  $timeout(function() {
-    c.limits = response.data.limits || [];
-    c.currentPage = 1;
-    c.totalPages = Math.ceil(c.limits.length / c.pageSize);
-    c.loading = false;
-    
-    // Re-setup column filters after table renders
-    $timeout(function() {
-      setupColumnFilters();
-    }, 100);
-  });
+      action: 'searchLimits',
+      search_type: searchType,
+      search_value: searchValue,
+      limit_type: limitType,
+      min_amount: minAmount
+    }).then(function(response) {
+      $timeout(function() {
+        c.limits = response.data.limits || [];
+        c.currentPage = 1;
+        c.totalPages = Math.ceil(c.limits.length / c.pageSize);
+        c.loading = false;
+        
+        // Re-setup column filters after table renders
+        $timeout(function() {
+          setupColumnFilters();
+        }, 100);
+      });
     }).catch(function(error) {
       console.error('Error loading limits:', error);
       spUtil.addErrorMessage('Failed to load authority limits');
@@ -1222,30 +1222,30 @@ api.controller = function($scope, $timeout, spUtil) {
     });
   }
   
-// Clear search
-function clearSearch() {
-  var searchInput = document.getElementById('searchInput');
-  var searchInputValue = document.getElementById('searchInputValue');
-  var amountInput = document.getElementById('amountInput');
-  
-  if (searchInput) searchInput.value = '';
-  if (searchInputValue) searchInputValue.value = '';
-  if (amountInput) amountInput.value = '';
-  
-  c.selectedReferenceValue = null;
-  c.selectedReferenceDisplay = '';
-  
-  // Don't reset search type - keep current selection
-  // If on amount search, just clear the results without error
-  if (c.currentSearchType === 'amount') {
-    c.limits = [];
-    c.searchPerformed = false;
-    c.loading = false;
-  } else {
-    // For other search types, perform search to show all limits
-    performSearch();
+  // Clear search
+  function clearSearch() {
+    var searchInput = document.getElementById('searchInput');
+    var searchInputValue = document.getElementById('searchInputValue');
+    var amountInput = document.getElementById('amountInput');
+    
+    if (searchInput) searchInput.value = '';
+    if (searchInputValue) searchInputValue.value = '';
+    if (amountInput) amountInput.value = '';
+    
+    c.selectedReferenceValue = null;
+    c.selectedReferenceDisplay = '';
+    
+    // Don't reset search type - keep current selection
+    // If on amount search, just clear the results without error
+    if (c.currentSearchType === 'amount') {
+      c.limits = [];
+      c.searchPerformed = false;
+      c.loading = false;
+    } else {
+      // For other search types, perform search to show all limits
+      performSearch();
+    }
   }
-}
   
   // Update search interface based on selected type
   function updateSearchInterface() {
@@ -1296,158 +1296,149 @@ function clearSearch() {
     }
   }
   
-  // Initialize widget
-function initializeWidget() {
-  // Setup search type dropdown
-  var searchTypeSelect = document.getElementById('searchTypeSelect');
-  if (searchTypeSelect) {
-    searchTypeSelect.addEventListener('change', function() {
-      c.currentSearchType = this.value;
-      updateSearchInterface();
-    });
-  }
-  
-  // Setup reference field input
-  var searchInput = document.getElementById('searchInput');
-  var searchDebounce;
-  
-  if (searchInput) {
-    searchInput.addEventListener('input', function(e) {
-      clearTimeout(searchDebounce);
-      searchDebounce = setTimeout(function() {
-        if (c.currentSearchType !== 'amount' && e.target.value.length >= 2) {
-          performReferenceLookup(e.target.value);
-        } else if (e.target.value.length < 2) {
-          hideDropdown();
-        }
-      }, 300);
-    });
+  // Setup column filter checkboxes - MOVED TO CONTROLLER LEVEL
+  function setupColumnFilters() {
+    var showNonCreditCheckbox = document.getElementById('showNonCredit');
+    var showCreditCheckbox = document.getElementById('showCredit');
+    var tableContainer = document.querySelector('.table-container');
     
-    searchInput.addEventListener('keydown', function(e) {
-      if (dropdownVisible) {
-        if (e.key === 'ArrowDown') {
-          e.preventDefault();
-          updateDropdownSelection('down');
-        } else if (e.key === 'ArrowUp') {
-          e.preventDefault();
-          updateDropdownSelection('up');
-        } else if (e.key === 'Enter') {
-          e.preventDefault();
-          if (selectedIndex >= 0) {
-            selectDropdownItem(selectedIndex);
-          }
-        } else if (e.key === 'Escape') {
-          hideDropdown();
+    if (showNonCreditCheckbox && tableContainer) {
+      showNonCreditCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+          tableContainer.classList.remove('hide-non-credit');
+        } else {
+          tableContainer.classList.add('hide-non-credit');
         }
-      } else if (e.key === 'Enter') {
-        performSearch();
-      }
-    });
-  }
-  
-  // Click outside to close dropdown
-  document.addEventListener('click', function(e) {
-    var refWrapper = document.querySelector('.reference-field-wrapper');
-    if (refWrapper && !refWrapper.contains(e.target)) {
-      hideDropdown();
+      });
     }
-  });
-  
-  // Setup search button
-  var searchButton = document.getElementById('searchButton');
-  if (searchButton) {
-    searchButton.addEventListener('click', function() {
-      performSearch();
-    });
+    
+    if (showCreditCheckbox && tableContainer) {
+      showCreditCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+          tableContainer.classList.remove('hide-credit');
+        } else {
+          tableContainer.classList.add('hide-credit');
+        }
+      });
+    }
   }
   
-  // Setup clear button
-  var clearButton = document.getElementById('clearButton');
-  if (clearButton) {
-    clearButton.addEventListener('click', function() {
-      clearSearch();
-    });
-  }
-  
-  // Setup amount input
-  var amountInput = document.getElementById('amountInput');
-  if (amountInput) {
-    // Format currency as user types
-    var isUpdating = false;
-    amountInput.addEventListener('input', function(event) {
-      if (isUpdating) return;
-      isUpdating = true;
+  // Initialize widget
+  function initializeWidget() {
+    // Setup search type dropdown
+    var searchTypeSelect = document.getElementById('searchTypeSelect');
+    if (searchTypeSelect) {
+      searchTypeSelect.addEventListener('change', function() {
+        c.currentSearchType = this.value;
+        updateSearchInterface();
+      });
+    }
+    
+    // Setup reference field input
+    var searchInput = document.getElementById('searchInput');
+    var searchDebounce;
+    
+    if (searchInput) {
+      searchInput.addEventListener('input', function(e) {
+        clearTimeout(searchDebounce);
+        searchDebounce = setTimeout(function() {
+          if (c.currentSearchType !== 'amount' && e.target.value.length >= 2) {
+            performReferenceLookup(e.target.value);
+          } else if (e.target.value.length < 2) {
+            hideDropdown();
+          }
+        }, 300);
+      });
       
-      var cursorPosition = event.target.selectionStart;
-      var oldValue = event.target.value;
-      var oldLength = oldValue.length;
-      var formattedValue = c.formatCurrency(oldValue);
-      
-      event.target.value = formattedValue;
-      
-      var newLength = formattedValue.length;
-      var lengthDiff = newLength - oldLength;
-      var newCursorPosition = Math.max(0, cursorPosition + lengthDiff);
-      setTimeout(() => {
-        event.target.setSelectionRange(newCursorPosition, newCursorPosition);
-      }, 0);
-      
-      isUpdating = false;
+      searchInput.addEventListener('keydown', function(e) {
+        if (dropdownVisible) {
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            updateDropdownSelection('down');
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            updateDropdownSelection('up');
+          } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (selectedIndex >= 0) {
+              selectDropdownItem(selectedIndex);
+            }
+          } else if (e.key === 'Escape') {
+            hideDropdown();
+          }
+        } else if (e.key === 'Enter') {
+          performSearch();
+        }
+      });
+    }
+    
+    // Click outside to close dropdown
+    document.addEventListener('click', function(e) {
+      var refWrapper = document.querySelector('.reference-field-wrapper');
+      if (refWrapper && !refWrapper.contains(e.target)) {
+        hideDropdown();
+      }
     });
     
-    amountInput.addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') {
+    // Setup search button
+    var searchButton = document.getElementById('searchButton');
+    if (searchButton) {
+      searchButton.addEventListener('click', function() {
         performSearch();
-      }
-      // Prevent decimal point entry
-      if (e.key === '.' || e.key === ',') {
-        e.preventDefault();
-      }
-    });
+      });
+    }
+    
+    // Setup clear button
+    var clearButton = document.getElementById('clearButton');
+    if (clearButton) {
+      clearButton.addEventListener('click', function() {
+        clearSearch();
+      });
+    }
+    
+    // Setup amount input
+    var amountInput = document.getElementById('amountInput');
+    if (amountInput) {
+      // Format currency as user types
+      var isUpdating = false;
+      amountInput.addEventListener('input', function(event) {
+        if (isUpdating) return;
+        isUpdating = true;
+        
+        var cursorPosition = event.target.selectionStart;
+        var oldValue = event.target.value;
+        var oldLength = oldValue.length;
+        var formattedValue = c.formatCurrency(oldValue);
+        
+        event.target.value = formattedValue;
+        
+        var newLength = formattedValue.length;
+        var lengthDiff = newLength - oldLength;
+        var newCursorPosition = Math.max(0, cursorPosition + lengthDiff);
+        setTimeout(() => {
+          event.target.setSelectionRange(newCursorPosition, newCursorPosition);
+        }, 0);
+        
+        isUpdating = false;
+      });
+      
+      amountInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          performSearch();
+        }
+        // Prevent decimal point entry
+        if (e.key === '.' || e.key === ',') {
+          e.preventDefault();
+        }
+      });
+    }
+    
+    // Setup column filter checkboxes - use setTimeout to ensure table exists
+    $timeout(function() {
+      setupColumnFilters();
+    }, 1000);
+    
+    // Initialize interface
+    updateSearchInterface();
   }
-  
-  // Setup column filter checkboxes - use setTimeout to ensure table exists
-  $timeout(function() {
-    setupColumnFilters();
-  }, 1000);
-  
-  // Initialize interface
-  updateSearchInterface();
-}
-
-// Setup column filter checkboxes - use setTimeout to ensure table exists
-  $timeout(function() {
-    setupColumnFilters();
-  }, 1000);
-  
-  // Initialize interface
-  updateSearchInterface();
-}
-
-// Setup column filter checkboxes (separate function)
-function setupColumnFilters() {
-  var showNonCreditCheckbox = document.getElementById('showNonCredit');
-  var showCreditCheckbox = document.getElementById('showCredit');
-  var tableContainer = document.querySelector('.table-container');
-  
-  if (showNonCreditCheckbox && tableContainer) {
-    showNonCreditCheckbox.addEventListener('change', function() {
-      if (this.checked) {
-        tableContainer.classList.remove('hide-non-credit');
-      } else {
-        tableContainer.classList.add('hide-non-credit');
-      }
-    });
-  }
-  
-  if (showCreditCheckbox && tableContainer) {
-    showCreditCheckbox.addEventListener('change', function() {
-      if (this.checked) {
-        tableContainer.classList.remove('hide-credit');
-      } else {
-        tableContainer.classList.add('hide-credit');
-      }
-    });
-  }
-}
 };
