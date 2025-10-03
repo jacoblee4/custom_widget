@@ -1235,14 +1235,8 @@ function clearSearch() {
   c.selectedReferenceValue = null;
   c.selectedReferenceDisplay = '';
   
-  // Always clear the limits table and reset search state
-  $timeout(function() {
-    c.limits = [];
-    c.searchPerformed = false;
-    c.loading = false;
-    c.currentPage = 1;
-    c.totalPages = 1;
-  });
+  // Perform search to show all limits (like initial load)
+  performSearch();
 }
   
   // Update search interface based on selected type
