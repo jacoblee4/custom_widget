@@ -1394,8 +1394,6 @@ function clearSearch() {
       });
     }
     
-    // Initialize interface
-    updateSearchInterface();
 // Setup column filter checkboxes
     var showNonCreditCheckbox = document.getElementById('showNonCredit');
     var showCreditCheckbox = document.getElementById('showCredit');
@@ -1423,8 +1421,5 @@ function clearSearch() {
     
     // Initialize interface
     updateSearchInterface();
-  }
-};
-
   }
 };
