@@ -287,6 +287,9 @@
   background: white;
   transition: border-color 0.15s ease-in-out;
   cursor: pointer;
+  line-height: 1.5;
+  height: auto;
+  min-height: 40px;
 }
 
 .form-control:focus {
@@ -688,10 +691,223 @@
 
 
 <!-- ============================================ -->
+<!-- SERVER SCRIPT -->
+<!-- ============================================ -->
+
+(function() {
+  'use strict';
+
+  // Handle reference field lookups
+  if (input && input.action === 'lookupReference') {
+    var searchType = input.search_type;
+    var searchValue = input.search_value;
+    var results = [];
+    
+    if (searchType === 'job_code') {
+      var gr = new GlideRecord('x_banun_rbac_job_code');
+      gr.addQuery('job_code', 'CONTAINS', searchValue);
+      gr.orderBy('job_code');
+      gr.setLimit(20);
+      gr.query();
+      
+      while (gr.next()) {
+        results.push({
+          value: gr.getUniqueValue(),
+          display: gr.getValue('job_code'),
+          secondary: gr.getValue('job_description')
+        });
+      }
+      
+    } else if (searchType === 'job_title') {
+      var titleGr = new GlideRecord('x_banun_rbac_job_code');
+      titleGr.addQuery('job_description', 'CONTAINS', searchValue);
+      titleGr.orderBy('job_description');
+      titleGr.setLimit(20);
+      titleGr.query();
+      
+      while (titleGr.next()) {
+        results.push({
+          value: titleGr.getValue('job_description'),
+          display: titleGr.getValue('job_description'),
+          secondary: titleGr.getValue('job_code')
+        });
+      }
+      
+    } else if (searchType === 'job_function') {
+      var funcGr = new GlideRecord('x_banun_rbac_job_code');
+      funcGr.addQuery('job_function_description', 'CONTAINS', searchValue);
+      funcGr.addQuery('job_function_description', '!=', '');
+      funcGr.orderBy('job_function_description');
+      funcGr.setLimit(20);
+      funcGr.query();
+      
+      var uniqueFunctions = {};
+      while (funcGr.next()) {
+        var funcValue = funcGr.getValue('job_function_description');
+        if (funcValue && !uniqueFunctions[funcValue]) {
+          uniqueFunctions[funcValue] = true;
+          results.push({
+            value: funcValue,
+            display: funcValue,
+            secondary: ''
+          });
+        }
+      }
+      
+    } else if (searchType === 'employee') {
+      var userGr = new GlideRecord('sys_user');
+      userGr.addQuery('name', 'CONTAINS', searchValue);
+      userGr.addQuery('active', true);
+      userGr.orderBy('name');
+      userGr.setLimit(20);
+      userGr.query();
+      
+      while (userGr.next()) {
+        // Get the user's job code
+        var userJobCode = userGr.getValue('u_job_code') || '';
+        var jobTitle = userGr.getValue('title') || '';
+        
+        // Build secondary text with job title and job code
+        var secondaryText = '';
+        if (jobTitle && userJobCode) {
+          secondaryText = jobTitle + ' - ' + userJobCode;
+        } else if (jobTitle) {
+          secondaryText = jobTitle;
+        } else if (userJobCode) {
+          secondaryText = userJobCode;
+        }
+        
+        results.push({
+          value: userGr.getUniqueValue(),
+          display: userGr.getValue('name'),
+          secondary: secondaryText
+        });
+      }
+    }
+    
+    data.results = results;
+    return;
+  }
+
+  if (input && input.action === 'searchLimits') {
+    var searchType = input.search_type;
+    var searchValue = input.search_value;
+    var limitType = input.limit_type;
+    var minAmount = input.min_amount;
+    
+    var limits = [];
+    
+    var gr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
+    gr.addQuery('active', true);
+    
+    // Apply filters based on search type
+    if (searchType === 'job_code' && searchValue) {
+      gr.addQuery('job_code', searchValue);
+      
+    } else if (searchType === 'job_title' && searchValue) {
+      gr.addQuery('job_code.job_description', searchValue);
+      
+    } else if (searchType === 'job_function' && searchValue) {
+      gr.addQuery('job_code.job_function_description', searchValue);
+      
+    } else if (searchType === 'employee' && searchValue) {
+      // Get the employee's job code
+      var userGr = new GlideRecord('sys_user');
+      if (userGr.get(searchValue)) {
+        var userJobCode = userGr.getValue('u_job_code');
+        if (userJobCode) {
+          // Find job code sys_id that matches this job code string
+          var jobCodeGr = new GlideRecord('x_banun_rbac_job_code');
+          jobCodeGr.addQuery('job_code', userJobCode);
+          jobCodeGr.query();
+          
+          if (jobCodeGr.next()) {
+            gr.addQuery('job_code', jobCodeGr.getUniqueValue());
+          } else {
+            // No matching job code found
+            data.limits = [];
+            return;
+          }
+        } else {
+          // Employee has no job code
+          data.limits = [];
+          return;
+        }
+      } else {
+        data.limits = [];
+        return;
+      }
+      
+    } else if (searchType === 'amount' && limitType && minAmount) {
+      // Search by limit amount - find all records where the specified field is >= minAmount
+      var minAmountNum = parseFloat(minAmount);
+      if (!isNaN(minAmountNum) && minAmountNum >= 0) {
+        gr.addQuery(limitType, '>=', minAmountNum);
+      }
+    }
+    
+    gr.orderBy('job_code.job_code');
+    gr.query();
+    
+    while (gr.next()) {
+      // Get the job code reference values
+      var jobCodeSysId = gr.getValue('job_code');
+      var jobCodeDisplay = '';
+      var jobTitle = '';
+      var jobFunction = '';
+      
+      // Query the job code table to get the actual values
+      var jobCodeGr = new GlideRecord('x_banun_rbac_job_code');
+      if (jobCodeGr.get(jobCodeSysId)) {
+        jobCodeDisplay = jobCodeGr.getValue('job_code') || '';
+        jobTitle = jobCodeGr.getValue('job_description') || '';
+        jobFunction = jobCodeGr.getValue('job_function_description') || '';
+      }
+      
+      var limit = {
+        sys_id: gr.getUniqueValue(),
+        job_code_sys_id: jobCodeSysId,
+        job_code_display: jobCodeDisplay,
+        job_title: jobTitle,
+        job_function: jobFunction,
+        
+        // Non-credit limits
+        disbursement_ach: gr.getValue('disbursement_ach') || '0',
+        disbursement_wire_transfer_external: gr.getValue('disbursement_wire_transfer_external') || '0',
+        disbursement_wire_transfer_internal: gr.getValue('disbursement_wire_transfer_internal') || '0',
+        disbursement_official_checks_external: gr.getValue('disbursement_official_checks_external') || '0',
+        disbursement_official_checks_internal: gr.getValue('disbursement_official_checks_internal') || '0',
+        check_cashing_on_us: gr.getValue('check_cashing_on_us') || '0',
+        check_cashing_not_on_us: gr.getValue('check_cashing_not_on_us') || '0',
+        remote_deposit: gr.getValue('remote_deposit') || '0',
+        treasury_solutions_company_wire_limits: gr.getValue('treasury_solutions_company_wire_limits') || '0',
+        fx_wire_limits: gr.getValue('fx_wire_limits') || '0',
+        
+        // Credit limits
+        overdraft_external_accounts: gr.getValue('overdraft_external_accounts') || '0',
+        overdraft_internal_accounts: gr.getValue('overdraft_internal_accounts') || '0',
+        unavailable_funds_external_accounts: gr.getValue('unavailable_funds_external_accounts') || '0',
+        unavailable_funds_internal_accounts: gr.getValue('unavailable_funds_internal_accounts') || '0',
+        
+        // For highlighting in amount searches
+        highlightField: (searchType === 'amount') ? limitType : '',
+        highlighted: false
+      };
+      
+      limits.push(limit);
+    }
+    
+    data.limits = limits;
+  }
+})();
+
+
+
+
+<!-- ============================================ -->
 <!-- CLIENT CONTROLLER -->
 <!-- ============================================ -->
 
-<script>
 api.controller = function($scope, $timeout, spUtil) {
   var c = this;
   
@@ -804,6 +1020,11 @@ api.controller = function($scope, $timeout, spUtil) {
   
   // Reference field lookup
   function performReferenceLookup(searchValue) {
+    if (!searchValue || searchValue.length < 2) {
+      hideDropdown();
+      return;
+    }
+    
     var dropdown = document.getElementById('searchDropdown');
     var loading = dropdown.querySelector('.dropdown-loading');
     var results = dropdown.querySelector('.dropdown-results');
@@ -1048,18 +1269,15 @@ api.controller = function($scope, $timeout, spUtil) {
     var searchDebounce;
     
     if (searchInput) {
-      // Handle clicking on the input to show dropdown
-      searchInput.addEventListener('click', function() {
-        if (c.currentSearchType !== 'amount') {
-          showDropdown();
-        }
-      });
+      // Remove click handler - only show dropdown when typing
       
       searchInput.addEventListener('input', function(e) {
         clearTimeout(searchDebounce);
         searchDebounce = setTimeout(function() {
           if (c.currentSearchType !== 'amount' && e.target.value.length >= 2) {
             performReferenceLookup(e.target.value);
+          } else if (e.target.value.length < 2) {
+            hideDropdown();
           }
         }, 300);
       });
@@ -1086,9 +1304,7 @@ api.controller = function($scope, $timeout, spUtil) {
       });
       
       searchInput.addEventListener('focus', function() {
-        if (c.currentSearchType !== 'amount') {
-          showDropdown();
-        }
+        // Don't show dropdown on focus - only when typing
       });
     }
     
@@ -1157,4 +1373,3 @@ api.controller = function($scope, $timeout, spUtil) {
     updateSearchInterface();
   }
 };
-</script>
