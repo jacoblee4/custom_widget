@@ -103,95 +103,108 @@
         Authority Limits
         <span class="results-count">({{c.limits.length}} total)</span>
       </h4>
+
+
+<div class="column-filter">
+      <span class="filter-label">Show Columns:</span>
+      <label class="filter-checkbox">
+        <input type="checkbox" id="showNonCredit" checked>
+        <span>Non-Credit Authority</span>
+      </label>
+      <label class="filter-checkbox">
+        <input type="checkbox" id="showCredit" checked>
+        <span>Credit Authority</span>
+      </label>
+    </div>
     </div>
     
     <div class="table-container">
       <table class="limits-table">
         <thead>
           <tr>
-            <th colspan="3" class="section-header">Job Information</th>
-            <th colspan="10" class="section-header">Non-Credit Authority</th>
-            <th colspan="4" class="section-header">Credit Authority</th>
-          </tr>
+  <th colspan="3" class="section-header">Job Information</th>
+  <th colspan="10" class="section-header non-credit-col">Non-Credit Authority</th>
+  <th colspan="4" class="section-header credit-col">Credit Authority</th>
+</tr>
           <tr>
-            <!-- Job Info Columns -->
-            <th class="sticky-col">Job Code</th>
-            <th>Job Title</th>
-            <th>Job Function</th>
-            
-            <!-- Non-Credit Columns (Internal first, then External) -->
-            <th>ACH</th>
-            <th>Wire Internal</th>
-            <th>Wire External</th>
-            <th>Checks Internal</th>
-            <th>Checks External</th>
-            <th>Check Cash On-Us</th>
-            <th>Check Cash Not On-Us</th>
-            <th>Remote Deposit</th>
-            <th>Treasury Solutions</th>
-            <th>FX Wire</th>
-            
-            <!-- Credit Columns (Internal first, then External) -->
-            <th>Overdraft Internal</th>
-            <th>Overdraft External</th>
-            <th>Unavailable Internal</th>
-            <th>Unavailable External</th>
-          </tr>
+  <!-- Job Info Columns -->
+  <th class="sticky-col">Job Code</th>
+  <th>Job Title</th>
+  <th>Job Function</th>
+  
+  <!-- Non-Credit Columns (Internal first, then External) -->
+  <th class="non-credit-col">ACH</th>
+  <th class="non-credit-col">Wire Internal</th>
+  <th class="non-credit-col">Wire External</th>
+  <th class="non-credit-col">Checks Internal</th>
+  <th class="non-credit-col">Checks External</th>
+  <th class="non-credit-col">Check Cash On-Us</th>
+  <th class="non-credit-col">Check Cash Not On-Us</th>
+  <th class="non-credit-col">Remote Deposit</th>
+  <th class="non-credit-col">Treasury Solutions</th>
+  <th class="non-credit-col">FX Wire</th>
+  
+  <!-- Credit Columns (Internal first, then External) -->
+  <th class="credit-col">Overdraft Internal</th>
+  <th class="credit-col">Overdraft External</th>
+  <th class="credit-col">Unavailable Internal</th>
+  <th class="credit-col">Unavailable External</th>
+</tr>
         </thead>
         <tbody>
-          <tr ng-repeat="limit in c.getCurrentPageLimits()" ng-class="{'highlight-row': limit.highlighted}">
-            <td class="sticky-col job-code-cell">
-              <strong>{{limit.job_code_display}}</strong>
-            </td>
-            <td class="job-info-cell">{{limit.job_title || '-'}}</td>
-            <td class="job-info-cell">{{limit.job_function || '-'}}</td>
-            
-            <!-- Non-Credit Values (Internal first, then External) -->
-            <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_ach'}">
-              {{c.formatAmount(limit.disbursement_ach)}}
-            </td>
-            <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_wire_transfer_internal'}">
-              {{c.formatAmount(limit.disbursement_wire_transfer_internal)}}
-            </td>
-            <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_wire_transfer_external'}">
-              {{c.formatAmount(limit.disbursement_wire_transfer_external)}}
-            </td>
-            <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_official_checks_internal'}">
-              {{c.formatAmount(limit.disbursement_official_checks_internal)}}
-            </td>
-            <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_official_checks_external'}">
-              {{c.formatAmount(limit.disbursement_official_checks_external)}}
-            </td>
-            <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'check_cashing_on_us'}">
-              {{c.formatAmount(limit.check_cashing_on_us)}}
-            </td>
-            <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'check_cashing_not_on_us'}">
-              {{c.formatAmount(limit.check_cashing_not_on_us)}}
-            </td>
-            <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'remote_deposit'}">
-              {{c.formatAmount(limit.remote_deposit)}}
-            </td>
-            <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'treasury_solutions_company_wire_limits'}">
-              {{c.formatAmount(limit.treasury_solutions_company_wire_limits)}}
-            </td>
-            <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'fx_wire_limits'}">
-              {{c.formatAmount(limit.fx_wire_limits)}}
-            </td>
-            
-            <!-- Credit Values (Internal first, then External) -->
-            <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'overdraft_internal_accounts'}">
-              {{c.formatAmount(limit.overdraft_internal_accounts)}}
-            </td>
-            <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'overdraft_external_accounts'}">
-              {{c.formatAmount(limit.overdraft_external_accounts)}}
-            </td>
-            <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'unavailable_funds_internal_accounts'}">
-              {{c.formatAmount(limit.unavailable_funds_internal_accounts)}}
-            </td>
-            <td class="amount-cell" ng-class="{'highlight-cell': limit.highlightField === 'unavailable_funds_external_accounts'}">
-              {{c.formatAmount(limit.unavailable_funds_external_accounts)}}
-            </td>
-          </tr>
+         <tr ng-repeat="limit in c.getCurrentPageLimits()" ng-class="{'highlight-row': limit.highlighted}">
+  <td class="sticky-col job-code-cell">
+    <strong>{{limit.job_code_display}}</strong>
+  </td>
+  <td class="job-info-cell">{{limit.job_title || '-'}}</td>
+  <td class="job-info-cell">{{limit.job_function || '-'}}</td>
+  
+  <!-- Non-Credit Values (Internal first, then External) -->
+  <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_ach'}">
+    {{c.formatAmount(limit.disbursement_ach)}}
+  </td>
+  <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_wire_transfer_internal'}">
+    {{c.formatAmount(limit.disbursement_wire_transfer_internal)}}
+  </td>
+  <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_wire_transfer_external'}">
+    {{c.formatAmount(limit.disbursement_wire_transfer_external)}}
+  </td>
+  <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_official_checks_internal'}">
+    {{c.formatAmount(limit.disbursement_official_checks_internal)}}
+  </td>
+  <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_official_checks_external'}">
+    {{c.formatAmount(limit.disbursement_official_checks_external)}}
+  </td>
+  <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'check_cashing_on_us'}">
+    {{c.formatAmount(limit.check_cashing_on_us)}}
+  </td>
+  <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'check_cashing_not_on_us'}">
+    {{c.formatAmount(limit.check_cashing_not_on_us)}}
+  </td>
+  <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'remote_deposit'}">
+    {{c.formatAmount(limit.remote_deposit)}}
+  </td>
+  <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'treasury_solutions_company_wire_limits'}">
+    {{c.formatAmount(limit.treasury_solutions_company_wire_limits)}}
+  </td>
+  <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'fx_wire_limits'}">
+    {{c.formatAmount(limit.fx_wire_limits)}}
+  </td>
+  
+  <!-- Credit Values (Internal first, then External) -->
+  <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.highlightField === 'overdraft_internal_accounts'}">
+    {{c.formatAmount(limit.overdraft_internal_accounts)}}
+  </td>
+  <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.highlightField === 'overdraft_external_accounts'}">
+    {{c.formatAmount(limit.overdraft_external_accounts)}}
+  </td>
+  <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.highlightField === 'unavailable_funds_internal_accounts'}">
+    {{c.formatAmount(limit.unavailable_funds_internal_accounts)}}
+  </td>
+  <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.highlightField === 'unavailable_funds_external_accounts'}">
+    {{c.formatAmount(limit.unavailable_funds_external_accounts)}}
+  </td>
+</tr>
         </tbody>
       </table>
     </div>
@@ -670,6 +683,48 @@
   .pagination-info {
     text-align: center;
   }
+}
+
+.column-filter {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.filter-label {
+  font-size: 14px;
+  color: #495057;
+  font-weight: 600;
+}
+
+.filter-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #495057;
+  user-select: none;
+}
+
+.filter-checkbox input[type="checkbox"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+.filter-checkbox:hover {
+  color: #2c3e50;
+}
+
+/* Hide columns when unchecked */
+.hide-non-credit .non-credit-col {
+  display: none !important;
+}
+
+.hide-credit .credit-col {
+  display: none !important;
 }
 
 
@@ -1163,27 +1218,22 @@ api.controller = function($scope, $timeout, spUtil) {
   }
   
   // Clear search
-  function clearSearch() {
-    var searchInput = document.getElementById('searchInput');
-    var searchInputValue = document.getElementById('searchInputValue');
-    var amountInput = document.getElementById('amountInput');
-    var searchTypeSelect = document.getElementById('searchTypeSelect');
-    
-    if (searchInput) searchInput.value = '';
-    if (searchInputValue) searchInputValue.value = '';
-    if (amountInput) amountInput.value = '';
-    
-    c.selectedReferenceValue = null;
-    c.selectedReferenceDisplay = '';
-    
-    // Reset to job code search
-    searchTypeSelect.value = 'job_code';
-    c.currentSearchType = 'job_code';
-    updateSearchInterface();
-    
-    // Perform search to show all limits
-    performSearch();
-  }
+function clearSearch() {
+  var searchInput = document.getElementById('searchInput');
+  var searchInputValue = document.getElementById('searchInputValue');
+  var amountInput = document.getElementById('amountInput');
+  
+  if (searchInput) searchInput.value = '';
+  if (searchInputValue) searchInputValue.value = '';
+  if (amountInput) amountInput.value = '';
+  
+  c.selectedReferenceValue = null;
+  c.selectedReferenceDisplay = '';
+  
+  // Don't reset search type - keep current selection
+  // Just perform search to show all limits
+  performSearch();
+}
   
   // Update search interface based on selected type
   function updateSearchInterface() {
@@ -1346,5 +1396,35 @@ api.controller = function($scope, $timeout, spUtil) {
     
     // Initialize interface
     updateSearchInterface();
+// Setup column filter checkboxes
+    var showNonCreditCheckbox = document.getElementById('showNonCredit');
+    var showCreditCheckbox = document.getElementById('showCredit');
+    var tableContainer = document.querySelector('.table-container');
+    
+    if (showNonCreditCheckbox && tableContainer) {
+      showNonCreditCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+          tableContainer.classList.remove('hide-non-credit');
+        } else {
+          tableContainer.classList.add('hide-non-credit');
+        }
+      });
+    }
+    
+    if (showCreditCheckbox && tableContainer) {
+      showCreditCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+          tableContainer.classList.remove('hide-credit');
+        } else {
+          tableContainer.classList.add('hide-credit');
+        }
+      });
+    }
+    
+    // Initialize interface
+    updateSearchInterface();
+  }
+};
+
   }
 };
