@@ -1223,29 +1223,27 @@ api.controller = function($scope, $timeout, spUtil) {
   }
   
   // Clear search
-  function clearSearch() {
-    var searchInput = document.getElementById('searchInput');
-    var searchInputValue = document.getElementById('searchInputValue');
-    var amountInput = document.getElementById('amountInput');
-    
-    if (searchInput) searchInput.value = '';
-    if (searchInputValue) searchInputValue.value = '';
-    if (amountInput) amountInput.value = '';
-    
-    c.selectedReferenceValue = null;
-    c.selectedReferenceDisplay = '';
-    
-    // Don't reset search type - keep current selection
-    // If on amount search, just clear the results without error
-    if (c.currentSearchType === 'amount') {
-      c.limits = [];
-      c.searchPerformed = false;
-      c.loading = false;
-    } else {
-      // For other search types, perform search to show all limits
-      performSearch();
-    }
-  }
+function clearSearch() {
+  var searchInput = document.getElementById('searchInput');
+  var searchInputValue = document.getElementById('searchInputValue');
+  var amountInput = document.getElementById('amountInput');
+  
+  if (searchInput) searchInput.value = '';
+  if (searchInputValue) searchInputValue.value = '';
+  if (amountInput) amountInput.value = '';
+  
+  c.selectedReferenceValue = null;
+  c.selectedReferenceDisplay = '';
+  
+  // Always clear the limits table and reset search state
+  $timeout(function() {
+    c.limits = [];
+    c.searchPerformed = false;
+    c.loading = false;
+    c.currentPage = 1;
+    c.totalPages = 1;
+  });
+}
   
   // Update search interface based on selected type
   function updateSearchInterface() {
