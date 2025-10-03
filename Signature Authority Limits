@@ -126,7 +126,7 @@
     <i class="fa fa-briefcase header-icon"></i>Job Information
 </th>
 <th colspan="10" class="section-header non-credit-header">
-    <i class="fa fa-dollar-sign header-icon"></i>Non-Credit Authority
+    <i class="fa fa-dollar header-icon"></i>Non-Credit Authority
 </th>
 <th colspan="4" class="section-header credit-header">
     <i class="fa fa-credit-card header-icon"></i>Credit Authority
