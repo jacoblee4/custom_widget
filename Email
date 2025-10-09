@@ -1,7 +1,9 @@
 (function runMailScript(current, template, email, email_action, event) {
     
-    // Get parent record details
-    var parent = current.parent; // Adjust field name if different
+    // Get parent record from the approval record
+    // current is the sysapproval_approver record
+    // sysapproval_approver.sysapproval links to the parent record
+    var parent = current.sysapproval.getRefRecord();
     var isChange = parent.request_type == 'change'; // Adjust based on your choice field value
     
     // Build email content
