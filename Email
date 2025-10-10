@@ -4,12 +4,50 @@
     var parent = current.sysapproval.getRefRecord();
     var isChange = parent.request_type == 'change_to_existing_authority';
     
+    // Helper function to determine if a limit should be shown
+    function shouldShowLimit(newValue, originalValue, isChangeRequest) {
+        var newVal = parseFloat(newValue) || 0;
+        var origVal = parseFloat(originalValue) || 0;
+        
+        if (isChangeRequest) {
+            // For change requests, hide if both are 0
+            return !(newVal === 0 && origVal === 0);
+        } else {
+            // For new requests, hide if value is 0
+            return newVal !== 0;
+        }
+    }
+    
+    // Helper function to format currency
+    function formatCurrency(value) {
+        if (!value) return '0.00';
+        return parseFloat(value).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+    
+    // Helper function to build a limit row with optional original value
+    function buildLimitRow(label, newValue, originalValue, showOriginal, indented) {
+        var row = '<div style="padding: 6px 0; border-bottom: 1px solid #ecf0f1;' + (indented ? ' padding-left: 15px;' : '') + '">';
+        row += '<div style="font-size: 13px; color: #5a6c7d; margin-bottom: 3px;">' + label + '</div>';
+        row += '<div style="display: flex; justify-content: space-between; align-items: center;">';
+        
+        if (showOriginal && (parseFloat(originalValue) || 0) > 0) {
+            row += '<div style="flex: 1;"><span style="color: #00aae3; font-weight: 700; font-size: 16px;">New: $' + formatCurrency(newValue) + '</span></div>';
+            row += '<div style="flex: 1; text-align: right;"><span style="color: #999999; font-weight: 400; font-size: 12px;">Original: $' + formatCurrency(originalValue) + '</span></div>';
+        } else {
+            row += '<div style="font-weight: 600; color: #000000; font-size: 15px;">$' + formatCurrency(newValue) + '</div>';
+        }
+        
+        row += '</div>';
+        row += '</div>';
+        return row;
+    }
+    
     // Build email content
     var content = '';
     
     // Header section with parent record details
     content += '<div style="font-family: Arial, sans-serif; color: #000000; max-width: 800px;">';
-    content += '<h2 style="color: #00aae3; border-bottom: 3px solid; border-image: linear-gradient(to right, #00aae3, #3363ff, #7b12d4) 1; padding-bottom: 10px;">Request Details</h2>';
+    content += '<h2 style="color: #00aae3; border-bottom: 3px solid #00aae3; padding-bottom: 10px;">Request Details</h2>';
     
     // Parent record information
     content += '<div style="background-color: #f5f5f5; padding: 15px; margin: 20px 0; border-left: 4px solid #00aae3;">';
@@ -37,7 +75,7 @@
     if (nonCreditLimits) nonCreditGr.next();
     
     // Authority Limits Section
-    content += '<h3 style="color: #0066cc; margin-top: 30px;">Requested Authority Limits</h3>';
+    content += '<h3 style="color: #00aae3; margin-top: 30px;">Requested Authority Limits</h3>';
     
     if (creditLimits || nonCreditLimits) {
         content += '<div style="display: table; width: 100%; border-collapse: collapse; margin: 20px 0;">';
@@ -48,60 +86,70 @@
         // Non-Credit Authority Column (Left)
         if (nonCreditLimits) {
             content += '<div style="display: table-cell; width: 48%; vertical-align: top; padding-right: 2%;">';
-            content += '<div style="background: white; border-left: 4px solid #27ae60; border-radius: 4px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
-            content += '<h4 style="color: #27ae60; margin: 0 0 15px 0; font-size: 14px; text-transform: uppercase;">Non-Credit Authority</h4>';
+            content += '<div style="background: #ffffff; border-left: 4px solid #00aae3; border-radius: 4px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
+            content += '<h4 style="color: #00aae3; margin: 0 0 15px 0; font-size: 14px; text-transform: uppercase;">Non-Credit Authority</h4>';
             
             // Disbursement Group
-            var hasDisbursement = nonCreditGr.disbursement_ach || nonCreditGr.disbursement_wire_transfer_external || 
-                                  nonCreditGr.disbursement_wire_transfer_internal || nonCreditGr.disbursement_official_checks_external || 
-                                  nonCreditGr.disbursement_official_checks_internal;
+            content += '<div style="margin-bottom: 15px;">';
+            var disbursementShown = false;
             
-            if (hasDisbursement) {
-                content += '<div style="margin-bottom: 15px;">';
-                content += '<div style="font-weight: 600; color: #2c3e50; font-size: 13px; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #dee2e6;">Disbursement</div>';
+            // Check if we have any disbursement values to show
+            if (shouldShowLimit(nonCreditGr.disbursement_ach, nonCreditGr.original_disbursement_ach, isChange) ||
+                shouldShowLimit(nonCreditGr.disbursement_wire_transfer_internal, nonCreditGr.original_disbursement_wire_transfer_internal, isChange) ||
+                shouldShowLimit(nonCreditGr.disbursement_wire_transfer_external, nonCreditGr.original_disbursement_wire_transfer_external, isChange) ||
+                shouldShowLimit(nonCreditGr.disbursement_official_checks_internal, nonCreditGr.original_disbursement_official_checks_internal, isChange) ||
+                shouldShowLimit(nonCreditGr.disbursement_official_checks_external, nonCreditGr.original_disbursement_official_checks_external, isChange)) {
                 
-                if (nonCreditGr.disbursement_ach) {
-                    content += buildLimitRow('ACH', nonCreditGr.disbursement_ach, nonCreditGr.original_disbursement_ach, isChange, true);
-                }
-                if (nonCreditGr.disbursement_wire_transfer_external) {
-                    content += buildLimitRow('Wire Transfer External', nonCreditGr.disbursement_wire_transfer_external, nonCreditGr.original_disbursement_wire_transfer_external, isChange, true);
-                }
-                if (nonCreditGr.disbursement_wire_transfer_internal) {
-                    content += buildLimitRow('Wire Transfer Internal', nonCreditGr.disbursement_wire_transfer_internal, nonCreditGr.original_disbursement_wire_transfer_internal, isChange, true);
-                }
-                if (nonCreditGr.disbursement_official_checks_external) {
-                    content += buildLimitRow('Official Checks External', nonCreditGr.disbursement_official_checks_external, nonCreditGr.original_disbursement_official_checks_external, isChange, true);
-                }
-                if (nonCreditGr.disbursement_official_checks_internal) {
-                    content += buildLimitRow('Official Checks Internal', nonCreditGr.disbursement_official_checks_internal, nonCreditGr.original_disbursement_official_checks_internal, isChange, true);
-                }
-                content += '</div>';
+                content += '<div style="font-weight: 600; color: #000000; font-size: 13px; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #dee2e6;">Disbursement</div>';
+                disbursementShown = true;
             }
+            
+            if (shouldShowLimit(nonCreditGr.disbursement_ach, nonCreditGr.original_disbursement_ach, isChange)) {
+                content += buildLimitRow('ACH', nonCreditGr.disbursement_ach, nonCreditGr.original_disbursement_ach, isChange, true);
+            }
+            if (shouldShowLimit(nonCreditGr.disbursement_wire_transfer_internal, nonCreditGr.original_disbursement_wire_transfer_internal, isChange)) {
+                content += buildLimitRow('Wire Transfer Internal', nonCreditGr.disbursement_wire_transfer_internal, nonCreditGr.original_disbursement_wire_transfer_internal, isChange, true);
+            }
+            if (shouldShowLimit(nonCreditGr.disbursement_wire_transfer_external, nonCreditGr.original_disbursement_wire_transfer_external, isChange)) {
+                content += buildLimitRow('Wire Transfer External', nonCreditGr.disbursement_wire_transfer_external, nonCreditGr.original_disbursement_wire_transfer_external, isChange, true);
+            }
+            if (shouldShowLimit(nonCreditGr.disbursement_official_checks_internal, nonCreditGr.original_disbursement_official_checks_internal, isChange)) {
+                content += buildLimitRow('Official Checks Internal', nonCreditGr.disbursement_official_checks_internal, nonCreditGr.original_disbursement_official_checks_internal, isChange, true);
+            }
+            if (shouldShowLimit(nonCreditGr.disbursement_official_checks_external, nonCreditGr.original_disbursement_official_checks_external, isChange)) {
+                content += buildLimitRow('Official Checks External', nonCreditGr.disbursement_official_checks_external, nonCreditGr.original_disbursement_official_checks_external, isChange, true);
+            }
+            
+            content += '</div>';
             
             // Check Cashing Group
-            var hasCheckCashing = nonCreditGr.check_cashing_on_us || nonCreditGr.check_cashing_not_on_us;
+            content += '<div style="margin-bottom: 15px;">';
+            var checkCashingShown = false;
             
-            if (hasCheckCashing) {
-                content += '<div style="margin-bottom: 15px;">';
-                content += '<div style="font-weight: 600; color: #2c3e50; font-size: 13px; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #dee2e6;">Check Cashing & Cash Withdrawal</div>';
+            if (shouldShowLimit(nonCreditGr.check_cashing_on_us, nonCreditGr.original_check_cashing_on_us, isChange) ||
+                shouldShowLimit(nonCreditGr.check_cashing_not_on_us, nonCreditGr.original_check_cashing_not_on_us, isChange)) {
                 
-                if (nonCreditGr.check_cashing_on_us) {
-                    content += buildLimitRow('On-Us (Checks & Cash Withdrawals)', nonCreditGr.check_cashing_on_us, nonCreditGr.original_check_cashing_on_us, isChange, true);
-                }
-                if (nonCreditGr.check_cashing_not_on_us) {
-                    content += buildLimitRow('Not On-Us (Checks)', nonCreditGr.check_cashing_not_on_us, nonCreditGr.original_check_cashing_not_on_us, isChange, true);
-                }
-                content += '</div>';
+                content += '<div style="font-weight: 600; color: #000000; font-size: 13px; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #dee2e6;">Check Cashing & Cash Withdrawal</div>';
+                checkCashingShown = true;
             }
+            
+            if (shouldShowLimit(nonCreditGr.check_cashing_on_us, nonCreditGr.original_check_cashing_on_us, isChange)) {
+                content += buildLimitRow('On-Us (Checks & Cash Withdrawals)', nonCreditGr.check_cashing_on_us, nonCreditGr.original_check_cashing_on_us, isChange, true);
+            }
+            if (shouldShowLimit(nonCreditGr.check_cashing_not_on_us, nonCreditGr.original_check_cashing_not_on_us, isChange)) {
+                content += buildLimitRow('Not On-Us (Checks)', nonCreditGr.check_cashing_not_on_us, nonCreditGr.original_check_cashing_not_on_us, isChange, true);
+            }
+            
+            content += '</div>';
             
             // Other Non-Credit Limits
-            if (nonCreditGr.remote_deposit) {
+            if (shouldShowLimit(nonCreditGr.remote_deposit, nonCreditGr.original_remote_deposit, isChange)) {
                 content += buildLimitRow('Remote Deposit', nonCreditGr.remote_deposit, nonCreditGr.original_remote_deposit, isChange, false);
             }
-            if (nonCreditGr.treasury_solutions_company_wire_limits) {
+            if (shouldShowLimit(nonCreditGr.treasury_solutions_company_wire_limits, nonCreditGr.original_treasury_solutions_company_wire_limits, isChange)) {
                 content += buildLimitRow('Treasury Solutions Company Wire Limits', nonCreditGr.treasury_solutions_company_wire_limits, nonCreditGr.original_treasury_solutions_company_wire_limits, isChange, false);
             }
-            if (nonCreditGr.fx_wire_limits) {
+            if (shouldShowLimit(nonCreditGr.fx_wire_limits, nonCreditGr.original_fx_wire_limits, isChange)) {
                 content += buildLimitRow('FX Wire Limits', nonCreditGr.fx_wire_limits, nonCreditGr.original_fx_wire_limits, isChange, false);
             }
             
@@ -112,40 +160,48 @@
         // Credit Authority Column (Right)
         if (creditLimits) {
             content += '<div style="display: table-cell; width: 48%; vertical-align: top; padding-left: 2%;">';
-            content += '<div style="background: white; border-left: 4px solid #e74c3c; border-radius: 4px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
-            content += '<h4 style="color: #e74c3c; margin: 0 0 15px 0; font-size: 14px; text-transform: uppercase;">Credit Authority</h4>';
+            content += '<div style="background: #ffffff; border-left: 4px solid #00aae3; border-radius: 4px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
+            content += '<h4 style="color: #00aae3; margin: 0 0 15px 0; font-size: 14px; text-transform: uppercase;">Credit Authority</h4>';
             
             // Overdraft Group
-            var hasOverdraft = creditGr.overdraft_external_accounts || creditGr.overdraft_internal_accounts;
+            content += '<div style="margin-bottom: 15px;">';
+            var overdraftShown = false;
             
-            if (hasOverdraft) {
-                content += '<div style="margin-bottom: 15px;">';
-                content += '<div style="font-weight: 600; color: #2c3e50; font-size: 13px; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #dee2e6;">Overdraft</div>';
+            if (shouldShowLimit(creditGr.overdraft_internal_accounts, creditGr.original_overdraft_internal_accounts, isChange) ||
+                shouldShowLimit(creditGr.overdraft_external_accounts, creditGr.original_overdraft_external_accounts, isChange)) {
                 
-                if (creditGr.overdraft_external_accounts) {
-                    content += buildLimitRow('External Accounts', creditGr.overdraft_external_accounts, creditGr.original_overdraft_external_accounts, isChange, true);
-                }
-                if (creditGr.overdraft_internal_accounts) {
-                    content += buildLimitRow('Internal Accounts', creditGr.overdraft_internal_accounts, creditGr.original_overdraft_internal_accounts, isChange, true);
-                }
-                content += '</div>';
+                content += '<div style="font-weight: 600; color: #000000; font-size: 13px; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #dee2e6;">Overdraft</div>';
+                overdraftShown = true;
             }
+            
+            if (shouldShowLimit(creditGr.overdraft_internal_accounts, creditGr.original_overdraft_internal_accounts, isChange)) {
+                content += buildLimitRow('Internal Accounts', creditGr.overdraft_internal_accounts, creditGr.original_overdraft_internal_accounts, isChange, true);
+            }
+            if (shouldShowLimit(creditGr.overdraft_external_accounts, creditGr.original_overdraft_external_accounts, isChange)) {
+                content += buildLimitRow('External Accounts', creditGr.overdraft_external_accounts, creditGr.original_overdraft_external_accounts, isChange, true);
+            }
+            
+            content += '</div>';
             
             // Unavailable Funds Group
-            var hasUnavailable = creditGr.unavailable_funds_external_accounts || creditGr.unavailable_funds_internal_accounts;
+            content += '<div style="margin-bottom: 15px;">';
+            var unavailableShown = false;
             
-            if (hasUnavailable) {
-                content += '<div style="margin-bottom: 15px;">';
-                content += '<div style="font-weight: 600; color: #2c3e50; font-size: 13px; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #dee2e6;">Unavailable Funds</div>';
+            if (shouldShowLimit(creditGr.unavailable_funds_internal_accounts, creditGr.original_unavailable_funds_internal_accounts, isChange) ||
+                shouldShowLimit(creditGr.unavailable_funds_external_accounts, creditGr.original_unavailable_funds_external_accounts, isChange)) {
                 
-                if (creditGr.unavailable_funds_external_accounts) {
-                    content += buildLimitRow('External Accounts', creditGr.unavailable_funds_external_accounts, creditGr.original_unavailable_funds_external_accounts, isChange, true);
-                }
-                if (creditGr.unavailable_funds_internal_accounts) {
-                    content += buildLimitRow('Internal Accounts', creditGr.unavailable_funds_internal_accounts, creditGr.original_unavailable_funds_internal_accounts, isChange, true);
-                }
-                content += '</div>';
+                content += '<div style="font-weight: 600; color: #000000; font-size: 13px; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #dee2e6;">Unavailable Funds</div>';
+                unavailableShown = true;
             }
+            
+            if (shouldShowLimit(creditGr.unavailable_funds_internal_accounts, creditGr.original_unavailable_funds_internal_accounts, isChange)) {
+                content += buildLimitRow('Internal Accounts', creditGr.unavailable_funds_internal_accounts, creditGr.original_unavailable_funds_internal_accounts, isChange, true);
+            }
+            if (shouldShowLimit(creditGr.unavailable_funds_external_accounts, creditGr.original_unavailable_funds_external_accounts, isChange)) {
+                content += buildLimitRow('External Accounts', creditGr.unavailable_funds_external_accounts, creditGr.original_unavailable_funds_external_accounts, isChange, true);
+            }
+            
+            content += '</div>';
             
             content += '</div>';
             content += '</div>';
@@ -156,38 +212,14 @@
     }
     
     // Action buttons
-    content += '<div style="margin: 30px 0; padding: 20px; background-color: #f0f0f0; border-radius: 5px;">';
-    content += '<p style="margin: 0 0 15px 0; font-weight: bold;">Please review this request and take appropriate action:</p>';
-    content += '<a href="${approve_link}" style="display: inline-block; padding: 12px 30px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px; margin-right: 10px;">Approve</a>';
-    content += '<a href="${reject_link}" style="display: inline-block; padding: 12px 30px; background-color: #dc3545; color: white; text-decoration: none; border-radius: 5px;">Reject</a>';
+    content += '<div style="margin: 30px 0; padding: 20px; background-color: #f5f5f5; border-radius: 5px; border: 1px solid #dee2e6;">';
+    content += '<p style="margin: 0 0 15px 0; font-weight: bold; color: #000000;">Please review this request and take appropriate action:</p>';
+    content += '<a href="${approve_link}" style="display: inline-block; padding: 12px 30px; background-color: #00aae3; color: #ffffff; text-decoration: none; border-radius: 5px; margin-right: 10px; font-weight: 600;">Approve</a>';
+    content += '<a href="${reject_link}" style="display: inline-block; padding: 12px 30px; background-color: #dc3545; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: 600;">Reject</a>';
     content += '</div>';
     
     content += '<p style="color: #666; font-size: 12px; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 15px;">This is an automated notification from the Signature Authority application. Please do not reply to this email.</p>';
     content += '</div>';
-    
-    // Helper function to build a limit row with optional original value
-    function buildLimitRow(label, newValue, originalValue, showOriginal, indented) {
-        var row = '<div style="padding: 6px 0; border-bottom: 1px solid #ecf0f1;' + (indented ? ' padding-left: 15px;' : '') + '">';
-        row += '<div style="font-size: 13px; color: #5a6c7d; margin-bottom: 3px;">' + label + '</div>';
-        row += '<div style="display: flex; justify-content: space-between;">';
-        
-        if (showOriginal && originalValue) {
-            row += '<div style="flex: 1;"><strong>New:</strong> $' + formatCurrency(newValue) + '</div>';
-            row += '<div style="flex: 1; text-align: right;"><strong>Original:</strong> $' + formatCurrency(originalValue) + '</div>';
-        } else {
-            row += '<div style="font-weight: 600; color: #2c3e50;">$' + formatCurrency(newValue) + '</div>';
-        }
-        
-        row += '</div>';
-        row += '</div>';
-        return row;
-    }
-    
-    // Helper function to format currency
-    function formatCurrency(value) {
-        if (!value) return '0.00';
-        return parseFloat(value).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    }
     
     template.print(content);
     
