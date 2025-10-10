@@ -4,7 +4,7 @@
     // current is the sysapproval_approver record
     // sysapproval_approver.sysapproval links to the parent record
     var parent = current.sysapproval.getRefRecord();
-    var isChange = parent.request_type == 'change'; // Adjust based on your choice field value
+    var isChange = parent.request_type == 'change_to_existing_authority';
     
     // Build email content
     var content = '';
@@ -17,21 +17,21 @@
     content += '<div style="background-color: #f5f5f5; padding: 15px; margin: 20px 0; border-left: 4px solid #0066cc;">';
     content += '<table style="width: 100%; border-collapse: collapse;">';
     content += '<tr><td style="padding: 8px; font-weight: bold; width: 200px;">Request Number:</td><td style="padding: 8px;">' + parent.number + '</td></tr>';
-    content += '<tr><td style="padding: 8px; font-weight: bold;">Job Code:</td><td style="padding: 8px;">' + parent.job_code + '</td></tr>';
-    content += '<tr><td style="padding: 8px; font-weight: bold;">Requested For:</td><td style="padding: 8px;">' + parent.requested_for.getDisplayValue() + '</td></tr>';
+	content += '<tr><td style="padding: 8px; font-weight: bold;">Request Type:</td><td style="padding: 8px;">' + parent.request_type.getDisplayValue() + '</td></tr>';
+    content += '<tr><td style="padding: 8px; font-weight: bold;">Job Code:</td><td style="padding: 8px;">' + parent.job_code.getDisplayValue() + '</td></tr>';
     content += '<tr><td style="padding: 8px; font-weight: bold;">Opened By:</td><td style="padding: 8px;">' + parent.opened_by.getDisplayValue() + '</td></tr>';
-    content += '<tr><td style="padding: 8px; font-weight: bold;">Request Type:</td><td style="padding: 8px;">' + parent.request_type.getDisplayValue() + '</td></tr>';
+	content += '<tr><td style="padding: 8px; font-weight: bold;">Requested For:</td><td style="padding: 8px;">' + parent.requested_for.getDisplayValue() + '</td></tr>';
     content += '<tr><td style="padding: 8px; font-weight: bold; vertical-align: top;">Overall Business Need:</td><td style="padding: 8px;">' + parent.overall_business_need + '</td></tr>';
     content += '</table>';
     content += '</div>';
     
     // Query child tables to determine which limits to show
-    var creditGr = new GlideRecord('x_1364796_signatu_credit_authority'); // Adjust table name
+    var creditGr = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
     creditGr.addQuery('parent', parent.sys_id);
     creditGr.query();
     var showCredit = creditGr.hasNext();
     
-    var nonCreditGr = new GlideRecord('x_1364796_signatu_non_credit_authority'); // Adjust table name
+    var nonCreditGr = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
     nonCreditGr.addQuery('parent', parent.sys_id);
     nonCreditGr.query();
     var showNonCredit = nonCreditGr.hasNext();
