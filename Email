@@ -1,41 +1,44 @@
-(function runMailScript( /* GlideRecord */ current, /* TemplatePrinter */ template,
-    /* Optional EmailOutbound */
-    email, /* Optional GlideRecord */ email_action,
-    /* Optional GlideRecord */
-    event) {
-
+(function runMailScript(current, template, email, email_action, event) {
+    
     // Get parent record from the approval record
     // current is the sysapproval_approver record
     // sysapproval_approver.sysapproval links to the parent record
     var parent = current.sysapproval.getRefRecord();
     var isChange = parent.request_type == 'change'; // Adjust based on your choice field value
-
+    
     // Build email content
     var content = '';
-
+    
     // Header section with parent record details
     content += '<div style="font-family: Arial, sans-serif; color: #333; max-width: 800px;">';
     content += '<h2 style="color: #0066cc; border-bottom: 2px solid #0066cc; padding-bottom: 10px;">Signature Authority Approval Request</h2>';
-
+    
     // Parent record information
     content += '<div style="background-color: #f5f5f5; padding: 15px; margin: 20px 0; border-left: 4px solid #0066cc;">';
     content += '<table style="width: 100%; border-collapse: collapse;">';
     content += '<tr><td style="padding: 8px; font-weight: bold; width: 200px;">Request Number:</td><td style="padding: 8px;">' + parent.number + '</td></tr>';
-	content += '<tr><td style="padding: 8px; font-weight: bold;">Request Type:</td><td style="padding: 8px;">' + parent.request_type.getDisplayValue() + '</td></tr>';
-    content += '<tr><td style="padding: 8px; font-weight: bold;">Job Code:</td><td style="padding: 8px;">' + parent.job_code.getDisplayValue() + '</td></tr>';
+    content += '<tr><td style="padding: 8px; font-weight: bold;">Job Code:</td><td style="padding: 8px;">' + parent.job_code + '</td></tr>';
+    content += '<tr><td style="padding: 8px; font-weight: bold;">Requested For:</td><td style="padding: 8px;">' + parent.requested_for.getDisplayValue() + '</td></tr>';
     content += '<tr><td style="padding: 8px; font-weight: bold;">Opened By:</td><td style="padding: 8px;">' + parent.opened_by.getDisplayValue() + '</td></tr>';
-	content += '<tr><td style="padding: 8px; font-weight: bold;">Requested For:</td><td style="padding: 8px;">' + parent.requested_for.getDisplayValue() + '</td></tr>';
+    content += '<tr><td style="padding: 8px; font-weight: bold;">Request Type:</td><td style="padding: 8px;">' + parent.request_type.getDisplayValue() + '</td></tr>';
     content += '<tr><td style="padding: 8px; font-weight: bold; vertical-align: top;">Overall Business Need:</td><td style="padding: 8px;">' + parent.overall_business_need + '</td></tr>';
     content += '</table>';
     content += '</div>';
-
-    // Determine which limits to show
-    var showCredit = parent.credit_authority_requested == true; // Adjust field name
-    var showNonCredit = parent.non_credit_authority_requested == true; // Adjust field name
-
+    
+    // Query child tables to determine which limits to show
+    var creditGr = new GlideRecord('x_1364796_signatu_credit_authority'); // Adjust table name
+    creditGr.addQuery('parent', parent.sys_id);
+    creditGr.query();
+    var showCredit = creditGr.hasNext();
+    
+    var nonCreditGr = new GlideRecord('x_1364796_signatu_non_credit_authority'); // Adjust table name
+    nonCreditGr.addQuery('parent', parent.sys_id);
+    nonCreditGr.query();
+    var showNonCredit = nonCreditGr.hasNext();
+    
     // Authority Limits Section
     content += '<h3 style="color: #0066cc; margin-top: 30px;">Requested Authority Limits</h3>';
-
+    
     if (showCredit && showNonCredit) {
         // Both Credit and Non-Credit
         content += '<table style="width: 100%; border-collapse: collapse; margin: 20px 0;">';
@@ -49,7 +52,7 @@
         content += '</tr>';
         content += '</thead>';
         content += '<tbody>';
-
+        
         // Credit Authority Row
         content += '<tr style="background-color: #f9f9f9;">';
         content += '<td style="padding: 12px; border: 1px solid #ddd;">Credit Authority</td>';
@@ -58,7 +61,7 @@
             content += '<td style="padding: 12px; border: 1px solid #ddd;">$' + formatCurrency(parent.original_credit_authority_limit) + '</td>';
         }
         content += '</tr>';
-
+        
         // Non-Credit Authority Row
         content += '<tr>';
         content += '<td style="padding: 12px; border: 1px solid #ddd;">Non-Credit Authority</td>';
@@ -67,10 +70,10 @@
             content += '<td style="padding: 12px; border: 1px solid #ddd;">$' + formatCurrency(parent.original_non_credit_authority_limit) + '</td>';
         }
         content += '</tr>';
-
+        
         content += '</tbody>';
         content += '</table>';
-
+        
     } else if (showCredit) {
         // Credit Only
         content += '<table style="width: 100%; border-collapse: collapse; margin: 20px 0;">';
@@ -93,7 +96,7 @@
         content += '</tr>';
         content += '</tbody>';
         content += '</table>';
-
+        
     } else if (showNonCredit) {
         // Non-Credit Only
         content += '<table style="width: 100%; border-collapse: collapse; margin: 20px 0;">';
@@ -117,23 +120,23 @@
         content += '</tbody>';
         content += '</table>';
     }
-
+    
     // Action buttons
     content += '<div style="margin: 30px 0; padding: 20px; background-color: #f0f0f0; border-radius: 5px;">';
     content += '<p style="margin: 0 0 15px 0; font-weight: bold;">Please review this request and take appropriate action:</p>';
     content += '<a href="${approve_link}" style="display: inline-block; padding: 12px 30px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px; margin-right: 10px;">Approve</a>';
     content += '<a href="${reject_link}" style="display: inline-block; padding: 12px 30px; background-color: #dc3545; color: white; text-decoration: none; border-radius: 5px;">Reject</a>';
     content += '</div>';
-
+    
     content += '<p style="color: #666; font-size: 12px; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 15px;">This is an automated notification from the Signature Authority application. Please do not reply to this email.</p>';
     content += '</div>';
-
+    
     // Helper function to format currency
     function formatCurrency(value) {
         if (!value) return '0.00';
         return parseFloat(value).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     }
-
+    
     template.print(content);
-
+    
 })(current, template, email, email_action, event);
