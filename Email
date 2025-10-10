@@ -94,7 +94,18 @@
     }
     
     content += '<div style="background-color: #f5f5f5; padding: 15px; margin: 20px 0; border-left: 4px solid #00aae3;">';
-    content += '<h3 style="color: #00aae3; margin: 0 0 15px 0; padding-bottom: 10px; border-bottom: 2px solid #00aae3;">Requested Authority Limits</h3>';
+    
+    // Dynamic title based on request type
+    var limitsTitle = 'Requested Authority Limits';
+    if (parent.request_type == 'new_authority') {
+        limitsTitle = 'New Authority Limits';
+    } else if (parent.request_type == 'change_to_existing_authority') {
+        limitsTitle = 'Changed Authority Limits';
+    } else if (parent.request_type == 'remove_authority') {
+        limitsTitle = 'Removed Authority Limits';
+    }
+    
+    content += '<h3 style="color: #00aae3; margin: 0 0 15px 0; padding-bottom: 10px; border-bottom: 2px solid #00aae3;">' + limitsTitle + '</h3>';
     
     if (creditLimits || nonCreditLimits) {
         content += '<div style="display: table; width: 100%; border-collapse: collapse;">';
