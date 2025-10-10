@@ -86,8 +86,8 @@
         // Non-Credit Authority Column (Left)
         if (nonCreditLimits) {
             content += '<div style="display: table-cell; width: 48%; vertical-align: top; padding-right: 2%;">';
-            content += '<div style="background: #ffffff; border-left: 4px solid #00aae3; border-radius: 4px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
-            content += '<h4 style="color: #00aae3; margin: 0 0 15px 0; font-size: 14px; text-transform: uppercase;">Non-Credit Authority</h4>';
+            content += '<div style="background: #ffffff; border-left: 4px solid #27ae60; border-radius: 4px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
+            content += '<h4 style="color: #27ae60; margin: 0 0 15px 0; font-size: 14px; text-transform: uppercase;">Non-Credit Authority</h4>';
             
             // Disbursement Group
             content += '<div style="margin-bottom: 15px;">';
@@ -160,8 +160,8 @@
         // Credit Authority Column (Right)
         if (creditLimits) {
             content += '<div style="display: table-cell; width: 48%; vertical-align: top; padding-left: 2%;">';
-            content += '<div style="background: #ffffff; border-left: 4px solid #00aae3; border-radius: 4px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
-            content += '<h4 style="color: #00aae3; margin: 0 0 15px 0; font-size: 14px; text-transform: uppercase;">Credit Authority</h4>';
+            content += '<div style="background: #ffffff; border-left: 4px solid #e74c3c; border-radius: 4px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
+            content += '<h4 style="color: #e74c3c; margin: 0 0 15px 0; font-size: 14px; text-transform: uppercase;">Credit Authority</h4>';
             
             // Overdraft Group
             content += '<div style="margin-bottom: 15px;">';
@@ -214,7 +214,7 @@
     // Action buttons
     content += '<div style="margin: 30px 0; padding: 20px; background-color: #f5f5f5; border-radius: 5px; border: 1px solid #dee2e6;">';
     content += '<p style="margin: 0 0 15px 0; font-weight: bold; color: #000000;">Please review this request and take appropriate action:</p>';
-    content += '<a href="${approve_link}" style="display: inline-block; padding: 12px 30px; background-color: #00aae3; color: #ffffff; text-decoration: none; border-radius: 5px; margin-right: 10px; font-weight: 600;">Approve</a>';
+    content += '<a href="${approve_link}" style="display: inline-block; padding: 12px 30px; background-color: #28a745; color: #ffffff; text-decoration: none; border-radius: 5px; margin-right: 10px; font-weight: 600;">Approve</a>';
     content += '<a href="${reject_link}" style="display: inline-block; padding: 12px 30px; background-color: #dc3545; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: 600;">Reject</a>';
     content += '</div>';
     
