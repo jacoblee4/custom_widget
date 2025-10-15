@@ -57,9 +57,41 @@
         return row;
     }
     
+    // Function to get impacted employees
+    function getImpactedEmployees(jobCodeSysId) {
+        var employees = [];
+        var jobCodeValue = '';
+        
+        if (jobCodeSysId) {
+            // Get the actual job code value from the job code table
+            var jobGr = new GlideRecord('x_banun_rbac_job_code');
+            if (jobGr.get(jobCodeSysId)) {
+                jobCodeValue = jobGr.getValue('job_code') || 
+                              jobGr.getValue('u_job_code') || 
+                              jobGr.getValue('code') || 
+                              jobGr.getDisplayValue();
+            }
+            
+            // Query sys_user table for active users with this job code
+            var userGr = new GlideRecord('sys_user');
+            userGr.addQuery('u_job_code', jobCodeValue);
+            userGr.addQuery('active', true);
+            userGr.orderBy('name');
+            userGr.query();
+            
+            while (userGr.next()) {
+                employees.push({
+                    name: userGr.getValue('name'),
+                    title: userGr.getValue('title') || 'N/A',
+                    manager: userGr.manager.getDisplayValue() || 'N/A'
+                });
+            }
+        }
+        
+        return employees;
+    }
+    
     var content = '';
-    
-    
     
     // Introduction text based on request type
     var introText = '';
@@ -75,7 +107,7 @@
     
     content += introText;
 
-	content += '<div style="font-family: Arial, sans-serif; color: #000000; max-width: 800px;">';
+    content += '<div style="font-family: Arial, sans-serif; color: #000000; max-width: 800px;">';
     content += '<h2 style="color: #00aae3; border-bottom: 3px solid #00aae3; padding-bottom: 10px;">Request Details</h2>';
     
     var instanceURL = gs.getProperty('glide.servlet.uri');
@@ -246,6 +278,43 @@
     content += '<a href="${approve_link}" style="display: inline-block; padding: 12px 30px; background-color: #28a745; color: #ffffff; text-decoration: none; border-radius: 5px; margin-right: 10px; font-weight: 600;">Approve</a>';
     content += '<a href="${reject_link}" style="display: inline-block; padding: 12px 30px; background-color: #dc3545; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: 600;">Reject</a>';
     content += '</div>';
+    
+    // Get impacted employees
+    var impactedEmployees = getImpactedEmployees(parent.getValue('job_code'));
+    
+    // Add Impacted Employees section if there are any
+    if (impactedEmployees.length > 0) {
+        content += '<div style="margin: 30px 0; padding: 20px; background-color: #f8f9fa; border-radius: 5px; border: 1px solid #dee2e6;">';
+        content += '<h3 style="color: #00aae3; margin: 0 0 10px 0; padding-bottom: 10px; border-bottom: 2px solid #00aae3;">';
+        content += '<span style="font-size: 16px;">&#128100;</span> Impacted Employees ';
+        content += '<span style="color: #7f8c8d; font-weight: normal; font-size: 14px;">(' + impactedEmployees.length + ' total)</span>';
+        content += '</h3>';
+        content += '<p style="margin: 10px 0 15px 0; color: #5a6c7d; font-size: 13px;">The following employees with job code <strong>' + parent.job_code.getDisplayValue() + '</strong> will be affected by this authority change:</p>';
+        
+        content += '<table style="width: 100%; border-collapse: collapse; background-color: #ffffff; border: 1px solid #dee2e6; border-radius: 4px;">';
+        content += '<thead>';
+        content += '<tr style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;">';
+        content += '<th style="padding: 12px; text-align: left; color: #495057; font-weight: 600; font-size: 13px;">Name</th>';
+        content += '<th style="padding: 12px; text-align: left; color: #495057; font-weight: 600; font-size: 13px;">Title</th>';
+        content += '<th style="padding: 12px; text-align: left; color: #495057; font-weight: 600; font-size: 13px;">Manager</th>';
+        content += '</tr>';
+        content += '</thead>';
+        content += '<tbody>';
+        
+        for (var i = 0; i < impactedEmployees.length; i++) {
+            var emp = impactedEmployees[i];
+            var rowStyle = (i % 2 === 0) ? 'background-color: #ffffff;' : 'background-color: #f8f9fa;';
+            content += '<tr style="' + rowStyle + ' border-bottom: 1px solid #ecf0f1;">';
+            content += '<td style="padding: 10px 12px; color: #000000; font-size: 13px;">' + emp.name + '</td>';
+            content += '<td style="padding: 10px 12px; color: #5a6c7d; font-size: 13px;">' + emp.title + '</td>';
+            content += '<td style="padding: 10px 12px; color: #5a6c7d; font-size: 13px;">' + emp.manager + '</td>';
+            content += '</tr>';
+        }
+        
+        content += '</tbody>';
+        content += '</table>';
+        content += '</div>';
+    }
     
     content += '<p style="color: #666; font-size: 12px; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 15px;">This is an automated notification from the Signature Authority application. Please do not reply to this email.</p>';
     content += '</div>';
