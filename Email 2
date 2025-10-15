@@ -59,8 +59,7 @@
     
     var content = '';
     
-    content += '<div style="font-family: Arial, sans-serif; color: #000000; max-width: 800px;">';
-    content += '<h2 style="color: #00aae3; border-bottom: 3px solid #00aae3; padding-bottom: 10px;">Request Details</h2>';
+    
     
     // Introduction text based on request type
     var introText = '';
@@ -75,6 +74,9 @@
     }
     
     content += introText;
+
+	content += '<div style="font-family: Arial, sans-serif; color: #000000; max-width: 800px;">';
+    content += '<h2 style="color: #00aae3; border-bottom: 3px solid #00aae3; padding-bottom: 10px;">Request Details</h2>';
     
     var instanceURL = gs.getProperty('glide.servlet.uri');
     var sysId = parent.sys_id.toString();
