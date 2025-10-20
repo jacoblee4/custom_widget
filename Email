@@ -1,9 +1,12 @@
 var external = fd_data.subflow_inputs.credit_record.overdraft_external_accounts;
 var internal = fd_data.subflow_inputs.credit_record.overdraft_internal_accounts;
 
-var externalValue = parseFloat(external.getValue());
-var internalValue = parseFloat(internal.getValue());
+var externalValue = parseFloat(external);
+var internalValue = parseFloat(internal);
 
-var largerValue = (externalValue >= internalValue) ? external.getDisplayValue() : internal.getDisplayValue();
-var largerValueFormatted = largerValue.toString().replace(/\.00*$/, '');
+var largerValue = (externalValue >= internalValue) ? external : internal;
+
+// Remove .00 only if present at end
+var largerValueFormatted = largerValue.toString().replace(/\.00$/, '');
+
 return largerValueFormatted;
