@@ -1,10 +1,58 @@
-var helper = new x_banun_bunow_si_0.SignatureHelper();
+// Setting Overdraft
+var type = fd_data.subflow_inputs.signature_parent_record.request_type;
 
-var creditSysId = fd_data.subflow_inputs.credit_record;
-var nonCreditSysId = fd_data.subflow_inputs.non_credit_record;
-    
-return helper.processAuthorityLimits(
-    fd_data.trigger.current.job_code,
-    creditSysId,
-    nonCreditSysId
-);
+if (type == 'remove_authority')
+	return '$0';
+
+var external = fd_data.subflow_inputs.credit_record.overdraft_external_accounts;
+var internal = fd_data.subflow_inputs.credit_record.overdraft_internal_accounts;
+
+var externalValue = parseFloat(external.getValue());
+var internalValue = parseFloat(internal.getValue());
+
+var largerValue = (externalValue >= internalValue) ? external.getDisplayValue() : internal.getDisplayValue();
+
+// Remove .00 from the display value
+largerValue = largerValue.replace(/\.00$/, '');
+
+return largerValue;
+
+
+// Setting Unavailable
+var type = fd_data.subflow_inputs.signature_parent_record.request_type;
+
+if (type == 'remove_authority')
+	return '$0';
+
+var external = fd_data.subflow_inputs.credit_record.unavailable_funds_external_accounts;
+var internal = fd_data.subflow_inputs.credit_record.unavailable_funds_internal_accounts;
+
+var externalValue = parseFloat(external);
+var internalValue = parseFloat(internal);
+
+var largerValue = (externalValue >= internalValue) ? external.getDisplayValue() : internal.getDisplayValue();
+
+// Remove .00 from the display value
+largerValue = largerValue.replace(/\.00$/, '');
+
+return largerValue;
+
+
+// setting wire transfer
+var type = fd_data.subflow_inputs.signature_parent_record.request_type;
+
+if (type == 'remove_authority')
+	return '$0';
+
+var external = fd_data.subflow_inputs.credit_record.unavailable_funds_external_accounts;
+var internal = fd_data.subflow_inputs.credit_record.unavailable_funds_internal_accounts;
+
+var externalValue = parseFloat(external);
+var internalValue = parseFloat(internal);
+
+var largerValue = (externalValue >= internalValue) ? external.getDisplayValue() : internal.getDisplayValue();
+
+// Remove .00 from the display value
+largerValue = largerValue.replace(/\.00$/, '');
+
+return largerValue;
