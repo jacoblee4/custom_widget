@@ -1,81 +1,45 @@
-Got it! Let's handle everything in the provisioning subflow. Here's how to modify it:
-Updated Provisioning Subflow Logic
-Step 1: Determine if AIM task is actually needed
-Add this as the first action in your provisioning subflow (before setting amount_text):
-javascript// Script to determine if provisioning task is actually needed
-(function() {
-    var recordType = fd_data.subflow_inputs.record_type; // 'credit', 'non-credit', or 'both'
-    var requestType = fd_data.subflow_inputs.signature_parent_record.request_type;
-    var creditRec = fd_data.subflow_inputs.credit_record;
-    var nonCreditRec = fd_data.subflow_inputs.non_credit_record;
+var recordType = fd_data.subflow_inputs.record_type; // 'credit', 'non-credit', or 'both'
+var requestType = fd_data.subflow_inputs.signature_parent_record.request_type;
+var creditRec = fd_data.subflow_inputs.credit_record;
+var nonCreditRec = fd_data.subflow_inputs.non_credit_record;
     
-    var needsCreditTask = false;
-    var needsNonCreditTask = false;
+var needsCreditTask = false;
+var needsNonCreditTask = false;
     
     // Credit always needs a task if present
-    if ((recordType == 'credit' || recordType == 'both') && creditRec && !creditRec.nil()) {
-        needsCreditTask = true;
-    }
+if ((recordType == 'credit' || recordType == 'both') && creditRec && !creditRec.nil()) {
+    needsCreditTask = true;
+}
     
-    // Non-credit only needs task based on wire transfer logic
-    if ((recordType == 'non-credit' || recordType == 'both') && nonCreditRec && !nonCreditRec.nil()) {
-        var wireExternal = parseFloat(nonCreditRec.disbursement_wire_transfer_external.getValue()) || 0;
-        var wireInternal = parseFloat(nonCreditRec.disbursement_wire_transfer_internal.getValue()) || 0;
-        var origWireExternal = parseFloat(nonCreditRec.original_disbursement_wire_transfer_external.getValue()) || 0;
-        var origWireInternal = parseFloat(nonCreditRec.original_disbursement_wire_transfer_internal.getValue()) || 0;
+// Non-credit only needs task based on wire transfer logic
+if ((recordType == 'non-credit' || recordType == 'both') && nonCreditRec && !nonCreditRec.nil()) {
+    var wireExternal = parseFloat(nonCreditRec.disbursement_wire_transfer_external.getValue()) || 0;
+    var wireInternal = parseFloat(nonCreditRec.disbursement_wire_transfer_internal.getValue()) || 0;
+    var origWireExternal = parseFloat(nonCreditRec.original_disbursement_wire_transfer_external.getValue()) || 0;
+    var origWireInternal = parseFloat(nonCreditRec.original_disbursement_wire_transfer_internal.getValue()) || 0;
         
-        if (requestType == 'new') {
-            // NEW: Need task if either value is positive
-            needsNonCreditTask = (wireExternal > 0 || wireInternal > 0);
+    if (requestType == 'new_authority') {
+        // NEW: Need task if either value is positive
+        needsNonCreditTask = (wireExternal > 0 || wireInternal > 0);
+    }
+    else if (requestType == 'change_to_existing_authority') {
+        // CHANGE: Need task if either value changed from original
+        needsNonCreditTask = (wireExternal != origWireExternal || wireInternal != origWireInternal);
         }
-        else if (requestType == 'change') {
-            // CHANGE: Need task if either value changed from original
-            needsNonCreditTask = (wireExternal != origWireExternal || wireInternal != origWireInternal);
-        }
-        else if (requestType == 'remove_authority') {
-            // REMOVE: Need task if either original value was positive
+    else if (requestType == 'remove_authority') {
+        // REMOVE: Need task if either original value was positive
             needsNonCreditTask = (origWireExternal > 0 || origWireInternal > 0);
-        }
     }
+}
     
-    // Determine final record_type or exit early
-    if (!needsCreditTask && !needsNonCreditTask) {
-        return 'none'; // No task needed at all
-    }
-    if (needsCreditTask && needsNonCreditTask) {
-        return 'both';
-    }
-    if (needsCreditTask) {
-        return 'credit';
-    }
-    return 'non-credit';
-})()
-Store this result in a flow variable called actual_record_type.
-Step 2: Early exit if no task needed
-Add an IF condition right after Step 1:
-Condition: actual_record_type == 'none'
-If true: Exit subflow (don't create any tasks, don't set stages)
-Step 3: Update amount_text script (your existing code)
-Keep as-is, but it will only run if we passed the Step 2 check.
-Step 4: Update stage-setting logic
-Replace your two IF statements with logic that uses actual_record_type:
-IF: actual_record_type == 'credit' OR actual_record_type == 'both'
-
-Set credit record stage to 'provisioning task'
-
-IF: actual_record_type == 'non-credit' OR actual_record_type == 'both'
-
-Set non-credit record stage to 'provisioning task'
-
-Step 5: Create REQ/RITM/SCTASK
-Keep as-is - this will only happen if we didn't exit early.
-
-Result
-Now your parent and child flows can always call the provisioning subflow without worrying about the logic. The subflow itself will:
-
-Determine if a task is actually needed
-Exit early if not
-Only set stages and create tasks when appropriate
-Handle the "both" scenario correctly by only setting stages for records that actually need provisioning
-
-This keeps all the decision logic in one place and makes it easier to maintain.
+// Determine final record_type or exit early
+if (!needsCreditTask && !needsNonCreditTask) {
+    return 'none'; // No task needed at all
+}
+if (needsCreditTask && needsNonCreditTask) {
+    return 'both';
+}
+if (needsCreditTask) {
+    return 'credit';
+}
+return 'non-credit';
