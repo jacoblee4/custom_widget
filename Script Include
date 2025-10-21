@@ -457,26 +457,32 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
     },
 
     // Create or update authority limits table
-    processAuthorityLimits: function(jobCode, creditChildId, nonCreditChildId) {
-
-        // Get values from child records
-        var creditValues = this._getCreditValues(creditChildId);
-        var nonCreditValues = this._getNonCreditValues(nonCreditChildId);
-
-        // Check if limit already exists
-        var existingGr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
-        existingGr.addQuery('job_code', jobCode);
-        existingGr.addQuery('active', true);
-        existingGr.query();
-
-        if (existingGr.next()) {
-            // Update existing
-            return this._updateLimit(existingGr, creditValues, nonCreditValues);
-        } else {
-            // Create new
-            return this._createLimit(jobCode, creditValues, nonCreditValues);
-        }
-    },
+processAuthorityLimits: function(jobCode, creditChildId, nonCreditChildId) {
+    
+    // Get values from child records (will be null if not provided)
+    var creditValues = creditChildId ? this._getCreditValues(creditChildId) : null;
+    var nonCreditValues = nonCreditChildId ? this._getNonCreditValues(nonCreditChildId) : null;
+    
+    // Validate that at least one child ID was provided
+    if (!creditValues && !nonCreditValues) {
+        gs.error('processAuthorityLimits: No valid credit or non-credit child ID provided');
+        return false;
+    }
+    
+    // Check if limit already exists
+    var existingGr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
+    existingGr.addQuery('job_code', jobCode);
+    existingGr.addQuery('active', true);
+    existingGr.query();
+    
+    if (existingGr.next()) {
+        // Update existing
+        return this._updateLimit(existingGr, creditValues, nonCreditValues);
+    } else {
+        // Create new
+        return this._createLimit(jobCode, creditValues, nonCreditValues);
+    }
+},
 
     _getCreditValues: function(creditChildId) {
         if (!creditChildId) return null;
@@ -515,45 +521,49 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
     },
 
     _updateLimit: function(existingGr, creditValues, nonCreditValues) {
-        if (creditValues) {
-            for (var key in creditValues) {
-                existingGr[key] = creditValues[key];
-            }
+    // Update credit fields if provided
+    if (creditValues) {
+        for (var key in creditValues) {
+            existingGr[key] = creditValues[key];
         }
-
-        if (nonCreditValues) {
-            for (var key in nonCreditValues) {
-                existingGr[key] = nonCreditValues[key];
-            }
+    }
+    
+    // Update non-credit fields if provided
+    if (nonCreditValues) {
+        for (var key in nonCreditValues) {
+            existingGr[key] = nonCreditValues[key];
         }
-
-        existingGr.update();
-
-        return true;
-    },
+    }
+    
+    existingGr.update();
+    
+    return true;
+},
 
     _createLimit: function(jobCode, creditValues, nonCreditValues) {
-        var newGr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
-        newGr.initialize();
-        newGr.job_code = jobCode;
-        newGr.active = true;
-
-        if (creditValues) {
-            for (var key in creditValues) {
-                newGr[key] = creditValues[key];
-            }
+    var newGr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
+    newGr.initialize();
+    newGr.job_code = jobCode;
+    newGr.active = true;
+    
+    // Set credit fields if provided
+    if (creditValues) {
+        for (var key in creditValues) {
+            newGr[key] = creditValues[key];
         }
-
-        if (nonCreditValues) {
-            for (var key in nonCreditValues) {
-                newGr[key] = nonCreditValues[key];
-            }
+    }
+    
+    // Set non-credit fields if provided
+    if (nonCreditValues) {
+        for (var key in nonCreditValues) {
+            newGr[key] = nonCreditValues[key];
         }
-
-        var sysId = newGr.insert();
-
-        return sysId ? true : false;
-    },
+    }
+    
+    var sysId = newGr.insert();
+    
+    return sysId ? true : false;
+},
 
 	// Check if any committee member rejected the record
     rejectionReceived: function(record) {
