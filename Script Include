@@ -1,58 +1,60 @@
-// Setting Overdraft
 var type = fd_data.subflow_inputs.signature_parent_record.request_type;
-
-if (type == 'remove_authority')
-	return '$0';
-
-var external = fd_data.subflow_inputs.credit_record.overdraft_external_accounts;
-var internal = fd_data.subflow_inputs.credit_record.overdraft_internal_accounts;
-
-var externalValue = parseFloat(external.getValue());
-var internalValue = parseFloat(internal.getValue());
-
-var largerValue = (externalValue >= internalValue) ? external.getDisplayValue() : internal.getDisplayValue();
-
-// Remove .00 from the display value
-largerValue = largerValue.replace(/\.00$/, '');
-
-return largerValue;
-
-
-// Setting Unavailable
-var type = fd_data.subflow_inputs.signature_parent_record.request_type;
-
-if (type == 'remove_authority')
-	return '$0';
-
-var external = fd_data.subflow_inputs.credit_record.unavailable_funds_external_accounts;
-var internal = fd_data.subflow_inputs.credit_record.unavailable_funds_internal_accounts;
-
-var externalValue = parseFloat(external);
-var internalValue = parseFloat(internal);
-
-var largerValue = (externalValue >= internalValue) ? external.getDisplayValue() : internal.getDisplayValue();
-
-// Remove .00 from the display value
-largerValue = largerValue.replace(/\.00$/, '');
-
-return largerValue;
-
-
-// setting wire transfer
-var type = fd_data.subflow_inputs.signature_parent_record.request_type;
-
-if (type == 'remove_authority')
-	return '$0';
-
-var external = fd_data.subflow_inputs.credit_record.unavailable_funds_external_accounts;
-var internal = fd_data.subflow_inputs.credit_record.unavailable_funds_internal_accounts;
-
-var externalValue = parseFloat(external);
-var internalValue = parseFloat(internal);
-
-var largerValue = (externalValue >= internalValue) ? external.getDisplayValue() : internal.getDisplayValue();
-
-// Remove .00 from the display value
-largerValue = largerValue.replace(/\.00$/, '');
-
-return largerValue;
+    var creditRecord = fd_data.subflow_inputs.credit_record;
+    var nonCreditRecord = fd_data.subflow_inputs.non_credit_record;
+    
+    var hasCreditRecord = creditRecord && !creditRecord.nil();
+    var hasNonCreditRecord = nonCreditRecord && !nonCreditRecord.nil();
+    var isRemove = (type == 'remove_authority');
+    
+    var output = [];
+    
+    // Helper function to format display value (remove .00)
+    function formatAmount(displayValue) {
+        return displayValue.replace(/\.00$/, '');
+    }
+    
+    // Helper function to get larger value
+    function getLargerValue(externalField, internalField) {
+        var externalValue = parseFloat(externalField.getValue());
+        var internalValue = parseFloat(internalField.getValue());
+        
+        var largerField = (externalValue >= internalValue) ? externalField : internalField;
+        return formatAmount(largerField.getDisplayValue());
+    }
+    
+    // Handle Remove Authority requests
+    if (isRemove) {
+        if (hasNonCreditRecord) {
+            output.push('Wire Transfer: $0');
+        }
+        if (hasCreditRecord) {
+            output.push('Overdraft: $0');
+            output.push('Unavailable Funds: $0');
+        }
+    }
+    // Handle New/Change requests
+    else {
+        if (hasNonCreditRecord) {
+            var wireTransfer = getLargerValue(
+                nonCreditRecord.wire_transfer_external_accounts,
+                nonCreditRecord.wire_transfer_internal_accounts
+            );
+            output.push('Wire Transfer: ' + wireTransfer);
+        }
+        
+        if (hasCreditRecord) {
+            var overdraft = getLargerValue(
+                creditRecord.overdraft_external_accounts,
+                creditRecord.overdraft_internal_accounts
+            );
+            output.push('Overdraft: ' + overdraft);
+            
+            var unavailable = getLargerValue(
+                creditRecord.unavailable_funds_external_accounts,
+                creditRecord.unavailable_funds_internal_accounts
+            );
+            output.push('Unavailable Funds: ' + unavailable);
+        }
+    }
+    
+    return output.join('\n');
