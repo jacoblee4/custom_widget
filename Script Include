@@ -6,7 +6,7 @@ var nonCreditRec = fd_data.subflow_inputs.non_credit_record;
 var needsCreditTask = false;
 var needsNonCreditTask = false;
     
-    // Credit always needs a task if present
+// Credit always needs a task if present
 if ((recordType == 'credit' || recordType == 'both') && creditRec && !creditRec.nil()) {
     needsCreditTask = true;
 }
@@ -25,10 +25,11 @@ if ((recordType == 'non-credit' || recordType == 'both') && nonCreditRec && !non
     else if (requestType == 'change_to_existing_authority') {
         // CHANGE: Need task if either value changed from original
         needsNonCreditTask = (wireExternal != origWireExternal || wireInternal != origWireInternal);
-        }
+    }
     else if (requestType == 'remove_authority') {
-        // REMOVE: Need task if either original value was positive
-            needsNonCreditTask = (origWireExternal > 0 || origWireInternal > 0);
+        // REMOVE: Need task if either current value is positive (indicates there was something to remove)
+        // For removals, original_ fields are always 0, so we check current values
+        needsNonCreditTask = (wireExternal > 0 || wireInternal > 0);
     }
 }
     
