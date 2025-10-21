@@ -1,62 +1,8 @@
-09-26-2025 10:33:49
-Information	x_banun_bunow_si_0	SIGNATURE LOG: Field disbursement_wire_transfer_external has changed!
+10-21-2025 16:23:47
+Information	x_banun_bunow_si_0	SIGNATURE TESTING requestType: remove_authority
 
-09-26-2025 10:33:49
-Information	x_banun_bunow_si_0	SIGNATURE LOG: This is a CHANGE request with existing limits - checking for credit changes
+10-21-2025 16:23:47
+Information	x_banun_bunow_si_0	SIGNATURE TESTING === PROVISIONING TASK DEBUG ===
 
-09-26-2025 10:33:49
-Information	x_banun_bunow_si_0	SIGNATURE LOG: Creating non-credit record
-
-09-26-2025 10:33:49
-Information	x_banun_bunow_si_0	SIGNATURE LOG: Starting script - Request Type: change_to_existing_authority, Job Code: 2c909cc31b474a10cd80ffbe034bcb69
-
-09-26-2025 10:33:49
-Information	x_banun_bunow_si_0	SIGNATURE LOG: Processing NEW or CHANGE request
-
-09-26-2025 10:33:49
-Information	x_banun_bunow_si_0	SIGNATURE LOG: Changes detected for credit, normal insert
-
-09-26-2025 10:33:49
-Information	x_banun_bunow_si_0	SIGNATURE LOG: Comparing field disbursement_wire_transfer_external - New: "" vs Original: "0"
-
-09-26-2025 10:33:49
-Information	x_banun_bunow_si_0	SIGNATURE LOG: Creating credit record
-
-09-26-2025 10:33:49
-Information	x_banun_bunow_si_0	SIGNATURE LOG: Processing authority type: non_credit
-
-09-26-2025 10:33:49
-Information	x_banun_bunow_si_0	SIGNATURE LOG: Existing Credit - Overdraft Internal: 2
-
-09-26-2025 10:33:49
-Information	x_banun_bunow_si_0	SIGNATURE LOG: Credit field overdraft_internal_accounts has changed!
-
-09-26-2025 10:33:49
-Information	x_banun_bunow_si_0	SIGNATURE LOG: Comparing field disbursement_ach - New: "20" vs Original: "20"
-
-09-26-2025 10:33:49
-Information	x_banun_bunow_si_0	SIGNATURE LOG: Processing authority type: credit
-
-09-26-2025 10:33:49
-Information	x_banun_bunow_si_0	SIGNATURE LOG: Authority data: {"disbursement_ach":"20","disbursement_wire_transfer_external":"","disbursement_wire_transfer_internal":"","disbursement_official_checks_external":"","disbursement_official_checks_internal":"","check_cashing_on_us":"","check_cashing_not_on_us":"","remote_deposit":"","treasury_solutions_company_wire_limits":"","fx_wire_limits":""}|{"overdraft_internal_accounts":"22","overdraft_external_accounts":"22","unavailable_funds_internal_accounts":"","unavailable_funds_external_accounts":""}
-
-09-26-2025 10:33:49
-Information	x_banun_bunow_si_0	SIGNATURE LOG: Existing Non-Credit - ACH: 20
-
-09-26-2025 10:33:49
-Information	x_banun_bunow_si_0	SIGNATURE LOG: Changes detected for non-credit, normal insert
-
-09-26-2025 10:33:49
-Information	x_banun_bunow_si_0	SIGNATURE LOG: Script completed
-
-09-26-2025 10:33:49
-Information	x_banun_bunow_si_0	SIGNATURE LOG: Comparing credit field overdraft_internal_accounts - New: "22" vs Original: "2"
-
-09-26-2025 10:33:49
-Information	x_banun_bunow_si_0	SIGNATURE LOG: This is a CHANGE request with existing limits - checking for changes
-
-09-26-2025 10:33:49
-Information	x_banun_bunow_si_0	SIGNATURE LOG: Authority types: non_credit|credit
-
-09-26-2025 10:33:49
-Information	x_banun_bunow_si_0	SIGNATURE LOG: Found existing limits for job code 2c909cc31b474a10cd80ffbe034bcb69
+10-21-2025 16:23:47
+Information	x_banun_bunow_si_0	SIGNATURE TESTING recordType: null
