@@ -1,4 +1,4 @@
-var recordType = fd_data.subflow_inputs.record_type; // 'credit', 'non-credit', or 'both'
+var recordType = fd_data.subflow_inputs.record_type || 'both'; // Default to 'both' if null
 var requestType = fd_data.subflow_inputs.signature_parent_record.request_type;
 var creditRec = fd_data.subflow_inputs.credit_record;
 var nonCreditRec = fd_data.subflow_inputs.non_credit_record;
@@ -6,20 +6,20 @@ var nonCreditRec = fd_data.subflow_inputs.non_credit_record;
 gs.log('SIGNATURE TESTING === PROVISIONING TASK DEBUG ===');
 gs.log('SIGNATURE TESTING recordType: ' + recordType);
 gs.log('SIGNATURE TESTING requestType: ' + requestType);
-gs.log('SIGNATURE TESTING creditRec exists: ' + (creditRec && !creditRec.nil()));
-gs.log('SIGNATURE TESTING nonCreditRec exists: ' + (nonCreditRec && !nonCreditRec.nil()));
+gs.log('SIGNATURE TESTING creditRec exists: ' + (creditRec && creditRec.sys_id));
+gs.log('SIGNATURE TESTING nonCreditRec exists: ' + (nonCreditRec && nonCreditRec.sys_id));
     
 var needsCreditTask = false;
 var needsNonCreditTask = false;
     
 // Credit always needs a task if present
-if ((recordType == 'credit' || recordType == 'both') && creditRec && !creditRec.nil()) {
+if ((recordType == 'credit' || recordType == 'both') && creditRec && creditRec.sys_id) {
     needsCreditTask = true;
     gs.log('SIGNATURE TESTING Credit task NEEDED');
 }
     
 // Non-credit only needs task based on wire transfer logic
-if ((recordType == 'non-credit' || recordType == 'both') && nonCreditRec && !nonCreditRec.nil()) {
+if ((recordType == 'non-credit' || recordType == 'both') && nonCreditRec && nonCreditRec.sys_id) {
     var wireExternal = parseFloat(nonCreditRec.disbursement_wire_transfer_external.getValue()) || 0;
     var wireInternal = parseFloat(nonCreditRec.disbursement_wire_transfer_internal.getValue()) || 0;
     var origWireExternal = parseFloat(nonCreditRec.original_disbursement_wire_transfer_external.getValue()) || 0;
