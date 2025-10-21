@@ -1,13 +1,13 @@
-var recordType = fd_data.subflow_inputs.record_type || 'both'; // Default to 'both' if null
+var recordType = fd_data.subflow_inputs.type_of_request || 'both'; // Default to 'both' if null
 var requestType = fd_data.subflow_inputs.signature_parent_record.request_type;
 var creditRec = fd_data.subflow_inputs.credit_record;
 var nonCreditRec = fd_data.subflow_inputs.non_credit_record;
 
-gs.log('SIGNATURE TESTING === PROVISIONING TASK DEBUG ===');
-gs.log('SIGNATURE TESTING recordType: ' + recordType);
-gs.log('SIGNATURE TESTING requestType: ' + requestType);
-gs.log('SIGNATURE TESTING creditRec exists: ' + (creditRec && creditRec.sys_id));
-gs.log('SIGNATURE TESTING nonCreditRec exists: ' + (nonCreditRec && nonCreditRec.sys_id));
+gs.info('SIGNATURE TESTING === PROVISIONING TASK DEBUG ===');
+gs.info('SIGNATURE TESTING recordType: ' + recordType);
+gs.info('SIGNATURE TESTING requestType: ' + requestType);
+gs.info('SIGNATURE TESTING creditRec exists: ' + (creditRec && creditRec.sys_id));
+gs.info('SIGNATURE TESTING nonCreditRec exists: ' + (nonCreditRec && nonCreditRec.sys_id));
     
 var needsCreditTask = false;
 var needsNonCreditTask = false;
@@ -15,7 +15,7 @@ var needsNonCreditTask = false;
 // Credit always needs a task if present
 if ((recordType == 'credit' || recordType == 'both') && creditRec && creditRec.sys_id) {
     needsCreditTask = true;
-    gs.log('SIGNATURE TESTING Credit task NEEDED');
+    gs.info('SIGNATURE TESTING Credit task NEEDED');
 }
     
 // Non-credit only needs task based on wire transfer logic
@@ -25,44 +25,44 @@ if ((recordType == 'non-credit' || recordType == 'both') && nonCreditRec && nonC
     var origWireExternal = parseFloat(nonCreditRec.original_disbursement_wire_transfer_external.getValue()) || 0;
     var origWireInternal = parseFloat(nonCreditRec.original_disbursement_wire_transfer_internal.getValue()) || 0;
     
-    gs.log('SIGNATURE TESTING Wire External: ' + wireExternal);
-    gs.log('SIGNATURE TESTING Wire Internal: ' + wireInternal);
-    gs.log('SIGNATURE TESTING Orig Wire External: ' + origWireExternal);
-    gs.log('SIGNATURE TESTING Orig Wire Internal: ' + origWireInternal);
+    gs.info('SIGNATURE TESTING Wire External: ' + wireExternal);
+    gs.info('SIGNATURE TESTING Wire Internal: ' + wireInternal);
+    gs.info('SIGNATURE TESTING Orig Wire External: ' + origWireExternal);
+    gs.info('SIGNATURE TESTING Orig Wire Internal: ' + origWireInternal);
         
     if (requestType == 'new_authority') {
         // NEW: Need task if either value is positive
         needsNonCreditTask = (wireExternal > 0 || wireInternal > 0);
-        gs.log('SIGNATURE TESTING NEW logic - needsNonCreditTask: ' + needsNonCreditTask);
+        gs.info('SIGNATURE TESTING NEW logic - needsNonCreditTask: ' + needsNonCreditTask);
     }
     else if (requestType == 'change_to_existing_authority') {
         // CHANGE: Need task if either value changed from original
         needsNonCreditTask = (wireExternal != origWireExternal || wireInternal != origWireInternal);
-        gs.log('SIGNATURE TESTING CHANGE logic - needsNonCreditTask: ' + needsNonCreditTask);
+        gs.info('SIGNATURE TESTING CHANGE logic - needsNonCreditTask: ' + needsNonCreditTask);
     }
     else if (requestType == 'remove_authority') {
         // REMOVE: Need task if either current value is positive (indicates there was something to remove)
         // For removals, original_ fields are always 0, so we check current values
         needsNonCreditTask = (wireExternal > 0 || wireInternal > 0);
-        gs.log('SIGNATURE TESTING REMOVE logic - needsNonCreditTask: ' + needsNonCreditTask);
+        gs.info('SIGNATURE TESTING REMOVE logic - needsNonCreditTask: ' + needsNonCreditTask);
     }
 }
     
-gs.log('SIGNATURE TESTING needsCreditTask: ' + needsCreditTask);
-gs.log('SIGNATURE TESTING needsNonCreditTask: ' + needsNonCreditTask);
+gs.info('SIGNATURE TESTING needsCreditTask: ' + needsCreditTask);
+gs.info('SIGNATURE TESTING needsNonCreditTask: ' + needsNonCreditTask);
 
 // Determine final record_type or exit early
 if (!needsCreditTask && !needsNonCreditTask) {
-    gs.log('SIGNATURE TESTING RESULT: none');
+    gs.info('SIGNATURE TESTING RESULT: none');
     return 'none'; // No task needed at all
 }
 if (needsCreditTask && needsNonCreditTask) {
-    gs.log('SIGNATURE TESTING RESULT: both');
+    gs.info('SIGNATURE TESTING RESULT: both');
     return 'both';
 }
 if (needsCreditTask) {
-    gs.log('SIGNATURE TESTING RESULT: credit');
+    gs.info('SIGNATURE TESTING RESULT: credit');
     return 'credit';
 }
-gs.log('SIGNATURE TESTING RESULT: non-credit');
+gs.info('SIGNATURE TESTING RESULT: non-credit');
 return 'non-credit';
