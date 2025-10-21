@@ -1,68 +1,63 @@
-var recordType = fd_data.subflow_inputs.type_of_request || 'both'; // Default to 'both' if null
-var requestType = fd_data.subflow_inputs.signature_parent_record.request_type;
-var creditRec = fd_data.subflow_inputs.credit_record;
-var nonCreditRec = fd_data.subflow_inputs.non_credit_record;
+Error: Error: Cannot find function nil in object [object GlideRecord].,Detail: Cannot find function nil in object [object GlideRecord].
 
-gs.info('SIGNATURE TESTING === PROVISIONING TASK DEBUG ===');
-gs.info('SIGNATURE TESTING recordType: ' + recordType);
-gs.info('SIGNATURE TESTING requestType: ' + requestType);
-gs.info('SIGNATURE TESTING creditRec exists: ' + (creditRec && creditRec.sys_id));
-gs.info('SIGNATURE TESTING nonCreditRec exists: ' + (nonCreditRec && nonCreditRec.sys_id));
+
+var type = fd_data.subflow_inputs.signature_parent_record.request_type;
+var creditRecord = fd_data.subflow_inputs.credit_record;
+var nonCreditRecord = fd_data.subflow_inputs.non_credit_record;
     
-var needsCreditTask = false;
-var needsNonCreditTask = false;
+var hasCreditRecord = creditRecord && !creditRecord.nil();
+var hasNonCreditRecord = nonCreditRecord && !nonCreditRecord.nil();
+var isRemove = (type == 'remove_authority');
     
-// Credit always needs a task if present
-if ((recordType == 'credit' || recordType == 'both') && creditRec && creditRec.sys_id) {
-    needsCreditTask = true;
-    gs.info('SIGNATURE TESTING Credit task NEEDED');
+var output = [];
+    
+// Helper function to format display value (remove .00)
+function formatAmount(displayValue) {
+    return displayValue.replace(/\.00$/, '');
 }
     
-// Non-credit only needs task based on wire transfer logic
-if ((recordType == 'non-credit' || recordType == 'both') && nonCreditRec && nonCreditRec.sys_id) {
-    var wireExternal = parseFloat(nonCreditRec.disbursement_wire_transfer_external.getValue()) || 0;
-    var wireInternal = parseFloat(nonCreditRec.disbursement_wire_transfer_internal.getValue()) || 0;
-    var origWireExternal = parseFloat(nonCreditRec.original_disbursement_wire_transfer_external.getValue()) || 0;
-    var origWireInternal = parseFloat(nonCreditRec.original_disbursement_wire_transfer_internal.getValue()) || 0;
-    
-    gs.info('SIGNATURE TESTING Wire External: ' + wireExternal);
-    gs.info('SIGNATURE TESTING Wire Internal: ' + wireInternal);
-    gs.info('SIGNATURE TESTING Orig Wire External: ' + origWireExternal);
-    gs.info('SIGNATURE TESTING Orig Wire Internal: ' + origWireInternal);
+// Helper function to get larger value
+function getLargerValue(externalField, internalField) {
+    var externalValue = parseFloat(externalField.getValue());
+    var internalValue = parseFloat(internalField.getValue());
         
-    if (requestType == 'new_authority') {
-        // NEW: Need task if either value is positive
-        needsNonCreditTask = (wireExternal > 0 || wireInternal > 0);
-        gs.info('SIGNATURE TESTING NEW logic - needsNonCreditTask: ' + needsNonCreditTask);
+    var largerField = (externalValue >= internalValue) ? externalField : internalField;
+    return formatAmount(largerField.getDisplayValue());
+}
+    
+// Handle Remove Authority requests
+if (isRemove) {
+    if (hasNonCreditRecord) {
+        output.push('Wire Transfer: $0');
     }
-    else if (requestType == 'change_to_existing_authority') {
-        // CHANGE: Need task if either value changed from original
-        needsNonCreditTask = (wireExternal != origWireExternal || wireInternal != origWireInternal);
-        gs.info('SIGNATURE TESTING CHANGE logic - needsNonCreditTask: ' + needsNonCreditTask);
+    if (hasCreditRecord) {
+        output.push('Overdraft: $0');
+        output.push('Unavailable Funds: $0');
     }
-    else if (requestType == 'remove_authority') {
-        // REMOVE: Need task if either current value is positive (indicates there was something to remove)
-        // For removals, original_ fields are always 0, so we check current values
-        needsNonCreditTask = (wireExternal > 0 || wireInternal > 0);
-        gs.info('SIGNATURE TESTING REMOVE logic - needsNonCreditTask: ' + needsNonCreditTask);
+}
+// Handle New/Change requests
+else {
+    if (hasNonCreditRecord) {
+        var wireTransfer = getLargerValue(
+            nonCreditRecord.wire_transfer_external_accounts,
+            nonCreditRecord.wire_transfer_internal_accounts
+        );
+        output.push('Wire Transfer: ' + wireTransfer);
+    }
+        
+    if (hasCreditRecord) {
+        var overdraft = getLargerValue(
+            creditRecord.overdraft_external_accounts,
+            creditRecord.overdraft_internal_accounts
+        );
+        output.push('Overdraft: ' + overdraft);
+        
+        var unavailable = getLargerValue(
+            creditRecord.unavailable_funds_external_accounts,
+            creditRecord.unavailable_funds_internal_accounts
+        );
+        output.push('Unavailable Funds: ' + unavailable);
     }
 }
     
-gs.info('SIGNATURE TESTING needsCreditTask: ' + needsCreditTask);
-gs.info('SIGNATURE TESTING needsNonCreditTask: ' + needsNonCreditTask);
-
-// Determine final record_type or exit early
-if (!needsCreditTask && !needsNonCreditTask) {
-    gs.info('SIGNATURE TESTING RESULT: none');
-    return 'none'; // No task needed at all
-}
-if (needsCreditTask && needsNonCreditTask) {
-    gs.info('SIGNATURE TESTING RESULT: both');
-    return 'both';
-}
-if (needsCreditTask) {
-    gs.info('SIGNATURE TESTING RESULT: credit');
-    return 'credit';
-}
-gs.info('SIGNATURE TESTING RESULT: non-credit');
-return 'non-credit';
+return output.join('\n');
