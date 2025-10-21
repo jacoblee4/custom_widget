@@ -1,12 +1,9 @@
-Error: Error: Cannot find function nil in object [object GlideRecord].,Detail: Cannot find function nil in object [object GlideRecord].
-
-
 var type = fd_data.subflow_inputs.signature_parent_record.request_type;
 var creditRecord = fd_data.subflow_inputs.credit_record;
 var nonCreditRecord = fd_data.subflow_inputs.non_credit_record;
     
-var hasCreditRecord = creditRecord && !creditRecord.nil();
-var hasNonCreditRecord = nonCreditRecord && !nonCreditRecord.nil();
+var hasCreditRecord = creditRecord && creditRecord.sys_id;
+var hasNonCreditRecord = nonCreditRecord && nonCreditRecord.sys_id;
 var isRemove = (type == 'remove_authority');
     
 var output = [];
