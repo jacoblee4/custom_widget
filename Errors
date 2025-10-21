@@ -1,8 +1,1 @@
-10-21-2025 16:23:47
-Information	x_banun_bunow_si_0	SIGNATURE TESTING requestType: remove_authority
-
-10-21-2025 16:23:47
-Information	x_banun_bunow_si_0	SIGNATURE TESTING === PROVISIONING TASK DEBUG ===
-
-10-21-2025 16:23:47
-Information	x_banun_bunow_si_0	SIGNATURE TESTING recordType: null
+Error: Cannot find function nil in object [object GlideRecord].,Detail: Cannot find function nil in object [object GlideRecord].
