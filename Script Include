@@ -1,20 +1,31 @@
-Error: Cannot read property "job_code" from null,Detail: Cannot read property "job_code" from null
-
-var helper = new x_banun_bunow_si_0.SignatureHelper();
-
-var creditSysId = fd_data.subflow_inputs.credit_record;
-var nonCreditSysId = fd_data.subflow_inputs.non_credit_record;
+(function executeRule(current, previous /*null when async*/) {
     
-var success = helper.processAuthorityLimits(
-    fd_data.trigger.current.job_code,
-    creditSysId,
-    nonCreditSysId
-);
-
-return success;
-
-
-
-
-
-
+    // List all your currency fields
+    var currencyFields = [
+        'disbursement_wire_transfer_external',
+        'disbursement_wire_transfer_internal',
+        'overdraft_external_accounts',
+        'overdraft_internal_accounts',
+        'unavailable_funds_external_accounts',
+        'unavailable_funds_internal_accounts'
+        // Add all other currency fields
+    ];
+    
+    // Format each field
+    for (var i = 0; i < currencyFields.length; i++) {
+        var fieldName = currencyFields[i];
+        var value = current.getValue(fieldName);
+        
+        if (value) {
+            var numValue = parseFloat(value);
+            if (!isNaN(numValue)) {
+                // Round manually
+                var rounded = parseInt(numValue + 0.5);
+                // Add commas
+                var formatted = rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                current.setDisplayValue(fieldName, '$' + formatted);
+            }
+        }
+    }
+    
+})(current, previous);
