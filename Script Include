@@ -1,6 +1,3 @@
-Error: Error: The undefined value has no properties.,Detail: The undefined value has no properties.
-
-
 var type = fd_data.subflow_inputs.signature_parent_record.request_type;
 var creditRecord = fd_data.subflow_inputs.credit_record;
 var nonCreditRecord = fd_data.subflow_inputs.non_credit_record;
@@ -12,8 +9,11 @@ var isRemove = (type == 'remove_authority');
 // For non-credit, check if wire transfer values exist
 var hasNonCreditWireTransfer = false;
 if (hasNonCreditRecord) {
-    var wireExternal = parseFloat(nonCreditRecord.disbursement_wire_transfer_external.getValue()) || 0;
-    var wireInternal = parseFloat(nonCreditRecord.disbursement_wire_transfer_internal.getValue()) || 0;
+    var wireExternalField = nonCreditRecord.disbursement_wire_transfer_external;
+    var wireInternalField = nonCreditRecord.disbursement_wire_transfer_internal;
+    
+    var wireExternal = (wireExternalField && wireExternalField.getValue()) ? parseFloat(wireExternalField.getValue()) : 0;
+    var wireInternal = (wireInternalField && wireInternalField.getValue()) ? parseFloat(wireInternalField.getValue()) : 0;
     hasNonCreditWireTransfer = (wireExternal > 0 || wireInternal > 0);
 }
     
@@ -21,13 +21,16 @@ var output = [];
     
 // Helper function to format display value (remove .00)
 function formatAmount(displayValue) {
+    if (!displayValue) return '$0';
     return displayValue.replace(/\.00$/, '');
 }
     
 // Helper function to get larger value
 function getLargerValue(externalField, internalField) {
-    var externalValue = parseFloat(externalField.getValue());
-    var internalValue = parseFloat(internalField.getValue());
+    if (!externalField || !internalField) return '$0';
+    
+    var externalValue = parseFloat(externalField.getValue() || 0);
+    var internalValue = parseFloat(internalField.getValue() || 0);
         
     var largerField = (externalValue >= internalValue) ? externalField : internalField;
     return formatAmount(largerField.getDisplayValue());
