@@ -1,31 +1,44 @@
-(function executeRule(current, previous /*null when async*/) {
-    
-    // List all your currency fields
+function onLoad() {
+    // Add all currency field names here
     var currencyFields = [
         'disbursement_wire_transfer_external',
         'disbursement_wire_transfer_internal',
         'overdraft_external_accounts',
         'overdraft_internal_accounts',
         'unavailable_funds_external_accounts',
-        'unavailable_funds_internal_accounts'
-        // Add all other currency fields
+        'unavailable_funds_internal_accounts',
+        'disbursement_ach',
+        'disbursement_official_checks_external',
+        'disbursement_official_checks_internal',
+        'check_cashing_on_us',
+        'check_cashing_not_on_us',
+        'remote_deposit',
+        'treasury_solutions_company_wire_limits',
+        'fx_wire_limits'
+        // Add any other currency fields
     ];
     
-    // Format each field
     for (var i = 0; i < currencyFields.length; i++) {
         var fieldName = currencyFields[i];
-        var value = current.getValue(fieldName);
         
-        if (value) {
-            var numValue = parseFloat(value);
-            if (!isNaN(numValue)) {
-                // Round manually
-                var rounded = parseInt(numValue + 0.5);
-                // Add commas
-                var formatted = rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-                current.setDisplayValue(fieldName, '$' + formatted);
+        // Check if field exists on form
+        if (g_form.getControl(fieldName)) {
+            var value = g_form.getValue(fieldName);
+            
+            if (value && value !== '0' && value !== '') {
+                // Parse and format without decimals
+                var numValue = parseFloat(value);
+                if (!isNaN(numValue)) {
+                    // Round manually (add 0.5 and parseInt)
+                    var rounded = parseInt(numValue + 0.5);
+                    
+                    // Format with commas
+                    var formatted = rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                    
+                    // Set the display value
+                    g_form.getControl(fieldName).value = '$' + formatted;
+                }
             }
         }
     }
-    
-})(current, previous);
+}
