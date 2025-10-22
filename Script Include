@@ -1,3 +1,6 @@
+Error: Error: The undefined value has no properties.,Detail: The undefined value has no properties.
+
+
 var type = fd_data.subflow_inputs.signature_parent_record.request_type;
 var creditRecord = fd_data.subflow_inputs.credit_record;
 var nonCreditRecord = fd_data.subflow_inputs.non_credit_record;
