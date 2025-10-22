@@ -5,6 +5,14 @@ var nonCreditRecord = fd_data.subflow_inputs.non_credit_record;
 var hasCreditRecord = creditRecord && creditRecord.sys_id;
 var hasNonCreditRecord = nonCreditRecord && nonCreditRecord.sys_id;
 var isRemove = (type == 'remove_authority');
+
+// For non-credit, check if wire transfer values exist
+var hasNonCreditWireTransfer = false;
+if (hasNonCreditRecord) {
+    var wireExternal = parseFloat(nonCreditRecord.disbursement_wire_transfer_external.getValue()) || 0;
+    var wireInternal = parseFloat(nonCreditRecord.disbursement_wire_transfer_internal.getValue()) || 0;
+    hasNonCreditWireTransfer = (wireExternal > 0 || wireInternal > 0);
+}
     
 var output = [];
     
@@ -24,7 +32,7 @@ function getLargerValue(externalField, internalField) {
     
 // Handle Remove Authority requests
 if (isRemove) {
-    if (hasNonCreditRecord) {
+    if (hasNonCreditWireTransfer) {
         output.push('Wire Transfer: $0');
     }
     if (hasCreditRecord) {
