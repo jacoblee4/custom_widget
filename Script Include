@@ -1,10 +1,13 @@
-****flow call
-// Remove all authority limits with the triggers job code
+//credit:
 var helper = new x_banun_bunow_si_0.SignatureHelper();
-return helper.removeAuthorityLimit(fd_data.subflow_inputs.parent_record.job_code);
+return helper.removeAuthorityLimit(fd_data.subflow_inputs.parent_record.job_code, 'credit');
+
+//non-credit:
+var helper = new x_banun_bunow_si_0.SignatureHelper();
+return helper.removeAuthorityLimit(fd_data.subflow_inputs.parent_record.job_code, 'non-credit');
 
 
-***Scropt include
+
 var SignatureHelper = Class.create();
 SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
 
@@ -451,16 +454,100 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         return false;
     },
 
-    // Remove all limits with requested job code
-    removeAuthorityLimit: function(jobCode) {
+    // Remove authority limits - intelligently handles partial removals
+    removeAuthorityLimit: function(jobCode, type) {
         var gr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
         gr.addQuery('job_code', jobCode);
         gr.query();
 
-        while (gr.next()) {
-            gr.deleteMultiple();
+        if (!gr.next()) {
+            gs.info('removeAuthorityLimit: No authority limit found for job code: ' + jobCode);
+            return true;
         }
+
+        // Check if the OTHER type has any values
+        var hasOtherTypeValues = false;
+
+        if (type === 'credit') {
+            // Removing credit, check if non-credit has values
+            hasOtherTypeValues = this._hasNonCreditValues(gr);
+        } else if (type === 'non-credit') {
+            // Removing non-credit, check if credit has values
+            hasOtherTypeValues = this._hasCreditValues(gr);
+        }
+
+        if (hasOtherTypeValues) {
+            // Other type has values, so just zero out this type's fields
+            gs.info('removeAuthorityLimit: Other type has values, zeroing out ' + type + ' fields');
+            
+            if (type === 'credit') {
+                gr.overdraft_external_accounts = 0;
+                gr.overdraft_internal_accounts = 0;
+                gr.unavailable_funds_external_accounts = 0;
+                gr.unavailable_funds_internal_accounts = 0;
+            } else if (type === 'non-credit') {
+                gr.disbursement_ach = 0;
+                gr.disbursement_wire_transfer_external = 0;
+                gr.disbursement_wire_transfer_internal = 0;
+                gr.disbursement_official_checks_external = 0;
+                gr.disbursement_official_checks_internal = 0;
+                gr.check_cashing_on_us = 0;
+                gr.check_cashing_not_on_us = 0;
+                gr.remote_deposit = 0;
+                gr.treasury_solutions_company_wire_limits = 0;
+                gr.fx_wire_limits = 0;
+            }
+            
+            gr.update();
+        } else {
+            // Other type has no values, safe to delete entire record
+            gs.info('removeAuthorityLimit: No other type values, deleting entire record');
+            gr.deleteRecord();
+        }
+
         return true;
+    },
+
+    // Helper to check if credit fields have any non-zero values
+    _hasCreditValues: function(gr) {
+        var creditFields = [
+            'overdraft_external_accounts',
+            'overdraft_internal_accounts',
+            'unavailable_funds_external_accounts',
+            'unavailable_funds_internal_accounts'
+        ];
+
+        for (var i = 0; i < creditFields.length; i++) {
+            var value = parseFloat(gr.getValue(creditFields[i]) || 0);
+            if (value > 0) {
+                return true;
+            }
+        }
+        return false;
+    },
+
+    // Helper to check if non-credit fields have any non-zero values
+    _hasNonCreditValues: function(gr) {
+        var nonCreditFields = [
+            'disbursement_ach',
+            'disbursement_wire_transfer_external',
+            'disbursement_wire_transfer_internal',
+            'disbursement_official_checks_external',
+            'disbursement_official_checks_internal',
+            'check_cashing_on_us',
+            'check_cashing_not_on_us',
+            'remote_deposit',
+            'treasury_solutions_company_wire_limits',
+            'fx_wire_limits'
+        ];
+
+        for (var i = 0; i < nonCreditFields.length; i++) {
+            var value = parseFloat(gr.getValue(nonCreditFields[i]) || 0);
+            if (value > 0) {
+                return true;
+            }
+        }
+        return false;
     },
 
     // Create or update authority limits table
