@@ -131,7 +131,7 @@ if (shouldProceed) {
             // Helper function to check if a value is greater than zero
             function isGreaterThanZero(value) {
                 if (!value) return false;
-                var numValue = parseFloat(value);
+                var numValue = parseInt(value, 10);
                 return !isNaN(numValue) && numValue > 0;
             }
 
