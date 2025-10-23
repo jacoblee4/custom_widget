@@ -658,5 +658,86 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         return rejection.hasNext();
     },
 
+// Format authority amounts for AIM task description
+    formatAuthorityAmountsForTask: function(parentRecordSysId, creditRecordSysId, nonCreditRecordSysId) {
+        var output = [];
+        
+        if (!parentRecordSysId) {
+            return 'Error: No parent record provided';
+        }
+        
+        // Get parent record to check request type
+        var parentGr = new GlideRecord('x_banun_bunow_si_0_signature_request');
+        if (!parentGr.get(parentRecordSysId)) {
+            return 'Error: Parent record not found';
+        }
+        
+        var requestType = parentGr.getValue('request_type');
+        var isRemove = (requestType === 'remove_authority');
+        
+        // Helper function to format integer amount as currency with commas
+        function formatAmount(value) {
+            if (!value || value === 0 || value === '0') return '$0';
+            var numValue = parseInt(value, 10);
+            if (isNaN(numValue)) return '$0';
+            // Use toLocaleString for comma formatting
+            return '$' + numValue.toLocaleString('en-US');
+        }
+        
+        // Helper function to get larger value between external and internal
+        function getLargerValue(externalValue, internalValue) {
+            var extVal = parseInt(externalValue || 0, 10);
+            var intVal = parseInt(internalValue || 0, 10);
+            var largerValue = Math.max(extVal, intVal);
+            return formatAmount(largerValue);
+        }
+        
+        // Process non-credit record
+        if (nonCreditRecordSysId) {
+            var ncGr = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
+            if (ncGr.get(nonCreditRecordSysId)) {
+                var wireExternal = ncGr.getValue('disbursement_wire_transfer_external');
+                var wireInternal = ncGr.getValue('disbursement_wire_transfer_internal');
+                
+                // Check if we have any wire transfer values
+                var hasWireTransfer = (parseInt(wireExternal || 0, 10) > 0) || (parseInt(wireInternal || 0, 10) > 0);
+                
+                if (hasWireTransfer) {
+                    if (isRemove) {
+                        output.push('Wire Transfer: $0');
+                    } else {
+                        var wireAmount = getLargerValue(wireExternal, wireInternal);
+                        output.push('Wire Transfer: ' + wireAmount);
+                    }
+                }
+            }
+        }
+        
+        // Process credit record
+        if (creditRecordSysId) {
+            var crGr = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
+            if (crGr.get(creditRecordSysId)) {
+                if (isRemove) {
+                    output.push('Overdraft: $0');
+                    output.push('Unavailable Funds: $0');
+                } else {
+                    // Overdraft
+                    var overdraftExternal = crGr.getValue('overdraft_external_accounts');
+                    var overdraftInternal = crGr.getValue('overdraft_internal_accounts');
+                    var overdraftAmount = getLargerValue(overdraftExternal, overdraftInternal);
+                    output.push('Overdraft: ' + overdraftAmount);
+                    
+                    // Unavailable Funds
+                    var unavailableExternal = crGr.getValue('unavailable_funds_external_accounts');
+                    var unavailableInternal = crGr.getValue('unavailable_funds_internal_accounts');
+                    var unavailableAmount = getLargerValue(unavailableExternal, unavailableInternal);
+                    output.push('Unavailable Funds: ' + unavailableAmount);
+                }
+            }
+        }
+        
+        return output.join('\n');
+    },
+
     type: 'SignatureHelper'
 });
