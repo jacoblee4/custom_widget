@@ -680,8 +680,19 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
             if (!value || value === 0 || value === '0') return '$0';
             var numValue = parseInt(value, 10);
             if (isNaN(numValue)) return '$0';
-            // Use toLocaleString for comma formatting
-            return '$' + numValue.toLocaleString('en-US');
+            
+            // Manual comma formatting (more reliable in ServiceNow)
+            var numStr = numValue.toString();
+            var parts = [];
+            
+            // Add commas from right to left
+            while (numStr.length > 3) {
+                parts.unshift(numStr.slice(-3));
+                numStr = numStr.slice(0, -3);
+            }
+            parts.unshift(numStr);
+            
+            return '$' + parts.join(',');
         }
         
         // Helper function to get larger value between external and internal
