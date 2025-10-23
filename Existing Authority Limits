@@ -389,25 +389,31 @@
 
             // Process each authority limit record found
             if (gr.next()) {
+                // Helper function to safely get integer value
+                function getIntValue(fieldName) {
+                    var val = gr.getValue(fieldName);
+                    return val ? val.toString() : '0';
+                }
+                
                 // Build the limit object with all authority limit fields
                 var limit = {
                     // Credit limits - Grouped into Overdraft and Unavailable Funds
-                    overdraft_external_accounts: gr.getValue('overdraft_external_accounts'),
-                    overdraft_internal_accounts: gr.getValue('overdraft_internal_accounts'),
-                    unavailable_funds_external_accounts: gr.getValue('unavailable_funds_external_accounts'),
-                    unavailable_funds_internal_accounts: gr.getValue('unavailable_funds_internal_accounts'),
+                    overdraft_external_accounts: getIntValue('overdraft_external_accounts'),
+                    overdraft_internal_accounts: getIntValue('overdraft_internal_accounts'),
+                    unavailable_funds_external_accounts: getIntValue('unavailable_funds_external_accounts'),
+                    unavailable_funds_internal_accounts: getIntValue('unavailable_funds_internal_accounts'),
 
                     // Non-credit limits - Grouped into Disbursements, Check Cashing, and others
-                    disbursement_ach: gr.getValue('disbursement_ach'),
-                    disbursement_wire_transfer_external: gr.getValue('disbursement_wire_transfer_external'),
-                    disbursement_wire_transfer_internal: gr.getValue('disbursement_wire_transfer_internal'),
-                    disbursement_official_checks_external: gr.getValue('disbursement_official_checks_external'),
-                    disbursement_official_checks_internal: gr.getValue('disbursement_official_checks_internal'),
-                    check_cashing_on_us: gr.getValue('check_cashing_on_us'),
-                    check_cashing_not_on_us: gr.getValue('check_cashing_not_on_us'),
-                    remote_deposit: gr.getValue('remote_deposit'),
-                    treasury_solutions_company_wire_limits: gr.getValue('treasury_solutions_company_wire_limits'),
-                    fx_wire_limits: gr.getValue('fx_wire_limits')
+                    disbursement_ach: getIntValue('disbursement_ach'),
+                    disbursement_wire_transfer_external: getIntValue('disbursement_wire_transfer_external'),
+                    disbursement_wire_transfer_internal: getIntValue('disbursement_wire_transfer_internal'),
+                    disbursement_official_checks_external: getIntValue('disbursement_official_checks_external'),
+                    disbursement_official_checks_internal: getIntValue('disbursement_official_checks_internal'),
+                    check_cashing_on_us: getIntValue('check_cashing_on_us'),
+                    check_cashing_not_on_us: getIntValue('check_cashing_not_on_us'),
+                    remote_deposit: getIntValue('remote_deposit'),
+                    treasury_solutions_company_wire_limits: getIntValue('treasury_solutions_company_wire_limits'),
+                    fx_wire_limits: getIntValue('fx_wire_limits')
                 };
 
                 // Add the limit to the array
