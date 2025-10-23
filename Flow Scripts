@@ -1,0 +1,131 @@
+//Setting actual record type:
+var recordType = fd_data.subflow_inputs.type_of_request; // 'credit', 'non-credit
+var requestType = fd_data.subflow_inputs.signature_parent_record.request_type;
+var creditRec = fd_data.subflow_inputs.credit_record;
+var nonCreditRec = fd_data.subflow_inputs.non_credit_record;
+    
+var needsCreditTask = false;
+var needsNonCreditTask = false;
+    
+// Credit always needs a task if present
+if ((recordType == 'credit') && creditRec && creditRec.sys_id) {
+    needsCreditTask = true;
+}
+    
+// Non-credit only needs task based on wire transfer logic
+if ((recordType == 'non-credit') && nonCreditRec && nonCreditRec.sys_id) {
+    var wireExternal = parseFloat(nonCreditRec.disbursement_wire_transfer_external.getValue()) || 0;
+    var wireInternal = parseFloat(nonCreditRec.disbursement_wire_transfer_internal.getValue()) || 0;
+    var origWireExternal = parseFloat(nonCreditRec.original_disbursement_wire_transfer_external.getValue()) || 0;
+    var origWireInternal = parseFloat(nonCreditRec.original_disbursement_wire_transfer_internal.getValue()) || 0;
+        
+    if (requestType == 'new_authority') {
+        // NEW: Need task if either value is positive
+        needsNonCreditTask = (wireExternal > 0 || wireInternal > 0);
+    }
+    else if (requestType == 'change_to_existing_authority') {
+        // CHANGE: Need task if either value changed from original
+        needsNonCreditTask = (wireExternal != origWireExternal || wireInternal != origWireInternal);
+    }
+    else if (requestType == 'remove_authority') {
+        // REMOVE: Need task if either current value is positive (indicates there was something to remove)
+        // For removals, original_ fields are always 0, so we check current values
+        needsNonCreditTask = (wireExternal > 0 || wireInternal > 0);
+    }
+}
+
+// Determine final record_type or exit early
+if (!needsCreditTask && !needsNonCreditTask) {
+    return 'none'; // No task needed at all
+}
+if (needsCreditTask) {
+    return 'credit';
+}
+return 'non-credit';
+
+
+
+
+
+// Setting amount text:
+var type = fd_data.subflow_inputs.signature_parent_record.request_type;
+var creditRecord = fd_data.subflow_inputs.credit_record;
+var nonCreditRecord = fd_data.subflow_inputs.non_credit_record;
+    
+var hasCreditRecord = creditRecord && creditRecord.sys_id;
+var hasNonCreditRecord = nonCreditRecord && nonCreditRecord.sys_id;
+var isRemove = (type == 'remove_authority');
+
+// For non-credit, check if wire transfer values exist
+var hasNonCreditWireTransfer = false;
+if (hasNonCreditRecord) {
+    var wireExternalField = nonCreditRecord.disbursement_wire_transfer_external;
+    var wireInternalField = nonCreditRecord.disbursement_wire_transfer_internal;
+    
+    var wireExternal = (wireExternalField && wireExternalField.getValue()) ? parseFloat(wireExternalField.getValue()) : 0;
+    var wireInternal = (wireInternalField && wireInternalField.getValue()) ? parseFloat(wireInternalField.getValue()) : 0;
+    hasNonCreditWireTransfer = (wireExternal > 0 || wireInternal > 0);
+}
+    
+var output = [];
+    
+// Helper function to format display value (remove .00)
+function formatAmount(displayValue) {
+    if (!displayValue) return '$0';
+    return displayValue.replace(/\.00$/, '');
+}
+    
+// Helper function to get larger value
+function getLargerValue(externalField, internalField) {
+    if (!externalField || !internalField) return '$0';
+    
+    var externalValue = parseFloat(externalField.getValue() || 0);
+    var internalValue = parseFloat(internalField.getValue() || 0);
+        
+    var largerField = (externalValue >= internalValue) ? externalField : internalField;
+    return formatAmount(largerField.getDisplayValue());
+}
+    
+// Handle Remove Authority requests
+if (isRemove) {
+    if (hasNonCreditWireTransfer) {
+        output.push('Wire Transfer: $0');
+    }
+    if (hasCreditRecord) {
+        output.push('Overdraft: $0');
+        output.push('Unavailable Funds: $0');
+    }
+}
+// Handle New/Change requests
+else {
+    if (hasNonCreditRecord) {
+        var wireTransfer = getLargerValue(
+            nonCreditRecord.disbursement_wire_transfer_external,
+            nonCreditRecord.disbursement_wire_transfer_internal
+        );
+        output.push('Wire Transfer: ' + wireTransfer);
+    }
+        
+    if (hasCreditRecord) {
+        var overdraft = getLargerValue(
+            creditRecord.overdraft_external_accounts,
+            creditRecord.overdraft_internal_accounts
+        );
+        output.push('Overdraft: ' + overdraft);
+        
+        var unavailable = getLargerValue(
+            creditRecord.unavailable_funds_external_accounts,
+            creditRecord.unavailable_funds_internal_accounts
+        );
+        output.push('Unavailable Funds: ' + unavailable);
+    }
+}
+    
+return output.join('\n');
+
+
+
+
+
+
+
