@@ -193,28 +193,28 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         var maxFieldName = '';
 
         if (type === 'credit') {
-            // Credit fields
-            values = {
-                'Overdraft Internal': parseFloat(gr.getValue('overdraft_internal_accounts') || 0),
-                'Overdraft External': parseFloat(gr.getValue('overdraft_external_accounts') || 0),
-                'Unavailable Funds Internal': parseFloat(gr.getValue('unavailable_funds_internal_accounts') || 0),
-                'Unavailable Funds External': parseFloat(gr.getValue('unavailable_funds_external_accounts') || 0)
-            };
-        } else {
-            // Non-credit fields
-            values = {
-                'ACH Disbursement': parseFloat(gr.getValue('disbursement_ach') || 0),
-                'Wire Transfer External': parseFloat(gr.getValue('disbursement_wire_transfer_external') || 0),
-                'Wire Transfer Internal': parseFloat(gr.getValue('disbursement_wire_transfer_internal') || 0),
-                'Official Checks External': parseFloat(gr.getValue('disbursement_official_checks_external') || 0),
-                'Official Checks Internal': parseFloat(gr.getValue('disbursement_official_checks_internal') || 0),
-                'Check Cashing On-Us': parseFloat(gr.getValue('check_cashing_on_us') || 0),
-                'Check Cashing Not On-Us': parseFloat(gr.getValue('check_cashing_not_on_us') || 0),
-                'Remote Deposit': parseFloat(gr.getValue('remote_deposit') || 0),
-                'Treasury Solutions': parseFloat(gr.getValue('treasury_solutions_company_wire_limits') || 0),
-                'FX Wire Limits': parseFloat(gr.getValue('fx_wire_limits') || 0)
-            };
-        }
+    // Credit fields
+    values = {
+        'Overdraft Internal': parseInt(gr.getValue('overdraft_internal_accounts') || 0, 10),
+        'Overdraft External': parseInt(gr.getValue('overdraft_external_accounts') || 0, 10),
+        'Unavailable Funds Internal': parseInt(gr.getValue('unavailable_funds_internal_accounts') || 0, 10),
+        'Unavailable Funds External': parseInt(gr.getValue('unavailable_funds_external_accounts') || 0, 10)
+    };
+} else {
+    // Non-credit fields
+    values = {
+        'ACH Disbursement': parseInt(gr.getValue('disbursement_ach') || 0, 10),
+        'Wire Transfer External': parseInt(gr.getValue('disbursement_wire_transfer_external') || 0, 10),
+        'Wire Transfer Internal': parseInt(gr.getValue('disbursement_wire_transfer_internal') || 0, 10),
+        'Official Checks External': parseInt(gr.getValue('disbursement_official_checks_external') || 0, 10),
+        'Official Checks Internal': parseInt(gr.getValue('disbursement_official_checks_internal') || 0, 10),
+        'Check Cashing On-Us': parseInt(gr.getValue('check_cashing_on_us') || 0, 10),
+        'Check Cashing Not On-Us': parseInt(gr.getValue('check_cashing_not_on_us') || 0, 10),
+        'Remote Deposit': parseInt(gr.getValue('remote_deposit') || 0, 10),
+        'Treasury Solutions': parseInt(gr.getValue('treasury_solutions_company_wire_limits') || 0, 10),
+        'FX Wire Limits': parseInt(gr.getValue('fx_wire_limits') || 0, 10)
+    };
+}
 
         // Find maximum value
         for (var fieldName in values) {
@@ -244,19 +244,19 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
             return result;
         }
 
-        var amountNum = parseFloat(amount);
+        var amountNum = parseInt(amount, 10);
 
-        var table = (type === 'credit') ?
-            'x_banun_bunow_si_0_crmc_delegated_authority' :
-            'x_banun_bunow_si_0_ormc_delegated_authority';
+var table = (type === 'credit') ?
+    'x_banun_bunow_si_0_crmc_delegated_authority' :
+    'x_banun_bunow_si_0_ormc_delegated_authority';
 
-        var gr = new GlideRecord(table);
-        gr.addQuery('delegate_name', approverSysId);
-        gr.addEncodedQuery('active=true^delegate_name.active=true'); // Make sure the delegate record is active AND the user record for the delegate
-        gr.query();
+var gr = new GlideRecord(table);
+gr.addQuery('delegate_name', approverSysId);
+gr.addEncodedQuery('active=true^delegate_name.active=true'); // Make sure the delegate record is active AND the user record for the delegate
+gr.query();
 
-        if (gr.next()) {
-            result.threshold = parseFloat(gr.getValue('authority_limit') || 0);
+if (gr.next()) {
+    result.threshold = parseInt(gr.getValue('authority_limit') || 0, 10);
 
             if (result.threshold > 0 && amountNum <= result.threshold) {
                 result.has_authority = true;
@@ -499,46 +499,46 @@ SignatureHelper.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
     },
 
     // Helper to check if credit fields have any non-zero values
-    _hasCreditValues: function(gr) {
-        var creditFields = [
-            'overdraft_external_accounts',
-            'overdraft_internal_accounts',
-            'unavailable_funds_external_accounts',
-            'unavailable_funds_internal_accounts'
-        ];
+_hasCreditValues: function(gr) {
+    var creditFields = [
+        'overdraft_external_accounts',
+        'overdraft_internal_accounts',
+        'unavailable_funds_external_accounts',
+        'unavailable_funds_internal_accounts'
+    ];
 
-        for (var i = 0; i < creditFields.length; i++) {
-            var value = parseFloat(gr.getValue(creditFields[i]) || 0);
-            if (value > 0) {
-                return true;
-            }
+    for (var i = 0; i < creditFields.length; i++) {
+        var value = parseInt(gr.getValue(creditFields[i]) || 0, 10);
+        if (value > 0) {
+            return true;
         }
-        return false;
-    },
+    }
+    return false;
+},
 
     // Helper to check if non-credit fields have any non-zero values
-    _hasNonCreditValues: function(gr) {
-        var nonCreditFields = [
-            'disbursement_ach',
-            'disbursement_wire_transfer_external',
-            'disbursement_wire_transfer_internal',
-            'disbursement_official_checks_external',
-            'disbursement_official_checks_internal',
-            'check_cashing_on_us',
-            'check_cashing_not_on_us',
-            'remote_deposit',
-            'treasury_solutions_company_wire_limits',
-            'fx_wire_limits'
-        ];
+_hasNonCreditValues: function(gr) {
+    var nonCreditFields = [
+        'disbursement_ach',
+        'disbursement_wire_transfer_external',
+        'disbursement_wire_transfer_internal',
+        'disbursement_official_checks_external',
+        'disbursement_official_checks_internal',
+        'check_cashing_on_us',
+        'check_cashing_not_on_us',
+        'remote_deposit',
+        'treasury_solutions_company_wire_limits',
+        'fx_wire_limits'
+    ];
 
-        for (var i = 0; i < nonCreditFields.length; i++) {
-            var value = parseFloat(gr.getValue(nonCreditFields[i]) || 0);
-            if (value > 0) {
-                return true;
-            }
+    for (var i = 0; i < nonCreditFields.length; i++) {
+        var value = parseInt(gr.getValue(nonCreditFields[i]) || 0, 10);
+        if (value > 0) {
+            return true;
         }
-        return false;
-    },
+    }
+    return false;
+},
 
     // Create or update authority limits table
     processAuthorityLimits: function(jobCode, creditChildId, nonCreditChildId) {
