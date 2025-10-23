@@ -70,23 +70,23 @@
               <div class="group-header">Disbursement</div>
               <div class="limit-row indented" ng-if="limit.disbursement_ach">
                 <span class="limit-label">ACH:</span>
-                <span class="limit-value">{{limit.disbursement_ach | currency}}</span>
+                <span class="limit-value">{{formatIntegerCurrency(limit.disbursement_ach)}}</span>
               </div>
               <div class="limit-row indented" ng-if="limit.disbursement_wire_transfer_external">
                 <span class="limit-label">Wire Transfer External:</span>
-                <span class="limit-value">{{limit.disbursement_wire_transfer_external | currency}}</span>
+                <span class="limit-value">{{formatIntegerCurrency(limit.disbursement_wire_transfer_external)}}</span>
               </div>
               <div class="limit-row indented" ng-if="limit.disbursement_wire_transfer_internal">
                 <span class="limit-label">Wire Transfer Internal:</span>
-                <span class="limit-value">{{limit.disbursement_wire_transfer_internal | currency}}</span>
+                <span class="limit-value">{{formatIntegerCurrency(limit.disbursement_wire_transfer_internal)}}</span>
               </div>
               <div class="limit-row indented" ng-if="limit.disbursement_official_checks_external">
                 <span class="limit-label">Official Checks External:</span>
-                <span class="limit-value">{{limit.disbursement_official_checks_external | currency}}</span>
+                <span class="limit-value">{{formatIntegerCurrency(limit.disbursement_official_checks_external)}}</span>
               </div>
               <div class="limit-row indented" ng-if="limit.disbursement_official_checks_internal">
                 <span class="limit-label">Official Checks Internal:</span>
-                <span class="limit-value">{{limit.disbursement_official_checks_internal | currency}}</span>
+                <span class="limit-value">{{formatIntegerCurrency(limit.disbursement_official_checks_internal)}}</span>
               </div>
             </div>
             
@@ -95,26 +95,26 @@
               <div class="group-header">Check Cashing & Cash Withdrawal</div>
               <div class="limit-row indented" ng-if="limit.check_cashing_on_us">
                 <span class="limit-label">On-Us (Checks & Cash Withdrawals):</span>
-                <span class="limit-value">{{limit.check_cashing_on_us | currency}}</span>
+                <span class="limit-value">{{formatIntegerCurrency(limit.check_cashing_on_us)}}</span>
               </div>
               <div class="limit-row indented" ng-if="limit.check_cashing_not_on_us">
                 <span class="limit-label">Not On-Us (Checks):</span>
-                <span class="limit-value">{{limit.check_cashing_not_on_us | currency}}</span>
+                <span class="limit-value">{{formatIntegerCurrency(limit.check_cashing_not_on_us)}}</span>
               </div>
             </div>
             
             <!-- Other Non-Credit Limits -->
             <div class="limit-row" ng-if="limit.remote_deposit">
               <span class="limit-label">Remote Deposit:</span>
-              <span class="limit-value">{{limit.remote_deposit | currency}}</span>
+              <span class="limit-value">{{formatIntegerCurrency(limit.remote_deposit)}}</span>
             </div>
             <div class="limit-row" ng-if="limit.treasury_solutions_company_wire_limits">
               <span class="limit-label">Treasury Solutions Company Wire Limits:</span>
-              <span class="limit-value">{{limit.treasury_solutions_company_wire_limits | currency}}</span>
+              <span class="limit-value">{{formatIntegerCurrency(limit.treasury_solutions_company_wire_limits)}}</span>
             </div>
             <div class="limit-row" ng-if="limit.fx_wire_limits">
               <span class="limit-label">FX Wire Limits:</span>
-              <span class="limit-value">{{limit.fx_wire_limits | currency}}</span>
+              <span class="limit-value">{{formatIntegerCurrency(limit.fx_wire_limits)}}</span>
             </div>
           </div>
         </div>
@@ -132,11 +132,11 @@
               <div class="group-header">Overdraft</div>
               <div class="limit-row indented" ng-if="limit.overdraft_external_accounts">
                 <span class="limit-label">External Accounts:</span>
-                <span class="limit-value">{{limit.overdraft_external_accounts | currency}}</span>
+                <span class="limit-value">{{formatIntegerCurrency(limit.overdraft_external_accounts)}}</span>
               </div>
               <div class="limit-row indented" ng-if="limit.overdraft_internal_accounts">
                 <span class="limit-label">Internal Accounts:</span>
-                <span class="limit-value">{{limit.overdraft_internal_accounts | currency}}</span>
+                <span class="limit-value">{{formatIntegerCurrency(limit.overdraft_internal_accounts)}}</span>
               </div>
             </div>
             
@@ -145,11 +145,11 @@
               <div class="group-header">Unavailable Funds</div>
               <div class="limit-row indented" ng-if="limit.unavailable_funds_external_accounts">
                 <span class="limit-label">External Accounts:</span>
-                <span class="limit-value">{{limit.unavailable_funds_external_accounts | currency}}</span>
+                <span class="limit-value">{{formatIntegerCurrency(limit.unavailable_funds_external_accounts)}}</span>
               </div>
               <div class="limit-row indented" ng-if="limit.unavailable_funds_internal_accounts">
                 <span class="limit-label">Internal Accounts:</span>
-                <span class="limit-value">{{limit.unavailable_funds_internal_accounts | currency}}</span>
+                <span class="limit-value">{{formatIntegerCurrency(limit.unavailable_funds_internal_accounts)}}</span>
               </div>
             </div>
             
@@ -438,6 +438,19 @@
 
 api.controller = function($scope, spUtil, $timeout) {
   var c = this;
+  
+  // Create custom filter for integer currency formatting (no decimals)
+  $scope.formatIntegerCurrency = function(value) {
+    if (!value || value === '0' || value === 0) {
+      return '$0';
+    }
+    var numValue = parseInt(value, 10);
+    if (isNaN(numValue)) {
+      return '$0';
+    }
+    // Format with commas using regex
+    return '$' + numValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  };
   
   // Initialize controller variables
   c.jobCode = '';          // Stores the job code sys_id
@@ -870,5 +883,4 @@ api.controller = function($scope, spUtil, $timeout) {
     }, 1500);
   }, 500);
 };
-
 
