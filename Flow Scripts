@@ -1,76 +1,20 @@
-var type = fd_data.subflow_inputs.signature_parent_record.request_type;
-var creditRecord = fd_data.subflow_inputs.credit_record;
-var nonCreditRecord = fd_data.subflow_inputs.non_credit_record;
-    
-var hasCreditRecord = creditRecord && creditRecord.sys_id;
-var hasNonCreditRecord = nonCreditRecord && nonCreditRecord.sys_id;
-var isRemove = (type == 'remove_authority');
+// Get parent record sys_id
+var parentSysId = fd_data.subflow_inputs.signature_parent_record.sys_id.toString();
 
-// For non-credit, check if wire transfer values exist
-var hasNonCreditWireTransfer = false;
-if (hasNonCreditRecord) {
-    var wireExternalField = nonCreditRecord.disbursement_wire_transfer_external;
-    var wireInternalField = nonCreditRecord.disbursement_wire_transfer_internal;
-    
-    var wireExternal = (wireExternalField && wireExternalField.getValue()) ? parseInt(wireExternalField.getValue(), 10) : 0;
-    var wireInternal = (wireInternalField && wireInternalField.getValue()) ? parseInt(wireInternalField.getValue(), 10) : 0;
-    hasNonCreditWireTransfer = (wireExternal > 0 || wireInternal > 0);
+// Get child record sys_ids (may be null)
+var creditSysId = null;
+var nonCreditSysId = null;
+
+if (fd_data.subflow_inputs.credit_record && fd_data.subflow_inputs.credit_record.sys_id) {
+    creditSysId = fd_data.subflow_inputs.credit_record.sys_id.toString();
 }
-    
-var output = [];
-    
-// Helper function to format integer amount as currency display
-function formatAmount(value) {
-    if (!value || value === 0) return '$0';
-    var numValue = parseInt(value, 10);
-    if (isNaN(numValue)) return '$0';
-    return '$' + numValue.toLocaleString();
+
+if (fd_data.subflow_inputs.non_credit_record && fd_data.subflow_inputs.non_credit_record.sys_id) {
+    nonCreditSysId = fd_data.subflow_inputs.non_credit_record.sys_id.toString();
 }
-    
-// Helper function to get larger value
-function getLargerValue(externalField, internalField) {
-    if (!externalField || !internalField) return '$0';
-    
-    var externalValue = parseInt(externalField.getValue(), 10) || 0;
-    var internalValue = parseInt(internalField.getValue(), 10) || 0;
-        
-    var largerValue = Math.max(externalValue, internalValue);
-    return formatAmount(largerValue);
-}
-    
-// Handle Remove Authority requests
-if (isRemove) {
-    if (hasNonCreditWireTransfer) {
-        output.push('Wire Transfer: $0');
-    }
-    if (hasCreditRecord) {
-        output.push('Overdraft: $0');
-        output.push('Unavailable Funds: $0');
-    }
-}
-// Handle New/Change requests
-else {
-    if (hasNonCreditRecord) {
-        var wireTransfer = getLargerValue(
-            nonCreditRecord.disbursement_wire_transfer_external,
-            nonCreditRecord.disbursement_wire_transfer_internal
-        );
-        output.push('Wire Transfer: ' + wireTransfer);
-    }
-        
-    if (hasCreditRecord) {
-        var overdraft = getLargerValue(
-            creditRecord.overdraft_external_accounts,
-            creditRecord.overdraft_internal_accounts
-        );
-        output.push('Overdraft: ' + overdraft);
-        
-        var unavailable = getLargerValue(
-            creditRecord.unavailable_funds_external_accounts,
-            creditRecord.unavailable_funds_internal_accounts
-        );
-        output.push('Unavailable Funds: ' + unavailable);
-    }
-}
-    
-return output.join('\n');
+
+// Call Script Include method to format amounts
+var helper = new SignatureHelper();
+var formattedAmounts = helper.formatAuthorityAmountsForTask(parentSysId, creditSysId, nonCreditSysId);
+
+return formattedAmounts;
