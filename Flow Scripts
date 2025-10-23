@@ -1,54 +1,3 @@
-//Setting actual record type:
-//Setting actual record type:
-var recordType = fd_data.subflow_inputs.type_of_request; // 'credit', 'non-credit
-var requestType = fd_data.subflow_inputs.signature_parent_record.request_type;
-var creditRec = fd_data.subflow_inputs.credit_record;
-var nonCreditRec = fd_data.subflow_inputs.non_credit_record;
-    
-var needsCreditTask = false;
-var needsNonCreditTask = false;
-    
-// Credit always needs a task if present
-if ((recordType == 'credit') && creditRec && creditRec.sys_id) {
-    needsCreditTask = true;
-}
-    
-// Non-credit only needs task based on wire transfer logic
-if ((recordType == 'non-credit') && nonCreditRec && nonCreditRec.sys_id) {
-    var wireExternal = parseInt(nonCreditRec.disbursement_wire_transfer_external.getValue(), 10) || 0;
-    var wireInternal = parseInt(nonCreditRec.disbursement_wire_transfer_internal.getValue(), 10) || 0;
-    var origWireExternal = parseInt(nonCreditRec.original_disbursement_wire_transfer_external.getValue(), 10) || 0;
-    var origWireInternal = parseInt(nonCreditRec.original_disbursement_wire_transfer_internal.getValue(), 10) || 0;
-        
-    if (requestType == 'new_authority') {
-        // NEW: Need task if either value is positive
-        needsNonCreditTask = (wireExternal > 0 || wireInternal > 0);
-    }
-    else if (requestType == 'change_to_existing_authority') {
-        // CHANGE: Need task if either value changed from original
-        needsNonCreditTask = (wireExternal != origWireExternal || wireInternal != origWireInternal);
-    }
-    else if (requestType == 'remove_authority') {
-        // REMOVE: Need task if either current value is positive (indicates there was something to remove)
-        // For removals, original_ fields are always 0, so we check current values
-        needsNonCreditTask = (wireExternal > 0 || wireInternal > 0);
-    }
-}
-
-// Determine final record_type or exit early
-if (!needsCreditTask && !needsNonCreditTask) {
-    return 'none'; // No task needed at all
-}
-if (needsCreditTask) {
-    return 'credit';
-}
-return 'non-credit';
-
-
-
-
-// Setting amount text:
-// Setting amount text:
 var type = fd_data.subflow_inputs.signature_parent_record.request_type;
 var creditRecord = fd_data.subflow_inputs.credit_record;
 var nonCreditRecord = fd_data.subflow_inputs.non_credit_record;
@@ -125,9 +74,3 @@ else {
 }
     
 return output.join('\n');
-
-
-
-
-
-
