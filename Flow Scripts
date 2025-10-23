@@ -1,4 +1,5 @@
 //Setting actual record type:
+//Setting actual record type:
 var recordType = fd_data.subflow_inputs.type_of_request; // 'credit', 'non-credit
 var requestType = fd_data.subflow_inputs.signature_parent_record.request_type;
 var creditRec = fd_data.subflow_inputs.credit_record;
@@ -14,10 +15,10 @@ if ((recordType == 'credit') && creditRec && creditRec.sys_id) {
     
 // Non-credit only needs task based on wire transfer logic
 if ((recordType == 'non-credit') && nonCreditRec && nonCreditRec.sys_id) {
-    var wireExternal = parseFloat(nonCreditRec.disbursement_wire_transfer_external.getValue()) || 0;
-    var wireInternal = parseFloat(nonCreditRec.disbursement_wire_transfer_internal.getValue()) || 0;
-    var origWireExternal = parseFloat(nonCreditRec.original_disbursement_wire_transfer_external.getValue()) || 0;
-    var origWireInternal = parseFloat(nonCreditRec.original_disbursement_wire_transfer_internal.getValue()) || 0;
+    var wireExternal = parseInt(nonCreditRec.disbursement_wire_transfer_external.getValue(), 10) || 0;
+    var wireInternal = parseInt(nonCreditRec.disbursement_wire_transfer_internal.getValue(), 10) || 0;
+    var origWireExternal = parseInt(nonCreditRec.original_disbursement_wire_transfer_external.getValue(), 10) || 0;
+    var origWireInternal = parseInt(nonCreditRec.original_disbursement_wire_transfer_internal.getValue(), 10) || 0;
         
     if (requestType == 'new_authority') {
         // NEW: Need task if either value is positive
@@ -46,7 +47,7 @@ return 'non-credit';
 
 
 
-
+// Setting amount text:
 // Setting amount text:
 var type = fd_data.subflow_inputs.signature_parent_record.request_type;
 var creditRecord = fd_data.subflow_inputs.credit_record;
@@ -62,28 +63,30 @@ if (hasNonCreditRecord) {
     var wireExternalField = nonCreditRecord.disbursement_wire_transfer_external;
     var wireInternalField = nonCreditRecord.disbursement_wire_transfer_internal;
     
-    var wireExternal = (wireExternalField && wireExternalField.getValue()) ? parseFloat(wireExternalField.getValue()) : 0;
-    var wireInternal = (wireInternalField && wireInternalField.getValue()) ? parseFloat(wireInternalField.getValue()) : 0;
+    var wireExternal = (wireExternalField && wireExternalField.getValue()) ? parseInt(wireExternalField.getValue(), 10) : 0;
+    var wireInternal = (wireInternalField && wireInternalField.getValue()) ? parseInt(wireInternalField.getValue(), 10) : 0;
     hasNonCreditWireTransfer = (wireExternal > 0 || wireInternal > 0);
 }
     
 var output = [];
     
-// Helper function to format display value (remove .00)
-function formatAmount(displayValue) {
-    if (!displayValue) return '$0';
-    return displayValue.replace(/\.00$/, '');
+// Helper function to format integer amount as currency display
+function formatAmount(value) {
+    if (!value || value === 0) return '$0';
+    var numValue = parseInt(value, 10);
+    if (isNaN(numValue)) return '$0';
+    return '$' + numValue.toLocaleString();
 }
     
 // Helper function to get larger value
 function getLargerValue(externalField, internalField) {
     if (!externalField || !internalField) return '$0';
     
-    var externalValue = parseFloat(externalField.getValue() || 0);
-    var internalValue = parseFloat(internalField.getValue() || 0);
+    var externalValue = parseInt(externalField.getValue(), 10) || 0;
+    var internalValue = parseInt(internalField.getValue(), 10) || 0;
         
-    var largerField = (externalValue >= internalValue) ? externalField : internalField;
-    return formatAmount(largerField.getDisplayValue());
+    var largerValue = Math.max(externalValue, internalValue);
+    return formatAmount(largerValue);
 }
     
 // Handle Remove Authority requests
@@ -122,7 +125,6 @@ else {
 }
     
 return output.join('\n');
-
 
 
 
