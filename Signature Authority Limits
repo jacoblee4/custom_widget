@@ -913,7 +913,8 @@
 
         } else if (searchType === 'amount' && limitType && minAmount) {
             // Search by limit amount - find all records where the specified field is >= minAmount
-            var minAmountNum = parseFloat(minAmount);
+            // Convert to integer for proper comparison with integer fields
+            var minAmountNum = parseInt(minAmount, 10);
             if (!isNaN(minAmountNum) && minAmountNum >= 0) {
                 gr.addQuery(limitType, '>=', minAmountNum);
             }
@@ -921,6 +922,12 @@
 
         gr.orderBy('job_code.job_code');
         gr.query();
+
+        // Helper function to safely get integer value as string
+        function getIntValue(record, fieldName) {
+            var val = record.getValue(fieldName);
+            return val ? val.toString() : '0';
+        }
 
         while (gr.next()) {
             // Get the job code reference values
@@ -945,22 +952,22 @@
                 job_function: jobFunction,
 
                 // Non-credit limits
-                disbursement_ach: gr.getValue('disbursement_ach') || '0',
-                disbursement_wire_transfer_external: gr.getValue('disbursement_wire_transfer_external') || '0',
-                disbursement_wire_transfer_internal: gr.getValue('disbursement_wire_transfer_internal') || '0',
-                disbursement_official_checks_external: gr.getValue('disbursement_official_checks_external') || '0',
-                disbursement_official_checks_internal: gr.getValue('disbursement_official_checks_internal') || '0',
-                check_cashing_on_us: gr.getValue('check_cashing_on_us') || '0',
-                check_cashing_not_on_us: gr.getValue('check_cashing_not_on_us') || '0',
-                remote_deposit: gr.getValue('remote_deposit') || '0',
-                treasury_solutions_company_wire_limits: gr.getValue('treasury_solutions_company_wire_limits') || '0',
-                fx_wire_limits: gr.getValue('fx_wire_limits') || '0',
+                disbursement_ach: getIntValue(gr, 'disbursement_ach'),
+                disbursement_wire_transfer_external: getIntValue(gr, 'disbursement_wire_transfer_external'),
+                disbursement_wire_transfer_internal: getIntValue(gr, 'disbursement_wire_transfer_internal'),
+                disbursement_official_checks_external: getIntValue(gr, 'disbursement_official_checks_external'),
+                disbursement_official_checks_internal: getIntValue(gr, 'disbursement_official_checks_internal'),
+                check_cashing_on_us: getIntValue(gr, 'check_cashing_on_us'),
+                check_cashing_not_on_us: getIntValue(gr, 'check_cashing_not_on_us'),
+                remote_deposit: getIntValue(gr, 'remote_deposit'),
+                treasury_solutions_company_wire_limits: getIntValue(gr, 'treasury_solutions_company_wire_limits'),
+                fx_wire_limits: getIntValue(gr, 'fx_wire_limits'),
 
                 // Credit limits
-                overdraft_external_accounts: gr.getValue('overdraft_external_accounts') || '0',
-                overdraft_internal_accounts: gr.getValue('overdraft_internal_accounts') || '0',
-                unavailable_funds_external_accounts: gr.getValue('unavailable_funds_external_accounts') || '0',
-                unavailable_funds_internal_accounts: gr.getValue('unavailable_funds_internal_accounts') || '0',
+                overdraft_external_accounts: getIntValue(gr, 'overdraft_external_accounts'),
+                overdraft_internal_accounts: getIntValue(gr, 'overdraft_internal_accounts'),
+                unavailable_funds_external_accounts: getIntValue(gr, 'unavailable_funds_external_accounts'),
+                unavailable_funds_internal_accounts: getIntValue(gr, 'unavailable_funds_internal_accounts'),
 
                 // For highlighting in amount searches
                 highlightField: (searchType === 'amount') ? limitType : '',
