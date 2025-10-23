@@ -218,7 +218,7 @@ if (shouldProceed) {
             }
 
         } else if (requestType !== 'remove_authority' && producer.authority_types && producer.authority_data) {
-            
+
             // Process authority data for NEW and CHANGE requests (existing logic)
             var authority_types = producer.authority_types.toString().split('|');
             var authority_data_strings = producer.authority_data.toString().split('|');
@@ -232,13 +232,13 @@ if (shouldProceed) {
                     var authorityData = JSON.parse(authorityDataStr);
 
                     if (authorityType === 'non_credit') {
-                        
+
                         // Track if any values changed (for CHANGE requests)
                         var hasNonCreditChanges = false;
 
                         // For CHANGE requests, check if any values actually changed
                         if (requestType === 'change_to_existing_authority' && existingLimitsFound) {
-                            
+
                             // Check if any values actually changed
                             var nonCreditFieldsToCheck = [
                                 'disbursement_ach',
@@ -257,7 +257,7 @@ if (shouldProceed) {
                             // Treats 0, "0", "", null, undefined as equivalent
                             function normalizeValue(val) {
                                 if (!val || val === '0' || val === 0) {
-                                    return '0';  // Normalize all empty/zero values to '0'
+                                    return '0'; // Normalize all empty/zero values to '0'
                                 }
                                 return val.toString();
                             }
@@ -320,7 +320,7 @@ if (shouldProceed) {
                                 nonCreditGR.insert();
                             }
                             // If no changes, don't create the record
-                            
+
                         } else {
                             // For NEW requests, always create the record
                             var nonCreditGR = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
@@ -356,13 +356,13 @@ if (shouldProceed) {
                         }
 
                     } else if (authorityType === 'credit') {
-                        
+
                         // Track if any values changed (for CHANGE requests)
                         var hasCreditChanges = false;
 
                         // For CHANGE requests, check if any values actually changed
                         if (requestType === 'change_to_existing_authority' && existingLimitsFound) {
-                            
+
                             // Check if any values actually changed
                             var creditFieldsToCheck = [
                                 'overdraft_internal_accounts',
@@ -375,7 +375,7 @@ if (shouldProceed) {
                             // Treats 0, "0", "", null, undefined as equivalent
                             function normalizeValueCredit(val) {
                                 if (!val || val === '0' || val === 0) {
-                                    return '0';  // Normalize all empty/zero values to '0'
+                                    return '0'; // Normalize all empty/zero values to '0'
                                 }
                                 return val.toString();
                             }
@@ -420,7 +420,7 @@ if (shouldProceed) {
                                 creditGR.insert();
                             }
                             // If no changes, don't create the record
-                            
+
                         } else {
                             // For NEW requests, always create the record
                             var creditGR = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
