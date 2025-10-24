@@ -80,14 +80,25 @@
         requestedLimits.fx_wire = safeGetValue(nonCreditGr, 'fx_wire_limits');
     }
     
-    // Define all limit fields to check
+    // Define all limit fields in the exact order we want to display
     var limitFields = [
-        'disbursement_ach', 'wire_internal', 'wire_external', 'checks_internal', 'checks_external',
-        'check_cashing_on_us', 'check_cashing_not_on_us', 'remote_deposit', 'treasury_wire', 'fx_wire',
-        'overdraft_internal', 'overdraft_external', 'unavailable_internal', 'unavailable_external'
+        'disbursement_ach', 
+        'wire_internal', 
+        'wire_external', 
+        'checks_internal', 
+        'checks_external',
+        'check_cashing_on_us', 
+        'check_cashing_not_on_us', 
+        'remote_deposit', 
+        'treasury_wire', 
+        'fx_wire',
+        'overdraft_internal', 
+        'overdraft_external', 
+        'unavailable_internal', 
+        'unavailable_external'
     ];
     
-    // Find the largest requested value and its field
+    // Find the largest requested value and its field for sorting
     var largestValue = 0;
     var largestField = '';
     
@@ -153,68 +164,57 @@
         return bVal - aVal;
     });
     
-    // Field display names mapping
-    var fieldDisplayNames = {
-        'disbursement_ach': 'ACH',
-        'wire_internal': 'Wire Internal',
-        'wire_external': 'Wire External',
-        'checks_internal': 'Checks Internal',
-        'checks_external': 'Checks External',
-        'check_cashing_on_us': 'Check Cashing (On-Us)',
-        'check_cashing_not_on_us': 'Check Cashing (Not On-Us)',
-        'remote_deposit': 'Remote Deposit',
-        'treasury_wire': 'Treasury Wire',
-        'fx_wire': 'FX Wire',
-        'overdraft_internal': 'Overdraft Internal',
-        'overdraft_external': 'Overdraft External',
-        'unavailable_internal': 'Unavailable Funds Internal',
-        'unavailable_external': 'Unavailable Funds External'
-    };
-    
-    // Count columns to show for colspan
-    var columnsToShow = [];
-    for (var f = 0; f < limitFields.length; f++) {
-        var hasValue = false;
-        for (var l = 0; l < existingLimits.length; l++) {
-            if ((existingLimits[l][limitFields[f]] || 0) > 0) {
-                hasValue = true;
-                break;
-            }
-        }
-        if (hasValue) {
-            columnsToShow.push(limitFields[f]);
-        }
-    }
-    
-    var totalColumns = columnsToShow.length + 1; // +1 for Job Code column
-    
     // Build the HTML content
     var content = '';
     content += '<div style="margin: 30px 0; padding: 20px; background-color: #f8f9fa; border-radius: 5px; border: 1px solid #dee2e6;">';
     content += '<h3 style="color: #00aae3; margin: 0 0 10px 0; padding-bottom: 10px; border-bottom: 2px solid #00aae3;">';
-    content += 'Authority Limits Comparison';
+    content += 'Authority Limits Comparison - <span style="color: #000000; font-weight: 700;">' + jobFunctionDescription + '</span>';
     content += '</h3>';
     
     // Create table
     content += '<div style="overflow-x: auto;">';
     content += '<table style="width: 100%; border-collapse: collapse; background-color: #ffffff; border: 1px solid #dee2e6; border-radius: 4px; font-size: 12px;">';
     
-    // Table header - Job Function row
     content += '<thead>';
-    content += '<tr style="background-color: #005a8c;">';
-    content += '<th colspan="' + totalColumns + '" style="padding: 12px 8px; text-align: center; font-weight: 700; color: #ffffff; font-size: 14px; border-bottom: 2px solid #dee2e6;">' + jobFunctionDescription + '</th>';
+    
+    // First header row - Credit/Non-Credit categories
+    content += '<tr>';
+    content += '<th rowspan="3" style="padding: 10px 8px; text-align: left; font-weight: 600; background-color: #00aae3; color: #000000; vertical-align: middle; border-right: 2px solid #dee2e6;">Job Code</th>';
+    content += '<th colspan="10" style="padding: 10px 8px; text-align: center; font-weight: 700; background-color: #27ae60; color: #ffffff; border-bottom: 1px solid #dee2e6;">Non-Credit Authority</th>';
+    content += '<th colspan="4" style="padding: 10px 8px; text-align: center; font-weight: 700; background-color: #e74c3c; color: #ffffff; border-bottom: 1px solid #dee2e6;">Credit Authority</th>';
     content += '</tr>';
     
-    // Column headers row
+    // Second header row - Groupings
+    content += '<tr>';
+    // Non-Credit groupings
+    content += '<th colspan="5" style="padding: 8px; text-align: center; font-weight: 600; background-color: #d4edda; color: #000000; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6;">Disbursement</th>';
+    content += '<th colspan="2" style="padding: 8px; text-align: center; font-weight: 600; background-color: #d4edda; color: #000000; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6;">Check Cashing</th>';
+    content += '<th colspan="3" style="padding: 8px; text-align: center; font-weight: 600; background-color: #d4edda; color: #000000; border-bottom: 1px solid #dee2e6;">Other</th>';
+    // Credit groupings
+    content += '<th colspan="2" style="padding: 8px; text-align: center; font-weight: 600; background-color: #f8d7da; color: #000000; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6;">Overdraft</th>';
+    content += '<th colspan="2" style="padding: 8px; text-align: center; font-weight: 600; background-color: #f8d7da; color: #000000; border-bottom: 1px solid #dee2e6;">Unavailable Funds</th>';
+    content += '</tr>';
+    
+    // Third header row - Individual columns
     content += '<tr style="background-color: #00aae3;">';
-    content += '<th style="padding: 10px 8px; text-align: left; font-weight: 600; position: sticky; left: 0; background-color: #00aae3; z-index: 10; color: #000000;">Job Code</th>';
-    
-    for (var f = 0; f < columnsToShow.length; f++) {
-        content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; white-space: nowrap; color: #000000;">' + 
-                   fieldDisplayNames[columnsToShow[f]] + '</th>';
-    }
-    
+    // Non-Credit columns
+    content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #000000; white-space: nowrap;">ACH</th>';
+    content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Wire Transfer<br/>Internal</th>';
+    content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Wire Transfer<br/>External</th>';
+    content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Official Checks<br/>Internal</th>';
+    content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2; border-right: 1px solid #dee2e6;">Official Checks<br/>External</th>';
+    content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">On-Us</th>';
+    content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2; border-right: 1px solid #dee2e6;">Not On-Us</th>';
+    content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Remote<br/>Deposit</th>';
+    content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Treasury Solutions<br/>Wire Limits</th>';
+    content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">FX Wire<br/>Limits</th>';
+    // Credit columns
+    content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Internal<br/>Accounts</th>';
+    content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2; border-right: 1px solid #dee2e6;">External<br/>Accounts</th>';
+    content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Internal<br/>Accounts</th>';
+    content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">External<br/>Accounts</th>';
     content += '</tr>';
+    
     content += '</thead>';
     
     // Table body
@@ -223,33 +223,40 @@
     for (var r = 0; r < existingLimits.length; r++) {
         var row = existingLimits[r];
         var rowStyle = row.isRequested ? 
-            'background-color: #fff3cd; border: 2px solid #ffc107;' : 
+            'background-color: #fff3cd;' : 
             (r % 2 === 0 ? 'background-color: #ffffff;' : 'background-color: #f8f9fa;');
         
         content += '<tr style="' + rowStyle + '">';
         
-        // Job Code column (sticky)
-        var jobCodeStyle = 'padding: 8px; font-weight: ' + (row.isRequested ? '700' : '500') + '; color: #000000; position: sticky; left: 0; z-index: 5;';
+        // Job Code column
+        var jobCodeStyle = 'padding: 8px; font-weight: ' + (row.isRequested ? '700' : '500') + '; color: #000000; border-right: 2px solid #dee2e6;';
         if (row.isRequested) {
-            jobCodeStyle += ' background-color: #fff3cd;';
             content += '<td style="' + jobCodeStyle + '">' + row.job_code + ' <span style="color: #856404; font-size: 11px;">(REQUESTED)</span></td>';
         } else {
-            jobCodeStyle += (r % 2 === 0 ? ' background-color: #ffffff;' : ' background-color: #f8f9fa;');
             content += '<td style="' + jobCodeStyle + '">' + row.job_code + '</td>';
         }
         
-        // Value columns
-        for (var c = 0; c < columnsToShow.length; c++) {
-            var colName = columnsToShow[c];
-            var value = row[colName] || 0;
-            var cellStyle = 'padding: 8px; text-align: right; color: #5a6c7d;';
-            
-            if (row.isRequested && value > 0) {
-                cellStyle += ' font-weight: 600; color: #000000;';
-            }
-            
-            content += '<td style="' + cellStyle + '">' + formatCurrency(value) + '</td>';
-        }
+        // All value columns in order
+        var cellStyle = 'padding: 8px; text-align: right; color: #5a6c7d;';
+        var requestedCellStyle = 'padding: 8px; text-align: right; font-weight: 600; color: #000000;';
+        
+        // Non-Credit columns
+        content += '<td style="' + (row.isRequested && row.disbursement_ach > 0 ? requestedCellStyle : cellStyle) + '">' + formatCurrency(row.disbursement_ach) + '</td>';
+        content += '<td style="' + (row.isRequested && row.wire_internal > 0 ? requestedCellStyle : cellStyle) + '">' + formatCurrency(row.wire_internal) + '</td>';
+        content += '<td style="' + (row.isRequested && row.wire_external > 0 ? requestedCellStyle : cellStyle) + '">' + formatCurrency(row.wire_external) + '</td>';
+        content += '<td style="' + (row.isRequested && row.checks_internal > 0 ? requestedCellStyle : cellStyle) + '">' + formatCurrency(row.checks_internal) + '</td>';
+        content += '<td style="' + (row.isRequested && row.checks_external > 0 ? requestedCellStyle : cellStyle) + '; border-right: 1px solid #dee2e6;">' + formatCurrency(row.checks_external) + '</td>';
+        content += '<td style="' + (row.isRequested && row.check_cashing_on_us > 0 ? requestedCellStyle : cellStyle) + '">' + formatCurrency(row.check_cashing_on_us) + '</td>';
+        content += '<td style="' + (row.isRequested && row.check_cashing_not_on_us > 0 ? requestedCellStyle : cellStyle) + '; border-right: 1px solid #dee2e6;">' + formatCurrency(row.check_cashing_not_on_us) + '</td>';
+        content += '<td style="' + (row.isRequested && row.remote_deposit > 0 ? requestedCellStyle : cellStyle) + '">' + formatCurrency(row.remote_deposit) + '</td>';
+        content += '<td style="' + (row.isRequested && row.treasury_wire > 0 ? requestedCellStyle : cellStyle) + '">' + formatCurrency(row.treasury_wire) + '</td>';
+        content += '<td style="' + (row.isRequested && row.fx_wire > 0 ? requestedCellStyle : cellStyle) + '">' + formatCurrency(row.fx_wire) + '</td>';
+        
+        // Credit columns
+        content += '<td style="' + (row.isRequested && row.overdraft_internal > 0 ? requestedCellStyle : cellStyle) + '">' + formatCurrency(row.overdraft_internal) + '</td>';
+        content += '<td style="' + (row.isRequested && row.overdraft_external > 0 ? requestedCellStyle : cellStyle) + '; border-right: 1px solid #dee2e6;">' + formatCurrency(row.overdraft_external) + '</td>';
+        content += '<td style="' + (row.isRequested && row.unavailable_internal > 0 ? requestedCellStyle : cellStyle) + '">' + formatCurrency(row.unavailable_internal) + '</td>';
+        content += '<td style="' + (row.isRequested && row.unavailable_external > 0 ? requestedCellStyle : cellStyle) + '">' + formatCurrency(row.unavailable_external) + '</td>';
         
         content += '</tr>';
     }
