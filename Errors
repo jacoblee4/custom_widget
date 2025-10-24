@@ -1,1 +1,53 @@
-Error: Cannot find function nil in object [object GlideRecord].,Detail: Cannot find function nil in object [object GlideRecord].
+10-24-2025 11:33:28
+Information	x_banun_bunow_si_0	SIGNATURE TESTING Non-credit limits query count: 1
+
+10-24-2025 11:33:28
+Information	x_banun_bunow_si_0	SIGNATURE TESTING Parent job_code: 2390d4071b474a10cd80ffbe034bcb2d
+
+10-24-2025 11:33:28
+Information	x_banun_bunow_si_0	SIGNATURE TESTING Job code found: HCSBCB
+
+10-24-2025 11:33:28
+Information	x_banun_bunow_si_0	SIGNATURE TESTING Largest value: 200000000 in field: wire_internal
+
+10-24-2025 11:33:28
+Information	x_banun_bunow_si_0	SIGNATURE TESTING Parent sys_id: ba476f5d1bb032904726c9d6624bcb66
+
+10-24-2025 11:33:28
+Information	x_banun_bunow_si_0	SIGNATURE TESTING Credit limits query count: 1
+
+10-24-2025 11:33:28
+Information	x_banun_bunow_si_0	SIGNATURE TESTING Job function description: Consumer and Small Business Banking
+
+10-24-2025 11:33:28
+Information	x_banun_bunow_si_0	SIGNATURE TESTING Found 4 matching job codes
+
+10-24-2025 11:33:28
+Information	x_banun_bunow_si_0	SIGNATURE TESTING Parent sys_id: ba476f5d1bb032904726c9d6624bcb66
+
+10-24-2025 11:33:28
+Information	x_banun_bunow_si_0	SIGNATURE TESTING === Authority Comparison Debug ===
+
+10-24-2025 11:33:28
+Information	x_banun_bunow_si_0	SIGNATURE TESTING Job code found: HCSBCB
+
+10-24-2025 11:33:28
+Information	x_banun_bunow_si_0	SIGNATURE TESTING === Authority Comparison Debug ===
+
+10-24-2025 11:33:28
+Information	x_banun_bunow_si_0	SIGNATURE TESTING Non-credit limits query count: 1
+
+10-24-2025 11:33:28
+Information	x_banun_bunow_si_0	SIGNATURE TESTING Largest value: 200000000 in field: wire_internal
+
+10-24-2025 11:33:28
+Information	x_banun_bunow_si_0	SIGNATURE TESTING Found 4 matching job codes
+
+10-24-2025 11:33:28
+Information	x_banun_bunow_si_0	SIGNATURE TESTING Credit limits query count: 1
+
+10-24-2025 11:33:28
+Information	x_banun_bunow_si_0	SIGNATURE TESTING Job function description: Consumer and Small Business Banking
+
+10-24-2025 11:33:28
+Information	x_banun_bunow_si_0	SIGNATURE TESTING Parent job_code: 2390d4071b474a10cd80ffbe034bcb2d
