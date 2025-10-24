@@ -1,5 +1,351 @@
-Remove the word Job Function and sticky left justify it and also make the color of that row #EBF1DE
-Job titles are not working make sure to use job_code.job_description
-make the row with "Disbursment/checkcashing/ect" this color #00B0F0
-Make the ach/wire transfer/ect column this color: #C5D9F1
-Then that light yellow color you are using to highlight, ONLY highlight the column that has changed or is new. Also use that color to highlight the job title and job code that is changing, also have you have (requested) under the job title do that for job code too. Also bold the values that are changing in addition to the yellow highloight.
+//signature_authority_comparison
+(function runMailScript(current, template, email, email_action, event) {
+    
+    var parent = current.sysapproval.getRefRecord();
+    
+    // Function to safely get value or return 0
+    function safeGetValue(glideRecord, fieldName) {
+        var value = glideRecord.getValue(fieldName);
+        return parseFloat(value) || 0;
+    }
+    
+    // Function to format currency
+    function formatCurrency(value) {
+        if (!value || value === 0) return '-';
+        return '$' + parseFloat(value).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+    
+    // Get the job function description from the requested job code
+    var jobCodeGr = new GlideRecord('x_banun_rbac_job_code');
+    if (!jobCodeGr.get(parent.getValue('job_code'))) {
+        return;
+    }
+    
+    var jobFunctionDescription = jobCodeGr.getValue('job_function_description') || 
+                                 jobCodeGr.getValue('u_job_function_description') ||
+                                 jobCodeGr.getValue('job_function');
+    
+    if (!jobFunctionDescription) {
+        return;
+    }
+    
+    // Get all job codes with matching job function description
+    var jobCodesList = [];
+    var jobCodesGr = new GlideRecord('x_banun_rbac_job_code');
+    jobCodesGr.addQuery('job_function_description', jobFunctionDescription);
+    jobCodesGr.query();
+    
+    while (jobCodesGr.next()) {
+        jobCodesList.push(jobCodesGr.sys_id.toString());
+    }
+    
+    if (jobCodesList.length === 0) {
+        return;
+    }
+    
+    // Get the requested limits for the current request
+    var requestedLimits = {
+        job_code: parent.job_code.getDisplayValue(),
+        job_code_sys_id: parent.getValue('job_code'),
+        sys_id: 'REQUESTED',
+        isRequested: true
+    };
+    
+    // Get job title for the requested job code
+    var requestedJobCodeGr = new GlideRecord('x_banun_rbac_job_code');
+    if (requestedJobCodeGr.get(parent.getValue('job_code'))) {
+        requestedLimits.job_title = requestedJobCodeGr.getValue('job_description') || '';
+    }
+    
+    // Determine if this is a change request
+    var isChangeRequest = (parent.request_type == 'change_to_existing_authority');
+    
+    // Fetch credit limits
+    var creditGr = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
+    creditGr.addQuery('parent', parent.sys_id);
+    creditGr.query();
+    
+    if (creditGr.next()) {
+        requestedLimits.overdraft_internal = safeGetValue(creditGr, 'overdraft_internal_accounts');
+        requestedLimits.overdraft_external = safeGetValue(creditGr, 'overdraft_external_accounts');
+        requestedLimits.unavailable_internal = safeGetValue(creditGr, 'unavailable_funds_internal_accounts');
+        requestedLimits.unavailable_external = safeGetValue(creditGr, 'unavailable_funds_external_accounts');
+        
+        // Get original values for change requests
+        if (isChangeRequest) {
+            requestedLimits.original_overdraft_internal = safeGetValue(creditGr, 'original_overdraft_internal_accounts');
+            requestedLimits.original_overdraft_external = safeGetValue(creditGr, 'original_overdraft_external_accounts');
+            requestedLimits.original_unavailable_internal = safeGetValue(creditGr, 'original_unavailable_funds_internal_accounts');
+            requestedLimits.original_unavailable_external = safeGetValue(creditGr, 'original_unavailable_funds_external_accounts');
+        }
+    }
+    
+    // Fetch non-credit limits
+    var nonCreditGr = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
+    nonCreditGr.addQuery('parent', parent.sys_id);
+    nonCreditGr.query();
+    
+    if (nonCreditGr.next()) {
+        requestedLimits.disbursement_ach = safeGetValue(nonCreditGr, 'disbursement_ach');
+        requestedLimits.wire_internal = safeGetValue(nonCreditGr, 'disbursement_wire_transfer_internal');
+        requestedLimits.wire_external = safeGetValue(nonCreditGr, 'disbursement_wire_transfer_external');
+        requestedLimits.checks_internal = safeGetValue(nonCreditGr, 'disbursement_official_checks_internal');
+        requestedLimits.checks_external = safeGetValue(nonCreditGr, 'disbursement_official_checks_external');
+        requestedLimits.check_cashing_on_us = safeGetValue(nonCreditGr, 'check_cashing_on_us');
+        requestedLimits.check_cashing_not_on_us = safeGetValue(nonCreditGr, 'check_cashing_not_on_us');
+        requestedLimits.remote_deposit = safeGetValue(nonCreditGr, 'remote_deposit');
+        requestedLimits.treasury_wire = safeGetValue(nonCreditGr, 'treasury_solutions_company_wire_limits');
+        requestedLimits.fx_wire = safeGetValue(nonCreditGr, 'fx_wire_limits');
+        
+        // Get original values for change requests
+        if (isChangeRequest) {
+            requestedLimits.original_disbursement_ach = safeGetValue(nonCreditGr, 'original_disbursement_ach');
+            requestedLimits.original_wire_internal = safeGetValue(nonCreditGr, 'original_disbursement_wire_transfer_internal');
+            requestedLimits.original_wire_external = safeGetValue(nonCreditGr, 'original_disbursement_wire_transfer_external');
+            requestedLimits.original_checks_internal = safeGetValue(nonCreditGr, 'original_disbursement_official_checks_internal');
+            requestedLimits.original_checks_external = safeGetValue(nonCreditGr, 'original_disbursement_official_checks_external');
+            requestedLimits.original_check_cashing_on_us = safeGetValue(nonCreditGr, 'original_check_cashing_on_us');
+            requestedLimits.original_check_cashing_not_on_us = safeGetValue(nonCreditGr, 'original_check_cashing_not_on_us');
+            requestedLimits.original_remote_deposit = safeGetValue(nonCreditGr, 'original_remote_deposit');
+            requestedLimits.original_treasury_wire = safeGetValue(nonCreditGr, 'original_treasury_solutions_company_wire_limits');
+            requestedLimits.original_fx_wire = safeGetValue(nonCreditGr, 'original_fx_wire_limits');
+        }
+    }
+    
+    // Define all limit fields in the exact order we want to display
+    var limitFields = [
+        'disbursement_ach', 
+        'wire_internal', 
+        'wire_external', 
+        'checks_internal', 
+        'checks_external',
+        'check_cashing_on_us', 
+        'check_cashing_not_on_us', 
+        'remote_deposit', 
+        'treasury_wire', 
+        'fx_wire',
+        'overdraft_internal', 
+        'overdraft_external', 
+        'unavailable_internal', 
+        'unavailable_external'
+    ];
+    
+    // Find the largest requested value and its field for sorting
+    var largestValue = 0;
+    var largestField = '';
+    
+    for (var i = 0; i < limitFields.length; i++) {
+        var fieldName = limitFields[i];
+        var value = requestedLimits[fieldName] || 0;
+        if (value > largestValue) {
+            largestValue = value;
+            largestField = fieldName;
+        }
+    }
+    
+    if (largestValue === 0) {
+        var content = '<div style="margin: 30px 0; padding: 20px; background-color: #fff3cd; border-radius: 5px; border: 1px solid #ffc107;">';
+        content += '<p style="color: #856404; margin: 0;"><strong>Note:</strong> No authority limits were specified in this request, so no comparison can be shown.</p>';
+        content += '</div>';
+        template.print(content);
+        return;
+    }
+    
+    // Get existing authority limits for matching job codes
+    var existingLimits = [];
+    
+    // Query by looping through job codes
+    for (var j = 0; j < jobCodesList.length; j++) {
+        var limitGr2 = new GlideRecord('x_banun_bunow_si_0_authority_limits');
+        limitGr2.addQuery('job_code', jobCodesList[j]);
+        limitGr2.query();
+        
+        while (limitGr2.next()) {
+            var limit = {
+                job_code: limitGr2.job_code.getDisplayValue(),
+                job_code_sys_id: limitGr2.getValue('job_code'),
+                sys_id: limitGr2.sys_id.toString(),
+                isRequested: false
+            };
+            
+            // Get job title
+            var jobCodeGr2 = new GlideRecord('x_banun_rbac_job_code');
+            if (jobCodeGr2.get(limitGr2.getValue('job_code'))) {
+                limit.job_title = jobCodeGr2.getValue('job_description') || '';
+            }
+            
+            limit.disbursement_ach = safeGetValue(limitGr2, 'disbursement_ach');
+            limit.wire_internal = safeGetValue(limitGr2, 'disbursement_wire_transfer_internal');
+            limit.wire_external = safeGetValue(limitGr2, 'disbursement_wire_transfer_external');
+            limit.checks_internal = safeGetValue(limitGr2, 'disbursement_official_checks_internal');
+            limit.checks_external = safeGetValue(limitGr2, 'disbursement_official_checks_external');
+            limit.check_cashing_on_us = safeGetValue(limitGr2, 'check_cashing_on_us');
+            limit.check_cashing_not_on_us = safeGetValue(limitGr2, 'check_cashing_not_on_us');
+            limit.remote_deposit = safeGetValue(limitGr2, 'remote_deposit');
+            limit.treasury_wire = safeGetValue(limitGr2, 'treasury_solutions_company_wire_limits');
+            limit.fx_wire = safeGetValue(limitGr2, 'fx_wire_limits');
+            limit.overdraft_internal = safeGetValue(limitGr2, 'overdraft_internal_accounts');
+            limit.overdraft_external = safeGetValue(limitGr2, 'overdraft_external_accounts');
+            limit.unavailable_internal = safeGetValue(limitGr2, 'unavailable_funds_internal_accounts');
+            limit.unavailable_external = safeGetValue(limitGr2, 'unavailable_funds_external_accounts');
+            
+            existingLimits.push(limit);
+        }
+    }
+    
+    // Add requested limits to the array
+    existingLimits.push(requestedLimits);
+    
+    // Sort by the largest field value (descending)
+    existingLimits.sort(function(a, b) {
+        var aVal = a[largestField] || 0;
+        var bVal = b[largestField] || 0;
+        return bVal - aVal;
+    });
+    
+    // Function to determine if a field should be highlighted
+    function shouldHighlight(row, fieldName) {
+        if (!row.isRequested) return false;
+        
+        var newValue = row[fieldName] || 0;
+        
+        if (isChangeRequest) {
+            var originalValue = row['original_' + fieldName] || 0;
+            return newValue !== originalValue;
+        } else {
+            // For new requests, highlight columns that have values
+            return newValue > 0;
+        }
+    }
+    
+    // Build the HTML content
+    var content = '';
+    content += '<div style="margin: 30px 0; padding: 20px; background-color: #f8f9fa; border-radius: 5px; border: 1px solid #dee2e6;">';
+    content += '<h3 style="color: #00aae3; margin: 0 0 10px 0; padding-bottom: 10px; border-bottom: 2px solid #00aae3;">';
+    content += 'Authority Limits Comparison';
+    content += '</h3>';
+    
+    // Create table
+    content += '<div style="overflow-x: auto;">';
+    content += '<table style="width: 100%; border-collapse: collapse; background-color: #ffffff; border: 1px solid #dee2e6; border-radius: 4px; font-size: 12px;">';
+    
+    content += '<thead>';
+    
+    // Job Function row (spanning all columns)
+    content += '<tr>';
+    content += '<th colspan="16" style="padding: 12px; text-align: left; font-weight: 700; background-color: #EBF1DE; color: #000000; border-bottom: 2px solid #dee2e6;">' + jobFunctionDescription + '</th>';
+    content += '</tr>';
+    
+    // First header row - Credit/Non-Credit categories
+    content += '<tr>';
+    content += '<th rowspan="3" style="padding: 10px 8px; text-align: left; font-weight: 600; background-color: #00aae3; color: #000000; vertical-align: middle; border-right: 2px solid #dee2e6; position: sticky; left: 0; z-index: 20;">Job Title</th>';
+    content += '<th colspan="10" style="padding: 10px 8px; text-align: center; font-weight: 700; background-color: #27ae60; color: #ffffff; border-bottom: 1px solid #dee2e6;">Non-Credit Authority</th>';
+    content += '<th colspan="4" style="padding: 10px 8px; text-align: center; font-weight: 700; background-color: #e74c3c; color: #ffffff; border-bottom: 1px solid #dee2e6;">Credit Authority</th>';
+    content += '<th rowspan="3" style="padding: 10px 8px; text-align: left; font-weight: 600; background-color: #00aae3; color: #000000; vertical-align: middle; border-left: 2px solid #dee2e6;">Job Code</th>';
+    content += '</tr>';
+    
+    // Second header row - Groupings
+    content += '<tr>';
+    // Non-Credit groupings
+    content += '<th colspan="5" style="padding: 8px; text-align: center; font-weight: 600; background-color: #00B0F0; color: #000000; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6;">Disbursement</th>';
+    content += '<th colspan="2" style="padding: 8px; text-align: center; font-weight: 600; background-color: #00B0F0; color: #000000; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6;">Check Cashing</th>';
+    content += '<th colspan="3" style="padding: 8px; text-align: center; font-weight: 600; background-color: #00B0F0; color: #000000; border-bottom: 1px solid #dee2e6;">Other</th>';
+    // Credit groupings
+    content += '<th colspan="2" style="padding: 8px; text-align: center; font-weight: 600; background-color: #00B0F0; color: #000000; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6;">Overdraft</th>';
+    content += '<th colspan="2" style="padding: 8px; text-align: center; font-weight: 600; background-color: #00B0F0; color: #000000; border-bottom: 1px solid #dee2e6;">Unavailable Funds</th>';
+    content += '</tr>';
+    
+    // Third header row - Individual columns
+    content += '<tr style="background-color: #C5D9F1;">';
+    // Non-Credit columns
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap;">ACH</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Wire Transfer<br/>Internal</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Wire Transfer<br/>External</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Official Checks<br/>Internal</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2; border-right: 1px solid #dee2e6;">Official Checks<br/>External</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">On-Us</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2; border-right: 1px solid #dee2e6;">Not On-Us</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Remote<br/>Deposit</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Treasury Solutions<br/>Wire Limits</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">FX Wire<br/>Limits</th>';
+    // Credit columns
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Internal<br/>Accounts</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2; border-right: 1px solid #dee2e6;">External<br/>Accounts</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Internal<br/>Accounts</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">External<br/>Accounts</th>';
+    content += '</tr>';
+    
+    content += '</thead>';
+    
+    // Table body
+    content += '<tbody>';
+    
+    for (var r = 0; r < existingLimits.length; r++) {
+        var row = existingLimits[r];
+        var rowStyle = row.isRequested ? 
+            'background-color: #fff3cd;' : 
+            (r % 2 === 0 ? 'background-color: #ffffff;' : 'background-color: #f8f9fa;');
+        
+        content += '<tr style="' + rowStyle + '">';
+        
+        // Job Title column (sticky) - always highlighted if requested
+        var jobTitleStyle = 'padding: 8px; border-right: 2px solid #dee2e6; position: sticky; left: 0; z-index: 10;';
+        if (row.isRequested) {
+            jobTitleStyle += ' font-weight: 700; color: #000000; background-color: #FFFF99;';
+            content += '<td style="' + jobTitleStyle + '">' + (row.job_title || '') + '<br/><span style="color: #856404; font-size: 11px;">(REQUESTED)</span></td>';
+        } else {
+            jobTitleStyle += ' font-weight: 500; color: #000000;';
+            jobTitleStyle += (r % 2 === 0 ? ' background-color: #ffffff;' : ' background-color: #f8f9fa;');
+            content += '<td style="' + jobTitleStyle + '">' + (row.job_title || '') + '</td>';
+        }
+        
+        // All value columns in order
+        var cellStyle = 'padding: 8px; text-align: right; color: #5a6c7d;';
+        var highlightStyle = 'padding: 8px; text-align: right; font-weight: 700; background-color: #FFFF99; color: #000000;';
+        
+        // Non-Credit columns
+        content += '<td style="' + (shouldHighlight(row, 'disbursement_ach') ? highlightStyle : cellStyle) + '">' + (shouldHighlight(row, 'disbursement_ach') ? '<strong>' : '') + formatCurrency(row.disbursement_ach) + (shouldHighlight(row, 'disbursement_ach') ? '</strong>' : '') + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'wire_internal') ? highlightStyle : cellStyle) + '">' + (shouldHighlight(row, 'wire_internal') ? '<strong>' : '') + formatCurrency(row.wire_internal) + (shouldHighlight(row, 'wire_internal') ? '</strong>' : '') + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'wire_external') ? highlightStyle : cellStyle) + '">' + (shouldHighlight(row, 'wire_external') ? '<strong>' : '') + formatCurrency(row.wire_external) + (shouldHighlight(row, 'wire_external') ? '</strong>' : '') + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'checks_internal') ? highlightStyle : cellStyle) + '">' + (shouldHighlight(row, 'checks_internal') ? '<strong>' : '') + formatCurrency(row.checks_internal) + (shouldHighlight(row, 'checks_internal') ? '</strong>' : '') + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'checks_external') ? highlightStyle : cellStyle) + '; border-right: 1px solid #dee2e6;">' + (shouldHighlight(row, 'checks_external') ? '<strong>' : '') + formatCurrency(row.checks_external) + (shouldHighlight(row, 'checks_external') ? '</strong>' : '') + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'check_cashing_on_us') ? highlightStyle : cellStyle) + '">' + (shouldHighlight(row, 'check_cashing_on_us') ? '<strong>' : '') + formatCurrency(row.check_cashing_on_us) + (shouldHighlight(row, 'check_cashing_on_us') ? '</strong>' : '') + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'check_cashing_not_on_us') ? highlightStyle : cellStyle) + '; border-right: 1px solid #dee2e6;">' + (shouldHighlight(row, 'check_cashing_not_on_us') ? '<strong>' : '') + formatCurrency(row.check_cashing_not_on_us) + (shouldHighlight(row, 'check_cashing_not_on_us') ? '</strong>' : '') + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'remote_deposit') ? highlightStyle : cellStyle) + '">' + (shouldHighlight(row, 'remote_deposit') ? '<strong>' : '') + formatCurrency(row.remote_deposit) + (shouldHighlight(row, 'remote_deposit') ? '</strong>' : '') + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'treasury_wire') ? highlightStyle : cellStyle) + '">' + (shouldHighlight(row, 'treasury_wire') ? '<strong>' : '') + formatCurrency(row.treasury_wire) + (shouldHighlight(row, 'treasury_wire') ? '</strong>' : '') + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'fx_wire') ? highlightStyle : cellStyle) + '">' + (shouldHighlight(row, 'fx_wire') ? '<strong>' : '') + formatCurrency(row.fx_wire) + (shouldHighlight(row, 'fx_wire') ? '</strong>' : '') + '</td>';
+        
+        // Credit columns
+        content += '<td style="' + (shouldHighlight(row, 'overdraft_internal') ? highlightStyle : cellStyle) + '">' + (shouldHighlight(row, 'overdraft_internal') ? '<strong>' : '') + formatCurrency(row.overdraft_internal) + (shouldHighlight(row, 'overdraft_internal') ? '</strong>' : '') + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'overdraft_external') ? highlightStyle : cellStyle) + '; border-right: 1px solid #dee2e6;">' + (shouldHighlight(row, 'overdraft_external') ? '<strong>' : '') + formatCurrency(row.overdraft_external) + (shouldHighlight(row, 'overdraft_external') ? '</strong>' : '') + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'unavailable_internal') ? highlightStyle : cellStyle) + '">' + (shouldHighlight(row, 'unavailable_internal') ? '<strong>' : '') + formatCurrency(row.unavailable_internal) + (shouldHighlight(row, 'unavailable_internal') ? '</strong>' : '') + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'unavailable_external') ? highlightStyle : cellStyle) + '">' + (shouldHighlight(row, 'unavailable_external') ? '<strong>' : '') + formatCurrency(row.unavailable_external) + (shouldHighlight(row, 'unavailable_external') ? '</strong>' : '') + '</td>';
+        
+        // Job Code column (right side) - always highlighted if requested, add (REQUESTED)
+        var jobCodeStyle = 'padding: 8px; border-left: 2px solid #dee2e6;';
+        if (row.isRequested) {
+            jobCodeStyle += ' font-weight: 700; background-color: #FFFF99; color: #000000;';
+            content += '<td style="' + jobCodeStyle + '">' + row.job_code + '<br/><span style="color: #856404; font-size: 11px;">(REQUESTED)</span></td>';
+        } else {
+            jobCodeStyle += ' font-weight: 500; color: #000000;';
+            content += '<td style="' + jobCodeStyle + '">' + row.job_code + '</td>';
+        }
+        
+        content += '</tr>';
+    }
+    
+    content += '</tbody>';
+    content += '</table>';
+    content += '</div>';
+    
+    if (existingLimits.length === 1) {
+        content += '<p style="color: #856404; font-size: 12px; margin-top: 15px; padding: 10px; background-color: #fff3cd; border-radius: 4px;">';
+        content += '⚠️ No existing authority limits found for other job codes in this job function. Only the requested limits are shown above.';
+        content += '</p>';
+    }
+    
+    content += '</div>';
+    
+    template.print(content);
+    
+})(current, template, email, email_action, event);
