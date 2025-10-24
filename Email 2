@@ -51,12 +51,12 @@
         isRequested: true
     };
     
-    // Get job title for the requested job code - FIX: use job_description
+    // Get job title for the requested job code
     var requestedJobCodeGr = new GlideRecord('x_banun_rbac_job_code');
     if (requestedJobCodeGr.get(parent.getValue('job_code'))) {
-        requestedLimits.job_title = requestedJobCodeGr.getValue('job_description') || 
-                                    requestedJobCodeGr.getValue('u_job_description') || 
-                                    requestedJobCodeGr.getValue('description') || '';
+        requestedLimits.job_title = requestedJobCodeGr.getValue('job_title') || 
+                                    requestedJobCodeGr.getValue('u_job_title') || 
+                                    requestedJobCodeGr.getValue('title') || '';
     }
     
     // Determine if this is a change request
@@ -73,6 +73,7 @@
         requestedLimits.unavailable_internal = safeGetValue(creditGr, 'unavailable_funds_internal_accounts');
         requestedLimits.unavailable_external = safeGetValue(creditGr, 'unavailable_funds_external_accounts');
         
+        // Get original values for change requests
         if (isChangeRequest) {
             requestedLimits.original_overdraft_internal = safeGetValue(creditGr, 'original_overdraft_internal_accounts');
             requestedLimits.original_overdraft_external = safeGetValue(creditGr, 'original_overdraft_external_accounts');
@@ -98,6 +99,7 @@
         requestedLimits.treasury_wire = safeGetValue(nonCreditGr, 'treasury_solutions_company_wire_limits');
         requestedLimits.fx_wire = safeGetValue(nonCreditGr, 'fx_wire_limits');
         
+        // Get original values for change requests
         if (isChangeRequest) {
             requestedLimits.original_disbursement_ach = safeGetValue(nonCreditGr, 'original_disbursement_ach');
             requestedLimits.original_wire_internal = safeGetValue(nonCreditGr, 'original_disbursement_wire_transfer_internal');
@@ -112,6 +114,7 @@
         }
     }
     
+    // Define all limit fields in the exact order we want to display
     var limitFields = [
         'disbursement_ach', 
         'wire_internal', 
@@ -167,12 +170,12 @@
                 isRequested: false
             };
             
-            // Get job title - FIX: use job_description
+            // Get job title
             var jobCodeGr2 = new GlideRecord('x_banun_rbac_job_code');
             if (jobCodeGr2.get(limitGr2.getValue('job_code'))) {
-                limit.job_title = jobCodeGr2.getValue('job_description') || 
-                                 jobCodeGr2.getValue('u_job_description') || 
-                                 jobCodeGr2.getValue('description') || '';
+                limit.job_title = jobCodeGr2.getValue('job_title') || 
+                                 jobCodeGr2.getValue('u_job_title') || 
+                                 jobCodeGr2.getValue('title') || '';
             }
             
             limit.disbursement_ach = safeGetValue(limitGr2, 'disbursement_ach');
@@ -222,51 +225,53 @@
     // Build the HTML content
     var content = '';
     content += '<div style="margin: 30px 0; padding: 20px; background-color: #f8f9fa; border-radius: 5px; border: 1px solid #dee2e6;">';
-    
-    // Job Function Header
-    content += '<div style="background-color: #d4c5a0; padding: 15px 20px; margin: -20px -20px 20px -20px; border-radius: 5px 5px 0 0;">';
-    content += '<h3 style="color: #000000; margin: 0; font-size: 18px; font-weight: 600;">Authority Limits Comparison - ' + jobFunctionDescription + '</h3>';
-    content += '</div>';
+    content += '<h3 style="color: #00aae3; margin: 0 0 10px 0; padding-bottom: 10px; border-bottom: 2px solid #00aae3;">';
+    content += 'Authority Limits Comparison - <span style="color: #000000; font-weight: 700;">' + jobFunctionDescription + '</span>';
+    content += '</h3>';
     
     // Create table
     content += '<div style="overflow-x: auto;">';
-    content += '<table style="width: 100%; border-collapse: collapse; background-color: #ffffff; border: 1px solid #000000; font-size: 12px;">';
+    content += '<table style="width: 100%; border-collapse: collapse; background-color: #ffffff; border: 1px solid #dee2e6; border-radius: 4px; font-size: 12px;">';
     
     content += '<thead>';
     
     // First header row - Credit/Non-Credit categories
     content += '<tr>';
-    content += '<th rowspan="3" style="padding: 10px 8px; text-align: left; font-weight: 600; background-color: #d4c5a0; color: #000000; vertical-align: middle; border: 1px solid #000000; position: sticky; left: 0; z-index: 20;">Job Title</th>';
-    content += '<th colspan="10" style="padding: 10px 8px; text-align: center; font-weight: 700; background-color: #d4c5a0; color: #000000; border: 1px solid #000000; font-size: 13px;">Non-Credit Authority</th>';
-    content += '<th colspan="4" style="padding: 10px 8px; text-align: center; font-weight: 700; background-color: #d4c5a0; color: #000000; border: 1px solid #000000; font-size: 13px;">Credit Authority</th>';
-    content += '<th rowspan="3" style="padding: 10px 8px; text-align: left; font-weight: 600; background-color: #d4c5a0; color: #000000; vertical-align: middle; border: 1px solid #000000;">Job Code</th>';
+    content += '<th rowspan="3" style="padding: 10px 8px; text-align: left; font-weight: 600; background-color: #00aae3; color: #000000; vertical-align: middle; border-right: 2px solid #dee2e6; position: sticky; left: 0; z-index: 20;">Job Title</th>';
+    content += '<th colspan="10" style="padding: 10px 8px; text-align: center; font-weight: 700; background-color: #27ae60; color: #ffffff; border-bottom: 1px solid #dee2e6;">Non-Credit Authority</th>';
+    content += '<th colspan="4" style="padding: 10px 8px; text-align: center; font-weight: 700; background-color: #e74c3c; color: #ffffff; border-bottom: 1px solid #dee2e6;">Credit Authority</th>';
+    content += '<th rowspan="3" style="padding: 10px 8px; text-align: left; font-weight: 600; background-color: #00aae3; color: #000000; vertical-align: middle; border-left: 2px solid #dee2e6;">Job Code</th>';
     content += '</tr>';
     
     // Second header row - Groupings
     content += '<tr>';
-    content += '<th colspan="5" style="padding: 8px; text-align: center; font-weight: 600; background-color: #4db8c4; color: #000000; border: 1px solid #000000; font-size: 11px;">Disbursement</th>';
-    content += '<th colspan="2" style="padding: 8px; text-align: center; font-weight: 600; background-color: #4db8c4; color: #000000; border: 1px solid #000000; font-size: 11px;">Check Cashing</th>';
-    content += '<th colspan="3" style="padding: 8px; text-align: center; font-weight: 600; background-color: #4db8c4; color: #000000; border: 1px solid #000000; font-size: 11px;">Other</th>';
-    content += '<th colspan="2" style="padding: 8px; text-align: center; font-weight: 600; background-color: #4db8c4; color: #000000; border: 1px solid #000000; font-size: 11px;">Overdraft</th>';
-    content += '<th colspan="2" style="padding: 8px; text-align: center; font-weight: 600; background-color: #4db8c4; color: #000000; border: 1px solid #000000; font-size: 11px;">Unavailable Funds</th>';
+    // Non-Credit groupings
+    content += '<th colspan="5" style="padding: 8px; text-align: center; font-weight: 600; background-color: #d4edda; color: #000000; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6;">Disbursement</th>';
+    content += '<th colspan="2" style="padding: 8px; text-align: center; font-weight: 600; background-color: #d4edda; color: #000000; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6;">Check Cashing</th>';
+    content += '<th colspan="3" style="padding: 8px; text-align: center; font-weight: 600; background-color: #d4edda; color: #000000; border-bottom: 1px solid #dee2e6;">Other</th>';
+    // Credit groupings
+    content += '<th colspan="2" style="padding: 8px; text-align: center; font-weight: 600; background-color: #f8d7da; color: #000000; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6;">Overdraft</th>';
+    content += '<th colspan="2" style="padding: 8px; text-align: center; font-weight: 600; background-color: #f8d7da; color: #000000; border-bottom: 1px solid #dee2e6;">Unavailable Funds</th>';
     content += '</tr>';
     
     // Third header row - Individual columns
-    content += '<tr style="background-color: #b0b0a8;">';
-    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; border: 1px solid #000000; font-size: 10px;">ACH</th>';
-    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; border: 1px solid #000000; font-size: 10px; line-height: 1.2;">Wire Transfer<br/>Internal</th>';
-    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; border: 1px solid #000000; font-size: 10px; line-height: 1.2;">Wire Transfer<br/>External</th>';
-    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; border: 1px solid #000000; font-size: 10px; line-height: 1.2;">Official Checks<br/>Internal</th>';
-    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; border: 1px solid #000000; font-size: 10px; line-height: 1.2;">Official Checks<br/>External</th>';
-    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; border: 1px solid #000000; font-size: 10px; line-height: 1.2;">On-Us</th>';
-    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; border: 1px solid #000000; font-size: 10px; line-height: 1.2;">Not On-Us</th>';
-    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; border: 1px solid #000000; font-size: 10px; line-height: 1.2;">Remote<br/>Deposit</th>';
-    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; border: 1px solid #000000; font-size: 10px; line-height: 1.2;">Treasury Solutions<br/>Wire Limits</th>';
-    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; border: 1px solid #000000; font-size: 10px; line-height: 1.2;">FX Wire<br/>Limits</th>';
-    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; border: 1px solid #000000; font-size: 10px; line-height: 1.2;">Internal<br/>Accounts</th>';
-    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; border: 1px solid #000000; font-size: 10px; line-height: 1.2;">External<br/>Accounts</th>';
-    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; border: 1px solid #000000; font-size: 10px; line-height: 1.2;">Internal<br/>Accounts</th>';
-    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; border: 1px solid #000000; font-size: 10px; line-height: 1.2;">External<br/>Accounts</th>';
+    content += '<tr style="background-color: #00aae3;">';
+    // Non-Credit columns
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap;">ACH</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Wire Transfer<br/>Internal</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Wire Transfer<br/>External</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Official Checks<br/>Internal</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2; border-right: 1px solid #dee2e6;">Official Checks<br/>External</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">On-Us</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2; border-right: 1px solid #dee2e6;">Not On-Us</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Remote<br/>Deposit</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Treasury Solutions<br/>Wire Limits</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">FX Wire<br/>Limits</th>';
+    // Credit columns
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Internal<br/>Accounts</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2; border-right: 1px solid #dee2e6;">External<br/>Accounts</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Internal<br/>Accounts</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">External<br/>Accounts</th>';
     content += '</tr>';
     
     content += '</thead>';
@@ -277,15 +282,15 @@
     for (var r = 0; r < existingLimits.length; r++) {
         var row = existingLimits[r];
         var rowStyle = row.isRequested ? 
-            'background-color: #d4c5a0;' : 
+            'background-color: #fff3cd;' : 
             (r % 2 === 0 ? 'background-color: #ffffff;' : 'background-color: #f8f9fa;');
         
         content += '<tr style="' + rowStyle + '">';
         
-        // Job Title column (sticky) - highlight if requested
-        var jobTitleStyle = 'padding: 8px; font-weight: ' + (row.isRequested ? '700' : '500') + '; color: #000000; border: 1px solid #000000; position: sticky; left: 0; z-index: 10;';
+        // Job Title column (sticky)
+        var jobTitleStyle = 'padding: 8px; font-weight: ' + (row.isRequested ? '700' : '500') + '; color: #000000; border-right: 2px solid #dee2e6; position: sticky; left: 0; z-index: 10;';
         if (row.isRequested) {
-            jobTitleStyle += ' background-color: #d4c5a0;';
+            jobTitleStyle += ' background-color: #fff3cd;';
             content += '<td style="' + jobTitleStyle + '">' + (row.job_title || '') + ' <span style="color: #856404; font-size: 11px;">(REQUESTED)</span></td>';
         } else {
             jobTitleStyle += (r % 2 === 0 ? ' background-color: #ffffff;' : ' background-color: #f8f9fa;');
@@ -293,33 +298,30 @@
         }
         
         // All value columns in order
-        var cellStyle = 'padding: 8px; text-align: right; color: #5a6c7d; border: 1px solid #000000;';
-        var changedCellStyle = 'padding: 8px; text-align: right; font-weight: 700; background-color: #8b7355; color: #ffffff; border: 1px solid #000000;';
+        var cellStyle = 'padding: 8px; text-align: right; color: #5a6c7d;';
+        var highlightStyle = 'padding: 8px; text-align: right; font-weight: 700; background-color: #ffc107; color: #000000;';
         
         // Non-Credit columns
-        content += '<td style="' + (shouldHighlight(row, 'disbursement_ach') ? changedCellStyle : cellStyle) + '">' + formatCurrency(row.disbursement_ach) + '</td>';
-        content += '<td style="' + (shouldHighlight(row, 'wire_internal') ? changedCellStyle : cellStyle) + '">' + formatCurrency(row.wire_internal) + '</td>';
-        content += '<td style="' + (shouldHighlight(row, 'wire_external') ? changedCellStyle : cellStyle) + '">' + formatCurrency(row.wire_external) + '</td>';
-        content += '<td style="' + (shouldHighlight(row, 'checks_internal') ? changedCellStyle : cellStyle) + '">' + formatCurrency(row.checks_internal) + '</td>';
-        content += '<td style="' + (shouldHighlight(row, 'checks_external') ? changedCellStyle : cellStyle) + '">' + formatCurrency(row.checks_external) + '</td>';
-        content += '<td style="' + (shouldHighlight(row, 'check_cashing_on_us') ? changedCellStyle : cellStyle) + '">' + formatCurrency(row.check_cashing_on_us) + '</td>';
-        content += '<td style="' + (shouldHighlight(row, 'check_cashing_not_on_us') ? changedCellStyle : cellStyle) + '">' + formatCurrency(row.check_cashing_not_on_us) + '</td>';
-        content += '<td style="' + (shouldHighlight(row, 'remote_deposit') ? changedCellStyle : cellStyle) + '">' + formatCurrency(row.remote_deposit) + '</td>';
-        content += '<td style="' + (shouldHighlight(row, 'treasury_wire') ? changedCellStyle : cellStyle) + '">' + formatCurrency(row.treasury_wire) + '</td>';
-        content += '<td style="' + (shouldHighlight(row, 'fx_wire') ? changedCellStyle : cellStyle) + '">' + formatCurrency(row.fx_wire) + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'disbursement_ach') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.disbursement_ach) + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'wire_internal') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.wire_internal) + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'wire_external') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.wire_external) + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'checks_internal') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.checks_internal) + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'checks_external') ? highlightStyle : cellStyle) + '; border-right: 1px solid #dee2e6;">' + formatCurrency(row.checks_external) + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'check_cashing_on_us') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.check_cashing_on_us) + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'check_cashing_not_on_us') ? highlightStyle : cellStyle) + '; border-right: 1px solid #dee2e6;">' + formatCurrency(row.check_cashing_not_on_us) + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'remote_deposit') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.remote_deposit) + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'treasury_wire') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.treasury_wire) + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'fx_wire') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.fx_wire) + '</td>';
         
         // Credit columns
-        content += '<td style="' + (shouldHighlight(row, 'overdraft_internal') ? changedCellStyle : cellStyle) + '">' + formatCurrency(row.overdraft_internal) + '</td>';
-        content += '<td style="' + (shouldHighlight(row, 'overdraft_external') ? changedCellStyle : cellStyle) + '">' + formatCurrency(row.overdraft_external) + '</td>';
-        content += '<td style="' + (shouldHighlight(row, 'unavailable_internal') ? changedCellStyle : cellStyle) + '">' + formatCurrency(row.unavailable_internal) + '</td>';
-        content += '<td style="' + (shouldHighlight(row, 'unavailable_external') ? changedCellStyle : cellStyle) + '">' + formatCurrency(row.unavailable_external) + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'overdraft_internal') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.overdraft_internal) + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'overdraft_external') ? highlightStyle : cellStyle) + '; border-right: 1px solid #dee2e6;">' + formatCurrency(row.overdraft_external) + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'unavailable_internal') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.unavailable_internal) + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'unavailable_external') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.unavailable_external) + '</td>';
         
-        // Job Code column (right side) - highlight if requested
-        var jobCodeCellStyle = 'padding: 8px; font-weight: ' + (row.isRequested ? '700' : '500') + '; color: #000000; border: 1px solid #000000;';
-        if (row.isRequested) {
-            jobCodeCellStyle += ' background-color: #d4c5a0;';
-        }
-        content += '<td style="' + jobCodeCellStyle + '">' + row.job_code + '</td>';
+        // Job Code column (right side)
+        var jobCodeStyle = 'padding: 8px; font-weight: ' + (row.isRequested ? '700' : '500') + '; color: #000000; border-left: 2px solid #dee2e6;';
+        content += '<td style="' + jobCodeStyle + '">' + row.job_code + '</td>';
         
         content += '</tr>';
     }
