@@ -46,9 +46,21 @@
     // Get the requested limits for the current request
     var requestedLimits = {
         job_code: parent.job_code.getDisplayValue(),
+        job_code_sys_id: parent.getValue('job_code'),
         sys_id: 'REQUESTED',
         isRequested: true
     };
+    
+    // Get job title for the requested job code
+    var requestedJobCodeGr = new GlideRecord('x_banun_rbac_job_code');
+    if (requestedJobCodeGr.get(parent.getValue('job_code'))) {
+        requestedLimits.job_title = requestedJobCodeGr.getValue('job_title') || 
+                                    requestedJobCodeGr.getValue('u_job_title') || 
+                                    requestedJobCodeGr.getValue('title') || '';
+    }
+    
+    // Determine if this is a change request
+    var isChangeRequest = (parent.request_type == 'change_to_existing_authority');
     
     // Fetch credit limits
     var creditGr = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
@@ -60,6 +72,14 @@
         requestedLimits.overdraft_external = safeGetValue(creditGr, 'overdraft_external_accounts');
         requestedLimits.unavailable_internal = safeGetValue(creditGr, 'unavailable_funds_internal_accounts');
         requestedLimits.unavailable_external = safeGetValue(creditGr, 'unavailable_funds_external_accounts');
+        
+        // Get original values for change requests
+        if (isChangeRequest) {
+            requestedLimits.original_overdraft_internal = safeGetValue(creditGr, 'original_overdraft_internal_accounts');
+            requestedLimits.original_overdraft_external = safeGetValue(creditGr, 'original_overdraft_external_accounts');
+            requestedLimits.original_unavailable_internal = safeGetValue(creditGr, 'original_unavailable_funds_internal_accounts');
+            requestedLimits.original_unavailable_external = safeGetValue(creditGr, 'original_unavailable_funds_external_accounts');
+        }
     }
     
     // Fetch non-credit limits
@@ -78,6 +98,20 @@
         requestedLimits.remote_deposit = safeGetValue(nonCreditGr, 'remote_deposit');
         requestedLimits.treasury_wire = safeGetValue(nonCreditGr, 'treasury_solutions_company_wire_limits');
         requestedLimits.fx_wire = safeGetValue(nonCreditGr, 'fx_wire_limits');
+        
+        // Get original values for change requests
+        if (isChangeRequest) {
+            requestedLimits.original_disbursement_ach = safeGetValue(nonCreditGr, 'original_disbursement_ach');
+            requestedLimits.original_wire_internal = safeGetValue(nonCreditGr, 'original_disbursement_wire_transfer_internal');
+            requestedLimits.original_wire_external = safeGetValue(nonCreditGr, 'original_disbursement_wire_transfer_external');
+            requestedLimits.original_checks_internal = safeGetValue(nonCreditGr, 'original_disbursement_official_checks_internal');
+            requestedLimits.original_checks_external = safeGetValue(nonCreditGr, 'original_disbursement_official_checks_external');
+            requestedLimits.original_check_cashing_on_us = safeGetValue(nonCreditGr, 'original_check_cashing_on_us');
+            requestedLimits.original_check_cashing_not_on_us = safeGetValue(nonCreditGr, 'original_check_cashing_not_on_us');
+            requestedLimits.original_remote_deposit = safeGetValue(nonCreditGr, 'original_remote_deposit');
+            requestedLimits.original_treasury_wire = safeGetValue(nonCreditGr, 'original_treasury_solutions_company_wire_limits');
+            requestedLimits.original_fx_wire = safeGetValue(nonCreditGr, 'original_fx_wire_limits');
+        }
     }
     
     // Define all limit fields in the exact order we want to display
@@ -131,9 +165,18 @@
         while (limitGr2.next()) {
             var limit = {
                 job_code: limitGr2.job_code.getDisplayValue(),
+                job_code_sys_id: limitGr2.getValue('job_code'),
                 sys_id: limitGr2.sys_id.toString(),
                 isRequested: false
             };
+            
+            // Get job title
+            var jobCodeGr2 = new GlideRecord('x_banun_rbac_job_code');
+            if (jobCodeGr2.get(limitGr2.getValue('job_code'))) {
+                limit.job_title = jobCodeGr2.getValue('job_title') || 
+                                 jobCodeGr2.getValue('u_job_title') || 
+                                 jobCodeGr2.getValue('title') || '';
+            }
             
             limit.disbursement_ach = safeGetValue(limitGr2, 'disbursement_ach');
             limit.wire_internal = safeGetValue(limitGr2, 'disbursement_wire_transfer_internal');
@@ -164,6 +207,21 @@
         return bVal - aVal;
     });
     
+    // Function to determine if a field should be highlighted
+    function shouldHighlight(row, fieldName) {
+        if (!row.isRequested) return false;
+        
+        var newValue = row[fieldName] || 0;
+        if (newValue === 0) return false;
+        
+        if (isChangeRequest) {
+            var originalValue = row['original_' + fieldName] || 0;
+            return newValue !== originalValue;
+        } else {
+            return true; // For new requests, highlight all positive values
+        }
+    }
+    
     // Build the HTML content
     var content = '';
     content += '<div style="margin: 30px 0; padding: 20px; background-color: #f8f9fa; border-radius: 5px; border: 1px solid #dee2e6;">';
@@ -179,9 +237,10 @@
     
     // First header row - Credit/Non-Credit categories
     content += '<tr>';
-    content += '<th rowspan="3" style="padding: 10px 8px; text-align: left; font-weight: 600; background-color: #00aae3; color: #000000; vertical-align: middle; border-right: 2px solid #dee2e6;">Job Code</th>';
+    content += '<th rowspan="3" style="padding: 10px 8px; text-align: left; font-weight: 600; background-color: #00aae3; color: #000000; vertical-align: middle; border-right: 2px solid #dee2e6; position: sticky; left: 0; z-index: 20;">Job Title</th>';
     content += '<th colspan="10" style="padding: 10px 8px; text-align: center; font-weight: 700; background-color: #27ae60; color: #ffffff; border-bottom: 1px solid #dee2e6;">Non-Credit Authority</th>';
     content += '<th colspan="4" style="padding: 10px 8px; text-align: center; font-weight: 700; background-color: #e74c3c; color: #ffffff; border-bottom: 1px solid #dee2e6;">Credit Authority</th>';
+    content += '<th rowspan="3" style="padding: 10px 8px; text-align: left; font-weight: 600; background-color: #00aae3; color: #000000; vertical-align: middle; border-left: 2px solid #dee2e6;">Job Code</th>';
     content += '</tr>';
     
     // Second header row - Groupings
@@ -198,21 +257,21 @@
     // Third header row - Individual columns
     content += '<tr style="background-color: #00aae3;">';
     // Non-Credit columns
-    content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #000000; white-space: nowrap;">ACH</th>';
-    content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Wire Transfer<br/>Internal</th>';
-    content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Wire Transfer<br/>External</th>';
-    content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Official Checks<br/>Internal</th>';
-    content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2; border-right: 1px solid #dee2e6;">Official Checks<br/>External</th>';
-    content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">On-Us</th>';
-    content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2; border-right: 1px solid #dee2e6;">Not On-Us</th>';
-    content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Remote<br/>Deposit</th>';
-    content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Treasury Solutions<br/>Wire Limits</th>';
-    content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">FX Wire<br/>Limits</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap;">ACH</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Wire Transfer<br/>Internal</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Wire Transfer<br/>External</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Official Checks<br/>Internal</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2; border-right: 1px solid #dee2e6;">Official Checks<br/>External</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">On-Us</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2; border-right: 1px solid #dee2e6;">Not On-Us</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Remote<br/>Deposit</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Treasury Solutions<br/>Wire Limits</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">FX Wire<br/>Limits</th>';
     // Credit columns
-    content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Internal<br/>Accounts</th>';
-    content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2; border-right: 1px solid #dee2e6;">External<br/>Accounts</th>';
-    content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Internal<br/>Accounts</th>';
-    content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">External<br/>Accounts</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Internal<br/>Accounts</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2; border-right: 1px solid #dee2e6;">External<br/>Accounts</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">Internal<br/>Accounts</th>';
+    content += '<th style="padding: 10px 8px; text-align: center; font-weight: 600; color: #000000; white-space: nowrap; font-size: 10px; line-height: 1.2;">External<br/>Accounts</th>';
     content += '</tr>';
     
     content += '</thead>';
@@ -228,35 +287,41 @@
         
         content += '<tr style="' + rowStyle + '">';
         
-        // Job Code column
-        var jobCodeStyle = 'padding: 8px; font-weight: ' + (row.isRequested ? '700' : '500') + '; color: #000000; border-right: 2px solid #dee2e6;';
+        // Job Title column (sticky)
+        var jobTitleStyle = 'padding: 8px; font-weight: ' + (row.isRequested ? '700' : '500') + '; color: #000000; border-right: 2px solid #dee2e6; position: sticky; left: 0; z-index: 10;';
         if (row.isRequested) {
-            content += '<td style="' + jobCodeStyle + '">' + row.job_code + ' <span style="color: #856404; font-size: 11px;">(REQUESTED)</span></td>';
+            jobTitleStyle += ' background-color: #fff3cd;';
+            content += '<td style="' + jobTitleStyle + '">' + (row.job_title || '') + ' <span style="color: #856404; font-size: 11px;">(REQUESTED)</span></td>';
         } else {
-            content += '<td style="' + jobCodeStyle + '">' + row.job_code + '</td>';
+            jobTitleStyle += (r % 2 === 0 ? ' background-color: #ffffff;' : ' background-color: #f8f9fa;');
+            content += '<td style="' + jobTitleStyle + '">' + (row.job_title || '') + '</td>';
         }
         
         // All value columns in order
         var cellStyle = 'padding: 8px; text-align: right; color: #5a6c7d;';
-        var requestedCellStyle = 'padding: 8px; text-align: right; font-weight: 600; color: #000000;';
+        var highlightStyle = 'padding: 8px; text-align: right; font-weight: 700; background-color: #ffc107; color: #000000;';
         
         // Non-Credit columns
-        content += '<td style="' + (row.isRequested && row.disbursement_ach > 0 ? requestedCellStyle : cellStyle) + '">' + formatCurrency(row.disbursement_ach) + '</td>';
-        content += '<td style="' + (row.isRequested && row.wire_internal > 0 ? requestedCellStyle : cellStyle) + '">' + formatCurrency(row.wire_internal) + '</td>';
-        content += '<td style="' + (row.isRequested && row.wire_external > 0 ? requestedCellStyle : cellStyle) + '">' + formatCurrency(row.wire_external) + '</td>';
-        content += '<td style="' + (row.isRequested && row.checks_internal > 0 ? requestedCellStyle : cellStyle) + '">' + formatCurrency(row.checks_internal) + '</td>';
-        content += '<td style="' + (row.isRequested && row.checks_external > 0 ? requestedCellStyle : cellStyle) + '; border-right: 1px solid #dee2e6;">' + formatCurrency(row.checks_external) + '</td>';
-        content += '<td style="' + (row.isRequested && row.check_cashing_on_us > 0 ? requestedCellStyle : cellStyle) + '">' + formatCurrency(row.check_cashing_on_us) + '</td>';
-        content += '<td style="' + (row.isRequested && row.check_cashing_not_on_us > 0 ? requestedCellStyle : cellStyle) + '; border-right: 1px solid #dee2e6;">' + formatCurrency(row.check_cashing_not_on_us) + '</td>';
-        content += '<td style="' + (row.isRequested && row.remote_deposit > 0 ? requestedCellStyle : cellStyle) + '">' + formatCurrency(row.remote_deposit) + '</td>';
-        content += '<td style="' + (row.isRequested && row.treasury_wire > 0 ? requestedCellStyle : cellStyle) + '">' + formatCurrency(row.treasury_wire) + '</td>';
-        content += '<td style="' + (row.isRequested && row.fx_wire > 0 ? requestedCellStyle : cellStyle) + '">' + formatCurrency(row.fx_wire) + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'disbursement_ach') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.disbursement_ach) + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'wire_internal') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.wire_internal) + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'wire_external') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.wire_external) + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'checks_internal') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.checks_internal) + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'checks_external') ? highlightStyle : cellStyle) + '; border-right: 1px solid #dee2e6;">' + formatCurrency(row.checks_external) + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'check_cashing_on_us') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.check_cashing_on_us) + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'check_cashing_not_on_us') ? highlightStyle : cellStyle) + '; border-right: 1px solid #dee2e6;">' + formatCurrency(row.check_cashing_not_on_us) + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'remote_deposit') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.remote_deposit) + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'treasury_wire') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.treasury_wire) + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'fx_wire') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.fx_wire) + '</td>';
         
         // Credit columns
-        content += '<td style="' + (row.isRequested && row.overdraft_internal > 0 ? requestedCellStyle : cellStyle) + '">' + formatCurrency(row.overdraft_internal) + '</td>';
-        content += '<td style="' + (row.isRequested && row.overdraft_external > 0 ? requestedCellStyle : cellStyle) + '; border-right: 1px solid #dee2e6;">' + formatCurrency(row.overdraft_external) + '</td>';
-        content += '<td style="' + (row.isRequested && row.unavailable_internal > 0 ? requestedCellStyle : cellStyle) + '">' + formatCurrency(row.unavailable_internal) + '</td>';
-        content += '<td style="' + (row.isRequested && row.unavailable_external > 0 ? requestedCellStyle : cellStyle) + '">' + formatCurrency(row.unavailable_external) + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'overdraft_internal') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.overdraft_internal) + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'overdraft_external') ? highlightStyle : cellStyle) + '; border-right: 1px solid #dee2e6;">' + formatCurrency(row.overdraft_external) + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'unavailable_internal') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.unavailable_internal) + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'unavailable_external') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.unavailable_external) + '</td>';
+        
+        // Job Code column (right side)
+        var jobCodeStyle = 'padding: 8px; font-weight: ' + (row.isRequested ? '700' : '500') + '; color: #000000; border-left: 2px solid #dee2e6;';
+        content += '<td style="' + jobCodeStyle + '">' + row.job_code + '</td>';
         
         content += '</tr>';
     }
