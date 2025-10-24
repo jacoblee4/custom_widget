@@ -221,8 +221,8 @@
     // Build the HTML content
     var content = '';
     content += '<div style="margin: 30px 0; padding: 20px; background-color: #f8f9fa; border-radius: 5px; border: 1px solid #dee2e6;">';
-    content += '<h3 style="color: #00aae3; margin: 0 0 10px 0; padding-bottom: 10px; border-bottom: 2px solid #00aae3;">';
-    content += 'Authority Limits Comparison';
+    content += '<h3 style="color: #000000; margin: 0 0 10px 0; padding-bottom: 10px; border-bottom: 2px solid #00aae3;">';
+    content += 'Authority Limits Comparison - ' + jobFunctionDescription;
     content += '</h3>';
     
     // Create table
@@ -231,17 +231,12 @@
     
     content += '<thead>';
     
-    // Job Function row (spanning all columns)
-    content += '<tr>';
-    content += '<th colspan="16" style="padding: 12px; text-align: left; font-weight: 700; background-color: #EBF1DE; color: #000000; border-bottom: 2px solid #dee2e6;">' + jobFunctionDescription + '</th>';
-    content += '</tr>';
-    
     // First header row - Credit/Non-Credit categories
     content += '<tr>';
-    content += '<th rowspan="3" style="padding: 10px 8px; text-align: left; font-weight: 600; background-color: #00aae3; color: #000000; vertical-align: middle; border-right: 2px solid #dee2e6; position: sticky; left: 0; z-index: 20;">Job Title</th>';
+    content += '<th rowspan="3" style="padding: 10px 8px; text-align: left; font-weight: 600; background-color: #EBF1DE; color: #000000; vertical-align: middle; border-right: 2px solid #dee2e6; position: sticky; left: 0; z-index: 20;">Job Title</th>';
     content += '<th colspan="10" style="padding: 10px 8px; text-align: center; font-weight: 700; background-color: #27ae60; color: #ffffff; border-bottom: 1px solid #dee2e6;">Non-Credit Authority</th>';
     content += '<th colspan="4" style="padding: 10px 8px; text-align: center; font-weight: 700; background-color: #e74c3c; color: #ffffff; border-bottom: 1px solid #dee2e6;">Credit Authority</th>';
-    content += '<th rowspan="3" style="padding: 10px 8px; text-align: left; font-weight: 600; background-color: #00aae3; color: #000000; vertical-align: middle; border-left: 2px solid #dee2e6;">Job Code</th>';
+    content += '<th rowspan="3" style="padding: 10px 8px; text-align: left; font-weight: 600; background-color: #EBF1DE; color: #000000; vertical-align: middle; border-left: 2px solid #dee2e6;">Job Code</th>';
     content += '</tr>';
     
     // Second header row - Groupings
@@ -288,11 +283,11 @@
         
         content += '<tr style="' + rowStyle + '">';
         
-        // Job Title column (sticky) - always highlighted if requested
+        // Job Title column (sticky) - use #EBF1DE for requested
         var jobTitleStyle = 'padding: 8px; border-right: 2px solid #dee2e6; position: sticky; left: 0; z-index: 10;';
         if (row.isRequested) {
-            jobTitleStyle += ' font-weight: 700; color: #000000; background-color: #FFFF99;';
-            content += '<td style="' + jobTitleStyle + '">' + (row.job_title || '') + '<br/><span style="color: #856404; font-size: 11px;">(REQUESTED)</span></td>';
+            jobTitleStyle += ' font-weight: 700; color: #000000; background-color: #EBF1DE;';
+            content += '<td style="' + jobTitleStyle + '">' + (row.job_title || '') + '<br/><span style="color: #000000; font-size: 11px;">(REQUESTED)</span></td>';
         } else {
             jobTitleStyle += ' font-weight: 500; color: #000000;';
             jobTitleStyle += (r % 2 === 0 ? ' background-color: #ffffff;' : ' background-color: #f8f9fa;');
@@ -321,11 +316,11 @@
         content += '<td style="' + (shouldHighlight(row, 'unavailable_internal') ? highlightStyle : cellStyle) + '">' + (shouldHighlight(row, 'unavailable_internal') ? '<strong>' : '') + formatCurrency(row.unavailable_internal) + (shouldHighlight(row, 'unavailable_internal') ? '</strong>' : '') + '</td>';
         content += '<td style="' + (shouldHighlight(row, 'unavailable_external') ? highlightStyle : cellStyle) + '">' + (shouldHighlight(row, 'unavailable_external') ? '<strong>' : '') + formatCurrency(row.unavailable_external) + (shouldHighlight(row, 'unavailable_external') ? '</strong>' : '') + '</td>';
         
-        // Job Code column (right side) - always highlighted if requested, add (REQUESTED)
+        // Job Code column (right side) - use #EBF1DE for requested, add (REQUESTED)
         var jobCodeStyle = 'padding: 8px; border-left: 2px solid #dee2e6;';
         if (row.isRequested) {
-            jobCodeStyle += ' font-weight: 700; background-color: #FFFF99; color: #000000;';
-            content += '<td style="' + jobCodeStyle + '">' + row.job_code + '<br/><span style="color: #856404; font-size: 11px;">(REQUESTED)</span></td>';
+            jobCodeStyle += ' font-weight: 700; background-color: #EBF1DE; color: #000000;';
+            content += '<td style="' + jobCodeStyle + '">' + row.job_code + '<br/><span style="color: #000000; font-size: 11px;">(REQUESTED)</span></td>';
         } else {
             jobCodeStyle += ' font-weight: 500; color: #000000;';
             content += '<td style="' + jobCodeStyle + '">' + row.job_code + '</td>';
