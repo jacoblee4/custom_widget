@@ -3,6 +3,11 @@
     
     var parent = current.sysapproval.getRefRecord();
     
+    // Debug logging
+    gs.info('SIGNATURE TESTING === Authority Comparison Debug ===');
+    gs.info('SIGNATURE TESTING Parent sys_id: ' + parent.sys_id);
+    gs.info('SIGNATURE TESTING Parent job_code: ' + parent.getValue('job_code'));
+    
     // Function to safely get value or return 0
     function safeGetValue(glideRecord, fieldName) {
         var value = glideRecord.getValue(fieldName);
@@ -18,11 +23,21 @@
     // Get the job function description from the requested job code
     var jobCodeGr = new GlideRecord('x_banun_rbac_job_code');
     if (!jobCodeGr.get(parent.getValue('job_code'))) {
+        gs.info('SIGNATURE TESTING Job code not found');
         return; // Exit if job code not found
     }
     
-    var jobFunctionDescription = jobCodeGr.getValue('job_function_description');
+    gs.info('SIGNATURE TESTING Job code found: ' + jobCodeGr.getDisplayValue());
+    
+    // Check different possible field names for job function
+    var jobFunctionDescription = jobCodeGr.getValue('job_function_description') || 
+                                 jobCodeGr.getValue('u_job_function_description') ||
+                                 jobCodeGr.getValue('job_function');
+    
+    gs.info('SIGNATURE TESTING Job function description: ' + jobFunctionDescription);
+    
     if (!jobFunctionDescription) {
+        gs.info('SIGNATURE TESTING No job function description found');
         return; // Exit if no job function description
     }
     
@@ -35,6 +50,8 @@
     while (jobCodesGr.next()) {
         jobCodesList.push(jobCodesGr.sys_id.toString());
     }
+    
+    gs.info('SIGNATURE TESTING Found ' + jobCodesList.length + ' matching job codes');
     
     if (jobCodesList.length === 0) {
         return; // Exit if no matching job codes found
@@ -52,6 +69,8 @@
     creditGr.addQuery('parent', parent.sys_id);
     creditGr.query();
     
+    gs.info('SIGNATURE TESTING Credit limits query count: ' + creditGr.getRowCount());
+    
     if (creditGr.next()) {
         requestedLimits.overdraft_internal = safeGetValue(creditGr, 'overdraft_internal_accounts');
         requestedLimits.overdraft_external = safeGetValue(creditGr, 'overdraft_external_accounts');
@@ -63,6 +82,8 @@
     var nonCreditGr = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
     nonCreditGr.addQuery('parent', parent.sys_id);
     nonCreditGr.query();
+    
+    gs.info('SIGNATURE TESTING Non-credit limits query count: ' + nonCreditGr.getRowCount());
     
     if (nonCreditGr.next()) {
         requestedLimits.disbursement_ach = safeGetValue(nonCreditGr, 'disbursement_ach');
@@ -97,8 +118,16 @@
         }
     }
     
+    gs.info('SIGNATURE TESTING Largest value: ' + largestValue + ' in field: ' + largestField);
+    
     if (largestValue === 0) {
-        return; // Exit if no limits were requested
+        gs.info('SIGNATURE TESTING No limits were requested - all values are 0');
+        // Instead of returning, let's show a message
+        var content = '<div style="margin: 30px 0; padding: 20px; background-color: #fff3cd; border-radius: 5px; border: 1px solid #ffc107;">';
+        content += '<p style="color: #856404; margin: 0;"><strong>Note:</strong> No authority limits were specified in this request, so no comparison can be shown.</p>';
+        content += '</div>';
+        template.print(content);
+        return;
     }
     
     // Get existing authority limits for matching job codes
@@ -106,6 +135,8 @@
     var limitsGr = new GlideRecord('x_banun_si_0_authority_limits');
     limitsGr.addQuery('job_code', 'IN', jobCodesList.join(','));
     limitsGr.query();
+    
+    gs.info('SIGNATURE TESTING Existing limits found: ' + limitsGr.getRowCount());
     
     while (limitsGr.next()) {
         var limit = {
@@ -135,6 +166,8 @@
     
     // Add requested limits to the array
     existingLimits.push(requestedLimits);
+    
+    gs.info('SIGNATURE TESTING Total limits to display: ' + existingLimits.length);
     
     // Sort by the largest field value (descending)
     existingLimits.sort(function(a, b) {
@@ -253,6 +286,7 @@
     
     content += '</div>';
     
+    gs.info('SIGNATURE TESTING Content generated, printing to template');
     template.print(content);
     
 })(current, template, email, email_action, event);
