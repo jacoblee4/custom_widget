@@ -285,7 +285,7 @@
         content += '<tr style="' + rowStyle + '">';
         
         // Job Title column (sticky) - use yellow for requested
-        var jobTitleStyle = 'padding: 8px; border-right: 2px solid #dee2e6; position: sticky; left: 0; z-index: 10; min-width: 180px;';
+        var jobTitleStyle = 'padding: 8px; border-right: 2px solid #dee2e6; position: sticky; left: 0; z-index: 10; min-width: 180px; word-wrap: break-word; white-space: normal;';
         if (row.isRequested) {
             jobTitleStyle += ' font-weight: 700; color: #000000; background-color: #FFFF99;';
             content += '<td style="' + jobTitleStyle + '">' + (row.job_title || '') + '<br/><span style="color: #FF0000; font-size: 11px; font-weight: 700;">(REQUESTED)</span></td>';
@@ -297,25 +297,25 @@
         
         // All value columns in order
         var cellStyle = 'padding: 8px; text-align: right; color: #5a6c7d;';
-        var highlightStyle = 'padding: 8px; text-align: right; color: #000000; background-color: #FFFF99;';
+        var highlightStyle = 'padding: 8px; text-align: right; color: #000000; background-color: #FFFF99; font-weight: 700;';
         
         // Non-Credit columns
-        content += '<td style="' + (shouldHighlight(row, 'disbursement_ach') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.disbursement_ach) + '</td>';
-        content += '<td style="' + (shouldHighlight(row, 'wire_internal') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.wire_internal) + '</td>';
-        content += '<td style="' + (shouldHighlight(row, 'wire_external') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.wire_external) + '</td>';
-        content += '<td style="' + (shouldHighlight(row, 'checks_internal') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.checks_internal) + '</td>';
-        content += '<td style="' + (shouldHighlight(row, 'checks_external') ? highlightStyle : cellStyle) + '; border-right: 1px solid #dee2e6;">' + formatCurrency(row.checks_external) + '</td>';
-        content += '<td style="' + (shouldHighlight(row, 'check_cashing_on_us') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.check_cashing_on_us) + '</td>';
-        content += '<td style="' + (shouldHighlight(row, 'check_cashing_not_on_us') ? highlightStyle : cellStyle) + '; border-right: 1px solid #dee2e6;">' + formatCurrency(row.check_cashing_not_on_us) + '</td>';
-        content += '<td style="' + (shouldHighlight(row, 'remote_deposit') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.remote_deposit) + '</td>';
-        content += '<td style="' + (shouldHighlight(row, 'treasury_wire') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.treasury_wire) + '</td>';
-        content += '<td style="' + (shouldHighlight(row, 'fx_wire') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.fx_wire) + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'disbursement_ach') ? highlightStyle : cellStyle) + '">' + (shouldHighlight(row, 'disbursement_ach') ? '<strong>' : '') + formatCurrency(row.disbursement_ach) + (shouldHighlight(row, 'disbursement_ach') ? '</strong>' : '') + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'wire_internal') ? highlightStyle : cellStyle) + '">' + (shouldHighlight(row, 'wire_internal') ? '<strong>' : '') + formatCurrency(row.wire_internal) + (shouldHighlight(row, 'wire_internal') ? '</strong>' : '') + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'wire_external') ? highlightStyle : cellStyle) + '">' + (shouldHighlight(row, 'wire_external') ? '<strong>' : '') + formatCurrency(row.wire_external) + (shouldHighlight(row, 'wire_external') ? '</strong>' : '') + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'checks_internal') ? highlightStyle : cellStyle) + '">' + (shouldHighlight(row, 'checks_internal') ? '<strong>' : '') + formatCurrency(row.checks_internal) + (shouldHighlight(row, 'checks_internal') ? '</strong>' : '') + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'checks_external') ? highlightStyle : cellStyle) + '; border-right: 1px solid #dee2e6;">' + (shouldHighlight(row, 'checks_external') ? '<strong>' : '') + formatCurrency(row.checks_external) + (shouldHighlight(row, 'checks_external') ? '</strong>' : '') + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'check_cashing_on_us') ? highlightStyle : cellStyle) + '">' + (shouldHighlight(row, 'check_cashing_on_us') ? '<strong>' : '') + formatCurrency(row.check_cashing_on_us) + (shouldHighlight(row, 'check_cashing_on_us') ? '</strong>' : '') + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'check_cashing_not_on_us') ? highlightStyle : cellStyle) + '; border-right: 1px solid #dee2e6;">' + (shouldHighlight(row, 'check_cashing_not_on_us') ? '<strong>' : '') + formatCurrency(row.check_cashing_not_on_us) + (shouldHighlight(row, 'check_cashing_not_on_us') ? '</strong>' : '') + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'remote_deposit') ? highlightStyle : cellStyle) + '">' + (shouldHighlight(row, 'remote_deposit') ? '<strong>' : '') + formatCurrency(row.remote_deposit) + (shouldHighlight(row, 'remote_deposit') ? '</strong>' : '') + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'treasury_wire') ? highlightStyle : cellStyle) + '">' + (shouldHighlight(row, 'treasury_wire') ? '<strong>' : '') + formatCurrency(row.treasury_wire) + (shouldHighlight(row, 'treasury_wire') ? '</strong>' : '') + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'fx_wire') ? highlightStyle : cellStyle) + '">' + (shouldHighlight(row, 'fx_wire') ? '<strong>' : '') + formatCurrency(row.fx_wire) + (shouldHighlight(row, 'fx_wire') ? '</strong>' : '') + '</td>';
         
         // Credit columns
-        content += '<td style="' + (shouldHighlight(row, 'overdraft_internal') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.overdraft_internal) + '</td>';
-        content += '<td style="' + (shouldHighlight(row, 'overdraft_external') ? highlightStyle : cellStyle) + '; border-right: 1px solid #dee2e6;">' + formatCurrency(row.overdraft_external) + '</td>';
-        content += '<td style="' + (shouldHighlight(row, 'unavailable_internal') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.unavailable_internal) + '</td>';
-        content += '<td style="' + (shouldHighlight(row, 'unavailable_external') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.unavailable_external) + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'overdraft_internal') ? highlightStyle : cellStyle) + '">' + (shouldHighlight(row, 'overdraft_internal') ? '<strong>' : '') + formatCurrency(row.overdraft_internal) + (shouldHighlight(row, 'overdraft_internal') ? '</strong>' : '') + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'overdraft_external') ? highlightStyle : cellStyle) + '; border-right: 1px solid #dee2e6;">' + (shouldHighlight(row, 'overdraft_external') ? '<strong>' : '') + formatCurrency(row.overdraft_external) + (shouldHighlight(row, 'overdraft_external') ? '</strong>' : '') + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'unavailable_internal') ? highlightStyle : cellStyle) + '">' + (shouldHighlight(row, 'unavailable_internal') ? '<strong>' : '') + formatCurrency(row.unavailable_internal) + (shouldHighlight(row, 'unavailable_internal') ? '</strong>' : '') + '</td>';
+        content += '<td style="' + (shouldHighlight(row, 'unavailable_external') ? highlightStyle : cellStyle) + '">' + (shouldHighlight(row, 'unavailable_external') ? '<strong>' : '') + formatCurrency(row.unavailable_external) + (shouldHighlight(row, 'unavailable_external') ? '</strong>' : '') + '</td>';
         
         // Job Code column (right side) - use yellow for requested, add (REQUESTED) in red
         var jobCodeStyle = 'padding: 8px; border-left: 2px solid #dee2e6;';
