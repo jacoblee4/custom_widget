@@ -1,322 +1,45 @@
-//Consumer and Small Business Banking
+//signature_request_details
 (function runMailScript(current, template, email, email_action, event) {
     
     var parent = current.sysapproval.getRefRecord();
-    
-    // Function to safely get value or return empty string
-    function safeGetValue(glideRecord, fieldName) {
-        var value = glideRecord.getValue(fieldName);
-        return (value && value !== 'undefined' && value !== 'null') ? value : '';
-    }
-    
-    // Function to safely get display value or return empty string
-    function safeGetDisplayValue(glideElement) {
-        var value = glideElement.getDisplayValue();
-        return (value && value !== 'undefined' && value !== 'null') ? value : '';
-    }
-    
-    // Function to get impacted employees
-    function getImpactedEmployees(jobCodeSysId) {
-        var employees = [];
-        var jobCodeValue = '';
-        
-        if (jobCodeSysId) {
-            // Get the actual job code value from the job code table
-            var jobGr = new GlideRecord('x_banun_rbac_job_code');
-            if (jobGr.get(jobCodeSysId)) {
-                jobCodeValue = jobGr.getValue('job_code') || 
-                              jobGr.getValue('u_job_code') || 
-                              jobGr.getValue('code') || 
-                              jobGr.getDisplayValue();
-            }
-            
-            // Query sys_user table for active users with this job code
-            var userGr = new GlideRecord('sys_user');
-            userGr.addQuery('u_job_code', jobCodeValue);
-            userGr.addQuery('active', true);
-            userGr.orderBy('name');
-            userGr.query();
-            
-            while (userGr.next()) {
-                employees.push({
-                    name: safeGetValue(userGr, 'name'),
-                    title: safeGetValue(userGr, 'title'),
-                    manager: safeGetDisplayValue(userGr.manager)
-                });
-            }
-        }
-        
-        return employees;
-    }
-    
     var content = '';
     
-    // Get impacted employees
-    var impactedEmployees = getImpactedEmployees(parent.getValue('job_code'));
-    
-    // Add Impacted Employees section if there are any
-    if (impactedEmployees.length > 0) {
-        content += '<div style="margin: 30px 0; padding: 20px; background-color: #f8f9fa; border-radius: 5px; border: 1px solid #dee2e6;">';
-        content += '<h3 style="color: #00aae3; margin: 0 0 10px 0; padding-bottom: 10px; border-bottom: 2px solid #00aae3;">';
-        content += '<span style="margin-right: 6px;">👥</span>Impacted Employees ';
-        content += '<span style="color: #7f8c8d; font-weight: normal; font-size: 14px;">(' + impactedEmployees.length + ' total)</span>';
-        content += '</h3>';
-        content += '<p style="margin: 10px 0 15px 0; color: #5a6c7d; font-size: 13px;">The following employees with job code <strong>' + parent.job_code.getDisplayValue() + '</strong> will be affected by this authority change:</p>';
-        
-        content += '<table style="width: 100%; border-collapse: collapse; background-color: #ffffff; border: 1px solid #dee2e6; border-radius: 4px;">';
-        content += '<thead>';
-        content += '<tr style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;">';
-        content += '<th style="padding: 12px; text-align: left; color: #495057; font-weight: 600; font-size: 13px;">Name</th>';
-        content += '<th style="padding: 12px; text-align: left; color: #495057; font-weight: 600; font-size: 13px;">Title</th>';
-        content += '<th style="padding: 12px; text-align: left; color: #495057; font-weight: 600; font-size: 13px;">Manager</th>';
-        content += '</tr>';
-        content += '</thead>';
-        content += '<tbody>';
-        
-        for (var i = 0; i < impactedEmployees.length; i++) {
-            var emp = impactedEmployees[i];
-            var rowStyle = (i % 2 === 0) ? 'background-color: #ffffff;' : 'background-color: #f8f9fa;';
-            content += '<tr style="' + rowStyle + ' border-bottom: 1px solid #ecf0f1;">';
-            content += '<td style="padding: 10px 12px; color: #000000; font-size: 13px;">' + (emp.name || '') + '</td>';
-            content += '<td style="padding: 10px 12px; color: #5a6c7d; font-size: 13px;">' + (emp.title || '') + '</td>';
-            content += '<td style="padding: 10px 12px; color: #5a6c7d; font-size: 13px;">' + (emp.manager || '') + '</td>';
-            content += '</tr>';
-        }
-        
-        content += '</tbody>';
-        content += '</table>';
-        content += '</div>';
+    // Introduction text based on request type
+    var introText = '';
+    if (parent.request_type == 'new_authority') {
+        introText = '<p style="margin: 20px 0; line-height: 1.6;">A new signature authority request has been submitted and requires your approval as the Business Line approver. Please review the details below and the requested authority limits.</p>';
+    } else if (parent.request_type == 'change_to_existing_authority') {
+        introText = '<p style="margin: 20px 0; line-height: 1.6;">A request to modify existing signature authority limits has been submitted and requires your approval as the Business Line approver. Please review the details below, noting the changes from the original authority limits.</p>';
+    } else if (parent.request_type == 'remove_authority') {
+        introText = '<p style="margin: 20px 0; line-height: 1.6;">A request to remove signature authority has been submitted and requires your approval as the Business Line approver. Please review the details below and the authority limits that will be removed upon approval.</p>';
+    } else {
+        introText = '<p style="margin: 20px 0; line-height: 1.6;">A signature authority request has been submitted and requires your approval as the Business Line approver. Please review the details and authority limits below.</p>';
     }
     
-    content += '<p style="color: #666; font-size: 12px; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 15px;">This is an automated notification from the Signature Authority application. Please do not reply to this email.</p>';
-    content += '</div>';
+    content += introText;
+
+    content += '<div style="font-family: Arial, sans-serif; color: #000000; max-width: 800px;">';
+    content += '<h2 style="color: #00aae3; border-bottom: 3px solid #00aae3; padding-bottom: 10px;">Request Details</h2>';
     
-    template.print(content);
-    
-})(current, template, email, email_action, event);
-
-
-
-
-
-
-
-
-
-
-//signature_impacted_employees
-(function runMailScript(current, template, email, email_action, event) {
-    
-    var parent = current.sysapproval.getRefRecord();
-    var isChange = parent.request_type == 'change_to_existing_authority';
-    
-    function shouldShowLimit(newValue, originalValue, isChangeRequest) {
-        var newVal = parseFloat(newValue) || 0;
-        var origVal = parseFloat(originalValue) || 0;
-        
-        if (isChangeRequest) {
-            return !(newVal === 0 && origVal === 0);
-        } else {
-            return newVal !== 0;
-        }
-    }
-    
-    function formatCurrency(value) {
-        if (!value) {
-            return '0.00';
-        }
-        return parseFloat(value).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    }
-    
-    function buildLimitRow(label, newValue, originalValue, showOriginal, indented) {
-        var row = '<div style="padding: 6px 0; border-bottom: 1px solid #ecf0f1;';
-        if (indented) {
-            row += ' padding-left: 15px;';
-        }
-        row += '">';
-        row += '<div style="font-size: 13px; color: #5a6c7d; margin-bottom: 3px;">' + label + '</div>';
-        row += '<div style="display: flex; justify-content: space-between; align-items: center;">';
-        
-        if (showOriginal) {
-            var newVal = parseFloat(newValue) || 0;
-            var origVal = parseFloat(originalValue) || 0;
-            var arrowDisplay = '';
-            
-            if (origVal === 0 && newVal !== 0) {
-                arrowDisplay = '<span style="color: #27ae60; font-weight: 600; font-size: 14px; margin-left: 8px;">&#9650;</span>';
-            } else if (newVal !== 0 && origVal !== 0) {
-                var difference = newVal - origVal;
-                if (difference > 0) {
-                    arrowDisplay = '<span style="color: #27ae60; font-weight: 600; font-size: 14px; margin-left: 8px;">&#9650;</span>';
-                } else if (difference < 0) {
-                    arrowDisplay = '<span style="color: #e74c3c; font-weight: 600; font-size: 14px; margin-left: 8px;">&#9660;</span>';
-                }
-            }
-            
-            row += '<div style="flex: 1;"><span style="color: #000000; font-weight: 600; font-size: 15px;">New: $' + formatCurrency(newValue) + arrowDisplay + '</span></div>';
-            row += '<div style="flex: 1; text-align: right;"><span style="color: #999999; font-weight: 400; font-size: 12px;">Original: $' + formatCurrency(originalValue) + '</span></div>';
-        } else {
-            row += '<div style="font-weight: 600; color: #000000; font-size: 15px;">$' + formatCurrency(newValue) + '</div>';
-        }
-        
-        row += '</div>';
-        row += '</div>';
-        return row;
-    }
-    
-    var content = '';
-    
-    var creditGr = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
-    creditGr.addQuery('parent', parent.sys_id);
-    creditGr.query();
-    var creditLimits = creditGr.hasNext() ? creditGr : null;
-    if (creditLimits) {
-        creditGr.next();
-    }
-    
-    var nonCreditGr = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
-    nonCreditGr.addQuery('parent', parent.sys_id);
-    nonCreditGr.query();
-    var nonCreditLimits = nonCreditGr.hasNext() ? nonCreditGr : null;
-    if (nonCreditLimits) {
-        nonCreditGr.next();
-    }
+    var instanceURL = gs.getProperty('glide.servlet.uri');
+    var sysId = parent.sys_id.toString();
+    var recordURL = instanceURL + 'now/workspace/signature-authority-workspace/record/x_banun_bunow_si_0_signature_authority_request/' + sysId;
     
     content += '<div style="background-color: #f5f5f5; padding: 15px; margin: 20px 0; border-left: 4px solid #00aae3;">';
-    
-    // Dynamic title based on request type
-    var limitsTitle = 'Requested Authority Limits';
-    if (parent.request_type == 'new_authority') {
-        limitsTitle = 'New Authority Limits';
-    } else if (parent.request_type == 'change_to_existing_authority') {
-        limitsTitle = 'Changed Authority Limits';
-    } else if (parent.request_type == 'remove_authority') {
-        limitsTitle = 'Removed Authority Limits';
-    }
-    
-    content += '<h3 style="color: #00aae3; margin: 0 0 15px 0; padding-bottom: 10px; border-bottom: 2px solid #00aae3;">' + limitsTitle + '</h3>';
-    
-    if (creditLimits || nonCreditLimits) {
-        content += '<div style="display: table; width: 100%; border-collapse: collapse;">';
-        content += '<div style="display: table-row;">';
-        
-        if (nonCreditLimits) {
-            content += '<div style="display: table-cell; width: 48%; vertical-align: top; padding-right: 2%;">';
-            content += '<div style="background: #ffffff; border-left: 4px solid #27ae60; border-radius: 4px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
-            content += '<h4 style="color: #27ae60; margin: 0 0 15px 0; font-size: 14px; text-transform: uppercase;"><span style="margin-right: 6px; font-size: 16px;">💵</span>Non-Credit Authority</h4>';
-            
-            content += '<div style="margin-bottom: 15px;">';
-            
-            if (shouldShowLimit(nonCreditGr.disbursement_ach, nonCreditGr.original_disbursement_ach, isChange) ||
-                shouldShowLimit(nonCreditGr.disbursement_wire_transfer_internal, nonCreditGr.original_disbursement_wire_transfer_internal, isChange) ||
-                shouldShowLimit(nonCreditGr.disbursement_wire_transfer_external, nonCreditGr.original_disbursement_wire_transfer_external, isChange) ||
-                shouldShowLimit(nonCreditGr.disbursement_official_checks_internal, nonCreditGr.original_disbursement_official_checks_internal, isChange) ||
-                shouldShowLimit(nonCreditGr.disbursement_official_checks_external, nonCreditGr.original_disbursement_official_checks_external, isChange)) {
-                
-                content += '<div style="font-weight: 600; color: #000000; font-size: 13px; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #dee2e6;">Disbursement</div>';
-            }
-            
-            if (shouldShowLimit(nonCreditGr.disbursement_ach, nonCreditGr.original_disbursement_ach, isChange)) {
-                content += buildLimitRow('ACH', nonCreditGr.disbursement_ach, nonCreditGr.original_disbursement_ach, isChange, true);
-            }
-            if (shouldShowLimit(nonCreditGr.disbursement_wire_transfer_internal, nonCreditGr.original_disbursement_wire_transfer_internal, isChange)) {
-                content += buildLimitRow('Wire Transfer Internal', nonCreditGr.disbursement_wire_transfer_internal, nonCreditGr.original_disbursement_wire_transfer_internal, isChange, true);
-            }
-            if (shouldShowLimit(nonCreditGr.disbursement_wire_transfer_external, nonCreditGr.original_disbursement_wire_transfer_external, isChange)) {
-                content += buildLimitRow('Wire Transfer External', nonCreditGr.disbursement_wire_transfer_external, nonCreditGr.original_disbursement_wire_transfer_external, isChange, true);
-            }
-            if (shouldShowLimit(nonCreditGr.disbursement_official_checks_internal, nonCreditGr.original_disbursement_official_checks_internal, isChange)) {
-                content += buildLimitRow('Official Checks Internal', nonCreditGr.disbursement_official_checks_internal, nonCreditGr.original_disbursement_official_checks_internal, isChange, true);
-            }
-            if (shouldShowLimit(nonCreditGr.disbursement_official_checks_external, nonCreditGr.original_disbursement_official_checks_external, isChange)) {
-                content += buildLimitRow('Official Checks External', nonCreditGr.disbursement_official_checks_external, nonCreditGr.original_disbursement_official_checks_external, isChange, true);
-            }
-            
-            content += '</div>';
-            
-            content += '<div style="margin-bottom: 15px;">';
-            
-            if (shouldShowLimit(nonCreditGr.check_cashing_on_us, nonCreditGr.original_check_cashing_on_us, isChange) ||
-                shouldShowLimit(nonCreditGr.check_cashing_not_on_us, nonCreditGr.original_check_cashing_not_on_us, isChange)) {
-                
-                content += '<div style="font-weight: 600; color: #000000; font-size: 13px; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #dee2e6;">Check Cashing & Cash Withdrawal</div>';
-            }
-            
-            if (shouldShowLimit(nonCreditGr.check_cashing_on_us, nonCreditGr.original_check_cashing_on_us, isChange)) {
-                content += buildLimitRow('On-Us (Checks & Cash Withdrawals)', nonCreditGr.check_cashing_on_us, nonCreditGr.original_check_cashing_on_us, isChange, true);
-            }
-            if (shouldShowLimit(nonCreditGr.check_cashing_not_on_us, nonCreditGr.original_check_cashing_not_on_us, isChange)) {
-                content += buildLimitRow('Not On-Us (Checks)', nonCreditGr.check_cashing_not_on_us, nonCreditGr.original_check_cashing_not_on_us, isChange, true);
-            }
-            
-            content += '</div>';
-            
-            if (shouldShowLimit(nonCreditGr.remote_deposit, nonCreditGr.original_remote_deposit, isChange)) {
-                content += buildLimitRow('Remote Deposit', nonCreditGr.remote_deposit, nonCreditGr.original_remote_deposit, isChange, false);
-            }
-            if (shouldShowLimit(nonCreditGr.treasury_solutions_company_wire_limits, nonCreditGr.original_treasury_solutions_company_wire_limits, isChange)) {
-                content += buildLimitRow('Treasury Solutions Company Wire Limits', nonCreditGr.treasury_solutions_company_wire_limits, nonCreditGr.original_treasury_solutions_company_wire_limits, isChange, false);
-            }
-            if (shouldShowLimit(nonCreditGr.fx_wire_limits, nonCreditGr.original_fx_wire_limits, isChange)) {
-                content += buildLimitRow('FX Wire Limits', nonCreditGr.fx_wire_limits, nonCreditGr.original_fx_wire_limits, isChange, false);
-            }
-            
-            content += '</div>';
-            content += '</div>';
-        }
-        
-        if (creditLimits) {
-            content += '<div style="display: table-cell; width: 48%; vertical-align: top; padding-left: 2%;">';
-            content += '<div style="background: #ffffff; border-left: 4px solid #e74c3c; border-radius: 4px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
-            content += '<h4 style="color: #e74c3c; margin: 0 0 15px 0; font-size: 14px; text-transform: uppercase;"><span style="margin-right: 6px; font-size: 16px;">💳</span>Credit Authority</h4>';
-            
-            content += '<div style="margin-bottom: 15px;">';
-            
-            if (shouldShowLimit(creditGr.overdraft_internal_accounts, creditGr.original_overdraft_internal_accounts, isChange) ||
-                shouldShowLimit(creditGr.overdraft_external_accounts, creditGr.original_overdraft_external_accounts, isChange)) {
-                
-                content += '<div style="font-weight: 600; color: #000000; font-size: 13px; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #dee2e6;">Overdraft</div>';
-            }
-            
-            if (shouldShowLimit(creditGr.overdraft_internal_accounts, creditGr.original_overdraft_internal_accounts, isChange)) {
-                content += buildLimitRow('Internal Accounts', creditGr.overdraft_internal_accounts, creditGr.original_overdraft_internal_accounts, isChange, true);
-            }
-            if (shouldShowLimit(creditGr.overdraft_external_accounts, creditGr.original_overdraft_external_accounts, isChange)) {
-                content += buildLimitRow('External Accounts', creditGr.overdraft_external_accounts, creditGr.original_overdraft_external_accounts, isChange, true);
-            }
-            
-            content += '</div>';
-            
-            content += '<div style="margin-bottom: 15px;">';
-            
-            if (shouldShowLimit(creditGr.unavailable_funds_internal_accounts, creditGr.original_unavailable_funds_internal_accounts, isChange) ||
-                shouldShowLimit(creditGr.unavailable_funds_external_accounts, creditGr.original_unavailable_funds_external_accounts, isChange)) {
-                
-                content += '<div style="font-weight: 600; color: #000000; font-size: 13px; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #dee2e6;">Unavailable Funds</div>';
-            }
-            
-            if (shouldShowLimit(creditGr.unavailable_funds_internal_accounts, creditGr.original_unavailable_funds_internal_accounts, isChange)) {
-                content += buildLimitRow('Internal Accounts', creditGr.unavailable_funds_internal_accounts, creditGr.original_unavailable_funds_internal_accounts, isChange, true);
-            }
-            if (shouldShowLimit(creditGr.unavailable_funds_external_accounts, creditGr.original_unavailable_funds_external_accounts, isChange)) {
-                content += buildLimitRow('External Accounts', creditGr.unavailable_funds_external_accounts, creditGr.original_unavailable_funds_external_accounts, isChange, true);
-            }
-            
-            content += '</div>';
-            
-            content += '</div>';
-            content += '</div>';
-        }
-        
-        content += '</div>';
-        content += '</div>';
-    }
-    
+    content += '<table style="width: 100%; border-collapse: collapse;">';
+    content += '<tr><td style="padding: 8px; font-weight: bold; width: 200px;">Request Number:</td><td style="padding: 8px;"><a href="' + recordURL + '" style="color: #00aae3; text-decoration: none; font-weight: 600;">' + parent.number + '</a></td></tr>';
+    content += '<tr><td style="padding: 8px; font-weight: bold;">Request Type:</td><td style="padding: 8px;">' + parent.request_type.getDisplayValue() + '</td></tr>';
+    content += '<tr><td style="padding: 8px; font-weight: bold;">Job Code:</td><td style="padding: 8px;">' + parent.job_code.getDisplayValue() + '</td></tr>';
+    content += '<tr><td style="padding: 8px; font-weight: bold;">Opened By:</td><td style="padding: 8px;">' + parent.opened_by.getDisplayValue() + '</td></tr>';
+    content += '<tr><td style="padding: 8px; font-weight: bold;">Requested For:</td><td style="padding: 8px;">' + parent.requested_for.getDisplayValue() + '</td></tr>';
+    content += '<tr><td style="padding: 8px; font-weight: bold; vertical-align: top;">Overall Business Need:</td><td style="padding: 8px;">' + parent.overall_business_need + '</td></tr>';
+    content += '</table>';
     content += '</div>';
     
     template.print(content);
     
 })(current, template, email, email_action, event);
+
 
 
 
@@ -540,25 +263,3 @@
     
 })(current, template, email, email_action, event);
 
-
-
-
-
-
-
-
-
-//signature_approval_buttons
-(function runMailScript(current, template, email, email_action, event) {
-    
-    var content = '';
-    
-    content += '<div style="margin: 30px 0; padding: 20px; background-color: #f5f5f5; border-radius: 5px; border: 1px solid #dee2e6;">';
-    content += '<p style="margin: 0 0 15px 0; font-weight: bold; color: #000000;">Please review this request and take appropriate action:</p>';
-    content += '<a href="${approve_link}" style="display: inline-block; padding: 12px 30px; background-color: #28a745; color: #ffffff; text-decoration: none; border-radius: 5px; margin-right: 10px; font-weight: 600;">Approve</a>';
-    content += '<a href="${reject_link}" style="display: inline-block; padding: 12px 30px; background-color: #dc3545; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: 600;">Reject</a>';
-    content += '</div>';
-    
-    template.print(content);
-    
-})(current, template, email, email_action, event);
