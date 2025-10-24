@@ -11,8 +11,8 @@
     
     // Function to format currency
     function formatCurrency(value) {
-        if (!value) return '$0.00';
-        return '$' + parseFloat(value).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        if (!value || value === 0) return '-';
+        return '$' + parseFloat(value).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     }
     
     // Get the job function description from the requested job code
@@ -171,26 +171,7 @@
         'unavailable_external': 'Unavailable Funds External'
     };
     
-    // Build the HTML content
-    var content = '';
-    content += '<div style="margin: 30px 0; padding: 20px; background-color: #f8f9fa; border-radius: 5px; border: 1px solid #dee2e6;">';
-    content += '<h3 style="color: #00aae3; margin: 0 0 10px 0; padding-bottom: 10px; border-bottom: 2px solid #00aae3;">';
-    content += 'Authority Limits Comparison';
-    content += '</h3>';
-    content += '<p style="margin: 10px 0 15px 0; color: #5a6c7d; font-size: 13px;">';
-    content += 'Comparing requested limits for <strong>' + requestedLimits.job_code + '</strong> against other job codes in the <strong>' + jobFunctionDescription + '</strong> job function.';
-    content += '</p>';
-    
-    // Create table
-    content += '<div style="overflow-x: auto;">';
-    content += '<table style="width: 100%; border-collapse: collapse; background-color: #ffffff; border: 1px solid #dee2e6; border-radius: 4px; font-size: 12px;">';
-    
-    // Table header
-    content += '<thead>';
-    content += '<tr style="background-color: #00aae3;">';
-    content += '<th style="padding: 10px 8px; text-align: left; font-weight: 600; position: sticky; left: 0; background-color: #00aae3; z-index: 10; color: #000000;">Job Code</th>';
-    
-    // Only show columns for fields that have at least one non-zero value
+    // Count columns to show for colspan
     var columnsToShow = [];
     for (var f = 0; f < limitFields.length; f++) {
         var hasValue = false;
@@ -202,9 +183,35 @@
         }
         if (hasValue) {
             columnsToShow.push(limitFields[f]);
-            content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; white-space: nowrap; color: #000000;">' + 
-                       fieldDisplayNames[limitFields[f]] + '</th>';
         }
+    }
+    
+    var totalColumns = columnsToShow.length + 1; // +1 for Job Code column
+    
+    // Build the HTML content
+    var content = '';
+    content += '<div style="margin: 30px 0; padding: 20px; background-color: #f8f9fa; border-radius: 5px; border: 1px solid #dee2e6;">';
+    content += '<h3 style="color: #00aae3; margin: 0 0 10px 0; padding-bottom: 10px; border-bottom: 2px solid #00aae3;">';
+    content += 'Authority Limits Comparison';
+    content += '</h3>';
+    
+    // Create table
+    content += '<div style="overflow-x: auto;">';
+    content += '<table style="width: 100%; border-collapse: collapse; background-color: #ffffff; border: 1px solid #dee2e6; border-radius: 4px; font-size: 12px;">';
+    
+    // Table header - Job Function row
+    content += '<thead>';
+    content += '<tr style="background-color: #005a8c;">';
+    content += '<th colspan="' + totalColumns + '" style="padding: 12px 8px; text-align: center; font-weight: 700; color: #ffffff; font-size: 14px; border-bottom: 2px solid #dee2e6;">' + jobFunctionDescription + '</th>';
+    content += '</tr>';
+    
+    // Column headers row
+    content += '<tr style="background-color: #00aae3;">';
+    content += '<th style="padding: 10px 8px; text-align: left; font-weight: 600; position: sticky; left: 0; background-color: #00aae3; z-index: 10; color: #000000;">Job Code</th>';
+    
+    for (var f = 0; f < columnsToShow.length; f++) {
+        content += '<th style="padding: 10px 8px; text-align: right; font-weight: 600; white-space: nowrap; color: #000000;">' + 
+                   fieldDisplayNames[columnsToShow[f]] + '</th>';
     }
     
     content += '</tr>';
