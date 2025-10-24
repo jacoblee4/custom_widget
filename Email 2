@@ -54,8 +54,8 @@
     // Get job title for the requested job code
     var requestedJobCodeGr = new GlideRecord('x_banun_rbac_job_code');
     if (requestedJobCodeGr.get(parent.getValue('job_code'))) {
-        requestedLimits.job_title = requestedJobCodeGr.getValue('job_title') || 
-                                    requestedJobCodeGr.getValue('u_job_title') || 
+        requestedLimits.job_title = requestedJobCodeGr.getValue('u_job_title') || 
+                                    requestedJobCodeGr.getValue('job_title') || 
                                     requestedJobCodeGr.getValue('title') || '';
     }
     
@@ -173,8 +173,8 @@
             // Get job title
             var jobCodeGr2 = new GlideRecord('x_banun_rbac_job_code');
             if (jobCodeGr2.get(limitGr2.getValue('job_code'))) {
-                limit.job_title = jobCodeGr2.getValue('job_title') || 
-                                 jobCodeGr2.getValue('u_job_title') || 
+                limit.job_title = jobCodeGr2.getValue('u_job_title') || 
+                                 jobCodeGr2.getValue('job_title') || 
                                  jobCodeGr2.getValue('title') || '';
             }
             
@@ -212,13 +212,13 @@
         if (!row.isRequested) return false;
         
         var newValue = row[fieldName] || 0;
-        if (newValue === 0) return false;
         
         if (isChangeRequest) {
             var originalValue = row['original_' + fieldName] || 0;
             return newValue !== originalValue;
         } else {
-            return true; // For new requests, highlight all positive values
+            // For new requests, don't highlight - user said not to highlight every column
+            return false;
         }
     }
     
@@ -226,7 +226,7 @@
     var content = '';
     content += '<div style="margin: 30px 0; padding: 20px; background-color: #f8f9fa; border-radius: 5px; border: 1px solid #dee2e6;">';
     content += '<h3 style="color: #00aae3; margin: 0 0 10px 0; padding-bottom: 10px; border-bottom: 2px solid #00aae3;">';
-    content += 'Authority Limits Comparison - <span style="color: #000000; font-weight: 700;">' + jobFunctionDescription + '</span>';
+    content += 'Authority Limits Comparison';
     content += '</h3>';
     
     // Create table
@@ -234,6 +234,11 @@
     content += '<table style="width: 100%; border-collapse: collapse; background-color: #ffffff; border: 1px solid #dee2e6; border-radius: 4px; font-size: 12px;">';
     
     content += '<thead>';
+    
+    // Job Function row (spanning all columns)
+    content += '<tr>';
+    content += '<th colspan="16" style="padding: 12px; text-align: center; font-weight: 700; background-color: #00aae3; color: #000000; border-bottom: 2px solid #dee2e6;">Job Function: ' + jobFunctionDescription + '</th>';
+    content += '</tr>';
     
     // First header row - Credit/Non-Credit categories
     content += '<tr>';
@@ -287,12 +292,13 @@
         
         content += '<tr style="' + rowStyle + '">';
         
-        // Job Title column (sticky)
-        var jobTitleStyle = 'padding: 8px; font-weight: ' + (row.isRequested ? '700' : '500') + '; color: #000000; border-right: 2px solid #dee2e6; position: sticky; left: 0; z-index: 10;';
+        // Job Title column (sticky) - always highlighted if requested
+        var jobTitleStyle = 'padding: 8px; border-right: 2px solid #dee2e6; position: sticky; left: 0; z-index: 10;';
         if (row.isRequested) {
-            jobTitleStyle += ' background-color: #fff3cd;';
+            jobTitleStyle += ' font-weight: 700; color: #000000; background-color: #ffc107;';
             content += '<td style="' + jobTitleStyle + '">' + (row.job_title || '') + ' <span style="color: #856404; font-size: 11px;">(REQUESTED)</span></td>';
         } else {
+            jobTitleStyle += ' font-weight: 500; color: #000000;';
             jobTitleStyle += (r % 2 === 0 ? ' background-color: #ffffff;' : ' background-color: #f8f9fa;');
             content += '<td style="' + jobTitleStyle + '">' + (row.job_title || '') + '</td>';
         }
@@ -319,8 +325,13 @@
         content += '<td style="' + (shouldHighlight(row, 'unavailable_internal') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.unavailable_internal) + '</td>';
         content += '<td style="' + (shouldHighlight(row, 'unavailable_external') ? highlightStyle : cellStyle) + '">' + formatCurrency(row.unavailable_external) + '</td>';
         
-        // Job Code column (right side)
-        var jobCodeStyle = 'padding: 8px; font-weight: ' + (row.isRequested ? '700' : '500') + '; color: #000000; border-left: 2px solid #dee2e6;';
+        // Job Code column (right side) - always highlighted if requested
+        var jobCodeStyle = 'padding: 8px; border-left: 2px solid #dee2e6;';
+        if (row.isRequested) {
+            jobCodeStyle += ' font-weight: 700; background-color: #ffc107; color: #000000;';
+        } else {
+            jobCodeStyle += ' font-weight: 500; color: #000000;';
+        }
         content += '<td style="' + jobCodeStyle + '">' + row.job_code + '</td>';
         
         content += '</tr>';
