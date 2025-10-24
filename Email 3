@@ -16,9 +16,10 @@
     
     function formatCurrency(value) {
         if (!value) {
-            return '0.00';
+            return '0';
         }
-        return parseFloat(value).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        var intValue = parseInt(parseFloat(value));
+        return intValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     }
     
     function buildLimitRow(label, newValue, originalValue, showOriginal, indented) {
@@ -34,20 +35,28 @@
             var newVal = parseFloat(newValue) || 0;
             var origVal = parseFloat(originalValue) || 0;
             var arrowDisplay = '';
+            var hasChanged = false;
             
             if (origVal === 0 && newVal !== 0) {
                 arrowDisplay = '<span style="color: #27ae60; font-weight: 600; font-size: 14px; margin-left: 8px;">&#9650;</span>';
+                hasChanged = true;
             } else if (newVal !== 0 && origVal !== 0) {
                 var difference = newVal - origVal;
                 if (difference > 0) {
                     arrowDisplay = '<span style="color: #27ae60; font-weight: 600; font-size: 14px; margin-left: 8px;">&#9650;</span>';
+                    hasChanged = true;
                 } else if (difference < 0) {
                     arrowDisplay = '<span style="color: #e74c3c; font-weight: 600; font-size: 14px; margin-left: 8px;">&#9660;</span>';
+                    hasChanged = true;
                 }
             }
             
-            row += '<div style="flex: 1;"><span style="color: #000000; font-weight: 600; font-size: 15px;">New: $' + formatCurrency(newValue) + arrowDisplay + '</span></div>';
-            row += '<div style="flex: 1; text-align: right;"><span style="color: #999999; font-weight: 400; font-size: 12px;">Original: $' + formatCurrency(originalValue) + '</span></div>';
+            if (hasChanged) {
+                row += '<div style="flex: 1;"><span style="color: #000000; font-weight: 600; font-size: 15px;">New: $' + formatCurrency(newValue) + arrowDisplay + '</span></div>';
+                row += '<div style="flex: 1; text-align: right;"><span style="color: #999999; font-weight: 400; font-size: 12px;">Original: $' + formatCurrency(originalValue) + '</span></div>';
+            } else {
+                row += '<div style="font-weight: 600; color: #000000; font-size: 15px;">$' + formatCurrency(newValue) + '</div>';
+            }
         } else {
             row += '<div style="font-weight: 600; color: #000000; font-size: 15px;">$' + formatCurrency(newValue) + '</div>';
         }
