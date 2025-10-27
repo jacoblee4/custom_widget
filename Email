@@ -12,13 +12,17 @@
     }
     
     function buildLimitRow(label, newValue, originalValue, showOriginal, indented) {
-        var row = '<div style="padding: 6px 0; border-bottom: 1px solid #ecf0f1;';
+        var row = '<div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #ecf0f1;';
         if (indented) {
             row += ' padding-left: 15px;';
         }
         row += '">';
-        row += '<div style="font-size: 13px; color: #5a6c7d; margin-bottom: 3px;">' + label + '</div>';
-        row += '<div style="display: flex; justify-content: space-between; align-items: center;">';
+        
+        // Label on the left
+        row += '<span style="font-size: 13px; color: #5a6c7d; flex: 1;">' + label + '</span>';
+        
+        // Value(s) on the right
+        row += '<div style="display: flex; align-items: center; gap: 8px;">';
         
         if (showOriginal) {
             var newVal = parseFloat(newValue) || 0;
@@ -41,13 +45,13 @@
             }
             
             if (hasChanged) {
-                row += '<div style="flex: 1;"><span style="color: #000000; font-weight: 600; font-size: 15px;">New: $' + formatCurrency(newValue) + arrowDisplay + '</span></div>';
-                row += '<div style="flex: 1; text-align: right;"><span style="color: #999999; font-weight: 400; font-size: 12px;">Original: $' + formatCurrency(originalValue) + '</span></div>';
+                row += '<span style="color: #999999; font-weight: 400; font-size: 12px;">Original: $' + formatCurrency(originalValue) + '</span>';
+                row += '<span style="color: #000000; font-weight: 600; font-size: 15px;">New: $' + formatCurrency(newValue) + arrowDisplay + '</span>';
             } else {
-                row += '<div style="font-weight: 600; color: #000000; font-size: 15px;">$' + formatCurrency(newValue) + '</div>';
+                row += '<span style="font-weight: 600; color: #000000; font-size: 15px;">$' + formatCurrency(newValue) + '</span>';
             }
         } else {
-            row += '<div style="font-weight: 600; color: #000000; font-size: 15px;">$' + formatCurrency(newValue) + '</div>';
+            row += '<span style="font-weight: 600; color: #000000; font-size: 15px;">$' + formatCurrency(newValue) + '</span>';
         }
         
         row += '</div>';
