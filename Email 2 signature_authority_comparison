@@ -26,6 +26,7 @@
                                  jobCodeGr.getValue('job_function');
     
     if (!jobFunctionDescription) {
+        // No job function found - don't show the comparison at all
         return;
     }
     
@@ -336,7 +337,7 @@
     
     if (existingLimits.length === 1) {
         content += '<p style="color: #856404; font-size: 12px; margin-top: 15px; padding: 10px; background-color: #fff3cd; border-radius: 4px;">';
-        content += '⚠️ No existing authority limits found for other job codes in this job function. Only the requested limits are shown above.';
+        content += '⚠️ No existing authority limits found for job function <strong>' + jobFunctionDescription + '</strong>. Only the requested limits are shown above.';
         content += '</p>';
     }
     
