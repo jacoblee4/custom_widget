@@ -85,6 +85,11 @@
         content += '</tbody>';
         content += '</table>';
         content += '</div>';
+    } else {
+        // No employees found - show a message
+        content += '<div style="margin: 30px 0; padding: 20px; background-color: #fff3cd; border-radius: 5px; border: 1px solid #ffc107;">';
+        content += '<p style="color: #856404; margin: 0;"><strong>Note:</strong> No existing employees found with job code <strong>' + parent.job_code.getDisplayValue() + '</strong>.</p>';
+        content += '</div>';
     }
     
     template.print(content);
