@@ -1,0 +1,92 @@
+(function runMailScript(current, template, email, email_action, event) {
+    
+    var parent = current.sysapproval.getRefRecord();
+    
+    // Function to safely get value or return empty string
+    function safeGetValue(glideRecord, fieldName) {
+        var value = glideRecord.getValue(fieldName);
+        return (value && value !== 'undefined' && value !== 'null') ? value : '';
+    }
+    
+    // Function to safely get display value or return empty string
+    function safeGetDisplayValue(glideElement) {
+        var value = glideElement.getDisplayValue();
+        return (value && value !== 'undefined' && value !== 'null') ? value : '';
+    }
+    
+    // Function to get impacted employees
+    function getImpactedEmployees(jobCodeSysId) {
+        var employees = [];
+        var jobCodeValue = '';
+        
+        if (jobCodeSysId) {
+            // Get the actual job code value from the job code table
+            var jobGr = new GlideRecord('x_banun_rbac_job_code');
+            if (jobGr.get(jobCodeSysId)) {
+                jobCodeValue = jobGr.getValue('job_code') || 
+                              jobGr.getValue('u_job_code') || 
+                              jobGr.getValue('code') || 
+                              jobGr.getDisplayValue();
+            }
+            
+            // Query sys_user table for active users with this job code
+            var userGr = new GlideRecord('sys_user');
+            userGr.addQuery('u_job_code', jobCodeValue);
+            userGr.addQuery('active', true);
+            userGr.orderBy('name');
+            userGr.query();
+            
+            while (userGr.next()) {
+                employees.push({
+                    name: safeGetValue(userGr, 'name'),
+                    title: safeGetValue(userGr, 'title'),
+                    manager: safeGetDisplayValue(userGr.manager)
+                });
+            }
+        }
+        
+        return employees;
+    }
+    
+    var content = '';
+    
+    // Get impacted employees
+    var impactedEmployees = getImpactedEmployees(parent.getValue('job_code'));
+    
+    // Add Impacted Employees section if there are any
+    if (impactedEmployees.length > 0) {
+        content += '<div style="margin: 30px 0; padding: 20px; background-color: #f8f9fa; border-radius: 5px; border: 1px solid #dee2e6;">';
+        content += '<h3 style="color: #00aae3; margin: 0 0 10px 0; padding-bottom: 10px; border-bottom: 2px solid #00aae3;">';
+        content += '<span style="margin-right: 6px;">👥</span>Impacted Employees ';
+        content += '<span style="color: #7f8c8d; font-weight: normal; font-size: 14px;">(' + impactedEmployees.length + ' total)</span>';
+        content += '</h3>';
+        content += '<p style="margin: 10px 0 15px 0; color: #5a6c7d; font-size: 13px;">The following employees with job code <strong>' + parent.job_code.getDisplayValue() + '</strong> will be affected by this authority change:</p>';
+        
+        content += '<table style="width: 100%; border-collapse: collapse; background-color: #ffffff; border: 1px solid #dee2e6; border-radius: 4px;">';
+        content += '<thead>';
+        content += '<tr style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;">';
+        content += '<th style="padding: 12px; text-align: left; color: #495057; font-weight: 600; font-size: 13px;">Name</th>';
+        content += '<th style="padding: 12px; text-align: left; color: #495057; font-weight: 600; font-size: 13px;">Title</th>';
+        content += '<th style="padding: 12px; text-align: left; color: #495057; font-weight: 600; font-size: 13px;">Manager</th>';
+        content += '</tr>';
+        content += '</thead>';
+        content += '<tbody>';
+        
+        for (var i = 0; i < impactedEmployees.length; i++) {
+            var emp = impactedEmployees[i];
+            var rowStyle = (i % 2 === 0) ? 'background-color: #ffffff;' : 'background-color: #f8f9fa;';
+            content += '<tr style="' + rowStyle + ' border-bottom: 1px solid #ecf0f1;">';
+            content += '<td style="padding: 10px 12px; color: #000000; font-size: 13px;">' + (emp.name || '') + '</td>';
+            content += '<td style="padding: 10px 12px; color: #5a6c7d; font-size: 13px;">' + (emp.title || '') + '</td>';
+            content += '<td style="padding: 10px 12px; color: #5a6c7d; font-size: 13px;">' + (emp.manager || '') + '</td>';
+            content += '</tr>';
+        }
+        
+        content += '</tbody>';
+        content += '</table>';
+        content += '</div>';
+    }
+    
+    template.print(content);
+    
+})(current, template, email, email_action, event);
