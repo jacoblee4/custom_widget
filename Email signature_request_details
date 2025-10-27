@@ -3,17 +3,9 @@
     var parent = current.sysapproval.getRefRecord();
     var content = '';
 
-    // Introduction text based on request type
-    var introText = '';
-    if (parent.request_type == 'new_authority') {
-        introText = '<p style="margin: 20px 0; line-height: 1.6;">A new signature authority request has been submitted and requires your approval as the Business Line approver. Please review the details below.</p>';
-    } else if (parent.request_type == 'change_to_existing_authority') {
-        introText = '<p style="margin: 20px 0; line-height: 1.6;">A request to modify existing signature authority limits has been submitted and requires your approval as the Business Line approver. Please review the details below.</p>';
-    } else if (parent.request_type == 'remove_authority') {
-        introText = '<p style="margin: 20px 0; line-height: 1.6;">A request to remove signature authority has been submitted and requires your approval as the Business Line approver. Please review the details below and the authority limits that will be removed upon approval.</p>';
-    } else {
-        introText = '<p style="margin: 20px 0; line-height: 1.6;">A signature authority request has been submitted and requires your approval as the Business Line approver. Please review the details below.</p>';
-    }
+    // Introduction text with dynamic request type
+    var requestTypeDisplay = parent.request_type.getDisplayValue();
+    var introText = '<p style="margin: 20px 0; line-height: 1.6;">A ' + requestTypeDisplay + ' Signature Request has been submitted and requires your approval. Please review the details below.</p>';
 
     content += introText;
 
