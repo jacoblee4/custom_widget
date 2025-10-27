@@ -2,48 +2,29 @@
 /* Optional EmailOutbound */ email, /* Optional GlideRecord */ email_action,
 /* Optional GlideRecord */ event) {
 	
-	// Add your code here
 	var number = current.sysapproval.number;
 	var watermark = email.watermark;
 	var mailTo = '';
 	var mail_add = new GlideRecord('sys_email_account');
 	mail_add.addActiveQuery();
-	mail_add.addQuery('type', 'smtp');
+	mail_add.addQuery('type','smtp');
 	mail_add.query();
-	if (mail_add.next())
+	if(mail_add.next())
 		mailTo = mail_add.from;
 	
 	var app_link = "mailto:" + mailTo + "?subject=Re:" + number + "%20-%20approve&body=" + watermark;
 	var rej_link = "mailto:" + mailTo + "?subject=Re:" + number + "%20-%20reject&body=" + watermark;
 	
-	template.print('<font face="helvetica">');
-	var backgroundColor_app = 'background-color: #32CD32;';
-	var backgroundColor_rej = 'background-color: #FF6347;';
-	var border_app = 'border: 1px solid #32CD32;';
-	var border_rej = 'border: 1px solid #FF6347;';
-	var color = 'color: #ffffff;';
-	var fontSize = 'font-size: 16px;';
-	var fontFamily = 'font-family: Helvetica, Arial, sans-serif;';
-	var textDecoration = 'text-decoration: none; border-radius: 3px;';
-	var webKitBorder = '-webkit-border-radius: 3px;';
-	var mozBorder = '-moz-border-radius: 3px;';
-	var display = 'display: inline-block;';
-	var padding = 'padding: 5px;';
+	// Container with modern styling from Email 2
+	template.print('<div style="margin: 30px 0; padding: 20px; background-color: #f5f5f5; border-radius: 5px; border: 1px solid #dee2e6;">');
+	template.print('<p style="margin: 0 0 15px 0; font-weight: bold; color: #000000;">Please review this request and take appropriate action:</p>');
 	
-	//approve button
-	template.print('<a href="' + app_link + '"');
-	template.print('style="' + backgroundColor_app + border_app + color + fontSize + fontFamily + textDecoration + webKitBorder + mozBorder + display + padding);
-	template.print('">');
-	template.print("Approve");
-	template.print('</a>');
-	template.print('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;');
+	// Approve button with Email 2 styling
+	template.print('<a href="' + app_link + '" style="display: inline-block; padding: 12px 30px; background-color: #28a745; color: #ffffff; text-decoration: none; border-radius: 5px; margin-right: 10px; font-weight: 600;">Approve</a>');
 	
-	//reject button
-	template.print('<a href="' + rej_link + '"');
-	template.print('style="' + backgroundColor_rej + border_rej + color + fontSize + fontFamily + textDecoration + webKitBorder + mozBorder + display + padding);
-	template.print('">');
-	template.print("Reject");
-	template.print('</a>');
-	template.print('</font>');
+	// Reject button with Email 2 styling
+	template.print('<a href="' + rej_link + '" style="display: inline-block; padding: 12px 30px; background-color: #dc3545; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: 600;">Reject</a>');
+	
+	template.print('</div>');
 	
 })(current, template, email, email_action, event);
