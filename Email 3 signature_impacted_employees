@@ -38,6 +38,8 @@
     content += '</table>';
     content += '</div>';
 
+    content += '</div>'; // Close main div
+
     template.print(content);
 
 })(current, template, email, email_action, event);
