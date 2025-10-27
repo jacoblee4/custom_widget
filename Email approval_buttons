@@ -2,7 +2,6 @@
 /* Optional EmailOutbound */ email, /* Optional GlideRecord */ email_action,
 /* Optional GlideRecord */ event) {
 	
-	// Add your code here
 	var number = current.sysapproval.number;
 	var watermark = email.watermark;
 		var mailTo ='';
