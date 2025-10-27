@@ -21,8 +21,8 @@
         // Label on the left
         row += '<span style="font-size: 13px; color: #5a6c7d; flex: 1;">' + label + '</span>';
         
-        // Value(s) on the right
-        row += '<div style="display: flex; align-items: center; gap: 8px;">';
+        // Value(s) on the right - stacked vertically
+        row += '<div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">';
         
         if (showOriginal) {
             var newVal = parseFloat(newValue) || 0;
@@ -45,8 +45,8 @@
             }
             
             if (hasChanged) {
-                row += '<span style="color: #999999; font-weight: 400; font-size: 12px;">Original: $' + formatCurrency(originalValue) + '</span>';
-                row += '<span style="color: #000000; font-weight: 600; font-size: 15px;">New: $' + formatCurrency(newValue) + arrowDisplay + '</span>';
+                row += '<span style="color: #000000; font-weight: 600; font-size: 15px;">$' + formatCurrency(newValue) + arrowDisplay + '</span>';
+                row += '<span style="color: #999999; font-weight: 400; font-size: 11px;">Original: $' + formatCurrency(originalValue) + '</span>';
             } else {
                 row += '<span style="font-weight: 600; color: #000000; font-size: 15px;">$' + formatCurrency(newValue) + '</span>';
             }
