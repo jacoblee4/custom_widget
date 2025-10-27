@@ -36,8 +36,8 @@
     }
     
     // Only show Job Function if it has a value
-    if (parent.job_function_description && parent.job_function_description.toString().trim() !== '') {
-        content += '<tr><td style="padding: 8px; font-weight: bold;">Job Function:</td><td style="padding: 8px;">' + parent.job_function_description + '</td></tr>';
+    if (parent.job_code.job_function_description && parent.job_code.job_function_description.toString().trim() !== '') {
+        content += '<tr><td style="padding: 8px; font-weight: bold;">Job Function:</td><td style="padding: 8px;">' + parent.job_code.job_function_description + '</td></tr>';
     }
     
     content += '<tr><td style="padding: 8px; font-weight: bold;">Opened By:</td><td style="padding: 8px;">' + parent.opened_by.getDisplayValue() + '</td></tr>';
