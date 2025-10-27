@@ -29,8 +29,17 @@
     content += '<tr><td style="padding: 8px; font-weight: bold; width: 200px;">Request Number:</td><td style="padding: 8px;"><a href="' + recordURL + '" style="color: #00aae3; text-decoration: none; font-weight: 600;">' + parent.number + '</a></td></tr>';
     content += '<tr><td style="padding: 8px; font-weight: bold;">Request Type:</td><td style="padding: 8px;">' + parent.request_type.getDisplayValue() + '</td></tr>';
     content += '<tr><td style="padding: 8px; font-weight: bold;">Job Code:</td><td style="padding: 8px;">' + parent.job_code.getDisplayValue() + '</td></tr>';
-    content += '<tr><td style="padding: 8px; font-weight: bold;">Job Title:</td><td style="padding: 8px;">' + parent.job_code.job_description + '</td></tr>';
-    content += '<tr><td style="padding: 8px; font-weight: bold;">Job Function:</td><td style="padding: 8px;">' + parent.job_function_description + '</td></tr>';
+    
+    // Only show Job Title if it has a value
+    if (parent.job_code.job_description && parent.job_code.job_description.toString().trim() !== '') {
+        content += '<tr><td style="padding: 8px; font-weight: bold;">Job Title:</td><td style="padding: 8px;">' + parent.job_code.job_description + '</td></tr>';
+    }
+    
+    // Only show Job Function if it has a value
+    if (parent.job_function_description && parent.job_function_description.toString().trim() !== '') {
+        content += '<tr><td style="padding: 8px; font-weight: bold;">Job Function:</td><td style="padding: 8px;">' + parent.job_function_description + '</td></tr>';
+    }
+    
     content += '<tr><td style="padding: 8px; font-weight: bold;">Opened By:</td><td style="padding: 8px;">' + parent.opened_by.getDisplayValue() + '</td></tr>';
     content += '<tr><td style="padding: 8px; font-weight: bold;">Requested By:</td><td style="padding: 8px;">' + parent.requested_for.getDisplayValue() + '</td></tr>';
     content += '<tr><td style="padding: 8px; font-weight: bold; vertical-align: top;">Overall Business Need:</td><td style="padding: 8px;">' + parent.overall_business_need + '</td></tr>';
