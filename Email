@@ -1,6 +1,24 @@
 (function runMailScript(current, template, email, email_action, event) {
 
-    var parent = current.sysapproval.getRefRecord();
+    // Determine if we're on parent or child record and get parent reference
+    var parent;
+    var currentTableName = current.getTableName();
+    
+    if (currentTableName == 'x_banun_bunow_si_0_credit_authority_limits' || 
+        currentTableName == 'x_banun_bunow_si_0_non_credit_authority_limits') {
+        // We're on a child record - get parent from the parent field
+        parent = current.parent.getRefRecord();
+    } else {
+        // We're on the parent record - get it from sysapproval
+        parent = current.sysapproval.getRefRecord();
+    }
+    
+    // Validation check
+    if (!parent || !parent.isValidRecord()) {
+        gs.error('Email Script Error: Unable to retrieve parent Signature Authority Request record');
+        return;
+    }
+    
     var content = '';
 
     // Introduction text with dynamic request type
