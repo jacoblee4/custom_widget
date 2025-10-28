@@ -12,13 +12,19 @@
     // Determine if the document is a parent or child record and get parent reference
     var parent;
     var documentTableName = documentRecord.getTableName();
+    var showOnlyCredit = false;
+    var showOnlyNonCredit = false;
     
-    if (documentTableName == 'x_banun_bunow_si_0_credit_authority_limits' || 
-        documentTableName == 'x_banun_bunow_si_0_non_credit_authority_limits') {
-        // Document is a child record - get parent from the parent field
+    if (documentTableName == 'x_banun_bunow_si_0_credit_authority_limits') {
+        // Document is a credit limits child record
         parent = documentRecord.parent.getRefRecord();
+        showOnlyCredit = true;
+    } else if (documentTableName == 'x_banun_bunow_si_0_non_credit_authority_limits') {
+        // Document is a non-credit limits child record
+        parent = documentRecord.parent.getRefRecord();
+        showOnlyNonCredit = true;
     } else {
-        // Document is the parent record itself
+        // Document is the parent record itself - show both
         parent = documentRecord;
     }
     
@@ -88,20 +94,30 @@
     
     var content = '';
     
-    var creditGr = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
-    creditGr.addQuery('parent', parent.sys_id);
-    creditGr.query();
-    var creditLimits = creditGr.hasNext() ? creditGr : null;
-    if (creditLimits) {
-        creditGr.next();
+    // Only query credit limits if needed (parent record or credit child approval)
+    var creditLimits = null;
+    var creditGr = null;
+    if (!showOnlyNonCredit) {
+        creditGr = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
+        creditGr.addQuery('parent', parent.sys_id);
+        creditGr.query();
+        creditLimits = creditGr.hasNext() ? creditGr : null;
+        if (creditLimits) {
+            creditGr.next();
+        }
     }
     
-    var nonCreditGr = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
-    nonCreditGr.addQuery('parent', parent.sys_id);
-    nonCreditGr.query();
-    var nonCreditLimits = nonCreditGr.hasNext() ? nonCreditGr : null;
-    if (nonCreditLimits) {
-        nonCreditGr.next();
+    // Only query non-credit limits if needed (parent record or non-credit child approval)
+    var nonCreditLimits = null;
+    var nonCreditGr = null;
+    if (!showOnlyCredit) {
+        nonCreditGr = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
+        nonCreditGr.addQuery('parent', parent.sys_id);
+        nonCreditGr.query();
+        nonCreditLimits = nonCreditGr.hasNext() ? nonCreditGr : null;
+        if (nonCreditLimits) {
+            nonCreditGr.next();
+        }
     }
     
     content += '<div style="background-color: #f5f5f5; padding: 15px; margin: 20px 0; border-left: 4px solid #00aae3;">';
