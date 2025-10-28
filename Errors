@@ -1,53 +1,153 @@
-10-24-2025 11:40:09
-Information	x_banun_bunow_si_0	SIGNATURE TESTING Parent sys_id: 307867911bf032904726c9d6624bcb8a
+(function() {
+    var grCase = new GlideRecord('sn_hr_core_case');
+    var universalRequestGr = new GlideRecord("universal_request");
+    if (input && input.parentCaseId)
+        data.parentCaseId = input.parentCaseId;
+    else
+        data.parentCaseId = options.sys_id || hr_PortalUtil.getParentFromUrl($sp.getParameter("sys_id"),
+            $sp.getParameter("table"));
+    setRecordInfo(data.parentCaseId);
+    data.showAcceptanceOptions = false;
+    if (data.recordInfo.universal_request)
+        universalRequestGr.get(data.recordInfo.universal_request);
+    // show case accept/reject option only when HR Case is in state Awaiting Acceptance and UR is in state Awaiting Response from User and state reason is Accept Resolution
+    if (data.recordInfo.isCase && data.recordInfo.state == 20 && data.recordInfo.universal_request) {
+        if (universalRequestGr.getValue("state") == 3 && universalRequestGr.getValue("state_reason") == 4 && gs.getUserID() === data.recordInfo.opened_for)
+            data.showAcceptanceOptions = true;
+    }
+    if (data.recordInfo.chatWidgetParams)
+        data.recordInfo.chatWidgetParams.title = " ";
+    var chatOptions = data.recordInfo.chatWidgetParams;
+    data.chatOptions = chatOptions;
+    if (!gs.nil(chatOptions))
+        data.chatWidget = $sp.getWidget('sn-chat', chatOptions);
+    if (input && input.action == 'cancelCase') {
+        grCase.get(data.parentCaseId);
+        grCase.state = 7;
+        grCase.update();
+    }
+    if (input && input.action == 'acceptResolution' && data.recordInfo.universal_request) {
+        // Update record only if HR case is the primary task for UR
+        if (universalRequestGr.getValue("primary_task") == data.parentCaseId) {
+            if (universalRequestGr.getValue("needs_resolution_review")) {
+                // On accepting resoultion, UR no longer needs resolution review
+                universalRequestGr.needs_resolution_review = false;
+                universalRequestGr.update();
+            }
+            grCase.get(data.parentCaseId);
+            // move HR case to closed complete state
+            grCase.state = 3;
+            grCase.comments = gs.getMessage("Resolution accepted, request closed");
+            grCase.update();
+            gs.addInfoMessage(gs.getMessage("You've accepted the resolution of this request, and its been closed."));
+        }
+    }
+    if (input && input.action == 'rejectResolution' && data.recordInfo.universal_request) {
+        // Update record only if HR case is the primary task for UR
+        if (universalRequestGr.getValue("primary_task") == data.parentCaseId) {
+            grCase.get(data.parentCaseId);
+            // move HR case to work in progress state
+            grCase.state = 18;
+            grCase.comments = gs.getMessage('[code]<b> Reason for rejection: </b>[/code] {0} ', [input.rejectNote]);
+            grCase.update();
+        }
+    }
+    if (grCase.get(data.parentCaseId)) {
+        var util = new hr_PortalUtil(grCase);
+        data.openForView = util.isOpenedForView();
+        data.isCaseCancellable = checkCaseCancellable(grCase);
+    }
 
-10-24-2025 11:40:09
-Information	x_banun_bunow_si_0	SIGNATURE TESTING Job code found: BBMADR
+    function checkCaseCancellable(hrCase) {
+        //This check has been added keeping in mind the backward compatibility and BR customizations
+        var preventCancelBR = new GlideRecord("sys_script");
+        preventCancelBR.get("499088d873c300105788e1e54cf6a79e");
+        //If BR is active only then prevent case cancellation based on universal_request
+        if (preventCancelBR && preventCancelBR.active && hrCase.universal_request) {
+            return false;
+        }
+        if (!hrCase.active || !data.openForView)
+            return false;
+        var caseOptions = hrCase.hr_service.case_options;
+        var optionsGr = new GlideRecord('sn_hr_core_service_option');
+        optionsGr.get('value', 'UserCannotCancel');
+        if (!gs.nil(caseOptions) && caseOptions.indexOf(String(optionsGr.sys_id)) > -1)
+            return false;
+        return true;
+    }
 
-10-24-2025 11:40:09
-Information	x_banun_bunow_si_0	SIGNATURE TESTING === Authority Comparison Debug ===
+    function setRecordInfo(recordId) {
+        var taskGr = new GlideRecord('sn_hr_core_case');
+        if (taskGr.get(recordId) && taskGr.canRead()) {
+            var util = new hr_PortalUtil(taskGr);
+            var chatParams = util.getChatWidgetParams();
+            data.recordInfo = {};
+            data.recordInfo.isCase = new sn_hr_core.hr_CoreUtils().isCase(taskGr.sys_class_name + '');
+            data.recordInfo.sys_id = String(taskGr.sys_id);
+            data.recordInfo.opened_for = taskGr.getValue("opened_for");
+            data.recordInfo.number = String(taskGr.number);
+            data.recordInfo.sys_class_name = String(taskGr.sys_class_name);
+            data.recordInfo.hr_case_coe = util.getHrCaseCoe(taskGr.sys_id);
+            data.recordInfo.hr_service = String(taskGr.hr_service.name);
+            data.recordInfo.short_desc = String(taskGr.short_description);
+            if (!gs.nil(chatParams))
+                data.recordInfo.chatWidgetParams = chatParams;
+            data.recordInfo.state = taskGr.getValue("state");
+            if (data.recordInfo.isCase && taskGr.universal_request) {
+                data.recordInfo.universal_request = String(taskGr.universal_request);
+                data.recordInfo.ur_number = String(taskGr.universal_request.number);
+                data.recordInfo.ur_short_desc = String(taskGr.universal_request.short_description);
+            }
+        }
+    }
+    //Connect and VA
+    if (GlidePluginManager.isActive("com.sn_hr_virtual_agent"))
+        data.search_text = 'Ask a Question (Template)';
+    else {
+        var util = new hr_PortalUtil();
+        data.search_text = util.getLiveAgentTopicName();
+    }
 
-10-24-2025 11:40:09
-Information	x_banun_bunow_si_0	SIGNATURE TESTING Credit limits query count: 1
+    isChatNeeded();
 
-10-24-2025 11:40:09
-Information	x_banun_bunow_si_0	SIGNATURE TESTING Non-credit limits query count: 1
+    function isChatNeeded() {
+        data.showTab = hr_PortalUtil.askQuestionPropEnabled();
+        if (!data.showTab) {
+            data.isConnectConfigured = false;
+            return;
+        }
+        var util = new hr_PortalUtil();
+        var isConnectConfigured = util.getConnectChatConfiguration(data.recordInfo);
+        if (!isConnectConfigured && !gs.nil(isConnectConfigured)) {
+            data.isConversationActive = util.checkForActiveChat();
+            data.isConnectConfigured = false;
 
-10-24-2025 11:40:09
-Information	x_banun_bunow_si_0	SIGNATURE TESTING Job function description: Consumer and Small Business Banking
+            if (input && input.AskAQuestionClicked && util.isConnectUsed(data.recordInfo.sys_id))
+                gs.addInfoMessage(gs.getMessage("Chat configurations have changed. Your last conversation is saved as additional comments."));
+        } else if (isConnectConfigured)
+            data.isConnectConfigured = true;
+        else
+            data.showTab = false;
 
-10-24-2025 11:40:09
-Information	x_banun_bunow_si_0	SIGNATURE TESTING Found 4 matching job codes
+    }
 
-10-24-2025 11:40:09
-Information	x_banun_bunow_si_0	SIGNATURE TESTING === Authority Comparison Debug ===
-
-10-24-2025 11:40:09
-Information	x_banun_bunow_si_0	SIGNATURE TESTING Non-credit limits query count: 1
-
-10-24-2025 11:40:09
-Information	x_banun_bunow_si_0	SIGNATURE TESTING Job code found: BBMADR
-
-10-24-2025 11:40:09
-Information	x_banun_bunow_si_0	SIGNATURE TESTING Parent job_code: 69acccea1be09a500775a935624bcb54
-
-10-24-2025 11:40:09
-Information	x_banun_bunow_si_0	SIGNATURE TESTING Largest value: 200000000 in field: wire_internal
-
-10-24-2025 11:40:09
-Information	x_banun_bunow_si_0	SIGNATURE TESTING Found 4 matching job codes
-
-10-24-2025 11:40:09
-Information	x_banun_bunow_si_0	SIGNATURE TESTING Job function description: Consumer and Small Business Banking
-
-10-24-2025 11:40:09
-Information	x_banun_bunow_si_0	SIGNATURE TESTING Largest value: 200000000 in field: wire_internal
-
-10-24-2025 11:40:09
-Information	x_banun_bunow_si_0	SIGNATURE TESTING Parent sys_id: 307867911bf032904726c9d6624bcb8a
-
-10-24-2025 11:40:09
-Information	x_banun_bunow_si_0	SIGNATURE TESTING Credit limits query count: 1
-
-10-24-2025 11:40:09
-Information	x_banun_bunow_si_0	SIGNATURE TESTING Parent job_code: 69acccea1be09a500775a935624bcb54
+    data.i18n = {};
+    data.i18n.cancelMsgNoChildren = gs.getMessage('Are you sure you want to cancel this case?');
+    data.i18n.cancelMsgOpenChildren = gs.getMessage(
+        'Are you sure you want to cancel this case? Canceling this case will also close child cases.');
+    data.chatTitle = gs.getMessage('Ask a Question');
+    // Lifecycle events Employee requests
+    var tableName = $sp.getParameter("table");
+    data.caseId = $sp.getParameter("sys_id");
+    var hrCaseGr = new GlideRecord(tableName);
+    var isLEFulfiller = (hrCaseGr.get(data.caseId) && hrCaseGr.hr_service && hrCaseGr.hr_service.fulfillment_type == "lifecycle_event") || (tableName == 'sn_hr_le_case');
+    if (isLEFulfiller) {
+        data.isLECase = true;
+        var empRequestUtil = new sn_hr_le.employeeRequestUtil();
+        data.employeeRequests = empRequestUtil.getEmployeeRequestsForDisplay(data.caseId);
+    }
+    if (data.employeeRequests && data.employeeRequests.length && (data.showTab || data.isCaseCancellable))
+        data.showActionsSeperator = true;
+    //keep track if any action is available for Actions button dropdown list
+    data.isActionAvailable = data.isCaseCancellable || data.showTab || (data.employeeRequests && data.employeeRequests.length);
+})();
