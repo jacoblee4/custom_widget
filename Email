@@ -1,19 +1,28 @@
 (function runMailScript(current, template, email, email_action, event) {
 
-    // Determine if we're on parent or child record and get parent reference
-    var parent;
-    var currentTableName = current.getTableName();
+    // Get the record being approved from document_id (sysapproval_approver table)
+    var documentRecord = current.document_id.getRefRecord();
     
-    if (currentTableName == 'x_banun_bunow_si_0_credit_authority_limits' || 
-        currentTableName == 'x_banun_bunow_si_0_non_credit_authority_limits') {
-        // We're on a child record - get parent from the parent field
-        parent = current.parent.getRefRecord();
-    } else {
-        // We're on the parent record - get it from sysapproval
-        parent = current.sysapproval.getRefRecord();
+    // Validation check for document record
+    if (!documentRecord || !documentRecord.isValidRecord()) {
+        gs.error('Email Script Error: Unable to retrieve document record from sysapproval_approver');
+        return;
     }
     
-    // Validation check
+    // Determine if the document is a parent or child record and get parent reference
+    var parent;
+    var documentTableName = documentRecord.getTableName();
+    
+    if (documentTableName == 'x_banun_bunow_si_0_credit_authority_limits' || 
+        documentTableName == 'x_banun_bunow_si_0_non_credit_authority_limits') {
+        // Document is a child record - get parent from the parent field
+        parent = documentRecord.parent.getRefRecord();
+    } else {
+        // Document is the parent record itself
+        parent = documentRecord;
+    }
+    
+    // Validation check for parent
     if (!parent || !parent.isValidRecord()) {
         gs.error('Email Script Error: Unable to retrieve parent Signature Authority Request record');
         return;
