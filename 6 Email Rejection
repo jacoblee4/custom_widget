@@ -1,24 +1,42 @@
 (function runMailScript(current, template, email, email_action, event) {
     
-    // Get the parent signature authority request
-    var parent = current;
+    // Current is the child record (credit or non-credit limits)
+    var childRecord = current;
     
-    // Validation check
-    if (!parent || !parent.isValidRecord()) {
-        gs.error('Email Script Error: Unable to retrieve Signature Authority Request record');
+    // Validation check for child record
+    if (!childRecord || !childRecord.isValidRecord()) {
+        gs.error('Email Script Error: Unable to retrieve child record');
         return;
+    }
+    
+    // Get the parent record
+    var parent = childRecord.parent.getRefRecord();
+    
+    // Validation check for parent
+    if (!parent || !parent.isValidRecord()) {
+        gs.error('Email Script Error: Unable to retrieve parent Signature Authority Request record');
+        return;
+    }
+    
+    // Determine which type of child record this is
+    var childTableName = childRecord.getTableName();
+    var limitType = '';
+    if (childTableName == 'x_banun_bunow_si_0_credit_authority_limits') {
+        limitType = 'Credit Authority Limits';
+    } else if (childTableName == 'x_banun_bunow_si_0_non_credit_authority_limits') {
+        limitType = 'Non-Credit Authority Limits';
     }
     
     var content = '';
     var instanceURL = gs.getProperty('glide.servlet.uri');
-    var sysId = parent.sys_id.toString();
-    var recordURL = instanceURL + 'now/workspace/signature-authority-workspace/record/x_banun_bunow_si_0_signature_authority_request/' + sysId;
+    var parentSysId = parent.sys_id.toString();
+    var recordURL = instanceURL + 'now/workspace/signature-authority-workspace/record/x_banun_bunow_si_0_signature_authority_request/' + parentSysId;
     
     // Header with rejection notice
     content += '<div style="font-family: Arial, sans-serif; color: #000000; max-width: 800px;">';
     content += '<div style="background-color: #f8d7da; padding: 20px; margin: 20px 0; border-left: 4px solid #dc3545; border-radius: 4px;">';
     content += '<h2 style="color: #dc3545; margin: 0 0 10px 0;"><span style="margin-right: 8px;">⚠️</span>Request Rejected</h2>';
-    content += '<p style="margin: 0; line-height: 1.6; font-size: 14px;">Your Signature Authority Request has been rejected and closed as incomplete. Please review the details below.</p>';
+    content += '<p style="margin: 0; line-height: 1.6; font-size: 14px;">Your Signature Authority Request (' + limitType + ') has been rejected and closed as incomplete. Please review the details below.</p>';
     content += '</div>';
     
     // Request Details Section
@@ -27,6 +45,7 @@
     content += '<table style="width: 100%; border-collapse: collapse;">';
     content += '<tr><td style="padding: 8px; font-weight: bold; width: 200px;">Request Number:</td><td style="padding: 8px;"><a href="' + recordURL + '" style="color: #00aae3; text-decoration: none; font-weight: 600;">' + parent.number + '</a></td></tr>';
     content += '<tr><td style="padding: 8px; font-weight: bold;">Request Type:</td><td style="padding: 8px;">' + parent.request_type.getDisplayValue() + '</td></tr>';
+    content += '<tr><td style="padding: 8px; font-weight: bold;">Limit Type:</td><td style="padding: 8px;">' + limitType + '</td></tr>';
     content += '<tr><td style="padding: 8px; font-weight: bold;">Job Code:</td><td style="padding: 8px;">' + parent.job_code.getDisplayValue() + '</td></tr>';
     
     if (parent.job_code.job_description && parent.job_code.job_description.toString().trim() !== '') {
@@ -42,20 +61,25 @@
     content += '<div style="background-color: #fff3cd; padding: 15px; margin: 20px 0; border-left: 4px solid #ffc107;">';
     content += '<h3 style="color: #856404; margin: 0 0 15px 0; padding-bottom: 10px; border-bottom: 2px solid #ffc107;">Rejection Details</h3>';
     
-    // Get all rejections from approval history
-    var approvalGr = new GlideRecord('sysapproval_approver');
-    approvalGr.addQuery('sysapproval', parent.sys_id);
-    approvalGr.addQuery('state', 'rejected');
-    approvalGr.orderBy('sys_updated_on');
-    approvalGr.query();
+    var hasRejections = false;
     
-    if (approvalGr.hasNext()) {
+    // Check for rejections on the CHILD record first
+    var childApprovalGr = new GlideRecord('sysapproval_approver');
+    childApprovalGr.addQuery('sysapproval', childRecord.sys_id);
+    childApprovalGr.addQuery('state', 'rejected');
+    childApprovalGr.orderBy('sys_updated_on');
+    childApprovalGr.query();
+    
+    if (childApprovalGr.hasNext()) {
+        hasRejections = true;
+        content += '<div style="margin-bottom: 20px;">';
+        content += '<h4 style="color: #856404; margin: 0 0 10px 0; font-size: 14px;">Rejected at ' + limitType + ' Level:</h4>';
         content += '<table style="width: 100%; border-collapse: collapse;">';
         
-        while (approvalGr.next()) {
-            var rejector = approvalGr.approver.getDisplayValue();
-            var rejectionDate = approvalGr.sys_updated_on.getDisplayValue();
-            var comments = approvalGr.comments.toString();
+        while (childApprovalGr.next()) {
+            var rejector = childApprovalGr.approver.getDisplayValue();
+            var rejectionDate = childApprovalGr.sys_updated_on.getDisplayValue();
+            var comments = childApprovalGr.comments.toString();
             
             content += '<tr>';
             content += '<td style="padding: 12px; vertical-align: top; border-bottom: 1px solid #e0e0e0;">';
@@ -76,6 +100,58 @@
         }
         
         content += '</table>';
+        content += '</div>';
+    }
+    
+    // Check for rejections on the PARENT record
+    var parentApprovalGr = new GlideRecord('sysapproval_approver');
+    parentApprovalGr.addQuery('sysapproval', parent.sys_id);
+    parentApprovalGr.addQuery('state', 'rejected');
+    parentApprovalGr.orderBy('sys_updated_on');
+    parentApprovalGr.query();
+    
+    if (parentApprovalGr.hasNext()) {
+        hasRejections = true;
+        
+        if (childApprovalGr.hasNext()) {
+            // If we already showed child rejections, add a separator
+            content += '<div style="border-top: 2px solid #ffc107; margin: 15px 0;"></div>';
+        }
+        
+        content += '<div style="margin-bottom: 20px;">';
+        content += '<h4 style="color: #856404; margin: 0 0 10px 0; font-size: 14px;">Rejected at Parent Request Level:</h4>';
+        content += '<table style="width: 100%; border-collapse: collapse;">';
+        
+        while (parentApprovalGr.next()) {
+            var rejector = parentApprovalGr.approver.getDisplayValue();
+            var rejectionDate = parentApprovalGr.sys_updated_on.getDisplayValue();
+            var comments = parentApprovalGr.comments.toString();
+            
+            content += '<tr>';
+            content += '<td style="padding: 12px; vertical-align: top; border-bottom: 1px solid #e0e0e0;">';
+            content += '<div style="font-weight: bold; color: #000000; margin-bottom: 5px;">Rejected by: ' + rejector + '</div>';
+            content += '<div style="color: #6c757d; font-size: 12px; margin-bottom: 8px;">' + rejectionDate + '</div>';
+            
+            if (comments && comments.trim() !== '') {
+                content += '<div style="background-color: #ffffff; padding: 10px; border-radius: 4px; border: 1px solid #dee2e6;">';
+                content += '<div style="font-weight: bold; color: #495057; font-size: 12px; margin-bottom: 5px;">Comments:</div>';
+                content += '<div style="color: #000000; line-height: 1.5;">' + comments + '</div>';
+                content += '</div>';
+            } else {
+                content += '<div style="color: #6c757d; font-style: italic;">No comments provided</div>';
+            }
+            
+            content += '</td>';
+            content += '</tr>';
+        }
+        
+        content += '</table>';
+        content += '</div>';
+    }
+    
+    // If no rejections found anywhere (shouldn't happen, but just in case)
+    if (!hasRejections) {
+        content += '<p style="color: #856404; font-style: italic;">No rejection details available. The request was closed incomplete without specific rejection comments.</p>';
     }
     
     content += '</div>';
