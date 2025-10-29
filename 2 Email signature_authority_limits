@@ -1,31 +1,53 @@
 (function runMailScript(current, template, email, email_action, event) {
     
-    // Get the record being approved from document_id (sysapproval_approver table)
-    var documentRecord = current.document_id.getRefRecord();
-    
-    // Validation check for document record
-    if (!documentRecord || !documentRecord.isValidRecord()) {
-        gs.error('Email Script Error: Unable to retrieve document record from sysapproval_approver');
-        return;
-    }
-    
-    // Determine if the document is a parent or child record and get parent reference
-    var parent;
-    var documentTableName = documentRecord.getTableName();
+    var documentRecord, parent;
     var showOnlyCredit = false;
     var showOnlyNonCredit = false;
     
-    if (documentTableName == 'x_banun_bunow_si_0_credit_authority_limits') {
-        // Document is a credit limits child record
-        parent = documentRecord.parent.getRefRecord();
-        showOnlyCredit = true;
-    } else if (documentTableName == 'x_banun_bunow_si_0_non_credit_authority_limits') {
-        // Document is a non-credit limits child record
-        parent = documentRecord.parent.getRefRecord();
-        showOnlyNonCredit = true;
+    // Determine context: approval notification (current = sysapproval_approver) or child state change (current = child record)
+    if (current.getTableName() == 'sysapproval_approver') {
+        // This is an approval email - current is sysapproval_approver
+        documentRecord = current.document_id.getRefRecord();
+        
+        // Validation check for document record
+        if (!documentRecord || !documentRecord.isValidRecord()) {
+            gs.error('Email Script Error: Unable to retrieve document record from sysapproval_approver');
+            return;
+        }
+        
+        // Determine if the document is a parent or child record and get parent reference
+        var documentTableName = documentRecord.getTableName();
+        
+        if (documentTableName == 'x_banun_bunow_si_0_credit_authority_limits') {
+            // Document is a credit limits child record
+            parent = documentRecord.parent.getRefRecord();
+            showOnlyCredit = true;
+        } else if (documentTableName == 'x_banun_bunow_si_0_non_credit_authority_limits') {
+            // Document is a non-credit limits child record
+            parent = documentRecord.parent.getRefRecord();
+            showOnlyNonCredit = true;
+        } else {
+            // Document is the parent record itself - show both
+            parent = documentRecord;
+        }
     } else {
-        // Document is the parent record itself - show both
-        parent = documentRecord;
+        // This is a child state change notification - current is the child record
+        var currentTableName = current.getTableName();
+        
+        if (currentTableName == 'x_banun_bunow_si_0_credit_authority_limits') {
+            showOnlyCredit = true;
+        } else if (currentTableName == 'x_banun_bunow_si_0_non_credit_authority_limits') {
+            showOnlyNonCredit = true;
+        }
+        
+        // Validation check for child record
+        if (!current || !current.isValidRecord()) {
+            gs.error('Email Script Error: Unable to retrieve child record');
+            return;
+        }
+        
+        // Get the parent record
+        parent = current.parent.getRefRecord();
     }
     
     // Validation check for parent
