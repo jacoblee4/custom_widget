@@ -1,6 +1,28 @@
 (function runMailScript(current, template, email, email_action, event) {
     
-    var parent = current.sysapproval.getRefRecord();
+    var parent;
+    
+    // Determine context: approval notification (current = sysapproval_approver) or child state change (current = child record)
+    if (current.getTableName() == 'sysapproval_approver') {
+        // This is an approval email - current is sysapproval_approver
+        parent = current.sysapproval.getRefRecord();
+    } else {
+        // This is a child state change notification - current is the child record
+        // Validation check for child record
+        if (!current || !current.isValidRecord()) {
+            gs.error('Email Script Error: Unable to retrieve child record');
+            return;
+        }
+        
+        // Get the parent record
+        parent = current.parent.getRefRecord();
+    }
+    
+    // Validation check for parent
+    if (!parent || !parent.isValidRecord()) {
+        gs.error('Email Script Error: Unable to retrieve parent Signature Authority Request record');
+        return;
+    }
     
     // Function to get value or return empty string
     function safeGetValue(glideRecord, fieldName) {
