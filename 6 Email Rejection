@@ -1,0 +1,103 @@
+(function runMailScript(current, template, email, email_action, event) {
+    
+    // Get the parent signature authority request
+    var parent = current;
+    
+    // Validation check
+    if (!parent || !parent.isValidRecord()) {
+        gs.error('Email Script Error: Unable to retrieve Signature Authority Request record');
+        return;
+    }
+    
+    var content = '';
+    var instanceURL = gs.getProperty('glide.servlet.uri');
+    var sysId = parent.sys_id.toString();
+    var recordURL = instanceURL + 'now/workspace/signature-authority-workspace/record/x_banun_bunow_si_0_signature_authority_request/' + sysId;
+    
+    // Header with rejection notice
+    content += '<div style="font-family: Arial, sans-serif; color: #000000; max-width: 800px;">';
+    content += '<div style="background-color: #f8d7da; padding: 20px; margin: 20px 0; border-left: 4px solid #dc3545; border-radius: 4px;">';
+    content += '<h2 style="color: #dc3545; margin: 0 0 10px 0;"><span style="margin-right: 8px;">⚠️</span>Request Rejected</h2>';
+    content += '<p style="margin: 0; line-height: 1.6; font-size: 14px;">Your Signature Authority Request has been rejected and closed as incomplete. Please review the details below.</p>';
+    content += '</div>';
+    
+    // Request Details Section
+    content += '<div style="background-color: #f5f5f5; padding: 15px; margin: 20px 0; border-left: 4px solid #00aae3;">';
+    content += '<h3 style="color: #00aae3; margin: 0 0 15px 0; padding-bottom: 10px; border-bottom: 2px solid #00aae3;">Request Details</h3>';
+    content += '<table style="width: 100%; border-collapse: collapse;">';
+    content += '<tr><td style="padding: 8px; font-weight: bold; width: 200px;">Request Number:</td><td style="padding: 8px;"><a href="' + recordURL + '" style="color: #00aae3; text-decoration: none; font-weight: 600;">' + parent.number + '</a></td></tr>';
+    content += '<tr><td style="padding: 8px; font-weight: bold;">Request Type:</td><td style="padding: 8px;">' + parent.request_type.getDisplayValue() + '</td></tr>';
+    content += '<tr><td style="padding: 8px; font-weight: bold;">Job Code:</td><td style="padding: 8px;">' + parent.job_code.getDisplayValue() + '</td></tr>';
+    
+    if (parent.job_code.job_description && parent.job_code.job_description.toString().trim() !== '') {
+        content += '<tr><td style="padding: 8px; font-weight: bold;">Job Title:</td><td style="padding: 8px;">' + parent.job_code.job_description + '</td></tr>';
+    }
+    
+    content += '<tr><td style="padding: 8px; font-weight: bold;">Requested For:</td><td style="padding: 8px;">' + parent.requested_for.getDisplayValue() + '</td></tr>';
+    content += '<tr><td style="padding: 8px; font-weight: bold;">Submitted:</td><td style="padding: 8px;">' + parent.sys_created_on.getDisplayValue() + '</td></tr>';
+    content += '</table>';
+    content += '</div>';
+    
+    // Rejection Details Section
+    content += '<div style="background-color: #fff3cd; padding: 15px; margin: 20px 0; border-left: 4px solid #ffc107;">';
+    content += '<h3 style="color: #856404; margin: 0 0 15px 0; padding-bottom: 10px; border-bottom: 2px solid #ffc107;">Rejection Details</h3>';
+    
+    // Get all rejections from approval history
+    var approvalGr = new GlideRecord('sysapproval_approver');
+    approvalGr.addQuery('sysapproval', parent.sys_id);
+    approvalGr.addQuery('state', 'rejected');
+    approvalGr.orderBy('sys_updated_on');
+    approvalGr.query();
+    
+    if (approvalGr.hasNext()) {
+        content += '<table style="width: 100%; border-collapse: collapse;">';
+        
+        while (approvalGr.next()) {
+            var rejector = approvalGr.approver.getDisplayValue();
+            var rejectionDate = approvalGr.sys_updated_on.getDisplayValue();
+            var comments = approvalGr.comments.toString();
+            
+            content += '<tr>';
+            content += '<td style="padding: 12px; vertical-align: top; border-bottom: 1px solid #e0e0e0;">';
+            content += '<div style="font-weight: bold; color: #000000; margin-bottom: 5px;">Rejected by: ' + rejector + '</div>';
+            content += '<div style="color: #6c757d; font-size: 12px; margin-bottom: 8px;">' + rejectionDate + '</div>';
+            
+            if (comments && comments.trim() !== '') {
+                content += '<div style="background-color: #ffffff; padding: 10px; border-radius: 4px; border: 1px solid #dee2e6;">';
+                content += '<div style="font-weight: bold; color: #495057; font-size: 12px; margin-bottom: 5px;">Comments:</div>';
+                content += '<div style="color: #000000; line-height: 1.5;">' + comments + '</div>';
+                content += '</div>';
+            } else {
+                content += '<div style="color: #6c757d; font-style: italic;">No comments provided</div>';
+            }
+            
+            content += '</td>';
+            content += '</tr>';
+        }
+        
+        content += '</table>';
+    }
+    
+    content += '</div>';
+    
+    // Next Steps Section
+    content += '<div style="background-color: #d1ecf1; padding: 15px; margin: 20px 0; border-left: 4px solid #0c5460; border-radius: 4px;">';
+    content += '<h3 style="color: #0c5460; margin: 0 0 10px 0;">Next Steps</h3>';
+    content += '<ul style="margin: 10px 0; padding-left: 25px; line-height: 1.8;">';
+    content += '<li>Review the rejection comments above</li>';
+    content += '<li>Address the concerns raised by the approver(s)</li>';
+    content += '<li>Submit a new request with the necessary corrections</li>';
+    content += '<li>Contact the approver if you need clarification</li>';
+    content += '</ul>';
+    content += '</div>';
+    
+    // Footer with link
+    content += '<div style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-radius: 4px; text-align: center;">';
+    content += '<a href="' + recordURL + '" style="display: inline-block; padding: 12px 30px; background-color: #00aae3; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: 600;">View Request Details</a>';
+    content += '</div>';
+    
+    content += '</div>';
+    
+    template.print(content);
+    
+})(current, template, email, email_action, event);
