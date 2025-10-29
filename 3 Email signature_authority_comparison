@@ -1,26 +1,39 @@
-
 (function runMailScript(current, template, email, email_action, event) {
 
-    // Get the record being approved from
-    var documentRecord = current.document_id.getRefRecord();
+    var documentRecord, parent;
     
-    // Validation check for document record
-    if (!documentRecord || !documentRecord.isValidRecord()) {
-        gs.error('Email Script Error: Unable to retrieve document record from sysapproval_approver');
-        return;
-    }
-    
-    // Determine if the document is a parent or child record and get parent reference
-    var parent;
-    var documentTableName = documentRecord.getTableName();
-    
-    if (documentTableName == 'x_banun_bunow_si_0_credit_authority_limits' || 
-        documentTableName == 'x_banun_bunow_si_0_non_credit_authority_limits') {
-        // Document is a child record - get parent from the parent field
-        parent = documentRecord.parent.getRefRecord();
+    // Determine context: approval notification (current = sysapproval_approver) or child state change (current = child record)
+    if (current.getTableName() == 'sysapproval_approver') {
+        // This is an approval email - current is sysapproval_approver
+        documentRecord = current.document_id.getRefRecord();
+        
+        // Validation check for document record
+        if (!documentRecord || !documentRecord.isValidRecord()) {
+            gs.error('Email Script Error: Unable to retrieve document record from sysapproval_approver');
+            return;
+        }
+        
+        // Determine if the document is a parent or child record and get parent reference
+        var documentTableName = documentRecord.getTableName();
+        
+        if (documentTableName == 'x_banun_bunow_si_0_credit_authority_limits' || 
+            documentTableName == 'x_banun_bunow_si_0_non_credit_authority_limits') {
+            // Document is a child record - get parent from the parent field
+            parent = documentRecord.parent.getRefRecord();
+        } else {
+            // Document is the parent record itself
+            parent = documentRecord;
+        }
     } else {
-        // Document is the parent record itself
-        parent = documentRecord;
+        // This is a child state change notification - current is the child record
+        // Validation check for child record
+        if (!current || !current.isValidRecord()) {
+            gs.error('Email Script Error: Unable to retrieve child record');
+            return;
+        }
+        
+        // Get the parent record
+        parent = current.parent.getRefRecord();
     }
     
     // Validation check for parent
