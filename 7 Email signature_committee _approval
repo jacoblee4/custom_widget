@@ -1,0 +1,121 @@
+(function runMailScript(current, template, email, email_action, event) {
+    
+    // Current is the child record (non-credit limits)
+    var childRecord = current;
+    
+    // Validation check for child record
+    if (!childRecord || !childRecord.isValidRecord()) {
+        gs.error('Email Script Error: Unable to retrieve child record');
+        return;
+    }
+    
+    // Get the parent record
+    var parent = childRecord.parent.getRefRecord();
+    
+    // Validation check for parent
+    if (!parent || !parent.isValidRecord()) {
+        gs.error('Email Script Error: Unable to retrieve parent Signature Authority Request record');
+        return;
+    }
+    
+    var content = '';
+    var instanceURL = gs.getProperty('glide.servlet.uri');
+    var parentSysId = parent.sys_id.toString();
+    var recordURL = instanceURL + 'now/workspace/signature-authority-workspace/record/x_banun_bunow_si_0_signature_authority_request/' + parentSysId;
+    
+    content += '<div style="font-family: Arial, sans-serif; color: #000000; max-width: 800px;">';
+    
+    // Approval Details Section
+    content += '<div style="background-color: #d4edda; padding: 15px; margin: 20px 0; border-left: 4px solid #28a745;">';
+    content += '<h3 style="color: #155724; margin: 0 0 15px 0; padding-bottom: 10px; border-bottom: 2px solid #28a745;">Committee Approval Details</h3>';
+    
+    var hasApprovals = false;
+    
+    // Get all approvals for the non-credit child record
+    var approvalGr = new GlideRecord('sysapproval_approver');
+    approvalGr.addQuery('sysapproval', childRecord.sys_id);
+    approvalGr.addQuery('state', 'approved');
+    approvalGr.orderByDesc('sys_updated_on'); // Most recent first
+    approvalGr.query();
+    
+    if (approvalGr.hasNext()) {
+        hasApprovals = true;
+        content += '<div style="margin-bottom: 20px;">';
+        content += '<h4 style="color: #155724; margin: 0 0 10px 0; font-size: 14px;">Committee Members Who Approved:</h4>';
+        content += '<table style="width: 100%; border-collapse: collapse;">';
+        
+        while (approvalGr.next()) {
+            var approver = approvalGr.approver.getDisplayValue();
+            var approvalDate = approvalGr.sys_updated_on.getDisplayValue();
+            var approverSysId = approvalGr.sys_id.toString();
+            
+            content += '<tr>';
+            content += '<td style="padding: 12px; vertical-align: top; border-bottom: 1px solid #c3e6cb;">';
+            content += '<div style="font-weight: bold; color: #000000; margin-bottom: 5px;">✓ Approved by: ' + approver + '</div>';
+            content += '<div style="color: #6c757d; font-size: 12px; margin-bottom: 8px;">' + approvalDate + '</div>';
+            
+            // Get comments from journal entries (activity feed)
+            var journalGr = new GlideRecord('sys_journal_field');
+            journalGr.addQuery('element_id', approverSysId);
+            journalGr.addQuery('element', 'comments');
+            journalGr.orderByDesc('sys_created_on');
+            journalGr.setLimit(1);
+            journalGr.query();
+            
+            var comments = '';
+            if (journalGr.next()) {
+                comments = journalGr.getValue('value') || '';
+            }
+            
+            if (comments && comments.trim() !== '') {
+                content += '<div style="background-color: #ffffff; padding: 10px; border-radius: 4px; border: 1px solid #dee2e6;">';
+                content += '<div style="font-weight: bold; color: #495057; font-size: 12px; margin-bottom: 5px;">Comments:</div>';
+                content += '<div style="color: #000000; line-height: 1.5;">' + comments.replace(/\n/g, '<br/>') + '</div>';
+                content += '</div>';
+            } else {
+                content += '<div style="color: #6c757d; font-style: italic;">No comments provided</div>';
+            }
+            
+            content += '</td>';
+            content += '</tr>';
+        }
+        
+        content += '</table>';
+        content += '</div>';
+    }
+    
+    // Get approval stats
+    var totalApprovers = new GlideRecord('sysapproval_approver');
+    totalApprovers.addQuery('sysapproval', childRecord.sys_id);
+    totalApprovers.query();
+    var totalCount = totalApprovers.getRowCount();
+    
+    var approvedCount = new GlideRecord('sysapproval_approver');
+    approvedCount.addQuery('sysapproval', childRecord.sys_id);
+    approvedCount.addQuery('state', 'approved');
+    approvedCount.query();
+    var approvedCountNum = approvedCount.getRowCount();
+    
+    if (hasApprovals) {
+        content += '<div style="margin-top: 15px; padding: 10px; background-color: #ffffff; border-radius: 4px; border: 1px solid #28a745;">';
+        content += '<div style="font-weight: bold; color: #155724; font-size: 13px;">Approval Status: ' + approvedCountNum + ' of ' + totalCount + ' committee members have approved</div>';
+        content += '</div>';
+    }
+    
+    // If no approvals found (shouldn't happen, but just in case)
+    if (!hasApprovals) {
+        content += '<p style="color: #155724; font-style: italic;">No approval details available.</p>';
+    }
+    
+    content += '</div>';
+    
+    // Footer with link
+    content += '<div style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-radius: 4px; text-align: center;">';
+    content += '<a href="' + recordURL + '" style="display: inline-block; padding: 12px 30px; background-color: #00aae3; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: 600;">View Request Details</a>';
+    content += '</div>';
+    
+    content += '</div>';
+    
+    template.print(content);
+    
+})(current, template, email, email_action, event);
