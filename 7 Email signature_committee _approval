@@ -109,12 +109,6 @@
     
     content += '</div>';
     
-    // Footer with link
-    content += '<div style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-radius: 4px; text-align: center;">';
-    content += '<a href="' + recordURL + '" style="display: inline-block; padding: 12px 30px; background-color: #00aae3; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: 600;">View Request Details</a>';
-    content += '</div>';
-    
-    content += '</div>';
     
     template.print(content);
     
