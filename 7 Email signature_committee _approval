@@ -35,8 +35,8 @@
     // Order by: approved first, then rejected, then not_required, and within each group by most recent first
     var approvalGr = new GlideRecord('sysapproval_approver');
     approvalGr.addQuery('sysapproval', childRecord.sys_id);
-    approvalGr.addQuery('state', 'NOT IN', 'requested,pending');
-    approvalGr.orderBy('state'); // This will order: approved, not_required, rejected alphabetically
+	approvalGr.addEncodedQuery('stateINapproved,rejected,not_required');
+    approvalGr.orderBy('state');
     approvalGr.orderByDesc('sys_updated_on');
     approvalGr.query();
     
