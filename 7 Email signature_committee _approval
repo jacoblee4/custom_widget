@@ -108,26 +108,29 @@
             content += '<div style="font-weight: bold; color: ' + statusColor + '; margin-bottom: 5px;">' + icon + ' ' + stateDisplay + ' by: ' + approver + '</div>';
             content += '<div style="color: #6c757d; font-size: 12px; margin-bottom: 8px;">' + approvalDate + '</div>';
             
-            // Get comments from journal entries (activity feed)
-            var journalGr = new GlideRecord('sys_journal_field');
-            journalGr.addQuery('element_id', approverSysId);
-            journalGr.addQuery('element', 'comments');
-            journalGr.orderByDesc('sys_created_on');
-            journalGr.setLimit(1);
-            journalGr.query();
-            
-            var comments = '';
-            if (journalGr.next()) {
-                comments = journalGr.getValue('value') || '';
-            }
-            
-            if (comments && comments.trim() !== '') {
-                content += '<div style="background-color: #ffffff; padding: 10px; border-radius: 4px; border: 1px solid #dee2e6;">';
-                content += '<div style="font-weight: bold; color: #495057; font-size: 12px; margin-bottom: 5px;">Comments:</div>';
-                content += '<div style="color: #000000; line-height: 1.5;">' + comments.replace(/\n/g, '<br/>') + '</div>';
-                content += '</div>';
-            } else {
-                content += '<div style="color: #6c757d; font-style: italic;">No comments provided</div>';
+            // Only show comments for approved or rejected (not for not_required)
+            if (state === 'approved' || state === 'rejected') {
+                // Get comments from journal entries (activity feed)
+                var journalGr = new GlideRecord('sys_journal_field');
+                journalGr.addQuery('element_id', approverSysId);
+                journalGr.addQuery('element', 'comments');
+                journalGr.orderByDesc('sys_created_on');
+                journalGr.setLimit(1);
+                journalGr.query();
+                
+                var comments = '';
+                if (journalGr.next()) {
+                    comments = journalGr.getValue('value') || '';
+                }
+                
+                if (comments && comments.trim() !== '') {
+                    content += '<div style="background-color: #ffffff; padding: 10px; border-radius: 4px; border: 1px solid #dee2e6;">';
+                    content += '<div style="font-weight: bold; color: #495057; font-size: 12px; margin-bottom: 5px;">Comments:</div>';
+                    content += '<div style="color: #000000; line-height: 1.5;">' + comments.replace(/\n/g, '<br/>') + '</div>';
+                    content += '</div>';
+                } else {
+                    content += '<div style="color: #6c757d; font-style: italic;">No comments provided</div>';
+                }
             }
             
             content += '</td>';
