@@ -1,5 +1,3 @@
-x_banun_bunow_si_0.bunow.ormc_committee
-
 (function runMailScript(current, template, email, email_action, event) {
     
     // Current is the child record (non-credit limits)
@@ -33,11 +31,41 @@ x_banun_bunow_si_0.bunow.ormc_committee
     
     var hasApprovals = false;
     
+    // Get the ORMC committee group sys_id from system property
+    var ormcCommitteeGroupId = gs.getProperty('x_banun_bunow_si_0.bunow.ormc_committee');
+    
+    if (!ormcCommitteeGroupId) {
+        gs.error('Email Script Error: ORMC Committee group system property not configured');
+        content += '<p style="color: #dc3545; font-style: italic;">Error: Committee group configuration not found.</p>';
+        content += '</div>';
+        template.print(content);
+        return;
+    }
+    
+    // Get all members of the ORMC committee group
+    var groupMemberIds = [];
+    var groupMemberGr = new GlideRecord('sys_user_grmember');
+    groupMemberGr.addQuery('group', ormcCommitteeGroupId);
+    groupMemberGr.query();
+    
+    while (groupMemberGr.next()) {
+        groupMemberIds.push(groupMemberGr.user.toString());
+    }
+    
+    if (groupMemberIds.length === 0) {
+        gs.warn('Email Script Warning: No members found in ORMC Committee group');
+        content += '<p style="color: #6c757d; font-style: italic;">No committee members found in the configured group.</p>';
+        content += '</div>';
+        template.print(content);
+        return;
+    }
+    
     // Get all approvals for the non-credit child record (exclude pending/requested states)
-    // Order by: approved first, then rejected, then not_required, and within each group by most recent first
+    // Only include approvals from ORMC committee members
     var approvalGr = new GlideRecord('sysapproval_approver');
     approvalGr.addQuery('sysapproval', childRecord.sys_id);
-	approvalGr.addEncodedQuery('stateINapproved,rejected,not_required');
+    approvalGr.addEncodedQuery('stateINapproved,rejected,not_required');
+    approvalGr.addQuery('approver', 'IN', groupMemberIds.join(','));
     approvalGr.orderBy('state');
     approvalGr.orderByDesc('sys_updated_on');
     approvalGr.query();
