@@ -70,7 +70,6 @@
     if (approvals.length > 0) {
         hasApprovals = true;
         content += '<div style="margin-bottom: 20px;">';
-        content += '<h4 style="color: #495057; margin: 0 0 10px 0; font-size: 14px;">Committee Member Responses:</h4>';
         content += '<table style="width: 100%; border-collapse: collapse;">';
         
         for (var i = 0; i < approvals.length; i++) {
