@@ -1260,31 +1260,31 @@ api.controller = function($scope, $timeout, spUtil) {
     }
 
     // Group limits by job function
-    function groupLimitsByFunction() {
-        var groups = {};
-        
-        c.limits.forEach(function(limit) {
-            var funcKey = limit.job_function || 'No Job Function';
-            if (!groups[funcKey]) {
-                groups[funcKey] = {
-                    job_function: limit.job_function,
-                    limits: []
-                };
-            }
-            groups[funcKey].limits.push(limit);
-        });
+function groupLimitsByFunction() {
+    var groups = {};
+    
+    c.limits.forEach(function(limit) {
+        var funcKey = limit.job_function || 'No Job Function';
+        if (!groups[funcKey]) {
+            groups[funcKey] = {
+                job_function: limit.job_function || 'No Job Function',
+                limits: []
+            };
+        }
+        groups[funcKey].limits.push(limit);
+    });
 
-        // Convert to array and sort by function name
-        c.groupedLimits = Object.keys(groups).sort().map(function(key) {
-            return groups[key];
-        });
+    // Convert to array and sort by function name
+    c.groupedLimits = Object.keys(groups).sort().map(function(key) {
+        return groups[key];
+    });
 
-        // Calculate total records
-        c.totalRecords = c.limits.length;
-        
-        // Update pagination
-        c.totalPages = Math.ceil(c.groupedLimits.length / c.pageSize);
-    }
+    // Calculate total records
+    c.totalRecords = c.limits.length;
+    
+    // Update pagination based on groups
+    c.totalPages = Math.ceil(c.groupedLimits.length / c.pageSize);
+}
 
     // Format amount for display
     c.formatAmount = function(value) {
