@@ -933,11 +933,6 @@
   }
 }
 
-
-<!-- ============================================ -->
-<!-- SERVER SCRIPT (NO CHANGES) -->
-<!-- ============================================ -->
-
 <!-- ============================================ -->
 <!-- SERVER SCRIPT -->
 <!-- ============================================ -->
@@ -950,6 +945,8 @@
         var searchType = input.search_type;
         var searchValue = input.search_value;
         var results = [];
+
+        gs.info('SIGNATURE TESTING - lookupReference called with type: ' + searchType + ', value: ' + searchValue);
 
         if (searchType === 'job_code') {
             var gr = new GlideRecord('x_banun_rbac_job_code');
@@ -1027,6 +1024,7 @@
             }
         }
 
+        gs.info('SIGNATURE TESTING - lookupReference found ' + results.length + ' results');
         data.results = results;
         return;
     }
@@ -1036,6 +1034,8 @@
         var searchValue = input.search_value;
         var limitType = input.limit_type;
         var minAmount = input.min_amount;
+
+        gs.info('SIGNATURE TESTING - searchLimits called with type: ' + searchType + ', value: ' + searchValue);
 
         var limits = [];
 
@@ -1063,14 +1063,17 @@
                     if (jobCodeGr.next()) {
                         gr.addQuery('job_code', jobCodeGr.getUniqueValue());
                     } else {
+                        gs.info('SIGNATURE TESTING - No job code found for employee job code: ' + userJobCode);
                         data.limits = [];
                         return;
                     }
                 } else {
+                    gs.info('SIGNATURE TESTING - Employee has no job code');
                     data.limits = [];
                     return;
                 }
             } else {
+                gs.info('SIGNATURE TESTING - Employee not found');
                 data.limits = [];
                 return;
             }
@@ -1085,12 +1088,16 @@
         gr.orderBy('job_code.job_code');
         gr.query();
 
+        gs.info('SIGNATURE TESTING - Authority limits query returned ' + gr.getRowCount() + ' records');
+
         function getIntValue(record, fieldName) {
             var val = record.getValue(fieldName);
             return val ? val.toString() : '0';
         }
 
+        var recordCount = 0;
         while (gr.next()) {
+            recordCount++;
             var jobCodeSysId = gr.getValue('job_code');
             var jobCodeDisplay = '';
             var jobTitle = '';
@@ -1101,6 +1108,12 @@
                 jobCodeDisplay = jobCodeGr.getValue('job_code') || '';
                 jobTitle = jobCodeGr.getValue('job_description') || '';
                 jobFunctionDesc = jobCodeGr.getValue('job_function_description') || '';
+                
+                if (recordCount <= 3) { // Log first 3 records
+                    gs.info('SIGNATURE TESTING - Record ' + recordCount + ' - Job Code: ' + jobCodeDisplay + ', Title: ' + jobTitle + ', Function: ' + jobFunctionDesc);
+                }
+            } else {
+                gs.info('SIGNATURE TESTING - Could not retrieve job code details for sys_id: ' + jobCodeSysId);
             }
 
             var limit = {
@@ -1133,10 +1146,10 @@
             limits.push(limit);
         }
 
+        gs.info('SIGNATURE TESTING - Total limits added to array: ' + limits.length);
         data.limits = limits;
     }
 })();
-
 
 <!-- ============================================ -->
 <!-- CLIENT CONTROLLER -->
@@ -1261,15 +1274,23 @@ api.controller = function($scope, $timeout, spUtil) {
 
     // Group limits by job function
 function groupLimitsByFunction() {
+    console.log('SIGNATURE TESTING - groupLimitsByFunction called with ' + c.limits.length + ' limits');
+    
     var groups = {};
     
-    c.limits.forEach(function(limit) {
+    c.limits.forEach(function(limit, index) {
         var funcKey = limit.job_function || 'No Job Function';
+        
+        if (index < 3) { // Log first 3 for debugging
+            console.log('SIGNATURE TESTING - Limit ' + index + ': Job Code=' + limit.job_code_display + ', Function=' + limit.job_function + ', FuncKey=' + funcKey);
+        }
+        
         if (!groups[funcKey]) {
             groups[funcKey] = {
                 job_function: limit.job_function || 'No Job Function',
                 limits: []
             };
+            console.log('SIGNATURE TESTING - Created new group: ' + funcKey);
         }
         groups[funcKey].limits.push(limit);
     });
@@ -1284,6 +1305,11 @@ function groupLimitsByFunction() {
     
     // Update pagination based on groups
     c.totalPages = Math.ceil(c.groupedLimits.length / c.pageSize);
+    
+    console.log('SIGNATURE TESTING - Created ' + c.groupedLimits.length + ' groups');
+    console.log('SIGNATURE TESTING - Total records: ' + c.totalRecords);
+    console.log('SIGNATURE TESTING - Total pages: ' + c.totalPages);
+    console.log('SIGNATURE TESTING - Groups:', c.groupedLimits);
 }
 
     // Format amount for display
