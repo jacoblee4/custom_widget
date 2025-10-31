@@ -1547,15 +1547,19 @@ function groupLimitsByFunction() {
             $timeout(function() {
                 c.limits = response.data.limits || [];
                 
-                // Sort and group
-                sortLimits();
-                groupLimitsByFunction();
-
- console.log('SIGNATURE TESTING - After grouping, groupedLimits:', c.groupedLimits);
+               // Sort and group
+        sortLimits();
+        groupLimitsByFunction();
+        
+        console.log('SIGNATURE TESTING - After grouping, groupedLimits:', c.groupedLimits);
         console.log('SIGNATURE TESTING - Current page groups:', c.getCurrentPageGroups());
         
-                c.currentPage = 1;
-                c.loading = false;
+        c.currentPage = 1;
+        c.loading = false;
+        
+        console.log('SIGNATURE TESTING - c.loading:', c.loading);
+        console.log('SIGNATURE TESTING - c.groupedLimits.length:', c.groupedLimits.length);
+        console.log('SIGNATURE TESTING - Should show table:', (!c.loading && c.groupedLimits.length > 0));
 
                 $timeout(function() {
                     setupColumnFilters();
