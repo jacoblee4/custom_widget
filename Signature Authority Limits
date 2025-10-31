@@ -1174,7 +1174,7 @@ api.controller = function($scope, $timeout, spUtil) {
 
     // Pagination
     c.currentPage = 1;
-    c.pageSize = 5; // Groups per page
+    c.pageSize = 50; // Groups per page
     c.totalPages = 1;
 
     // Reference field dropdown state
@@ -1550,7 +1550,10 @@ function groupLimitsByFunction() {
                 // Sort and group
                 sortLimits();
                 groupLimitsByFunction();
-                
+
+ console.log('SIGNATURE TESTING - After grouping, groupedLimits:', c.groupedLimits);
+        console.log('SIGNATURE TESTING - Current page groups:', c.getCurrentPageGroups());
+        
                 c.currentPage = 1;
                 c.loading = false;
 
