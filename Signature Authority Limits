@@ -90,19 +90,20 @@
   </div>
 
   <!-- No Results Message -->
-  <div ng-if="!c.loading && c.searchPerformed && c.groupedLimits.length === 0" class="alert alert-info">
+  <div ng-if="!c.loading && c.searchPerformed && c.limits.length === 0" class="alert alert-info">
     <i class="fa fa-info-circle"></i>
     No authority limits found matching your search criteria.
   </div>
 
   <!-- Results Table -->
-  <div ng-if="!c.loading && c.groupedLimits.length > 0" class="results-container">
+  <div ng-if="!c.loading && c.limits.length > 0" class="results-container">
     <div class="results-header">
       <h4>
         <i class="fa fa-list"></i>
         Authority Limits
-        <span class="results-count">({{c.totalRecords}} total)</span>
+        <span class="results-count">({{c.limits.length}} total)</span>
       </h4>
+
 
       <div class="column-filter">
         <span class="filter-label">Show Columns:</span>
@@ -121,7 +122,7 @@
       <table class="limits-table">
         <thead>
           <tr>
-            <th colspan="2" class="section-header job-info-header">
+            <th colspan="3" class="section-header job-info-header">
               <i class="fa fa-briefcase header-icon"></i>Job Information
             </th>
             <th colspan="10" class="section-header non-credit-header">
@@ -133,172 +134,83 @@
           </tr>
           <tr>
             <!-- Job Info Columns -->
-            <th class="sticky-col sortable-header" ng-click="c.sortBy('job_code_display')">
-              <span class="header-content">
-                Job Code
-                <i class="fa sort-icon" ng-class="c.getSortIcon('job_code_display')"></i>
-              </span>
-            </th>
-            <th class="sortable-header" ng-click="c.sortBy('job_title')">
-              <span class="header-content">
-                Job Title
-                <i class="fa sort-icon" ng-class="c.getSortIcon('job_title')"></i>
-              </span>
-            </th>
+            <th class="sticky-col">Job Code</th>
+            <th>Job Title</th>
+            <th>Job Function</th>
 
-            <!-- Non-Credit Columns -->
-            <th class="non-credit-col sortable-header" ng-click="c.sortBy('disbursement_ach')">
-              <span class="header-content">
-                ACH
-                <i class="fa sort-icon" ng-class="c.getSortIcon('disbursement_ach')"></i>
-              </span>
-            </th>
-            <th class="non-credit-col sortable-header" ng-click="c.sortBy('disbursement_wire_transfer_internal')">
-              <span class="header-content">
-                Wire Internal
-                <i class="fa sort-icon" ng-class="c.getSortIcon('disbursement_wire_transfer_internal')"></i>
-              </span>
-            </th>
-            <th class="non-credit-col sortable-header" ng-click="c.sortBy('disbursement_wire_transfer_external')">
-              <span class="header-content">
-                Wire External
-                <i class="fa sort-icon" ng-class="c.getSortIcon('disbursement_wire_transfer_external')"></i>
-              </span>
-            </th>
-            <th class="non-credit-col sortable-header" ng-click="c.sortBy('disbursement_official_checks_internal')">
-              <span class="header-content">
-                Checks Internal
-                <i class="fa sort-icon" ng-class="c.getSortIcon('disbursement_official_checks_internal')"></i>
-              </span>
-            </th>
-            <th class="non-credit-col sortable-header" ng-click="c.sortBy('disbursement_official_checks_external')">
-              <span class="header-content">
-                Checks External
-                <i class="fa sort-icon" ng-class="c.getSortIcon('disbursement_official_checks_external')"></i>
-              </span>
-            </th>
-            <th class="non-credit-col sortable-header" ng-click="c.sortBy('check_cashing_on_us')">
-              <span class="header-content">
-                Check Cash On-Us
-                <i class="fa sort-icon" ng-class="c.getSortIcon('check_cashing_on_us')"></i>
-              </span>
-            </th>
-            <th class="non-credit-col sortable-header" ng-click="c.sortBy('check_cashing_not_on_us')">
-              <span class="header-content">
-                Check Cash Not On-Us
-                <i class="fa sort-icon" ng-class="c.getSortIcon('check_cashing_not_on_us')"></i>
-              </span>
-            </th>
-            <th class="non-credit-col sortable-header" ng-click="c.sortBy('remote_deposit')">
-              <span class="header-content">
-                Remote Deposit
-                <i class="fa sort-icon" ng-class="c.getSortIcon('remote_deposit')"></i>
-              </span>
-            </th>
-            <th class="non-credit-col sortable-header" ng-click="c.sortBy('treasury_solutions_company_wire_limits')">
-              <span class="header-content">
-                Treasury Solutions
-                <i class="fa sort-icon" ng-class="c.getSortIcon('treasury_solutions_company_wire_limits')"></i>
-              </span>
-            </th>
-            <th class="non-credit-col sortable-header" ng-click="c.sortBy('fx_wire_limits')">
-              <span class="header-content">
-                FX Wire
-                <i class="fa sort-icon" ng-class="c.getSortIcon('fx_wire_limits')"></i>
-              </span>
-            </th>
+            <!-- Non-Credit Columns (Internal first, then External) -->
+            <th class="non-credit-col">ACH</th>
+            <th class="non-credit-col">Wire Internal</th>
+            <th class="non-credit-col">Wire External</th>
+            <th class="non-credit-col">Checks Internal</th>
+            <th class="non-credit-col">Checks External</th>
+            <th class="non-credit-col">Check Cash On-Us</th>
+            <th class="non-credit-col">Check Cash Not On-Us</th>
+            <th class="non-credit-col">Remote Deposit</th>
+            <th class="non-credit-col">Treasury Solutions</th>
+            <th class="non-credit-col">FX Wire</th>
 
-            <!-- Credit Columns -->
-            <th class="credit-col sortable-header" ng-click="c.sortBy('overdraft_internal_accounts')">
-              <span class="header-content">
-                Overdraft Internal
-                <i class="fa sort-icon" ng-class="c.getSortIcon('overdraft_internal_accounts')"></i>
-              </span>
-            </th>
-            <th class="credit-col sortable-header" ng-click="c.sortBy('overdraft_external_accounts')">
-              <span class="header-content">
-                Overdraft External
-                <i class="fa sort-icon" ng-class="c.getSortIcon('overdraft_external_accounts')"></i>
-              </span>
-            </th>
-            <th class="credit-col sortable-header" ng-click="c.sortBy('unavailable_funds_internal_accounts')">
-              <span class="header-content">
-                Unavailable Internal
-                <i class="fa sort-icon" ng-class="c.getSortIcon('unavailable_funds_internal_accounts')"></i>
-              </span>
-            </th>
-            <th class="credit-col sortable-header" ng-click="c.sortBy('unavailable_funds_external_accounts')">
-              <span class="header-content">
-                Unavailable External
-                <i class="fa sort-icon" ng-class="c.getSortIcon('unavailable_funds_external_accounts')"></i>
-              </span>
-            </th>
+            <!-- Credit Columns (Internal first, then External) -->
+            <th class="credit-col">Overdraft Internal</th>
+            <th class="credit-col">Overdraft External</th>
+            <th class="credit-col">Unavailable Internal</th>
+            <th class="credit-col">Unavailable External</th>
           </tr>
         </thead>
         <tbody>
-          <ng-container ng-repeat="group in c.getCurrentPageGroups()">
-            <!-- Job Function Header Row -->
-            <tr class="job-function-row">
-              <td colspan="16" class="job-function-cell">
-                <i class="fa fa-folder-open"></i>
-                <strong>{{group.job_function || 'No Job Function'}}</strong>
-                <span class="group-count">({{group.limits.length}} job codes)</span>
-              </td>
-            </tr>
-            <!-- Limits in this group -->
-            <tr ng-repeat="limit in group.limits" ng-class="{'highlight-row': limit.highlighted}">
-              <td class="sticky-col job-code-cell">
-                <strong>{{limit.job_code_display}}</strong>
-              </td>
-              <td class="job-info-cell job-title-cell">{{limit.job_title || '-'}}</td>
+          <tr ng-repeat="limit in c.getCurrentPageLimits()" ng-class="{'highlight-row': limit.highlighted}">
+            <td class="sticky-col job-code-cell">
+              <strong>{{limit.job_code_display}}</strong>
+            </td>
+            <td class="job-info-cell">{{limit.job_title || '-'}}</td>
+            <td class="job-info-cell">{{limit.job_function || '-'}}</td>
 
-              <!-- Non-Credit Values -->
-              <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_ach'}">
-                {{c.formatAmount(limit.disbursement_ach)}}
-              </td>
-              <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_wire_transfer_internal'}">
-                {{c.formatAmount(limit.disbursement_wire_transfer_internal)}}
-              </td>
-              <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_wire_transfer_external'}">
-                {{c.formatAmount(limit.disbursement_wire_transfer_external)}}
-              </td>
-              <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_official_checks_internal'}">
-                {{c.formatAmount(limit.disbursement_official_checks_internal)}}
-              </td>
-              <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_official_checks_external'}">
-                {{c.formatAmount(limit.disbursement_official_checks_external)}}
-              </td>
-              <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'check_cashing_on_us'}">
-                {{c.formatAmount(limit.check_cashing_on_us)}}
-              </td>
-              <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'check_cashing_not_on_us'}">
-                {{c.formatAmount(limit.check_cashing_not_on_us)}}
-              </td>
-              <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'remote_deposit'}">
-                {{c.formatAmount(limit.remote_deposit)}}
-              </td>
-              <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'treasury_solutions_company_wire_limits'}">
-                {{c.formatAmount(limit.treasury_solutions_company_wire_limits)}}
-              </td>
-              <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'fx_wire_limits'}">
-                {{c.formatAmount(limit.fx_wire_limits)}}
-              </td>
+            <!-- Non-Credit Values (Internal first, then External) -->
+            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_ach'}">
+              {{c.formatAmount(limit.disbursement_ach)}}
+            </td>
+            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_wire_transfer_internal'}">
+              {{c.formatAmount(limit.disbursement_wire_transfer_internal)}}
+            </td>
+            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_wire_transfer_external'}">
+              {{c.formatAmount(limit.disbursement_wire_transfer_external)}}
+            </td>
+            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_official_checks_internal'}">
+              {{c.formatAmount(limit.disbursement_official_checks_internal)}}
+            </td>
+            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_official_checks_external'}">
+              {{c.formatAmount(limit.disbursement_official_checks_external)}}
+            </td>
+            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'check_cashing_on_us'}">
+              {{c.formatAmount(limit.check_cashing_on_us)}}
+            </td>
+            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'check_cashing_not_on_us'}">
+              {{c.formatAmount(limit.check_cashing_not_on_us)}}
+            </td>
+            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'remote_deposit'}">
+              {{c.formatAmount(limit.remote_deposit)}}
+            </td>
+            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'treasury_solutions_company_wire_limits'}">
+              {{c.formatAmount(limit.treasury_solutions_company_wire_limits)}}
+            </td>
+            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'fx_wire_limits'}">
+              {{c.formatAmount(limit.fx_wire_limits)}}
+            </td>
 
-              <!-- Credit Values -->
-              <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.highlightField === 'overdraft_internal_accounts'}">
-                {{c.formatAmount(limit.overdraft_internal_accounts)}}
-              </td>
-              <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.highlightField === 'overdraft_external_accounts'}">
-                {{c.formatAmount(limit.overdraft_external_accounts)}}
-              </td>
-              <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.highlightField === 'unavailable_funds_internal_accounts'}">
-                {{c.formatAmount(limit.unavailable_funds_internal_accounts)}}
-              </td>
-              <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.highlightField === 'unavailable_funds_external_accounts'}">
-                {{c.formatAmount(limit.unavailable_funds_external_accounts)}}
-              </td>
-            </tr>
-          </ng-container>
+            <!-- Credit Values (Internal first, then External) -->
+            <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.highlightField === 'overdraft_internal_accounts'}">
+              {{c.formatAmount(limit.overdraft_internal_accounts)}}
+            </td>
+            <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.highlightField === 'overdraft_external_accounts'}">
+              {{c.formatAmount(limit.overdraft_external_accounts)}}
+            </td>
+            <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.highlightField === 'unavailable_funds_internal_accounts'}">
+              {{c.formatAmount(limit.unavailable_funds_internal_accounts)}}
+            </td>
+            <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.highlightField === 'unavailable_funds_external_accounts'}">
+              {{c.formatAmount(limit.unavailable_funds_external_accounts)}}
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -324,11 +236,12 @@
         </ul>
       </nav>
       <div class="pagination-info">
-        Showing {{c.getStartIndex() + 1}}-{{c.getEndIndex()}} of {{c.totalRecords}} records
+        Showing {{c.getStartIndex() + 1}}-{{c.getEndIndex()}} of {{c.limits.length}} records
       </div>
     </div>
   </div>
 </div>
+
 
 
 
@@ -592,7 +505,6 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
-  table-layout: auto;
 }
 
 .limits-table thead {
@@ -646,40 +558,6 @@
   border-right: 1px solid #e9ecef;
 }
 
-.sortable-header {
-  cursor: pointer;
-  user-select: none;
-  transition: background-color 0.2s;
-}
-
-.sortable-header:hover {
-  background-color: #e9ecef !important;
-}
-
-.sortable-header .header-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-}
-
-.sort-icon {
-  font-size: 11px;
-  color: #6c757d;
-  min-width: 12px;
-  text-align: center;
-}
-
-.fa-sort {
-  opacity: 0.3;
-}
-
-.fa-sort-asc,
-.fa-sort-desc {
-  opacity: 1;
-  color: #3498db;
-}
-
 .limits-table thead tr:last-child th {
   background: #f8f9fa !important;
 }
@@ -708,52 +586,11 @@
   box-shadow: 2px 0 4px rgba(0,0,0,0.1);
 }
 
-.job-function-row {
-  background-color: #e9ecef !important;
-  font-weight: 600;
-}
-
-.job-function-cell {
-  padding: 12px 10px !important;
-  color: #2c3e50;
-  font-size: 14px;
-  border-bottom: 2px solid #dee2e6 !important;
-  background-color: #e9ecef !important;
-  position: sticky;
-  left: 0;
-  z-index: 3;
-}
-
-.job-function-cell i {
-  margin-right: 8px;
-  color: #7f8c8d;
-}
-
-.group-count {
-  font-weight: normal;
-  color: #6c757d;
-  font-size: 12px;
-  margin-left: 8px;
-}
-
 .limits-table tbody td {
   padding: 10px 8px;
   border-bottom: 1px solid #e9ecef;
   vertical-align: middle;
   border-right: 1px solid #f1f3f5;
-  max-height: 48px;
-  overflow: hidden;
-}
-
-.job-title-cell {
-  max-width: 250px;
-  white-space: normal;
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .limits-table tbody tr:hover {
@@ -772,7 +609,6 @@
   box-shadow: 2px 0 4px rgba(0,0,0,0.1);
   font-weight: 600;
   color: #2c3e50;
-  white-space: nowrap;
 }
 
 .limits-table tbody tr:hover .job-code-cell {
@@ -793,7 +629,6 @@
   font-size: 13px;
   color: #2c3e50;
   font-weight: 500;
-  white-space: nowrap;
 }
 
 .highlight-cell {
@@ -946,8 +781,6 @@
         var searchValue = input.search_value;
         var results = [];
 
-        gs.info('SIGNATURE TESTING - lookupReference called with type: ' + searchType + ', value: ' + searchValue);
-
         if (searchType === 'job_code') {
             var gr = new GlideRecord('x_banun_rbac_job_code');
             gr.addQuery('job_code', 'CONTAINS', searchValue);
@@ -1004,9 +837,11 @@
             userGr.query();
 
             while (userGr.next()) {
+                // Get the user's job code
                 var userJobCode = userGr.getValue('u_job_code') || '';
                 var jobTitle = userGr.getValue('title') || '';
 
+                // Build secondary text with job title and job code
                 var secondaryText = '';
                 if (jobTitle && userJobCode) {
                     secondaryText = jobTitle + ' - ' + userJobCode;
@@ -1024,7 +859,6 @@
             }
         }
 
-        gs.info('SIGNATURE TESTING - lookupReference found ' + results.length + ' results');
         data.results = results;
         return;
     }
@@ -1035,13 +869,12 @@
         var limitType = input.limit_type;
         var minAmount = input.min_amount;
 
-        gs.info('SIGNATURE TESTING - searchLimits called with type: ' + searchType + ', value: ' + searchValue);
-
         var limits = [];
 
         var gr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
         gr.addQuery('active', true);
 
+        // Apply filters based on search type
         if (searchType === 'job_code' && searchValue) {
             gr.addQuery('job_code', searchValue);
 
@@ -1052,10 +885,12 @@
             gr.addQuery('job_code.job_function_description', searchValue);
 
         } else if (searchType === 'employee' && searchValue) {
+            // Get the employee's job code
             var userGr = new GlideRecord('sys_user');
             if (userGr.get(searchValue)) {
                 var userJobCode = userGr.getValue('u_job_code');
                 if (userJobCode) {
+                    // Find job code sys_id that matches this job code string
                     var jobCodeGr = new GlideRecord('x_banun_rbac_job_code');
                     jobCodeGr.addQuery('job_code', userJobCode);
                     jobCodeGr.query();
@@ -1063,23 +898,23 @@
                     if (jobCodeGr.next()) {
                         gr.addQuery('job_code', jobCodeGr.getUniqueValue());
                     } else {
-                        gs.info('SIGNATURE TESTING - No job code found for employee job code: ' + userJobCode);
+                        // No matching job code found
                         data.limits = [];
                         return;
                     }
                 } else {
-                    gs.info('SIGNATURE TESTING - Employee has no job code');
+                    // Employee has no job code
                     data.limits = [];
                     return;
                 }
             } else {
-                gs.info('SIGNATURE TESTING - Employee not found');
                 data.limits = [];
                 return;
             }
 
         } else if (searchType === 'amount' && limitType && minAmount) {
-            var minAmountNum = parseInt(minAmount, 10);
+            // Search by limit amount - find all records where the specified field is >= minAmount
+            var minAmountNum = parseFloat(minAmount);
             if (!isNaN(minAmountNum) && minAmountNum >= 0) {
                 gr.addQuery(limitType, '>=', minAmountNum);
             }
@@ -1088,32 +923,19 @@
         gr.orderBy('job_code.job_code');
         gr.query();
 
-        gs.info('SIGNATURE TESTING - Authority limits query returned ' + gr.getRowCount() + ' records');
-
-        function getIntValue(record, fieldName) {
-            var val = record.getValue(fieldName);
-            return val ? val.toString() : '0';
-        }
-
-        var recordCount = 0;
         while (gr.next()) {
-            recordCount++;
+            // Get the job code reference values
             var jobCodeSysId = gr.getValue('job_code');
             var jobCodeDisplay = '';
             var jobTitle = '';
-            var jobFunctionDesc = '';
+            var jobFunction = '';
 
+            // Query the job code table to get the actual values
             var jobCodeGr = new GlideRecord('x_banun_rbac_job_code');
             if (jobCodeGr.get(jobCodeSysId)) {
                 jobCodeDisplay = jobCodeGr.getValue('job_code') || '';
                 jobTitle = jobCodeGr.getValue('job_description') || '';
-                jobFunctionDesc = jobCodeGr.getValue('job_function_description') || '';
-                
-                if (recordCount <= 3) { // Log first 3 records
-                    gs.info('SIGNATURE TESTING - Record ' + recordCount + ' - Job Code: ' + jobCodeDisplay + ', Title: ' + jobTitle + ', Function: ' + jobFunctionDesc);
-                }
-            } else {
-                gs.info('SIGNATURE TESTING - Could not retrieve job code details for sys_id: ' + jobCodeSysId);
+                jobFunction = jobCodeGr.getValue('job_function_description') || '';
             }
 
             var limit = {
@@ -1121,24 +943,27 @@
                 job_code_sys_id: jobCodeSysId,
                 job_code_display: jobCodeDisplay,
                 job_title: jobTitle,
-                job_function: jobFunctionDesc,
+                job_function: jobFunction,
 
-                disbursement_ach: getIntValue(gr, 'disbursement_ach'),
-                disbursement_wire_transfer_external: getIntValue(gr, 'disbursement_wire_transfer_external'),
-                disbursement_wire_transfer_internal: getIntValue(gr, 'disbursement_wire_transfer_internal'),
-                disbursement_official_checks_external: getIntValue(gr, 'disbursement_official_checks_external'),
-                disbursement_official_checks_internal: getIntValue(gr, 'disbursement_official_checks_internal'),
-                check_cashing_on_us: getIntValue(gr, 'check_cashing_on_us'),
-                check_cashing_not_on_us: getIntValue(gr, 'check_cashing_not_on_us'),
-                remote_deposit: getIntValue(gr, 'remote_deposit'),
-                treasury_solutions_company_wire_limits: getIntValue(gr, 'treasury_solutions_company_wire_limits'),
-                fx_wire_limits: getIntValue(gr, 'fx_wire_limits'),
+                // Non-credit limits
+                disbursement_ach: gr.getValue('disbursement_ach') || '0',
+                disbursement_wire_transfer_external: gr.getValue('disbursement_wire_transfer_external') || '0',
+                disbursement_wire_transfer_internal: gr.getValue('disbursement_wire_transfer_internal') || '0',
+                disbursement_official_checks_external: gr.getValue('disbursement_official_checks_external') || '0',
+                disbursement_official_checks_internal: gr.getValue('disbursement_official_checks_internal') || '0',
+                check_cashing_on_us: gr.getValue('check_cashing_on_us') || '0',
+                check_cashing_not_on_us: gr.getValue('check_cashing_not_on_us') || '0',
+                remote_deposit: gr.getValue('remote_deposit') || '0',
+                treasury_solutions_company_wire_limits: gr.getValue('treasury_solutions_company_wire_limits') || '0',
+                fx_wire_limits: gr.getValue('fx_wire_limits') || '0',
 
-                overdraft_external_accounts: getIntValue(gr, 'overdraft_external_accounts'),
-                overdraft_internal_accounts: getIntValue(gr, 'overdraft_internal_accounts'),
-                unavailable_funds_external_accounts: getIntValue(gr, 'unavailable_funds_external_accounts'),
-                unavailable_funds_internal_accounts: getIntValue(gr, 'unavailable_funds_internal_accounts'),
+                // Credit limits
+                overdraft_external_accounts: gr.getValue('overdraft_external_accounts') || '0',
+                overdraft_internal_accounts: gr.getValue('overdraft_internal_accounts') || '0',
+                unavailable_funds_external_accounts: gr.getValue('unavailable_funds_external_accounts') || '0',
+                unavailable_funds_internal_accounts: gr.getValue('unavailable_funds_internal_accounts') || '0',
 
+                // For highlighting in amount searches
                 highlightField: (searchType === 'amount') ? limitType : '',
                 highlighted: false
             };
@@ -1146,7 +971,6 @@
             limits.push(limit);
         }
 
-        gs.info('SIGNATURE TESTING - Total limits added to array: ' + limits.length);
         data.limits = limits;
     }
 })();
@@ -1160,21 +984,15 @@ api.controller = function($scope, $timeout, spUtil) {
 
     // Initialize variables
     c.limits = [];
-    c.groupedLimits = [];
     c.loading = false;
     c.searchPerformed = false;
     c.currentSearchType = 'job_code';
     c.selectedReferenceValue = null;
     c.selectedReferenceDisplay = '';
-    c.totalRecords = 0;
-
-    // Sorting
-    c.sortField = 'job_code_display';
-    c.sortDirection = 'asc';
 
     // Pagination
     c.currentPage = 1;
-    c.pageSize = 50; // Groups per page
+    c.pageSize = 10;
     c.totalPages = 1;
 
     // Reference field dropdown state
@@ -1185,134 +1003,12 @@ api.controller = function($scope, $timeout, spUtil) {
     c.$onInit = function() {
         $timeout(function() {
             initializeWidget();
+            // Perform initial search to show all limits
             performSearch();
         }, 500);
     };
 
-    // Get sort icon class
-    c.getSortIcon = function(field) {
-        if (c.sortField !== field) {
-            return 'fa-sort';
-        }
-        return c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc';
-    };
-
-    // Sort by field
-    c.sortBy = function(field) {
-        if (c.sortField === field) {
-            // Toggle direction
-            c.sortDirection = c.sortDirection === 'asc' ? 'desc' : 'asc';
-        } else {
-            // New field - start with appropriate default
-            c.sortField = field;
-            // For text fields, default to A-Z (asc)
-            // For numeric fields, default to largest to smallest (desc)
-            var numericFields = [
-                'disbursement_ach',
-                'disbursement_wire_transfer_internal',
-                'disbursement_wire_transfer_external',
-                'disbursement_official_checks_internal',
-                'disbursement_official_checks_external',
-                'check_cashing_on_us',
-                'check_cashing_not_on_us',
-                'remote_deposit',
-                'treasury_solutions_company_wire_limits',
-                'fx_wire_limits',
-                'overdraft_internal_accounts',
-                'overdraft_external_accounts',
-                'unavailable_funds_internal_accounts',
-                'unavailable_funds_external_accounts'
-            ];
-            
-            c.sortDirection = numericFields.indexOf(field) >= 0 ? 'desc' : 'asc';
-        }
-        
-        // Re-sort and re-group
-        sortLimits();
-        groupLimitsByFunction();
-        c.currentPage = 1;
-    };
-
-    // Sort limits array
-    function sortLimits() {
-        c.limits.sort(function(a, b) {
-            var aVal = a[c.sortField];
-            var bVal = b[c.sortField];
-
-            // Handle numeric fields
-            var numericFields = [
-                'disbursement_ach',
-                'disbursement_wire_transfer_internal',
-                'disbursement_wire_transfer_external',
-                'disbursement_official_checks_internal',
-                'disbursement_official_checks_external',
-                'check_cashing_on_us',
-                'check_cashing_not_on_us',
-                'remote_deposit',
-                'treasury_solutions_company_wire_limits',
-                'fx_wire_limits',
-                'overdraft_internal_accounts',
-                'overdraft_external_accounts',
-                'unavailable_funds_internal_accounts',
-                'unavailable_funds_external_accounts'
-            ];
-
-            if (numericFields.indexOf(c.sortField) >= 0) {
-                aVal = parseFloat(aVal) || 0;
-                bVal = parseFloat(bVal) || 0;
-            } else {
-                // String comparison
-                aVal = (aVal || '').toString().toLowerCase();
-                bVal = (bVal || '').toString().toLowerCase();
-            }
-
-            if (aVal < bVal) return c.sortDirection === 'asc' ? -1 : 1;
-            if (aVal > bVal) return c.sortDirection === 'asc' ? 1 : -1;
-            return 0;
-        });
-    }
-
-    // Group limits by job function
-function groupLimitsByFunction() {
-    console.log('SIGNATURE TESTING - groupLimitsByFunction called with ' + c.limits.length + ' limits');
-    
-    var groups = {};
-    
-    c.limits.forEach(function(limit, index) {
-        var funcKey = limit.job_function || 'No Job Function';
-        
-        if (index < 3) { // Log first 3 for debugging
-            console.log('SIGNATURE TESTING - Limit ' + index + ': Job Code=' + limit.job_code_display + ', Function=' + limit.job_function + ', FuncKey=' + funcKey);
-        }
-        
-        if (!groups[funcKey]) {
-            groups[funcKey] = {
-                job_function: limit.job_function || 'No Job Function',
-                limits: []
-            };
-            console.log('SIGNATURE TESTING - Created new group: ' + funcKey);
-        }
-        groups[funcKey].limits.push(limit);
-    });
-
-    // Convert to array and sort by function name
-    c.groupedLimits = Object.keys(groups).sort().map(function(key) {
-        return groups[key];
-    });
-
-    // Calculate total records
-    c.totalRecords = c.limits.length;
-    
-    // Update pagination based on groups
-    c.totalPages = Math.ceil(c.groupedLimits.length / c.pageSize);
-    
-    console.log('SIGNATURE TESTING - Created ' + c.groupedLimits.length + ' groups');
-    console.log('SIGNATURE TESTING - Total records: ' + c.totalRecords);
-    console.log('SIGNATURE TESTING - Total pages: ' + c.totalPages);
-    console.log('SIGNATURE TESTING - Groups:', c.groupedLimits);
-}
-
-    // Format amount for display
+    // Format amount for display - show dash for zero values
     c.formatAmount = function(value) {
         if (!value || value === '0' || parseFloat(value) === 0) {
             return '-';
@@ -1335,31 +1031,19 @@ function groupLimitsByFunction() {
     };
 
     // Pagination functions
-    c.getCurrentPageGroups = function() {
+    c.getCurrentPageLimits = function() {
         var start = (c.currentPage - 1) * c.pageSize;
         var end = start + c.pageSize;
-        return c.groupedLimits.slice(start, end);
+        return c.limits.slice(start, end);
     };
 
     c.getStartIndex = function() {
-        var groups = c.getCurrentPageGroups();
-        if (groups.length === 0) return 0;
-        
-        var start = 0;
-        for (var i = 0; i < (c.currentPage - 1) * c.pageSize && i < c.groupedLimits.length; i++) {
-            start += c.groupedLimits[i].limits.length;
-        }
-        return start;
+        return (c.currentPage - 1) * c.pageSize;
     };
 
     c.getEndIndex = function() {
-        var start = c.getStartIndex();
-        var groups = c.getCurrentPageGroups();
-        var count = 0;
-        groups.forEach(function(group) {
-            count += group.limits.length;
-        });
-        return start + count;
+        var end = c.currentPage * c.pageSize;
+        return end > c.limits.length ? c.limits.length : end;
     };
 
     c.previousPage = function() {
@@ -1417,6 +1101,7 @@ function groupLimitsByFunction() {
         var results = dropdown.querySelector('.dropdown-results');
         var noResults = dropdown.querySelector('.dropdown-no-results');
 
+        // Show loading
         loading.style.display = 'block';
         results.innerHTML = '';
         noResults.style.display = 'none';
@@ -1480,6 +1165,8 @@ function groupLimitsByFunction() {
             searchInputValue.value = result.value;
 
             hideDropdown();
+
+            // Auto-search after selection
             performSearch();
         }
     }
@@ -1496,16 +1183,19 @@ function groupLimitsByFunction() {
 
         var items = document.querySelectorAll('.dropdown-item');
 
+        // Remove previous selection
         if (selectedIndex >= 0 && selectedIndex < items.length) {
             items[selectedIndex].classList.remove('active');
         }
 
+        // Update index
         if (direction === 'down') {
             selectedIndex = (selectedIndex + 1) % currentResults.length;
         } else if (direction === 'up') {
             selectedIndex = selectedIndex <= 0 ? currentResults.length - 1 : selectedIndex - 1;
         }
 
+        // Add new selection
         if (selectedIndex >= 0 && selectedIndex < items.length) {
             items[selectedIndex].classList.add('active');
             items[selectedIndex].scrollIntoView({
@@ -1525,57 +1215,49 @@ function groupLimitsByFunction() {
             var amountInput = document.getElementById('amountInput');
             minAmount = c.getCurrencyValue(amountInput.value);
 
+            // If no amount entered when clearing, show all limits by changing search type temporarily
             if (!minAmount) {
-                searchType = 'all';
+                searchType = 'all'; // This will show all limits
             }
         } else {
             var searchInputValue = document.getElementById('searchInputValue');
             var searchInput = document.getElementById('searchInput');
+
+            // Use hidden field value if available, otherwise use the text input value for partial match
             searchValue = searchInputValue.value || searchInput.value;
         }
 
         c.loading = true;
         c.searchPerformed = true;
 
+        // Call server to get limits
         c.server.get({
-    action: 'searchLimits',
-    search_type: searchType,
-    search_value: searchValue,
-    limit_type: limitType,
-    min_amount: minAmount
-}).then(function(response) {
-    c.limits = response.data.limits || [];
-    
-    // Sort and group
-    sortLimits();
-    groupLimitsByFunction();
-    
-    console.log('SIGNATURE TESTING - After grouping, groupedLimits:', c.groupedLimits);
-    console.log('SIGNATURE TESTING - Current page groups:', c.getCurrentPageGroups());
-    
-    c.currentPage = 1;
-    c.loading = false;
-    
-    console.log('SIGNATURE TESTING - c.loading:', c.loading);
-    console.log('SIGNATURE TESTING - c.groupedLimits.length:', c.groupedLimits.length);
-    console.log('SIGNATURE TESTING - Should show table:', (!c.loading && c.groupedLimits.length > 0));
-    
-    // Force Angular to detect changes
-    $scope.$applyAsync();
+            action: 'searchLimits',
+            search_type: searchType,
+            search_value: searchValue,
+            limit_type: limitType,
+            min_amount: minAmount
+        }).then(function(response) {
+            $timeout(function() {
+                c.limits = response.data.limits || [];
+                c.currentPage = 1;
+                c.totalPages = Math.ceil(c.limits.length / c.pageSize);
+                c.loading = false;
 
-    $timeout(function() {
-        setupColumnFilters();
-    }, 100);
+                // Re-setup column filters after table renders
+                $timeout(function() {
+                    setupColumnFilters();
+                }, 100);
             });
         }).catch(function(error) {
             console.error('Error loading limits:', error);
             spUtil.addErrorMessage('Failed to load authority limits');
             c.limits = [];
-            c.groupedLimits = [];
             c.loading = false;
         });
     }
 
+    // Clear search
     function clearSearch() {
         var searchInput = document.getElementById('searchInput');
         var searchInputValue = document.getElementById('searchInputValue');
@@ -1588,9 +1270,11 @@ function groupLimitsByFunction() {
         c.selectedReferenceValue = null;
         c.selectedReferenceDisplay = '';
 
+        // Perform search to show all limits (like initial load)
         performSearch();
     }
 
+    // Update search interface based on selected type
     function updateSearchInterface() {
         var searchType = c.currentSearchType;
         var textSearchContainer = document.getElementById('textSearchContainer');
@@ -1598,13 +1282,16 @@ function groupLimitsByFunction() {
         var searchInputLabel = document.getElementById('searchInputLabel');
         var searchInput = document.getElementById('searchInput');
         var searchInputValue = document.getElementById('searchInputValue');
+        var searchButton = document.getElementById('searchButton');
 
+        // Clear previous values
         if (searchInput) searchInput.value = '';
         if (searchInputValue) searchInputValue.value = '';
         c.selectedReferenceValue = null;
         c.selectedReferenceDisplay = '';
         hideDropdown();
 
+        // Show/hide appropriate containers
         if (searchType === 'amount') {
             textSearchContainer.style.display = 'none';
             amountSearchContainer.style.display = 'block';
@@ -1612,6 +1299,7 @@ function groupLimitsByFunction() {
             textSearchContainer.style.display = 'block';
             amountSearchContainer.style.display = 'none';
 
+            // Update label and placeholder based on search type
             switch (searchType) {
                 case 'job_code':
                     searchInputLabel.textContent = 'Search Value';
@@ -1633,6 +1321,7 @@ function groupLimitsByFunction() {
         }
     }
 
+    // Setup column filter checkboxes
     function setupColumnFilters() {
         var showNonCreditCheckbox = document.getElementById('showNonCredit');
         var showCreditCheckbox = document.getElementById('showCredit');
@@ -1659,7 +1348,9 @@ function groupLimitsByFunction() {
         }
     }
 
+    // Initialize widget
     function initializeWidget() {
+        // Setup search type dropdown
         var searchTypeSelect = document.getElementById('searchTypeSelect');
         if (searchTypeSelect) {
             searchTypeSelect.addEventListener('change', function() {
@@ -1668,6 +1359,7 @@ function groupLimitsByFunction() {
             });
         }
 
+        // Setup reference field input
         var searchInput = document.getElementById('searchInput');
         var searchDebounce;
 
@@ -1705,6 +1397,7 @@ function groupLimitsByFunction() {
             });
         }
 
+        // Click outside to close dropdown
         document.addEventListener('click', function(e) {
             var refWrapper = document.querySelector('.reference-field-wrapper');
             if (refWrapper && !refWrapper.contains(e.target)) {
@@ -1712,6 +1405,7 @@ function groupLimitsByFunction() {
             }
         });
 
+        // Setup search button
         var searchButton = document.getElementById('searchButton');
         if (searchButton) {
             searchButton.addEventListener('click', function() {
@@ -1719,6 +1413,7 @@ function groupLimitsByFunction() {
             });
         }
 
+        // Setup clear button
         var clearButton = document.getElementById('clearButton');
         if (clearButton) {
             clearButton.addEventListener('click', function() {
@@ -1726,8 +1421,10 @@ function groupLimitsByFunction() {
             });
         }
 
+        // Setup amount input
         var amountInput = document.getElementById('amountInput');
         if (amountInput) {
+            // Format currency as user types
             var isUpdating = false;
             amountInput.addEventListener('input', function(event) {
                 if (isUpdating) return;
@@ -1754,16 +1451,19 @@ function groupLimitsByFunction() {
                 if (e.key === 'Enter') {
                     performSearch();
                 }
+                // Prevent decimal point entry
                 if (e.key === '.' || e.key === ',') {
                     e.preventDefault();
                 }
             });
         }
 
+        // Setup column filter checkboxes
         $timeout(function() {
             setupColumnFilters();
         }, 1000);
 
+        // Initialize interface
         updateSearchInterface();
     }
 };
