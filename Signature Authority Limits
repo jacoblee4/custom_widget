@@ -938,6 +938,10 @@
 <!-- SERVER SCRIPT (NO CHANGES) -->
 <!-- ============================================ -->
 
+<!-- ============================================ -->
+<!-- SERVER SCRIPT -->
+<!-- ============================================ -->
+
 (function() {
     'use strict';
 
@@ -1090,13 +1094,13 @@
             var jobCodeSysId = gr.getValue('job_code');
             var jobCodeDisplay = '';
             var jobTitle = '';
-            var jobFunction = '';
+            var jobFunctionDesc = '';
 
             var jobCodeGr = new GlideRecord('x_banun_rbac_job_code');
             if (jobCodeGr.get(jobCodeSysId)) {
                 jobCodeDisplay = jobCodeGr.getValue('job_code') || '';
                 jobTitle = jobCodeGr.getValue('job_description') || '';
-                jobFunction = jobCodeGr.getValue('job_function_description') || '';
+                jobFunctionDesc = jobCodeGr.getValue('job_function_description') || '';
             }
 
             var limit = {
@@ -1104,7 +1108,7 @@
                 job_code_sys_id: jobCodeSysId,
                 job_code_display: jobCodeDisplay,
                 job_title: jobTitle,
-                job_function: jobFunction,
+                job_function: jobFunctionDesc,
 
                 disbursement_ach: getIntValue(gr, 'disbursement_ach'),
                 disbursement_wire_transfer_external: getIntValue(gr, 'disbursement_wire_transfer_external'),
