@@ -1538,32 +1538,34 @@ function groupLimitsByFunction() {
         c.searchPerformed = true;
 
         c.server.get({
-            action: 'searchLimits',
-            search_type: searchType,
-            search_value: searchValue,
-            limit_type: limitType,
-            min_amount: minAmount
-        }).then(function(response) {
-            $timeout(function() {
-                c.limits = response.data.limits || [];
-                
-               // Sort and group
-        sortLimits();
-        groupLimitsByFunction();
-        
-        console.log('SIGNATURE TESTING - After grouping, groupedLimits:', c.groupedLimits);
-        console.log('SIGNATURE TESTING - Current page groups:', c.getCurrentPageGroups());
-        
-        c.currentPage = 1;
-        c.loading = false;
-        
-        console.log('SIGNATURE TESTING - c.loading:', c.loading);
-        console.log('SIGNATURE TESTING - c.groupedLimits.length:', c.groupedLimits.length);
-        console.log('SIGNATURE TESTING - Should show table:', (!c.loading && c.groupedLimits.length > 0));
+    action: 'searchLimits',
+    search_type: searchType,
+    search_value: searchValue,
+    limit_type: limitType,
+    min_amount: minAmount
+}).then(function(response) {
+    c.limits = response.data.limits || [];
+    
+    // Sort and group
+    sortLimits();
+    groupLimitsByFunction();
+    
+    console.log('SIGNATURE TESTING - After grouping, groupedLimits:', c.groupedLimits);
+    console.log('SIGNATURE TESTING - Current page groups:', c.getCurrentPageGroups());
+    
+    c.currentPage = 1;
+    c.loading = false;
+    
+    console.log('SIGNATURE TESTING - c.loading:', c.loading);
+    console.log('SIGNATURE TESTING - c.groupedLimits.length:', c.groupedLimits.length);
+    console.log('SIGNATURE TESTING - Should show table:', (!c.loading && c.groupedLimits.length > 0));
+    
+    // Force Angular to detect changes
+    $scope.$applyAsync();
 
-                $timeout(function() {
-                    setupColumnFilters();
-                }, 100);
+    $timeout(function() {
+        setupColumnFilters();
+    }, 100);
             });
         }).catch(function(error) {
             console.error('Error loading limits:', error);
