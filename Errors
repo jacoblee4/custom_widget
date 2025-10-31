@@ -1,65 +1,101 @@
-10-31-2025 15:29:24
-Information	x_banun_bunow_si_0	SIGNATURE TESTING - Record 1 - Job Code: 999999, Title: Conversion Job Code, Function:
-
-10-31-2025 15:29:24
-Information	x_banun_bunow_si_0	SIGNATURE TESTING - searchLimits called with type: job_code, value: 1f9094071b474a10cd80ffbe034bcb87
-
-10-31-2025 15:29:24
-Information	x_banun_bunow_si_0	SIGNATURE TESTING - Authority limits query returned 1 records
-
-10-31-2025 15:29:24
+10-31-2025 15:35:37
 Information	x_banun_bunow_si_0	SIGNATURE TESTING - Total limits added to array: 1
 
-10-31-2025 15:29:24
-Information	x_banun_bunow_si_0	SIGNATURE TESTING - Record 1 - Job Code: 999999, Title: Conversion Job Code, Function:
-
-10-31-2025 15:29:24
-Information	x_banun_bunow_si_0	SIGNATURE TESTING - Total limits added to array: 1
-
-10-31-2025 15:29:24
+10-31-2025 15:35:37
 Information	x_banun_bunow_si_0	SIGNATURE TESTING - Authority limits query returned 1 records
 
-10-31-2025 15:29:24
-Information	x_banun_bunow_si_0	SIGNATURE TESTING - searchLimits called with type: job_code, value: 1f9094071b474a10cd80ffbe034bcb87
+10-31-2025 15:35:37
+Information	x_banun_bunow_si_0	SIGNATURE TESTING - Record 1 - Job Code: BBMKLD, Title: Business Banking Mkt Leader, Function: Consumer and Small Business Banking
 
-10-31-2025 15:29:23
+10-31-2025 15:35:37
+Information	x_banun_bunow_si_0	SIGNATURE TESTING - searchLimits called with type: job_code, value: 139094071b474a10cd80ffbe034bcba2
+
+10-31-2025 15:35:35
 Information	x_banun_bunow_si_0	SIGNATURE TESTING - lookupReference found 1 results
 
-10-31-2025 15:29:23
+10-31-2025 15:35:35
+Information	x_banun_bunow_si_0	SIGNATURE TESTING - Authority limits query returned 1 records
+
+10-31-2025 15:35:35
+Information	x_banun_bunow_si_0	SIGNATURE TESTING - Total limits added to array: 1
+
+10-31-2025 15:35:35
+Information	x_banun_bunow_si_0	SIGNATURE TESTING - Record 1 - Job Code: BBMKLD, Title: Business Banking Mkt Leader, Function: Consumer and Small Business Banking
+
+10-31-2025 15:35:35
+Information	x_banun_bunow_si_0	SIGNATURE TESTING - lookupReference called with type: job_code, value: BBMKLD
+
+10-31-2025 15:35:35
+Information	x_banun_bunow_si_0	SIGNATURE TESTING - searchLimits called with type: job_code, value: 139094071b474a10cd80ffbe034bcba2
+
+10-31-2025 15:35:33
+Information	x_banun_bunow_si_0	SIGNATURE TESTING - lookupReference found 0 results
+
+10-31-2025 15:35:33
+Information	x_banun_bunow_si_0	SIGNATURE TESTING - lookupReference called with type: job_code, value: BBMKLD
+
+10-31-2025 15:35:32
+Information	x_banun_bunow_si_0	SIGNATURE TESTING - Total limits added to array: 7
+
+10-31-2025 15:35:31
+Information	x_banun_bunow_si_0	SIGNATURE TESTING - searchLimits called with type: job_code, value:
+
+10-31-2025 15:35:31
+Information	x_banun_bunow_si_0	SIGNATURE TESTING - Record 2 - Job Code: AAMGR, Title: Automation and Analytics Manag, Function:
+
+10-31-2025 15:35:31
+Information	x_banun_bunow_si_0	SIGNATURE TESTING - Authority limits query returned 7 records
+
+10-31-2025 15:35:31
+Information	x_banun_bunow_si_0	SIGNATURE TESTING - Record 3 - Job Code: ACCII, Title: Accountant II, Function:
+
+10-31-2025 15:35:31
+Information	x_banun_bunow_si_0	SIGNATURE TESTING - Record 1 - Job Code: 999999, Title: Conversion Job Code, Function:
+
+10-31-2025 15:35:26
+Information	x_banun_bunow_si_0	SIGNATURE TESTING - lookupReference found 0 results
+
+10-31-2025 15:35:26
+Information	x_banun_bunow_si_0	SIGNATURE TESTING - lookupReference called with type: job_code, value: BBMKLD
+
+10-31-2025 15:35:05
+Information	x_banun_bunow_si_0	SIGNATURE TESTING - lookupReference found 1 results
+
+10-31-2025 15:35:05
 Information	x_banun_bunow_si_0	SIGNATURE TESTING - lookupReference called with type: job_code, value: 999
 
-10-31-2025 15:29:20
-Information	x_banun_bunow_si_0	SIGNATURE TESTING - searchLimits called with type: job_code, value:
-
-10-31-2025 15:29:20
-Information	x_banun_bunow_si_0	SIGNATURE TESTING - Record 2 - Job Code: AAMGR, Title: Automation and Analytics Manag, Function:
-
-10-31-2025 15:29:20
+10-31-2025 15:35:00
 Information	x_banun_bunow_si_0	SIGNATURE TESTING - Authority limits query returned 7 records
 
-10-31-2025 15:29:20
+10-31-2025 15:35:00
 Information	x_banun_bunow_si_0	SIGNATURE TESTING - Total limits added to array: 7
 
-10-31-2025 15:29:20
+10-31-2025 15:35:00
 Information	x_banun_bunow_si_0	SIGNATURE TESTING - Record 3 - Job Code: ACCII, Title: Accountant II, Function:
 
-10-31-2025 15:29:20
+10-31-2025 15:35:00
 Information	x_banun_bunow_si_0	SIGNATURE TESTING - Record 1 - Job Code: 999999, Title: Conversion Job Code, Function:
 
-10-31-2025 15:28:55
-Information	x_banun_bunow_si_0	SIGNATURE TESTING - Record 2 - Job Code: AAMGR, Title: Automation and Analytics Manag, Function:
-
-10-31-2025 15:28:55
+10-31-2025 15:35:00
 Information	x_banun_bunow_si_0	SIGNATURE TESTING - searchLimits called with type: job_code, value:
 
-10-31-2025 15:28:55
+10-31-2025 15:35:00
+Information	x_banun_bunow_si_0	SIGNATURE TESTING - Record 2 - Job Code: AAMGR, Title: Automation and Analytics Manag, Function:
+
+10-31-2025 15:32:47
+Information	x_banun_bunow_si_0	SIGNATURE TESTING - searchLimits called with type: job_code, value:
+
+10-31-2025 15:32:47
+Information	x_banun_bunow_si_0	SIGNATURE TESTING - Record 2 - Job Code: AAMGR, Title: Automation and Analytics Manag, Function:
+
+10-31-2025 15:32:47
 Information	x_banun_bunow_si_0	SIGNATURE TESTING - Total limits added to array: 7
 
-10-31-2025 15:28:55
-Information	x_banun_bunow_si_0	SIGNATURE TESTING - Record 1 - Job Code: 999999, Title: Conversion Job Code, Function:
-
-10-31-2025 15:28:55
+10-31-2025 15:32:47
 Information	x_banun_bunow_si_0	SIGNATURE TESTING - Authority limits query returned 7 records
 
-10-31-2025 15:28:55
+10-31-2025 15:32:47
 Information	x_banun_bunow_si_0	SIGNATURE TESTING - Record 3 - Job Code: ACCII, Title: Accountant II, Function:
+
+10-31-2025 15:32:47
+Information	x_banun_bunow_si_0	SIGNATURE TESTING - Record 1 - Job Code: 999999, Title: Conversion Job Code, Function:
