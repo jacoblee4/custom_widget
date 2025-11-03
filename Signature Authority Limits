@@ -134,27 +134,112 @@
           </tr>
           <tr>
             <!-- Job Info Columns -->
-            <th class="sticky-col">Job Code</th>
-            <th>Job Title</th>
-            <th>Job Function</th>
+            <th class="sticky-col sortable" ng-click="c.sortBy('job_code_display')">
+              Job Code 
+              <span class="sort-indicator" ng-if="c.sortColumn === 'job_code_display'">
+                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              </span>
+            </th>
+            <th class="sortable" ng-click="c.sortBy('job_title')">
+              Job Title
+              <span class="sort-indicator" ng-if="c.sortColumn === 'job_title'">
+                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              </span>
+            </th>
+            <th class="sortable" ng-click="c.sortBy('job_function')">
+              Job Function
+              <span class="sort-indicator" ng-if="c.sortColumn === 'job_function'">
+                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              </span>
+            </th>
 
             <!-- Non-Credit Columns (Internal first, then External) -->
-            <th class="non-credit-col">ACH</th>
-            <th class="non-credit-col">Wire Internal</th>
-            <th class="non-credit-col">Wire External</th>
-            <th class="non-credit-col">Checks Internal</th>
-            <th class="non-credit-col">Checks External</th>
-            <th class="non-credit-col">Check Cash On-Us</th>
-            <th class="non-credit-col">Check Cash Not On-Us</th>
-            <th class="non-credit-col">Remote Deposit</th>
-            <th class="non-credit-col">Treasury Solutions</th>
-            <th class="non-credit-col">FX Wire</th>
+            <th class="non-credit-col sortable" ng-click="c.sortBy('disbursement_ach')">
+              ACH
+              <span class="sort-indicator" ng-if="c.sortColumn === 'disbursement_ach'">
+                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              </span>
+            </th>
+            <th class="non-credit-col sortable" ng-click="c.sortBy('disbursement_wire_transfer_internal')">
+              Wire Internal
+              <span class="sort-indicator" ng-if="c.sortColumn === 'disbursement_wire_transfer_internal'">
+                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              </span>
+            </th>
+            <th class="non-credit-col sortable" ng-click="c.sortBy('disbursement_wire_transfer_external')">
+              Wire External
+              <span class="sort-indicator" ng-if="c.sortColumn === 'disbursement_wire_transfer_external'">
+                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              </span>
+            </th>
+            <th class="non-credit-col sortable" ng-click="c.sortBy('disbursement_official_checks_internal')">
+              Checks Internal
+              <span class="sort-indicator" ng-if="c.sortColumn === 'disbursement_official_checks_internal'">
+                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              </span>
+            </th>
+            <th class="non-credit-col sortable" ng-click="c.sortBy('disbursement_official_checks_external')">
+              Checks External
+              <span class="sort-indicator" ng-if="c.sortColumn === 'disbursement_official_checks_external'">
+                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              </span>
+            </th>
+            <th class="non-credit-col sortable" ng-click="c.sortBy('check_cashing_on_us')">
+              Check Cash On-Us
+              <span class="sort-indicator" ng-if="c.sortColumn === 'check_cashing_on_us'">
+                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              </span>
+            </th>
+            <th class="non-credit-col sortable" ng-click="c.sortBy('check_cashing_not_on_us')">
+              Check Cash Not On-Us
+              <span class="sort-indicator" ng-if="c.sortColumn === 'check_cashing_not_on_us'">
+                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              </span>
+            </th>
+            <th class="non-credit-col sortable" ng-click="c.sortBy('remote_deposit')">
+              Remote Deposit
+              <span class="sort-indicator" ng-if="c.sortColumn === 'remote_deposit'">
+                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              </span>
+            </th>
+            <th class="non-credit-col sortable" ng-click="c.sortBy('treasury_solutions_company_wire_limits')">
+              Treasury Solutions
+              <span class="sort-indicator" ng-if="c.sortColumn === 'treasury_solutions_company_wire_limits'">
+                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              </span>
+            </th>
+            <th class="non-credit-col sortable" ng-click="c.sortBy('fx_wire_limits')">
+              FX Wire
+              <span class="sort-indicator" ng-if="c.sortColumn === 'fx_wire_limits'">
+                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              </span>
+            </th>
 
             <!-- Credit Columns (Internal first, then External) -->
-            <th class="credit-col">Overdraft Internal</th>
-            <th class="credit-col">Overdraft External</th>
-            <th class="credit-col">Unavailable Internal</th>
-            <th class="credit-col">Unavailable External</th>
+            <th class="credit-col sortable" ng-click="c.sortBy('overdraft_internal_accounts')">
+              Overdraft Internal
+              <span class="sort-indicator" ng-if="c.sortColumn === 'overdraft_internal_accounts'">
+                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              </span>
+            </th>
+            <th class="credit-col sortable" ng-click="c.sortBy('overdraft_external_accounts')">
+              Overdraft External
+              <span class="sort-indicator" ng-if="c.sortColumn === 'overdraft_external_accounts'">
+                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              </span>
+            </th>
+            <th class="credit-col sortable" ng-click="c.sortBy('unavailable_funds_internal_accounts')">
+              Unavailable Internal
+              <span class="sort-indicator" ng-if="c.sortColumn === 'unavailable_funds_internal_accounts'">
+                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              </span>
+            </th>
+            <th class="credit-col sortable" ng-click="c.sortBy('unavailable_funds_external_accounts')">
+              Unavailable External
+              <span class="sort-indicator" ng-if="c.sortColumn === 'unavailable_funds_external_accounts'">
+                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              </span>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -162,8 +247,8 @@
             <td class="sticky-col job-code-cell">
               <strong>{{limit.job_code_display}}</strong>
             </td>
-            <td class="job-info-cell">{{limit.job_title || '-'}}</td>
-            <td class="job-info-cell">{{limit.job_function || '-'}}</td>
+            <td class="job-info-cell text-wrap-cell">{{limit.job_title || '-'}}</td>
+            <td class="job-info-cell text-wrap-cell">{{limit.job_function || '-'}}</td>
 
             <!-- Non-Credit Values (Internal first, then External) -->
             <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_ach'}">
@@ -559,6 +644,27 @@
   border-right: 1px solid #e9ecef;
 }
 
+/* Sortable columns styling */
+.limits-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  padding-right: 24px;
+}
+
+.limits-table th.sortable:hover {
+  background: #e9ecef;
+}
+
+.sort-indicator {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: #3498db;
+}
+
 .limits-table thead tr:last-child th {
   background: #f8f9fa !important;
 }
@@ -569,6 +675,18 @@
 
 .limits-table thead tr:last-child th.credit-col {
   background: #fef5f6 !important;
+}
+
+.limits-table thead tr:last-child th.sortable:hover {
+  background: #e9ecef !important;
+}
+
+.limits-table thead tr:last-child th.non-credit-col.sortable:hover {
+  background: #e3f3e9 !important;
+}
+
+.limits-table thead tr:last-child th.credit-col.sortable:hover {
+  background: #fce8ea !important;
 }
 
 .non-credit-col {
@@ -588,10 +706,22 @@
 }
 
 .limits-table tbody td {
-  padding: 10px 8px;
+  padding: 8px;
   border-bottom: 1px solid #e9ecef;
   vertical-align: middle;
   border-right: 1px solid #f1f3f5;
+}
+
+/* Text wrapping for job title and job function - max 2 lines */
+.text-wrap-cell {
+  max-width: 200px;
+  word-wrap: break-word;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.3em;
+  max-height: 2.6em; /* 2 lines * 1.3em line-height */
 }
 
 .limits-table tbody tr:hover {
@@ -774,6 +904,7 @@
 
 <!-- ============================================ -->
 <!-- SERVER SCRIPT -->
+<!-- (No changes needed) -->
 <!-- ============================================ -->
 
 (function() {
@@ -997,6 +1128,10 @@ api.controller = function($scope, $timeout, spUtil) {
     c.selectedReferenceValue = null;
     c.selectedReferenceDisplay = '';
 
+    // Sorting
+    c.sortColumn = null;
+    c.sortDirection = 'asc';
+
     // Pagination
     c.currentPage = 1;
     c.pageSize = 10;
@@ -1013,6 +1148,45 @@ api.controller = function($scope, $timeout, spUtil) {
             // Perform initial search to show all limits
             performSearch();
         }, 500);
+    };
+
+    // Sorting function
+    c.sortBy = function(column) {
+        if (c.sortColumn === column) {
+            // Toggle direction if clicking same column
+            c.sortDirection = c.sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            // New column, default to ascending
+            c.sortColumn = column;
+            c.sortDirection = 'asc';
+        }
+
+        // Sort the limits array
+        c.limits.sort(function(a, b) {
+            var aVal = a[column];
+            var bVal = b[column];
+
+            // Handle numeric fields (all the amount fields)
+            if (column !== 'job_code_display' && column !== 'job_title' && column !== 'job_function') {
+                aVal = parseFloat(aVal) || 0;
+                bVal = parseFloat(bVal) || 0;
+            } else {
+                // Handle string fields
+                aVal = (aVal || '').toString().toLowerCase();
+                bVal = (bVal || '').toString().toLowerCase();
+            }
+
+            if (aVal < bVal) {
+                return c.sortDirection === 'asc' ? -1 : 1;
+            }
+            if (aVal > bVal) {
+                return c.sortDirection === 'asc' ? 1 : -1;
+            }
+            return 0;
+        });
+
+        // Reset to first page after sorting
+        c.currentPage = 1;
     };
 
     // Format amount for display - show dash for zero values
@@ -1247,6 +1421,11 @@ api.controller = function($scope, $timeout, spUtil) {
         }).then(function(response) {
             $timeout(function() {
                 c.limits = response.data.limits || [];
+                
+                // Reset sorting when new search is performed
+                c.sortColumn = null;
+                c.sortDirection = 'asc';
+                
                 c.currentPage = 1;
                 c.totalPages = Math.ceil(c.limits.length / c.pageSize);
                 c.loading = false;
