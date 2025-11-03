@@ -140,10 +140,16 @@
       <div class="filter-content-panel" id="filterPanel-job_function">
         <h3 class="filter-content-title">Line of Business Filter</h3>
         <div class="form-group">
-          <label for="jobFunctionSelect">Select Line of Business</label>
-          <select id="jobFunctionSelect" class="form-control lob-select">
-            <option value="">-- Loading... --</option>
-          </select>
+          <label for="jobFunctionInput">Select or Type Line of Business</label>
+          <input type="text" 
+                 id="jobFunctionInput" 
+                 class="form-control" 
+                 list="jobFunctionDatalist"
+                 placeholder="Start typing or select from dropdown..."
+                 autocomplete="off">
+          <datalist id="jobFunctionDatalist">
+            <option value="">Loading...</option>
+          </datalist>
         </div>
         <div class="filter-actions">
           <button class="btn btn-add-filter" id="addJobFunctionFilter">Apply Filter</button>
@@ -623,6 +629,35 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  align-items: center;
+}
+
+.filter-category-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 4px 8px;
+  background: rgba(52, 152, 219, 0.05);
+  border-radius: 8px;
+  border: 1px dashed rgba(52, 152, 219, 0.3);
+}
+
+.filter-separator {
+  font-weight: 700;
+  color: #e74c3c;
+  font-size: 12px;
+  padding: 4px 12px;
+  background: rgba(231, 76, 60, 0.1);
+  border-radius: 4px;
+  border: 1px solid rgba(231, 76, 60, 0.3);
+}
+
+.filter-or-separator {
+  font-weight: 600;
+  color: #27ae60;
+  font-size: 11px;
+  padding: 2px 8px;
 }
 
 .filter-tag {
@@ -1490,14 +1525,13 @@ api.controller = function($scope, $timeout, spUtil) {
         }).then(function(response) {
             var lobOptions = response.data.lobs || [];
             
-            var select = document.getElementById('jobFunctionSelect');
-            if (select) {
-                select.innerHTML = '<option value="">-- Select Line of Business --</option>';
+            var datalist = document.getElementById('jobFunctionDatalist');
+            if (datalist) {
+                datalist.innerHTML = '';
                 lobOptions.forEach(function(lob) {
                     var option = document.createElement('option');
-                    option.value = lob.value;
-                    option.textContent = lob.display;
-                    select.appendChild(option);
+                    option.value = lob.display;
+                    datalist.appendChild(option);
                 });
             }
         }).catch(function(error) {
@@ -1673,16 +1707,65 @@ api.controller = function($scope, $timeout, spUtil) {
             searchDisplay = selectedOption.text + ' >= $' + c.formatCurrency(minAmount);
             searchValue = minAmount;
 
+            // Check if this limit type already exists - if so, REPLACE it
+            var existingIndex = -1;
+            c.activeFilters.forEach(function(filter, index) {
+                if (filter.type === 'amount' && filter.limitType === limitType) {
+                    existingIndex = index;
+                }
+            });
+
+            if (existingIndex >= 0) {
+                // Replace existing filter for this limit type
+                c.activeFilters[existingIndex] = {
+                    type: filterType,
+                    typeLabel: 'Amount',
+                    value: searchValue,
+                    display: searchDisplay,
+                    limitType: limitType
+                };
+                spUtil.addInfoMessage('Updated ' + selectedOption.text + ' filter to $' + c.formatCurrency(minAmount));
+            } else {
+                // Add new filter
+                c.activeFilters.push({
+                    type: filterType,
+                    typeLabel: 'Amount',
+                    value: searchValue,
+                    display: searchDisplay,
+                    limitType: limitType
+                });
+            }
+
         } else if (filterType === 'job_function') {
-            var lobSelect = document.getElementById('jobFunctionSelect');
-            searchValue = lobSelect.value;
+            var lobInput = document.getElementById('jobFunctionInput');
+            searchValue = lobInput.value.trim();
             if (!searchValue) {
-                spUtil.addInfoMessage('Please select a line of business');
+                spUtil.addInfoMessage('Please enter or select a line of business');
                 return;
             }
-            searchDisplay = lobSelect.options[lobSelect.selectedIndex].text;
+            searchDisplay = searchValue;
+
+            // Check if this exact LOB already exists
+            var filterExists = c.activeFilters.some(function(filter) {
+                return filter.type === 'job_function' && filter.value.toLowerCase() === searchValue.toLowerCase();
+            });
+
+            if (filterExists) {
+                spUtil.addInfoMessage('This Line of Business filter is already active');
+                return;
+            }
+
+            // Add new LOB filter (allows multiple LOBs)
+            c.activeFilters.push({
+                type: filterType,
+                typeLabel: 'Line of Business',
+                value: searchValue,
+                display: searchDisplay,
+                limitType: ''
+            });
 
         } else {
+            // job_code, job_title, employee
             var inputId = filterType === 'job_code' ? 'jobCodeInput' : 
                          filterType === 'job_title' ? 'jobTitleInput' : 'employeeInput';
             var valueId = inputId + 'Value';
@@ -1697,35 +1780,34 @@ api.controller = function($scope, $timeout, spUtil) {
             }
 
             searchDisplay = searchInput.value;
+
+            // Check if this exact filter already exists
+            var filterExists = c.activeFilters.some(function(filter) {
+                return filter.type === filterType && filter.value === searchValue;
+            });
+
+            if (filterExists) {
+                spUtil.addInfoMessage('This filter is already active');
+                return;
+            }
+
+            // Determine label
+            var filterTypeLabel = '';
+            switch(filterType) {
+                case 'job_code': filterTypeLabel = 'Job Code'; break;
+                case 'job_title': filterTypeLabel = 'Job Title'; break;
+                case 'employee': filterTypeLabel = 'Employee'; break;
+            }
+
+            // Add new filter (allows multiple)
+            c.activeFilters.push({
+                type: filterType,
+                typeLabel: filterTypeLabel,
+                value: searchValue,
+                display: searchDisplay,
+                limitType: ''
+            });
         }
-
-        var filterExists = c.activeFilters.some(function(filter) {
-            return filter.type === filterType && 
-                   filter.value === searchValue && 
-                   filter.limitType === limitType;
-        });
-
-        if (filterExists) {
-            spUtil.addInfoMessage('This filter is already active');
-            return;
-        }
-
-        var filterTypeLabel = '';
-        switch(filterType) {
-            case 'job_code': filterTypeLabel = 'Job Code'; break;
-            case 'job_title': filterTypeLabel = 'Job Title'; break;
-            case 'job_function': filterTypeLabel = 'Line of Business'; break;
-            case 'employee': filterTypeLabel = 'Employee'; break;
-            case 'amount': filterTypeLabel = 'Amount'; break;
-        }
-
-        c.activeFilters.push({
-            type: filterType,
-            typeLabel: filterTypeLabel,
-            value: searchValue,
-            display: searchDisplay,
-            limitType: limitType
-        });
 
         clearPanelInputs(filterType);
         updateActiveFiltersDisplay();
@@ -1739,8 +1821,8 @@ api.controller = function($scope, $timeout, spUtil) {
             var amountInput = document.getElementById('amountInput');
             if (amountInput) amountInput.value = '';
         } else if (filterType === 'job_function') {
-            var lobSelect = document.getElementById('jobFunctionSelect');
-            if (lobSelect) lobSelect.value = '';
+            var lobInput = document.getElementById('jobFunctionInput');
+            if (lobInput) lobInput.value = '';
         } else {
             var inputId = filterType === 'job_code' ? 'jobCodeInput' : 
                          filterType === 'job_title' ? 'jobTitleInput' : 'employeeInput';
@@ -1774,45 +1856,81 @@ api.controller = function($scope, $timeout, spUtil) {
         });
     }
 
-    // Apply all active filters (OR logic)
+    // Apply all active filters (Hybrid AND/OR logic)
+    // OR within same category, AND across categories
     function applyFilters() {
         if (c.activeFilters.length === 0) {
             c.limits = c.allLimits.slice();
         } else {
-            var filteredLimits = [];
-            var addedSysIds = {};
+            // Group filters by category
+            var filtersByCategory = {
+                job_code: [],
+                job_title: [],
+                job_function: [],
+                employee: [],
+                amount: []
+            };
 
             c.activeFilters.forEach(function(filter) {
-                c.allLimits.forEach(function(limit) {
-                    if (addedSysIds[limit.sys_id]) {
-                        return;
-                    }
+                filtersByCategory[filter.type].push(filter);
+            });
 
-                    var matches = false;
+            // Start with all limits
+            var filteredLimits = c.allLimits.slice();
 
-                    if (filter.type === 'job_code') {
-                        matches = limit.job_code_sys_id === filter.value || 
-                                 limit.job_code_display.toLowerCase().indexOf(filter.value.toLowerCase()) >= 0;
-                    } else if (filter.type === 'job_title') {
-                        matches = limit.job_title && 
-                                 limit.job_title.toLowerCase().indexOf(filter.value.toLowerCase()) >= 0;
-                    } else if (filter.type === 'job_function') {
-                        matches = limit.job_function && 
-                                 limit.job_function.toLowerCase().indexOf(filter.value.toLowerCase()) >= 0;
-                    } else if (filter.type === 'employee') {
-                        matches = limit.job_code_sys_id === filter.value;
-                    } else if (filter.type === 'amount') {
+            // Apply each category with AND logic between categories
+            // Within each category, use OR logic
+
+            // Job Code filters (OR within category)
+            if (filtersByCategory.job_code.length > 0) {
+                filteredLimits = filteredLimits.filter(function(limit) {
+                    return filtersByCategory.job_code.some(function(filter) {
+                        return limit.job_code_sys_id === filter.value || 
+                               limit.job_code_display.toLowerCase().indexOf(filter.value.toLowerCase()) >= 0;
+                    });
+                });
+            }
+
+            // Job Title filters (OR within category)
+            if (filtersByCategory.job_title.length > 0) {
+                filteredLimits = filteredLimits.filter(function(limit) {
+                    return filtersByCategory.job_title.some(function(filter) {
+                        return limit.job_title && 
+                               limit.job_title.toLowerCase().indexOf(filter.value.toLowerCase()) >= 0;
+                    });
+                });
+            }
+
+            // Line of Business filters (OR within category)
+            if (filtersByCategory.job_function.length > 0) {
+                filteredLimits = filteredLimits.filter(function(limit) {
+                    return filtersByCategory.job_function.some(function(filter) {
+                        return limit.job_function && 
+                               limit.job_function.toLowerCase().indexOf(filter.value.toLowerCase()) >= 0;
+                    });
+                });
+            }
+
+            // Employee filters (OR within category)
+            if (filtersByCategory.employee.length > 0) {
+                filteredLimits = filteredLimits.filter(function(limit) {
+                    return filtersByCategory.employee.some(function(filter) {
+                        return limit.job_code_sys_id === filter.value;
+                    });
+                });
+            }
+
+            // Amount filters (AND across different limit types)
+            if (filtersByCategory.amount.length > 0) {
+                filteredLimits = filteredLimits.filter(function(limit) {
+                    // ALL amount filters must match (AND logic)
+                    return filtersByCategory.amount.every(function(filter) {
                         var limitValue = parseFloat(limit[filter.limitType]) || 0;
                         var minValue = parseFloat(filter.value) || 0;
-                        matches = limitValue >= minValue;
-                    }
-
-                    if (matches) {
-                        filteredLimits.push(limit);
-                        addedSysIds[limit.sys_id] = true;
-                    }
+                        return limitValue >= minValue;
+                    });
                 });
-            });
+            }
 
             c.limits = filteredLimits;
         }
@@ -1825,7 +1943,7 @@ api.controller = function($scope, $timeout, spUtil) {
         $scope.$apply();
     }
 
-    // Update active filters display
+    // Update active filters display with grouping by category
     function updateActiveFiltersDisplay() {
         var container = document.getElementById('activeFiltersContainer');
         var filtersList = document.getElementById('activeFilters');
@@ -1836,28 +1954,73 @@ api.controller = function($scope, $timeout, spUtil) {
             container.style.display = 'block';
             filtersList.innerHTML = '';
 
+            // Group filters by category
+            var filtersByCategory = {
+                amount: [],
+                job_code: [],
+                job_title: [],
+                job_function: [],
+                employee: []
+            };
+
             c.activeFilters.forEach(function(filter, index) {
-                var tag = document.createElement('div');
-                tag.className = 'filter-tag';
+                filter.originalIndex = index; // Store original index for removal
+                filtersByCategory[filter.type].push(filter);
+            });
 
-                var label = document.createElement('span');
-                label.className = 'filter-tag-label';
-                label.textContent = filter.typeLabel + ':';
-                tag.appendChild(label);
+            var categoryOrder = ['employee', 'job_code', 'job_title', 'job_function', 'amount'];
+            var addedCategories = 0;
 
-                var value = document.createElement('span');
-                value.textContent = filter.display;
-                tag.appendChild(value);
+            categoryOrder.forEach(function(categoryType) {
+                var categoryFilters = filtersByCategory[categoryType];
+                if (categoryFilters.length === 0) return;
 
-                var removeBtn = document.createElement('button');
-                removeBtn.className = 'filter-tag-remove';
-                removeBtn.innerHTML = '&times;';
-                removeBtn.onclick = function() {
-                    removeFilter(index);
-                };
-                tag.appendChild(removeBtn);
+                // Add AND separator between categories
+                if (addedCategories > 0) {
+                    var andSeparator = document.createElement('span');
+                    andSeparator.className = 'filter-separator';
+                    andSeparator.textContent = 'AND';
+                    filtersList.appendChild(andSeparator);
+                }
 
-                filtersList.appendChild(tag);
+                // Add category group
+                var categoryGroup = document.createElement('div');
+                categoryGroup.className = 'filter-category-group';
+
+                categoryFilters.forEach(function(filter, catIndex) {
+                    // Add OR separator within category
+                    if (catIndex > 0) {
+                        var orSeparator = document.createElement('span');
+                        orSeparator.className = 'filter-or-separator';
+                        orSeparator.textContent = 'OR';
+                        categoryGroup.appendChild(orSeparator);
+                    }
+
+                    var tag = document.createElement('div');
+                    tag.className = 'filter-tag';
+
+                    var label = document.createElement('span');
+                    label.className = 'filter-tag-label';
+                    label.textContent = filter.typeLabel + ':';
+                    tag.appendChild(label);
+
+                    var value = document.createElement('span');
+                    value.textContent = filter.display;
+                    tag.appendChild(value);
+
+                    var removeBtn = document.createElement('button');
+                    removeBtn.className = 'filter-tag-remove';
+                    removeBtn.innerHTML = '&times;';
+                    removeBtn.onclick = function() {
+                        removeFilter(filter.originalIndex);
+                    };
+                    tag.appendChild(removeBtn);
+
+                    categoryGroup.appendChild(tag);
+                });
+
+                filtersList.appendChild(categoryGroup);
+                addedCategories++;
             });
         }
     }
@@ -2086,6 +2249,16 @@ api.controller = function($scope, $timeout, spUtil) {
         if (clearEmployeeBtn) {
             clearEmployeeBtn.addEventListener('click', function() {
                 clearPanelInputs('employee');
+            });
+        }
+
+        // Setup LOB input
+        var jobFunctionInput = document.getElementById('jobFunctionInput');
+        if (jobFunctionInput) {
+            jobFunctionInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addFilterFromPanel('job_function');
+                }
             });
         }
 
