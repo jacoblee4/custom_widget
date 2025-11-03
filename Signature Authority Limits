@@ -741,11 +741,12 @@
 .job-info-cell {
   color: #6c757d;
   font-size: 13px;
-  max-width: 200px;
+  max-width: 300px; /* Expanded width to accommodate longer text */
+  min-width: 150px; /* Ensure minimum width */
   word-wrap: break-word;
   white-space: normal;
-  line-height: 1.3em;
-  max-height: 2.6em; /* Approximately 2 lines */
+  line-height: 1.4em;
+  max-height: 2.8em; /* Exactly 2 lines (2 * 1.4em) */
   overflow: hidden;
   text-overflow: ellipsis;
 }
