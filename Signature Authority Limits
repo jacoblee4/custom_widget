@@ -10,17 +10,25 @@
   <!-- Search Controls -->
   <div class="search-controls">
     <div class="form-group">
-      <label for="searchTypeSelect">Search Type</label>
+      <label for="searchTypeSelect">Add Filter</label>
       <select id="searchTypeSelect" class="form-control">
+        <option value="">-- Select Filter Type --</option>
         <option value="job_code">Job Code</option>
         <option value="job_title">Job Title</option>
-        <option value="job_function">Job Function</option>
+        <option value="job_function">Line of Business</option>
         <option value="employee">Employee Name</option>
         <option value="amount">Limit Amount</option>
       </select>
     </div>
 
+    <!-- Active Filters Display -->
+    <div id="activeFiltersContainer" style="display: none;">
+      <label>Active Filters:</label>
+      <div id="activeFilters" class="active-filters-list"></div>
+    </div>
+
     <!-- Text Search Input (for job code, title, function, employee) -->
+    <div class="form-group" id="textSearchContainer" style="display: none;">
     <div class="form-group" id="textSearchContainer">
       <label for="searchInput" id="searchInputLabel">Search Value</label>
       <div class="reference-field-wrapper">
@@ -78,8 +86,8 @@
     </div>
 
     <div class="button-group">
-      <button id="searchButton" class="btn btn-search">Search</button>
-      <button id="clearButton" class="btn btn-clear">Clear</button>
+      <button id="searchButton" class="btn btn-search">Add Filter</button>
+      <button id="clearButton" class="btn btn-clear">Clear All Filters</button>
     </div>
   </div>
 
@@ -147,7 +155,7 @@
               </span>
             </th>
             <th class="sortable" ng-click="c.sortBy('job_function')">
-              Job Function
+              Line of Business
               <span class="sort-indicator" ng-if="c.sortColumn === 'job_function'">
                 <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
               </span>
@@ -364,6 +372,48 @@
   padding: 20px;
   margin-bottom: 24px;
   max-width: 50%;
+}
+
+.active-filters-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+  margin-bottom: 16px;
+}
+
+.filter-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #3498db;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.filter-tag-label {
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.filter-tag-remove {
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0;
+  margin-left: 4px;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.filter-tag-remove:hover {
+  opacity: 1;
 }
 
 .form-group {
@@ -1118,11 +1168,15 @@ api.controller = function($scope, $timeout, spUtil) {
 
     // Initialize variables
     c.limits = [];
+    c.allLimits = []; // Store unfiltered results
     c.loading = false;
     c.searchPerformed = false;
-    c.currentSearchType = 'job_code';
+    c.currentSearchType = '';
     c.selectedReferenceValue = null;
     c.selectedReferenceDisplay = '';
+
+    // Multiple filters support
+    c.activeFilters = [];
 
     // Sorting
     c.sortColumn = null;
@@ -1142,7 +1196,7 @@ api.controller = function($scope, $timeout, spUtil) {
         $timeout(function() {
             initializeWidget();
             // Perform initial search to show all limits
-            performSearch();
+            loadAllLimits();
         }, 500);
     };
 
@@ -1343,8 +1397,8 @@ api.controller = function($scope, $timeout, spUtil) {
 
             hideDropdown();
 
-            // Auto-search after selection
-            performSearch();
+            // Auto-add filter after selection
+            addFilter();
         }
     }
 
@@ -1381,9 +1435,48 @@ api.controller = function($scope, $timeout, spUtil) {
         }
     }
 
-    function performSearch() {
+    // Load all limits initially (unfiltered)
+    function loadAllLimits() {
+        c.loading = true;
+        c.searchPerformed = true;
+
+        c.server.get({
+            action: 'searchLimits',
+            search_type: 'all',
+            search_value: '',
+            limit_type: '',
+            min_amount: ''
+        }).then(function(response) {
+            $timeout(function() {
+                c.allLimits = response.data.limits || [];
+                c.limits = c.allLimits.slice(); // Copy all limits
+                c.currentPage = 1;
+                c.totalPages = Math.ceil(c.limits.length / c.pageSize);
+                c.loading = false;
+
+                $timeout(function() {
+                    setupColumnFilters();
+                }, 100);
+            });
+        }).catch(function(error) {
+            console.error('Error loading limits:', error);
+            spUtil.addErrorMessage('Failed to load authority limits');
+            c.allLimits = [];
+            c.limits = [];
+            c.loading = false;
+        });
+    }
+
+    // Add a new filter
+    function addFilter() {
         var searchType = c.currentSearchType;
+        if (!searchType) {
+            spUtil.addInfoMessage('Please select a filter type');
+            return;
+        }
+
         var searchValue = '';
+        var searchDisplay = '';
         var limitType = '';
         var minAmount = '';
 
@@ -1392,55 +1485,163 @@ api.controller = function($scope, $timeout, spUtil) {
             var amountInput = document.getElementById('amountInput');
             minAmount = c.getCurrencyValue(amountInput.value);
 
-            // If no amount entered when clearing, show all limits by changing search type temporarily
             if (!minAmount) {
-                searchType = 'all'; // This will show all limits
+                spUtil.addInfoMessage('Please enter an amount');
+                return;
             }
+
+            // Get the display text for the limit type
+            var limitTypeSelect = document.getElementById('limitTypeSelect');
+            var selectedOption = limitTypeSelect.options[limitTypeSelect.selectedIndex];
+            searchDisplay = selectedOption.text + ' >= $' + c.formatCurrency(minAmount);
+            searchValue = minAmount;
+
         } else {
             var searchInputValue = document.getElementById('searchInputValue');
             var searchInput = document.getElementById('searchInput');
 
-            // Use hidden field value if available, otherwise use the text input value for partial match
             searchValue = searchInputValue.value || searchInput.value;
+            if (!searchValue) {
+                spUtil.addInfoMessage('Please enter a search value');
+                return;
+            }
+
+            searchDisplay = searchInput.value;
         }
 
-        c.loading = true;
-        c.searchPerformed = true;
-
-        // Call server to get limits
-        c.server.get({
-            action: 'searchLimits',
-            search_type: searchType,
-            search_value: searchValue,
-            limit_type: limitType,
-            min_amount: minAmount
-        }).then(function(response) {
-            $timeout(function() {
-                c.limits = response.data.limits || [];
-                
-                // Reset sorting when new search is performed
-                c.sortColumn = null;
-                c.sortDirection = 'asc';
-                
-                c.currentPage = 1;
-                c.totalPages = Math.ceil(c.limits.length / c.pageSize);
-                c.loading = false;
-
-                // Re-setup column filters after table renders
-                $timeout(function() {
-                    setupColumnFilters();
-                }, 100);
-            });
-        }).catch(function(error) {
-            console.error('Error loading limits:', error);
-            spUtil.addErrorMessage('Failed to load authority limits');
-            c.limits = [];
-            c.loading = false;
+        // Check if this filter already exists
+        var filterExists = c.activeFilters.some(function(filter) {
+            return filter.type === searchType && 
+                   filter.value === searchValue && 
+                   filter.limitType === limitType;
         });
+
+        if (filterExists) {
+            spUtil.addInfoMessage('This filter is already active');
+            return;
+        }
+
+        // Add the filter
+        var filterTypeLabel = '';
+        switch(searchType) {
+            case 'job_code': filterTypeLabel = 'Job Code'; break;
+            case 'job_title': filterTypeLabel = 'Job Title'; break;
+            case 'job_function': filterTypeLabel = 'Line of Business'; break;
+            case 'employee': filterTypeLabel = 'Employee'; break;
+            case 'amount': filterTypeLabel = 'Amount'; break;
+        }
+
+        c.activeFilters.push({
+            type: searchType,
+            typeLabel: filterTypeLabel,
+            value: searchValue,
+            display: searchDisplay,
+            limitType: limitType
+        });
+
+        // Clear the input fields
+        clearInputFields();
+
+        // Update the display
+        updateActiveFiltersDisplay();
+
+        // Apply all filters
+        applyFilters();
     }
 
-    // Clear search
-    function clearSearch() {
+    // Remove a specific filter
+    function removeFilter(index) {
+        c.activeFilters.splice(index, 1);
+        updateActiveFiltersDisplay();
+        applyFilters();
+    }
+
+    // Apply all active filters
+    function applyFilters() {
+        if (c.activeFilters.length === 0) {
+            // No filters, show all
+            c.limits = c.allLimits.slice();
+        } else {
+            // Start with all limits
+            var filteredLimits = c.allLimits.slice();
+
+            // Apply each filter sequentially
+            c.activeFilters.forEach(function(filter) {
+                filteredLimits = filteredLimits.filter(function(limit) {
+                    if (filter.type === 'job_code') {
+                        return limit.job_code_sys_id === filter.value || 
+                               limit.job_code_display.toLowerCase().indexOf(filter.value.toLowerCase()) >= 0;
+                    } else if (filter.type === 'job_title') {
+                        return limit.job_title && 
+                               limit.job_title.toLowerCase().indexOf(filter.value.toLowerCase()) >= 0;
+                    } else if (filter.type === 'job_function') {
+                        return limit.job_function && 
+                               limit.job_function.toLowerCase().indexOf(filter.value.toLowerCase()) >= 0;
+                    } else if (filter.type === 'employee') {
+                        // Employee filter was converted to job code
+                        return limit.job_code_sys_id === filter.value;
+                    } else if (filter.type === 'amount') {
+                        var limitValue = parseFloat(limit[filter.limitType]) || 0;
+                        var minValue = parseFloat(filter.value) || 0;
+                        return limitValue >= minValue;
+                    }
+                    return true;
+                });
+            });
+
+            c.limits = filteredLimits;
+        }
+
+        // Reset pagination
+        c.currentPage = 1;
+        c.totalPages = Math.ceil(c.limits.length / c.pageSize);
+
+        // Reset sorting
+        c.sortColumn = null;
+        c.sortDirection = 'asc';
+
+        $scope.$apply();
+    }
+
+    // Update the active filters display
+    function updateActiveFiltersDisplay() {
+        var container = document.getElementById('activeFiltersContainer');
+        var filtersList = document.getElementById('activeFilters');
+
+        if (c.activeFilters.length === 0) {
+            container.style.display = 'none';
+        } else {
+            container.style.display = 'block';
+            filtersList.innerHTML = '';
+
+            c.activeFilters.forEach(function(filter, index) {
+                var tag = document.createElement('div');
+                tag.className = 'filter-tag';
+
+                var label = document.createElement('span');
+                label.className = 'filter-tag-label';
+                label.textContent = filter.typeLabel + ':';
+                tag.appendChild(label);
+
+                var value = document.createElement('span');
+                value.textContent = filter.display;
+                tag.appendChild(value);
+
+                var removeBtn = document.createElement('button');
+                removeBtn.className = 'filter-tag-remove';
+                removeBtn.innerHTML = '&times;';
+                removeBtn.onclick = function() {
+                    removeFilter(index);
+                };
+                tag.appendChild(removeBtn);
+
+                filtersList.appendChild(tag);
+            });
+        }
+    }
+
+    // Clear input fields
+    function clearInputFields() {
         var searchInput = document.getElementById('searchInput');
         var searchInputValue = document.getElementById('searchInputValue');
         var amountInput = document.getElementById('amountInput');
@@ -1452,8 +1653,36 @@ api.controller = function($scope, $timeout, spUtil) {
         c.selectedReferenceValue = null;
         c.selectedReferenceDisplay = '';
 
-        // Perform search to show all limits (like initial load)
-        performSearch();
+        // Hide the input containers
+        document.getElementById('textSearchContainer').style.display = 'none';
+        document.getElementById('amountSearchContainer').style.display = 'none';
+
+        // Reset the search type dropdown
+        document.getElementById('searchTypeSelect').value = '';
+        c.currentSearchType = '';
+    }
+
+    function performSearch() {
+        // This is now the "Add Filter" button
+        addFilter();
+    }
+
+    // Clear all filters
+    function clearSearch() {
+        c.activeFilters = [];
+        clearInputFields();
+        updateActiveFiltersDisplay();
+        
+        // Show all limits
+        c.limits = c.allLimits.slice();
+        c.currentPage = 1;
+        c.totalPages = Math.ceil(c.limits.length / c.pageSize);
+        
+        // Reset sorting
+        c.sortColumn = null;
+        c.sortDirection = 'asc';
+        
+        $scope.$apply();
     }
 
     // Update search interface based on selected type
@@ -1464,7 +1693,6 @@ api.controller = function($scope, $timeout, spUtil) {
         var searchInputLabel = document.getElementById('searchInputLabel');
         var searchInput = document.getElementById('searchInput');
         var searchInputValue = document.getElementById('searchInputValue');
-        var searchButton = document.getElementById('searchButton');
 
         // Clear previous values
         if (searchInput) searchInput.value = '';
@@ -1474,7 +1702,10 @@ api.controller = function($scope, $timeout, spUtil) {
         hideDropdown();
 
         // Show/hide appropriate containers
-        if (searchType === 'amount') {
+        if (!searchType) {
+            textSearchContainer.style.display = 'none';
+            amountSearchContainer.style.display = 'none';
+        } else if (searchType === 'amount') {
             textSearchContainer.style.display = 'none';
             amountSearchContainer.style.display = 'block';
         } else {
@@ -1484,19 +1715,19 @@ api.controller = function($scope, $timeout, spUtil) {
             // Update label and placeholder based on search type
             switch (searchType) {
                 case 'job_code':
-                    searchInputLabel.textContent = 'Search Value';
+                    searchInputLabel.textContent = 'Job Code';
                     searchInput.placeholder = 'Start typing to search job codes...';
                     break;
                 case 'job_title':
-                    searchInputLabel.textContent = 'Search Value';
+                    searchInputLabel.textContent = 'Job Title';
                     searchInput.placeholder = 'Start typing to search job titles...';
                     break;
                 case 'job_function':
-                    searchInputLabel.textContent = 'Search Value';
-                    searchInput.placeholder = 'Start typing to search job functions...';
+                    searchInputLabel.textContent = 'Line of Business';
+                    searchInput.placeholder = 'Start typing to search line of business...';
                     break;
                 case 'employee':
-                    searchInputLabel.textContent = 'Search Value';
+                    searchInputLabel.textContent = 'Employee Name';
                     searchInput.placeholder = 'Start typing to search employees...';
                     break;
             }
@@ -1574,7 +1805,7 @@ api.controller = function($scope, $timeout, spUtil) {
                         hideDropdown();
                     }
                 } else if (e.key === 'Enter') {
-                    performSearch();
+                    addFilter();
                 }
             });
         }
@@ -1631,7 +1862,7 @@ api.controller = function($scope, $timeout, spUtil) {
 
             amountInput.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
-                    performSearch();
+                    addFilter();
                 }
                 // Prevent decimal point entry
                 if (e.key === '.' || e.key === ',') {
