@@ -29,7 +29,6 @@
 
     <!-- Text Search Input (for job code, title, function, employee) -->
     <div class="form-group" id="textSearchContainer" style="display: none;">
-    <div class="form-group" id="textSearchContainer">
       <label for="searchInput" id="searchInputLabel">Search Value</label>
       <div class="reference-field-wrapper">
         <input type="text" 
@@ -84,7 +83,10 @@
         <small class="help-text">Shows all limits from entered amount and above</small>
       </div>
     </div>
+  </div>
 
+  <!-- Button Group - Always Visible -->
+  <div class="button-group-container">
     <div class="button-group">
       <button id="searchButton" class="btn btn-search">Add Filter</button>
       <button id="clearButton" class="btn btn-clear">Clear All Filters</button>
@@ -371,7 +373,7 @@
   border-radius: 6px;
   padding: 20px;
   margin-bottom: 24px;
-  max-width: 50%;
+  max-width: 100%;
 }
 
 .active-filters-list {
@@ -549,10 +551,13 @@
   font-style: italic;
 }
 
+.button-group-container {
+  margin-bottom: 24px;
+}
+
 .button-group {
   display: flex;
   gap: 10px;
-  margin-top: 20px;
 }
 
 .btn {
@@ -920,17 +925,7 @@
   display: none !important;
 }
 
-@media (max-width: 1200px) {
-  .search-controls {
-    max-width: 70%;
-  }
-}
-
 @media (max-width: 768px) {
-  .search-controls {
-    max-width: 100%;
-  }
-
   .pagination-controls {
     flex-direction: column;
     align-items: stretch;
@@ -1562,30 +1557,41 @@ api.controller = function($scope, $timeout, spUtil) {
             // No filters, show all
             c.limits = c.allLimits.slice();
         } else {
-            // Start with all limits
-            var filteredLimits = c.allLimits.slice();
+            // OR logic - show results that match ANY filter
+            var filteredLimits = [];
+            var addedSysIds = {}; // Track which records we've already added to avoid duplicates
 
-            // Apply each filter sequentially
             c.activeFilters.forEach(function(filter) {
-                filteredLimits = filteredLimits.filter(function(limit) {
+                c.allLimits.forEach(function(limit) {
+                    // Skip if we've already added this record
+                    if (addedSysIds[limit.sys_id]) {
+                        return;
+                    }
+
+                    var matches = false;
+
                     if (filter.type === 'job_code') {
-                        return limit.job_code_sys_id === filter.value || 
-                               limit.job_code_display.toLowerCase().indexOf(filter.value.toLowerCase()) >= 0;
+                        matches = limit.job_code_sys_id === filter.value || 
+                                 limit.job_code_display.toLowerCase().indexOf(filter.value.toLowerCase()) >= 0;
                     } else if (filter.type === 'job_title') {
-                        return limit.job_title && 
-                               limit.job_title.toLowerCase().indexOf(filter.value.toLowerCase()) >= 0;
+                        matches = limit.job_title && 
+                                 limit.job_title.toLowerCase().indexOf(filter.value.toLowerCase()) >= 0;
                     } else if (filter.type === 'job_function') {
-                        return limit.job_function && 
-                               limit.job_function.toLowerCase().indexOf(filter.value.toLowerCase()) >= 0;
+                        matches = limit.job_function && 
+                                 limit.job_function.toLowerCase().indexOf(filter.value.toLowerCase()) >= 0;
                     } else if (filter.type === 'employee') {
                         // Employee filter was converted to job code
-                        return limit.job_code_sys_id === filter.value;
+                        matches = limit.job_code_sys_id === filter.value;
                     } else if (filter.type === 'amount') {
                         var limitValue = parseFloat(limit[filter.limitType]) || 0;
                         var minValue = parseFloat(filter.value) || 0;
-                        return limitValue >= minValue;
+                        matches = limitValue >= minValue;
                     }
-                    return true;
+
+                    if (matches) {
+                        filteredLimits.push(limit);
+                        addedSysIds[limit.sys_id] = true;
+                    }
                 });
             });
 
