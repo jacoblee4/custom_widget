@@ -2050,15 +2050,6 @@ c.totalPages = parseInt((c.limits.length + c.pageSize - 1) / c.pageSize);
 
 $scope.$apply();
         }
-
-        c.currentPage = 1;
-        c.totalPages = Math.ceil(c.limits.length / c.pageSize);
-        c.sortColumn = null;
-        c.sortDirection = 'asc';
-
-        $scope.$apply();
-    }
-
     // Update active filters display with grouping by category
     function updateActiveFiltersDisplay() {
         var container = document.getElementById('activeFiltersContainer');
