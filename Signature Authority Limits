@@ -1560,18 +1560,25 @@ api.controller = function($scope, $timeout, spUtil) {
 
     // Sorting function
     c.sortBy = function(column) {
+        // Check if this is a numeric column (all columns except the three job info ones)
+        var isNumericColumn = column !== 'job_code_display' && 
+                             column !== 'job_title' && 
+                             column !== 'job_function';
+
         if (c.sortColumn === column) {
+            // Toggle direction if clicking same column
             c.sortDirection = c.sortDirection === 'asc' ? 'desc' : 'asc';
         } else {
+            // New column - numeric columns default to descending (high to low), text columns to ascending
             c.sortColumn = column;
-            c.sortDirection = 'asc';
+            c.sortDirection = isNumericColumn ? 'desc' : 'asc';
         }
 
         c.limits.sort(function(a, b) {
             var aVal = a[column];
             var bVal = b[column];
 
-            if (column !== 'job_code_display' && column !== 'job_title' && column !== 'job_function') {
+            if (isNumericColumn) {
                 aVal = parseFloat(aVal) || 0;
                 bVal = parseFloat(bVal) || 0;
             } else {
@@ -1807,8 +1814,13 @@ api.controller = function($scope, $timeout, spUtil) {
             }
 
             // Check if this exact filter already exists
+            // For employees, check by display name (not value/job code) to allow same job code but different employees
             var filterExists = c.activeFilters.some(function(filter) {
-                return filter.type === filterType && filter.value === searchValue;
+                if (filterType === 'employee') {
+                    return filter.type === filterType && filter.display.toLowerCase() === searchDisplay.toLowerCase();
+                } else {
+                    return filter.type === filterType && filter.value === searchValue;
+                }
             });
 
             if (filterExists) {
@@ -1888,6 +1900,13 @@ api.controller = function($scope, $timeout, spUtil) {
     function applyFilters() {
         if (c.activeFilters.length === 0) {
             c.limits = c.allLimits.slice();
+            // Clear all highlighting
+            c.limits.forEach(function(limit) {
+                limit.highlightField = '';
+                limit.highlighted = false;
+            });
+            c.sortColumn = null;
+            c.sortDirection = 'asc';
         } else {
             // Group filters by category
             var filtersByCategory = {
@@ -1958,6 +1977,32 @@ api.controller = function($scope, $timeout, spUtil) {
                         var minValue = parseFloat(filter.value) || 0;
                         return limitValue >= minValue;
                     });
+                });
+
+                // Highlight the filtered amount columns
+                filteredLimits.forEach(function(limit) {
+                    // Get the first amount filter's limit type for primary highlighting
+                    if (filtersByCategory.amount.length > 0) {
+                        limit.highlightField = filtersByCategory.amount[0].limitType;
+                        limit.highlighted = true;
+                    }
+                });
+
+                // Auto-sort by the first amount filter column (descending - high to low)
+                var sortColumn = filtersByCategory.amount[0].limitType;
+                c.sortColumn = sortColumn;
+                c.sortDirection = 'desc';
+                
+                filteredLimits.sort(function(a, b) {
+                    var aVal = parseFloat(a[sortColumn]) || 0;
+                    var bVal = parseFloat(b[sortColumn]) || 0;
+                    return bVal - aVal; // Descending order
+                });
+            } else {
+                // Clear highlighting if no amount filters
+                filteredLimits.forEach(function(limit) {
+                    limit.highlightField = '';
+                    limit.highlighted = false;
                 });
             }
 
