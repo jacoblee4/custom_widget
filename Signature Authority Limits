@@ -1368,7 +1368,7 @@
                     value: userGr.getUniqueValue(),
                     display: userGr.getValue('name'),
                     secondary: secondaryText,
-                    jobCodeSysId: jobCodeSysId  // Pass the job code sys_id
+                    jobCodeSysId: jobCodeSysId // Pass the job code sys_id
                 });
             }
         }
@@ -1381,12 +1381,12 @@
     if (input && input.action === 'getLOBOptions') {
         var lobs = [];
         var seen = {};
-        
+
         var gr = new GlideRecord('x_banun_rbac_job_code');
         gr.addQuery('job_function_description', '!=', '');
         gr.orderBy('job_function_description');
         gr.query();
-        
+
         while (gr.next()) {
             var lobValue = gr.getValue('job_function_description');
             if (lobValue && !seen[lobValue]) {
@@ -1397,7 +1397,7 @@
                 });
             }
         }
-        
+
         data.lobs = lobs;
         return;
     }
@@ -1537,9 +1537,21 @@ api.controller = function($scope, $timeout, spUtil) {
 
     // Reference field dropdown states
     var dropdownStates = {
-        jobCode: { visible: false, results: [], selectedIndex: -1 },
-        jobTitle: { visible: false, results: [], selectedIndex: -1 },
-        employee: { visible: false, results: [], selectedIndex: -1 }
+        jobCode: {
+            visible: false,
+            results: [],
+            selectedIndex: -1
+        },
+        jobTitle: {
+            visible: false,
+            results: [],
+            selectedIndex: -1
+        },
+        employee: {
+            visible: false,
+            results: [],
+            selectedIndex: -1
+        }
     };
 
     c.$onInit = function() {
@@ -1579,7 +1591,7 @@ api.controller = function($scope, $timeout, spUtil) {
             action: 'getLOBOptions'
         }).then(function(response) {
             var lobOptions = response.data.lobs || [];
-            
+
             var datalist = document.getElementById('jobFunctionDatalist');
             if (datalist) {
                 datalist.innerHTML = '';
@@ -1597,9 +1609,9 @@ api.controller = function($scope, $timeout, spUtil) {
     // Sorting function
     c.sortBy = function(column) {
         // Check if this is a numeric column (all columns except the three job info ones)
-        var isNumericColumn = column !== 'job_code_display' && 
-                             column !== 'job_title' && 
-                             column !== 'job_function';
+        var isNumericColumn = column !== 'job_code_display' &&
+            column !== 'job_title' &&
+            column !== 'job_function';
 
         if (c.sortColumn === column) {
             // Toggle direction if clicking same column
@@ -1691,14 +1703,14 @@ api.controller = function($scope, $timeout, spUtil) {
     };
 
     c.getPageNumbers = function() {
-    var pages = [];
-    var maxPagesToShow = 5;
-    var startPage = 1;
-    var endPage = c.totalPages;
+        var pages = [];
+        var maxPagesToShow = 5;
+        var startPage = 1;
+        var endPage = c.totalPages;
 
-    if (c.totalPages > maxPagesToShow) {
-        var middlePage = parseInt(maxPagesToShow / 2);
-        if (c.currentPage <= middlePage) {
+        if (c.totalPages > maxPagesToShow) {
+            var middlePage = parseInt(maxPagesToShow / 2);
+            if (c.currentPage <= middlePage) {
                 endPage = maxPagesToShow;
             } else if (c.currentPage >= c.totalPages - middlePage) {
                 startPage = c.totalPages - maxPagesToShow + 1;
@@ -1729,10 +1741,10 @@ api.controller = function($scope, $timeout, spUtil) {
         }).then(function(response) {
             $timeout(function() {
                 c.allLimits = response.data.limits || [];
-c.limits = c.allLimits.slice();
-c.currentPage = 1;
-c.totalPages = parseInt((c.limits.length + c.pageSize - 1) / c.pageSize);
-c.loading = false;
+                c.limits = c.allLimits.slice();
+                c.currentPage = 1;
+                c.totalPages = parseInt((c.limits.length + c.pageSize - 1) / c.pageSize);
+                c.loading = false;
 
                 $timeout(function() {
                     setupColumnFilters();
@@ -1828,10 +1840,10 @@ c.loading = false;
 
         } else {
             // job_code, job_title, employee
-            var inputId = filterType === 'job_code' ? 'jobCodeInput' : 
-                         filterType === 'job_title' ? 'jobTitleInput' : 'employeeInput';
+            var inputId = filterType === 'job_code' ? 'jobCodeInput' :
+                filterType === 'job_title' ? 'jobTitleInput' : 'employeeInput';
             var valueId = inputId + 'Value';
-            
+
             var searchInput = document.getElementById(inputId);
             var searchInputValue = document.getElementById(valueId);
 
@@ -1860,18 +1872,24 @@ c.loading = false;
             });
 
             if (filterExists) {
-                var existingFilterLabel = filterType === 'employee' ? 'Employee' : 
-                                         filterType === 'job_code' ? 'Job Code' : 'Job Title';
+                var existingFilterLabel = filterType === 'employee' ? 'Employee' :
+                    filterType === 'job_code' ? 'Job Code' : 'Job Title';
                 spUtil.addInfoMessage('This ' + existingFilterLabel + ' filter is already active');
                 return;
             }
 
             // Determine label
             var filterTypeLabel = '';
-            switch(filterType) {
-                case 'job_code': filterTypeLabel = 'Job Code'; break;
-                case 'job_title': filterTypeLabel = 'Job Title'; break;
-                case 'employee': filterTypeLabel = 'Employee'; break;
+            switch (filterType) {
+                case 'job_code':
+                    filterTypeLabel = 'Job Code';
+                    break;
+                case 'job_title':
+                    filterTypeLabel = 'Job Title';
+                    break;
+                case 'employee':
+                    filterTypeLabel = 'Employee';
+                    break;
             }
 
             // Add new filter (allows multiple)
@@ -1899,13 +1917,13 @@ c.loading = false;
             var lobInput = document.getElementById('jobFunctionInput');
             if (lobInput) lobInput.value = '';
         } else {
-            var inputId = filterType === 'job_code' ? 'jobCodeInput' : 
-                         filterType === 'job_title' ? 'jobTitleInput' : 'employeeInput';
+            var inputId = filterType === 'job_code' ? 'jobCodeInput' :
+                filterType === 'job_title' ? 'jobTitleInput' : 'employeeInput';
             var valueId = inputId + 'Value';
-            
+
             var searchInput = document.getElementById(inputId);
             var searchInputValue = document.getElementById(valueId);
-            
+
             if (searchInput) searchInput.value = '';
             if (searchInputValue) searchInputValue.value = '';
         }
@@ -1921,7 +1939,7 @@ c.loading = false;
         document.querySelectorAll('.filter-nav-tab').forEach(function(tab) {
             var filterType = tab.getAttribute('data-filter');
             var badge = tab.querySelector('.filter-nav-badge');
-            
+
             if (counts[filterType]) {
                 badge.textContent = counts[filterType];
                 badge.style.display = 'block';
@@ -1966,8 +1984,8 @@ c.loading = false;
             if (filtersByCategory.job_code.length > 0) {
                 filteredLimits = filteredLimits.filter(function(limit) {
                     return filtersByCategory.job_code.some(function(filter) {
-                        return limit.job_code_sys_id === filter.value || 
-                               limit.job_code_display.toLowerCase().indexOf(filter.value.toLowerCase()) >= 0;
+                        return limit.job_code_sys_id === filter.value ||
+                            limit.job_code_display.toLowerCase().indexOf(filter.value.toLowerCase()) >= 0;
                     });
                 });
             }
@@ -1976,8 +1994,8 @@ c.loading = false;
             if (filtersByCategory.job_title.length > 0) {
                 filteredLimits = filteredLimits.filter(function(limit) {
                     return filtersByCategory.job_title.some(function(filter) {
-                        return limit.job_title && 
-                               limit.job_title.toLowerCase().indexOf(filter.value.toLowerCase()) >= 0;
+                        return limit.job_title &&
+                            limit.job_title.toLowerCase().indexOf(filter.value.toLowerCase()) >= 0;
                     });
                 });
             }
@@ -1986,8 +2004,8 @@ c.loading = false;
             if (filtersByCategory.job_function.length > 0) {
                 filteredLimits = filteredLimits.filter(function(limit) {
                     return filtersByCategory.job_function.some(function(filter) {
-                        return limit.job_function && 
-                               limit.job_function.toLowerCase().indexOf(filter.value.toLowerCase()) >= 0;
+                        return limit.job_function &&
+                            limit.job_function.toLowerCase().indexOf(filter.value.toLowerCase()) >= 0;
                     });
                 });
             }
@@ -2004,52 +2022,52 @@ c.loading = false;
             }
 
             // Amount filters (AND across different limit types)
-if (filtersByCategory.amount.length > 0) {
-    filteredLimits = filteredLimits.filter(function(limit) {
-        // ALL amount filters must match (AND logic)
-        return filtersByCategory.amount.every(function(filter) {
-            var limitValue = parseFloat(limit[filter.limitType]) || 0;
-            var minValue = parseFloat(filter.value) || 0;
-            return limitValue >= minValue;
-        });
-    });
+            if (filtersByCategory.amount.length > 0) {
+                filteredLimits = filteredLimits.filter(function(limit) {
+                    // ALL amount filters must match (AND logic)
+                    return filtersByCategory.amount.every(function(filter) {
+                        var limitValue = parseFloat(limit[filter.limitType]) || 0;
+                        var minValue = parseFloat(filter.value) || 0;
+                        return limitValue >= minValue;
+                    });
+                });
 
-    // Highlight ALL active amount filter columns
-    // Store all active limit types for highlighting
-    var activeLimitTypes = filtersByCategory.amount.map(function(filter) {
-        return filter.limitType;
-    });
+                // Highlight ALL active amount filter columns
+                // Store all active limit types for highlighting
+                var activeLimitTypes = filtersByCategory.amount.map(function(filter) {
+                    return filter.limitType;
+                });
 
-    filteredLimits.forEach(function(limit) {
-        limit.activeLimitTypes = activeLimitTypes;
-    });
+                filteredLimits.forEach(function(limit) {
+                    limit.activeLimitTypes = activeLimitTypes;
+                });
 
-    // Auto-sort by the first amount filter column (descending - high to low)
-    var sortColumn = filtersByCategory.amount[0].limitType;
-    c.sortColumn = sortColumn;  // This sets the sort column
-    c.sortDirection = 'desc';    // This sets the direction
-    
-    filteredLimits.sort(function(a, b) {
-        var aVal = parseFloat(a[sortColumn]) || 0;
-        var bVal = parseFloat(b[sortColumn]) || 0;
-        return bVal - aVal; // Descending order
-    });
-} else {
-    // Clear highlighting if no amount filters
-    filteredLimits.forEach(function(limit) {
-        limit.activeLimitTypes = [];
-    });
-    // Don't reset sort if no amount filters - REMOVED LINE THAT WAS RESETTING SORT
-}
+                // Auto-sort by the first amount filter column (descending - high to low)
+                var sortColumn = filtersByCategory.amount[0].limitType;
+                c.sortColumn = sortColumn; // This sets the sort column
+                c.sortDirection = 'desc'; // This sets the direction
 
-c.limits = filteredLimits;
-}
+                filteredLimits.sort(function(a, b) {
+                    var aVal = parseFloat(a[sortColumn]) || 0;
+                    var bVal = parseFloat(b[sortColumn]) || 0;
+                    return bVal - aVal; // Descending order
+                });
+            } else {
+                // Clear highlighting if no amount filters
+                filteredLimits.forEach(function(limit) {
+                    limit.activeLimitTypes = [];
+                });
+                // Don't reset sort if no amount filters - REMOVED LINE THAT WAS RESETTING SORT
+            }
 
-c.currentPage = 1;
-c.totalPages = parseInt((c.limits.length + c.pageSize - 1) / c.pageSize);
-
-$scope.$apply();
+            c.limits = filteredLimits;
         }
+
+        c.currentPage = 1;
+        c.totalPages = parseInt((c.limits.length + c.pageSize - 1) / c.pageSize);
+
+        $scope.$apply();
+    }
     // Update active filters display with grouping by category
     function updateActiveFiltersDisplay() {
         var container = document.getElementById('activeFiltersContainer');
@@ -2147,25 +2165,25 @@ $scope.$apply();
     }
 
     // Clear all filters
-function clearAllFilters() {
-    c.activeFilters = [];
-    updateActiveFiltersDisplay();
-    updateFilterBadges();
-    
-    c.limits = c.allLimits.slice();
-    
-    // Clear all highlighting from limits
-    c.limits.forEach(function(limit) {
-        limit.activeLimitTypes = [];
-    });
-    
-    c.currentPage = 1;
-    c.totalPages = parseInt((c.limits.length + c.pageSize - 1) / c.pageSize);
-    c.sortColumn = null;
-    c.sortDirection = 'asc';
-    
-    $scope.$apply();
-}
+    function clearAllFilters() {
+        c.activeFilters = [];
+        updateActiveFiltersDisplay();
+        updateFilterBadges();
+
+        c.limits = c.allLimits.slice();
+
+        // Clear all highlighting from limits
+        c.limits.forEach(function(limit) {
+            limit.activeLimitTypes = [];
+        });
+
+        c.currentPage = 1;
+        c.totalPages = parseInt((c.limits.length + c.pageSize - 1) / c.pageSize);
+        c.sortColumn = null;
+        c.sortDirection = 'asc';
+
+        $scope.$apply();
+    }
 
     // Reference field lookup
     function performReferenceLookup(searchValue, filterType, inputId) {
@@ -2244,7 +2262,7 @@ function clearAllFilters() {
             var searchInput = document.getElementById(inputId);
             var searchInputValue = document.getElementById(inputId + 'Value');
             searchInput.value = result.display;
-            
+
             // For employee, store the job code sys_id instead of user sys_id
             if (inputId === 'employeeInput' && result.jobCodeSysId) {
                 searchInputValue.value = result.jobCodeSysId;
@@ -2510,7 +2528,7 @@ function clearAllFilters() {
                     clickedInside = true;
                 }
             });
-            
+
             if (!clickedInside) {
                 hideDropdown('jobCodeInput');
                 hideDropdown('jobTitleInput');
