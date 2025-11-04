@@ -1341,16 +1341,20 @@
             // Build HTML for PDF
             var html = buildPDFHTML(limits, filterDescription);
             
-            // Create a UI Page to generate PDF
-            var pdfGen = new sn_pdfgeneratorutils.PDFGenerationAPI();
-            var fileName = 'Authority_Limits_' + new GlideDateTime().getNumericValue() + '.pdf';
+            // Use a temporary sys_user record to attach the PDF to
+            var userSysId = gs.getUserID();
             
-            // Generate PDF and get attachment sys_id
-            var attachmentId = pdfGen.convertToPDF(fileName, html);
+            // Create PDF using the API
+            var pdfGen = new sn_pdfgeneratorutils.PDFGenerationAPI();
+            var fileName = 'Authority_Limits_' + new GlideDateTime().getNumericValue();
+            
+            // Generate PDF and attach to user record
+            var attachmentId = pdfGen.convertToPDF(html, 'sys_user', userSysId, fileName);
             
             if (attachmentId) {
                 data.success = true;
-                data.pdfUrl = '/sys_attachment.do?sys_id=' + attachmentId;
+                data.attachmentId = attachmentId;
+                data.fileName = fileName + '.pdf';
             } else {
                 data.success = false;
                 data.error = 'Failed to generate PDF attachment';
@@ -2430,14 +2434,28 @@ api.controller = function($scope, $timeout, spUtil) {
         
         var filterDescription = getFilterDescription();
         
+        spUtil.addInfoMessage('Generating PDF, please wait...');
+        
         c.server.get({
             action: 'exportPDF',
             limits: limitsToExport,
             filterDescription: filterDescription
         }).then(function(response) {
-            if (response.data.success && response.data.pdfUrl) {
-                // Open PDF in new tab
-                window.open(response.data.pdfUrl, '_blank');
+            if (response.data.success && response.data.attachmentId) {
+                // Download the PDF directly
+                var downloadUrl = '/sys_attachment.do?sys_id=' + response.data.attachmentId;
+                
+                // Create invisible iframe to trigger download
+                var iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = downloadUrl;
+                document.body.appendChild(iframe);
+                
+                // Remove iframe after download starts
+                setTimeout(function() {
+                    document.body.removeChild(iframe);
+                }, 5000);
+                
                 spUtil.addInfoMessage('PDF export completed successfully');
             } else {
                 spUtil.addErrorMessage('Failed to generate PDF: ' + (response.data.error || 'Unknown error'));
