@@ -253,108 +253,125 @@
             <!-- Job Info Columns -->
             <th class="sticky-col sortable" ng-click="c.sortBy('job_code_display')">
               Job Code 
-              <span class="sort-indicator" ng-if="c.sortColumn === 'job_code_display'">
-                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              <span class="sort-arrows">
+                <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'job_code_display' && c.sortDirection === 'asc'}"></i>
+                <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'job_code_display' && c.sortDirection === 'desc'}"></i>
               </span>
             </th>
             <th class="sortable" ng-click="c.sortBy('job_title')">
               Job Title
-              <span class="sort-indicator" ng-if="c.sortColumn === 'job_title'">
-                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              <span class="sort-arrows">
+                <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'job_title' && c.sortDirection === 'asc'}"></i>
+                <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'job_title' && c.sortDirection === 'desc'}"></i>
               </span>
             </th>
             <th class="sortable" ng-click="c.sortBy('job_function')">
               Line of Business
-              <span class="sort-indicator" ng-if="c.sortColumn === 'job_function'">
-                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              <span class="sort-arrows">
+                <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'job_function' && c.sortDirection === 'asc'}"></i>
+                <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'job_function' && c.sortDirection === 'desc'}"></i>
               </span>
             </th>
 
             <!-- Non-Credit Columns -->
             <th class="non-credit-col sortable" ng-click="c.sortBy('disbursement_ach')">
               ACH
-              <span class="sort-indicator" ng-if="c.sortColumn === 'disbursement_ach'">
-                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              <span class="sort-arrows">
+                <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_ach' && c.sortDirection === 'asc'}"></i>
+                <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'disbursement_ach' && c.sortDirection === 'desc'}"></i>
               </span>
             </th>
             <th class="non-credit-col sortable" ng-click="c.sortBy('disbursement_wire_transfer_internal')">
               Wire Internal
-              <span class="sort-indicator" ng-if="c.sortColumn === 'disbursement_wire_transfer_internal'">
-                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              <span class="sort-arrows">
+                <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_wire_transfer_internal' && c.sortDirection === 'asc'}"></i>
+                <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'disbursement_wire_transfer_internal' && c.sortDirection === 'desc'}"></i>
               </span>
             </th>
             <th class="non-credit-col sortable" ng-click="c.sortBy('disbursement_wire_transfer_external')">
               Wire External
-              <span class="sort-indicator" ng-if="c.sortColumn === 'disbursement_wire_transfer_external'">
-                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              <span class="sort-arrows">
+                <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_wire_transfer_external' && c.sortDirection === 'asc'}"></i>
+                <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'disbursement_wire_transfer_external' && c.sortDirection === 'desc'}"></i>
               </span>
             </th>
             <th class="non-credit-col sortable" ng-click="c.sortBy('disbursement_official_checks_internal')">
               Checks Internal
-              <span class="sort-indicator" ng-if="c.sortColumn === 'disbursement_official_checks_internal'">
-                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              <span class="sort-arrows">
+                <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_official_checks_internal' && c.sortDirection === 'asc'}"></i>
+                <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'disbursement_official_checks_internal' && c.sortDirection === 'desc'}"></i>
               </span>
             </th>
             <th class="non-credit-col sortable" ng-click="c.sortBy('disbursement_official_checks_external')">
               Checks External
-              <span class="sort-indicator" ng-if="c.sortColumn === 'disbursement_official_checks_external'">
-                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              <span class="sort-arrows">
+                <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_official_checks_external' && c.sortDirection === 'asc'}"></i>
+                <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'disbursement_official_checks_external' && c.sortDirection === 'desc'}"></i>
               </span>
             </th>
             <th class="non-credit-col sortable" ng-click="c.sortBy('check_cashing_on_us')">
               Check Cash On-Us
-              <span class="sort-indicator" ng-if="c.sortColumn === 'check_cashing_on_us'">
-                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              <span class="sort-arrows">
+                <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'check_cashing_on_us' && c.sortDirection === 'asc'}"></i>
+                <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'check_cashing_on_us' && c.sortDirection === 'desc'}"></i>
               </span>
             </th>
             <th class="non-credit-col sortable" ng-click="c.sortBy('check_cashing_not_on_us')">
               Check Cash Not On-Us
-              <span class="sort-indicator" ng-if="c.sortColumn === 'check_cashing_not_on_us'">
-                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              <span class="sort-arrows">
+                <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'check_cashing_not_on_us' && c.sortDirection === 'asc'}"></i>
+                <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'check_cashing_not_on_us' && c.sortDirection === 'desc'}"></i>
               </span>
             </th>
             <th class="non-credit-col sortable" ng-click="c.sortBy('remote_deposit')">
               Remote Deposit
-              <span class="sort-indicator" ng-if="c.sortColumn === 'remote_deposit'">
-                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              <span class="sort-arrows">
+                <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'remote_deposit' && c.sortDirection === 'asc'}"></i>
+                <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'remote_deposit' && c.sortDirection === 'desc'}"></i>
               </span>
             </th>
             <th class="non-credit-col sortable" ng-click="c.sortBy('treasury_solutions_company_wire_limits')">
               Treasury Solutions
-              <span class="sort-indicator" ng-if="c.sortColumn === 'treasury_solutions_company_wire_limits'">
-                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              <span class="sort-arrows">
+                <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'treasury_solutions_company_wire_limits' && c.sortDirection === 'asc'}"></i>
+                <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'treasury_solutions_company_wire_limits' && c.sortDirection === 'desc'}"></i>
               </span>
             </th>
             <th class="non-credit-col sortable" ng-click="c.sortBy('fx_wire_limits')">
               FX Wire
-              <span class="sort-indicator" ng-if="c.sortColumn === 'fx_wire_limits'">
-                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              <span class="sort-arrows">
+                <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'fx_wire_limits' && c.sortDirection === 'asc'}"></i>
+                <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'fx_wire_limits' && c.sortDirection === 'desc'}"></i>
               </span>
             </th>
 
             <!-- Credit Columns -->
             <th class="credit-col sortable" ng-click="c.sortBy('overdraft_internal_accounts')">
               Overdraft Internal
-              <span class="sort-indicator" ng-if="c.sortColumn === 'overdraft_internal_accounts'">
-                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              <span class="sort-arrows">
+                <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'overdraft_internal_accounts' && c.sortDirection === 'asc'}"></i>
+                <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'overdraft_internal_accounts' && c.sortDirection === 'desc'}"></i>
               </span>
             </th>
             <th class="credit-col sortable" ng-click="c.sortBy('overdraft_external_accounts')">
               Overdraft External
-              <span class="sort-indicator" ng-if="c.sortColumn === 'overdraft_external_accounts'">
-                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              <span class="sort-arrows">
+                <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'overdraft_external_accounts' && c.sortDirection === 'asc'}"></i>
+                <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'overdraft_external_accounts' && c.sortDirection === 'desc'}"></i>
               </span>
             </th>
             <th class="credit-col sortable" ng-click="c.sortBy('unavailable_funds_internal_accounts')">
               Unavailable Internal
-              <span class="sort-indicator" ng-if="c.sortColumn === 'unavailable_funds_internal_accounts'">
-                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              <span class="sort-arrows">
+                <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'unavailable_funds_internal_accounts' && c.sortDirection === 'asc'}"></i>
+                <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'unavailable_funds_internal_accounts' && c.sortDirection === 'desc'}"></i>
               </span>
             </th>
             <th class="credit-col sortable" ng-click="c.sortBy('unavailable_funds_external_accounts')">
               Unavailable External
-              <span class="sort-indicator" ng-if="c.sortColumn === 'unavailable_funds_external_accounts'">
-                <i class="fa" ng-class="c.sortDirection === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc'"></i>
+              <span class="sort-arrows">
+                <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'unavailable_funds_external_accounts' && c.sortDirection === 'asc'}"></i>
+                <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'unavailable_funds_external_accounts' && c.sortDirection === 'desc'}"></i>
               </span>
             </th>
           </tr>
@@ -368,48 +385,48 @@
             <td class="job-info-cell">{{limit.job_function || '-'}}</td>
 
             <!-- Non-Credit Values -->
-            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_ach'}">
+            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('disbursement_ach') >= 0}">
               {{c.formatAmount(limit.disbursement_ach)}}
             </td>
-            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_wire_transfer_internal'}">
+            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('disbursement_wire_transfer_internal') >= 0}">
               {{c.formatAmount(limit.disbursement_wire_transfer_internal)}}
             </td>
-            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_wire_transfer_external'}">
+            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('disbursement_wire_transfer_external') >= 0}">
               {{c.formatAmount(limit.disbursement_wire_transfer_external)}}
             </td>
-            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_official_checks_internal'}">
+            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('disbursement_official_checks_internal') >= 0}">
               {{c.formatAmount(limit.disbursement_official_checks_internal)}}
             </td>
-            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'disbursement_official_checks_external'}">
+            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('disbursement_official_checks_external') >= 0}">
               {{c.formatAmount(limit.disbursement_official_checks_external)}}
             </td>
-            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'check_cashing_on_us'}">
+            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('check_cashing_on_us') >= 0}">
               {{c.formatAmount(limit.check_cashing_on_us)}}
             </td>
-            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'check_cashing_not_on_us'}">
+            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('check_cashing_not_on_us') >= 0}">
               {{c.formatAmount(limit.check_cashing_not_on_us)}}
             </td>
-            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'remote_deposit'}">
+            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('remote_deposit') >= 0}">
               {{c.formatAmount(limit.remote_deposit)}}
             </td>
-            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'treasury_solutions_company_wire_limits'}">
+            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('treasury_solutions_company_wire_limits') >= 0}">
               {{c.formatAmount(limit.treasury_solutions_company_wire_limits)}}
             </td>
-            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.highlightField === 'fx_wire_limits'}">
+            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('fx_wire_limits') >= 0}">
               {{c.formatAmount(limit.fx_wire_limits)}}
             </td>
 
             <!-- Credit Values -->
-            <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.highlightField === 'overdraft_internal_accounts'}">
+            <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('overdraft_internal_accounts') >= 0}">
               {{c.formatAmount(limit.overdraft_internal_accounts)}}
             </td>
-            <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.highlightField === 'overdraft_external_accounts'}">
+            <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('overdraft_external_accounts') >= 0}">
               {{c.formatAmount(limit.overdraft_external_accounts)}}
             </td>
-            <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.highlightField === 'unavailable_funds_internal_accounts'}">
+            <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('unavailable_funds_internal_accounts') >= 0}">
               {{c.formatAmount(limit.unavailable_funds_internal_accounts)}}
             </td>
-            <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.highlightField === 'unavailable_funds_external_accounts'}">
+            <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('unavailable_funds_external_accounts') >= 0}">
               {{c.formatAmount(limit.unavailable_funds_external_accounts)}}
             </td>
           </tr>
@@ -1031,6 +1048,28 @@
   transform: translateY(-50%);
   font-size: 14px;
   color: #3498db;
+}
+
+.sort-arrows {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  line-height: 0.6;
+}
+
+.sort-arrows i {
+  font-size: 10px;
+  color: #cbd5e0;
+  transition: color 0.2s;
+}
+
+.sort-arrows i.active-sort {
+  color: #3498db;
+  font-weight: bold;
 }
 
 .limits-table thead tr:last-child th {
@@ -1902,8 +1941,7 @@ api.controller = function($scope, $timeout, spUtil) {
             c.limits = c.allLimits.slice();
             // Clear all highlighting
             c.limits.forEach(function(limit) {
-                limit.highlightField = '';
-                limit.highlighted = false;
+                limit.activeLimitTypes = [];
             });
             c.sortColumn = null;
             c.sortDirection = 'asc';
@@ -1979,13 +2017,14 @@ api.controller = function($scope, $timeout, spUtil) {
                     });
                 });
 
-                // Highlight the filtered amount columns
+                // Highlight ALL active amount filter columns
+                // Store all active limit types for highlighting
+                var activeLimitTypes = filtersByCategory.amount.map(function(filter) {
+                    return filter.limitType;
+                });
+
                 filteredLimits.forEach(function(limit) {
-                    // Get the first amount filter's limit type for primary highlighting
-                    if (filtersByCategory.amount.length > 0) {
-                        limit.highlightField = filtersByCategory.amount[0].limitType;
-                        limit.highlighted = true;
-                    }
+                    limit.activeLimitTypes = activeLimitTypes;
                 });
 
                 // Auto-sort by the first amount filter column (descending - high to low)
@@ -2001,9 +2040,10 @@ api.controller = function($scope, $timeout, spUtil) {
             } else {
                 // Clear highlighting if no amount filters
                 filteredLimits.forEach(function(limit) {
-                    limit.highlightField = '';
-                    limit.highlighted = false;
+                    limit.activeLimitTypes = [];
                 });
+                c.sortColumn = null;
+                c.sortDirection = 'asc';
             }
 
             c.limits = filteredLimits;
