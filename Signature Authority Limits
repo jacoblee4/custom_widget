@@ -491,10 +491,6 @@
   margin: 0;
 }
 
-/* ========================================
-   SIDE NAVIGATION FILTER STYLES
-   ======================================== */
-
 .search-controls-side-nav {
   display: flex;
   gap: 20px;
@@ -1291,6 +1287,7 @@
     text-align: center;
   }
 }
+
 
 
 
