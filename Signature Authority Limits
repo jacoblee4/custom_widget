@@ -660,6 +660,13 @@
   padding: 2px 8px;
 }
 
+.filter-and-separator {
+  font-weight: 600;
+  color: #e67e22;
+  font-size: 11px;
+  padding: 2px 8px;
+}
+
 .filter-tag {
   display: inline-flex;
   align-items: center;
@@ -1301,19 +1308,31 @@
                 var userJobCode = userGr.getValue('u_job_code') || '';
                 var jobTitle = userGr.getValue('title') || '';
 
+                // Find the job code sys_id from the job codes table
+                var jobCodeSysId = '';
+                if (userJobCode) {
+                    var jobCodeGr = new GlideRecord('x_banun_rbac_job_code');
+                    jobCodeGr.addQuery('job_code', userJobCode);
+                    jobCodeGr.query();
+                    if (jobCodeGr.next()) {
+                        jobCodeSysId = jobCodeGr.getUniqueValue();
+                    }
+                }
+
                 var secondaryText = '';
                 if (jobTitle && userJobCode) {
-                    secondaryText = jobTitle + ' - ' + userJobCode;
+                    secondaryText = jobTitle + ' - Job Code: ' + userJobCode;
                 } else if (jobTitle) {
                     secondaryText = jobTitle;
                 } else if (userJobCode) {
-                    secondaryText = userJobCode;
+                    secondaryText = 'Job Code: ' + userJobCode;
                 }
 
                 results.push({
                     value: userGr.getUniqueValue(),
                     display: userGr.getValue('name'),
-                    secondary: secondaryText
+                    secondary: secondaryText,
+                    jobCodeSysId: jobCodeSysId  // Pass the job code sys_id
                 });
             }
         }
@@ -1773,7 +1792,7 @@ api.controller = function($scope, $timeout, spUtil) {
             var searchInput = document.getElementById(inputId);
             var searchInputValue = document.getElementById(valueId);
 
-            searchValue = searchInputValue.value || searchInput.value;
+            searchValue = searchInputValue.value;
             if (!searchValue) {
                 spUtil.addInfoMessage('Please enter a search value');
                 return;
@@ -1781,13 +1800,21 @@ api.controller = function($scope, $timeout, spUtil) {
 
             searchDisplay = searchInput.value;
 
+            // For employee, verify they have a valid job code
+            if (filterType === 'employee' && !searchValue) {
+                spUtil.addInfoMessage('Selected employee does not have a valid job code');
+                return;
+            }
+
             // Check if this exact filter already exists
             var filterExists = c.activeFilters.some(function(filter) {
                 return filter.type === filterType && filter.value === searchValue;
             });
 
             if (filterExists) {
-                spUtil.addInfoMessage('This filter is already active');
+                var existingFilterLabel = filterType === 'employee' ? 'Employee' : 
+                                         filterType === 'job_code' ? 'Job Code' : 'Job Title';
+                spUtil.addInfoMessage('This ' + existingFilterLabel + ' filter is already active');
                 return;
             }
 
@@ -1912,9 +1939,11 @@ api.controller = function($scope, $timeout, spUtil) {
             }
 
             // Employee filters (OR within category)
+            // Employee filters work by matching the job code sys_id
             if (filtersByCategory.employee.length > 0) {
                 filteredLimits = filteredLimits.filter(function(limit) {
                     return filtersByCategory.employee.some(function(filter) {
+                        // Filter value is the job code sys_id
                         return limit.job_code_sys_id === filter.value;
                     });
                 });
@@ -1988,12 +2017,18 @@ api.controller = function($scope, $timeout, spUtil) {
                 categoryGroup.className = 'filter-category-group';
 
                 categoryFilters.forEach(function(filter, catIndex) {
-                    // Add OR separator within category
+                    // Add separator within category
                     if (catIndex > 0) {
-                        var orSeparator = document.createElement('span');
-                        orSeparator.className = 'filter-or-separator';
-                        orSeparator.textContent = 'OR';
-                        categoryGroup.appendChild(orSeparator);
+                        var separator = document.createElement('span');
+                        // Amount filters use AND, others use OR
+                        if (categoryType === 'amount') {
+                            separator.className = 'filter-and-separator';
+                            separator.textContent = 'AND';
+                        } else {
+                            separator.className = 'filter-or-separator';
+                            separator.textContent = 'OR';
+                        }
+                        categoryGroup.appendChild(separator);
                     }
 
                     var tag = document.createElement('div');
@@ -2125,7 +2160,14 @@ api.controller = function($scope, $timeout, spUtil) {
             var searchInput = document.getElementById(inputId);
             var searchInputValue = document.getElementById(inputId + 'Value');
             searchInput.value = result.display;
-            searchInputValue.value = result.value;
+            
+            // For employee, store the job code sys_id instead of user sys_id
+            if (inputId === 'employeeInput' && result.jobCodeSysId) {
+                searchInputValue.value = result.jobCodeSysId;
+                searchInputValue.setAttribute('data-user-name', result.display);
+            } else {
+                searchInputValue.value = result.value;
+            }
 
             hideDropdown(inputId);
         }
