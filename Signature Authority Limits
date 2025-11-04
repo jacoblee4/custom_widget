@@ -198,6 +198,12 @@
   <div class="button-group-container">
     <div class="button-group">
       <button id="clearAllButton" class="btn btn-clear-all">Clear All Filters</button>
+      <button id="exportPdfButton" class="btn btn-export-pdf">
+        <i class="fa fa-file-pdf-o"></i> Export PDF
+      </button>
+      <button id="exportXmlButton" class="btn btn-export-xml">
+        <i class="fa fa-file-code-o"></i> Export XML
+      </button>
     </div>
   </div>
 
@@ -914,6 +920,33 @@
   background: #c0392b;
 }
 
+.btn-clear-all:hover {
+  background: #c0392b;
+}
+
+.btn-export-pdf {
+  background: #e74c3c;
+  color: white;
+}
+
+.btn-export-pdf:hover {
+  background: #c0392b;
+}
+
+.btn-export-xml {
+  background: #27ae60;
+  color: white;
+}
+
+.btn-export-xml:hover {
+  background: #229954;
+}
+
+.btn-export-pdf i,
+.btn-export-xml i {
+  margin-right: 6px;
+}
+
 .loading-container {
   text-align: center;
   padding: 40px;
@@ -1299,6 +1332,36 @@
 (function() {
     'use strict';
 
+    // Handle PDF Export
+    if (input && input.action === 'exportPDF') {
+        var limits = input.limits || [];
+        
+        // Create PDF using sn_pdfgeneratorutils
+        var pdfGen = new sn_pdfgeneratorutils.PDFGenerationAPI();
+        
+        // Build HTML content for PDF
+        var htmlContent = buildPDFHTML(limits, input.filterDescription);
+        
+        // Generate PDF
+        var pdfSysId = pdfGen.convertToPDF(
+            'Authority_Limits_Export_' + new GlideDateTime().getNumericValue(),
+            htmlContent
+        );
+        
+        data.pdfSysId = pdfSysId;
+        return;
+    }
+
+    // Handle XML Export
+    if (input && input.action === 'exportXML') {
+        var limits = input.limits || [];
+        var xmlContent = buildXMLContent(limits, input.filterDescription);
+        
+        data.xmlContent = xmlContent;
+        data.fileName = 'Authority_Limits_Export_' + new GlideDateTime().getNumericValue() + '.xml';
+        return;
+    }
+
     // Handle reference field lookups
     if (input && input.action === 'lookupReference') {
         var searchType = input.search_type;
@@ -1344,7 +1407,6 @@
                 var userJobCode = userGr.getValue('u_job_code') || '';
                 var jobTitle = userGr.getValue('title') || '';
 
-                // Find the job code sys_id from the job codes table
                 var jobCodeSysId = '';
                 if (userJobCode) {
                     var jobCodeGr = new GlideRecord('x_banun_rbac_job_code');
@@ -1368,7 +1430,7 @@
                     value: userGr.getUniqueValue(),
                     display: userGr.getValue('name'),
                     secondary: secondaryText,
-                    jobCodeSysId: jobCodeSysId // Pass the job code sys_id
+                    jobCodeSysId: jobCodeSysId
                 });
             }
         }
@@ -1413,7 +1475,6 @@
         var gr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
         gr.addQuery('active', true);
 
-        // Apply filters based on search type
         if (searchType === 'job_code' && searchValue) {
             gr.addQuery('job_code', searchValue);
 
@@ -1477,7 +1538,6 @@
                 job_title: jobTitle,
                 job_function: jobFunction,
 
-                // Non-credit limits
                 disbursement_ach: gr.getValue('disbursement_ach') || '0',
                 disbursement_wire_transfer_external: gr.getValue('disbursement_wire_transfer_external') || '0',
                 disbursement_wire_transfer_internal: gr.getValue('disbursement_wire_transfer_internal') || '0',
@@ -1489,7 +1549,6 @@
                 treasury_solutions_company_wire_limits: gr.getValue('treasury_solutions_company_wire_limits') || '0',
                 fx_wire_limits: gr.getValue('fx_wire_limits') || '0',
 
-                // Credit limits
                 overdraft_external_accounts: gr.getValue('overdraft_external_accounts') || '0',
                 overdraft_internal_accounts: gr.getValue('overdraft_internal_accounts') || '0',
                 unavailable_funds_external_accounts: gr.getValue('unavailable_funds_external_accounts') || '0',
@@ -1504,8 +1563,135 @@
 
         data.limits = limits;
     }
-})();
 
+    // Helper function to build PDF HTML
+    function buildPDFHTML(limits, filterDescription) {
+        var html = '<!DOCTYPE html><html><head><style>';
+        html += 'body { font-family: Arial, sans-serif; font-size: 10px; }';
+        html += 'h1 { font-size: 16px; margin-bottom: 10px; }';
+        html += '.filter-info { margin-bottom: 15px; padding: 10px; background: #f0f0f0; font-size: 9px; }';
+        html += 'table { width: 100%; border-collapse: collapse; margin-top: 10px; }';
+        html += 'th { background: #333; color: white; padding: 6px; text-align: left; font-size: 8px; }';
+        html += 'td { border: 1px solid #ddd; padding: 5px; font-size: 8px; }';
+        html += '.amount { text-align: right; }';
+        html += '.section-header { background: #666; color: white; font-weight: bold; text-align: center; }';
+        html += '</style></head><body>';
+        
+        html += '<h1>Signature Authority Limits Report</h1>';
+        html += '<div class="filter-info">';
+        html += '<strong>Generated:</strong> ' + new GlideDateTime().getDisplayValue() + '<br>';
+        html += '<strong>Total Records:</strong> ' + limits.length + '<br>';
+        if (filterDescription) {
+            html += '<strong>Filters Applied:</strong> ' + filterDescription;
+        } else {
+            html += '<strong>Filters:</strong> None (All Records)';
+        }
+        html += '</div>';
+        
+        html += '<table>';
+        html += '<thead><tr>';
+        html += '<th colspan="3" class="section-header">Job Information</th>';
+        html += '<th colspan="10" class="section-header">Non-Credit Authority</th>';
+        html += '<th colspan="4" class="section-header">Credit Authority</th>';
+        html += '</tr><tr>';
+        html += '<th>Job Code</th><th>Job Title</th><th>Line of Business</th>';
+        html += '<th>ACH</th><th>Wire Int.</th><th>Wire Ext.</th>';
+        html += '<th>Check Int.</th><th>Check Ext.</th><th>Cash On-Us</th>';
+        html += '<th>Cash Not On-Us</th><th>Remote Dep.</th><th>Treasury</th><th>FX Wire</th>';
+        html += '<th>OD Int.</th><th>OD Ext.</th><th>UF Int.</th><th>UF Ext.</th>';
+        html += '</tr></thead><tbody>';
+        
+        for (var i = 0; i < limits.length; i++) {
+            var limit = limits[i];
+            html += '<tr>';
+            html += '<td>' + (limit.job_code_display || '-') + '</td>';
+            html += '<td>' + (limit.job_title || '-') + '</td>';
+            html += '<td>' + (limit.job_function || '-') + '</td>';
+            html += '<td class="amount">' + formatAmount(limit.disbursement_ach) + '</td>';
+            html += '<td class="amount">' + formatAmount(limit.disbursement_wire_transfer_internal) + '</td>';
+            html += '<td class="amount">' + formatAmount(limit.disbursement_wire_transfer_external) + '</td>';
+            html += '<td class="amount">' + formatAmount(limit.disbursement_official_checks_internal) + '</td>';
+            html += '<td class="amount">' + formatAmount(limit.disbursement_official_checks_external) + '</td>';
+            html += '<td class="amount">' + formatAmount(limit.check_cashing_on_us) + '</td>';
+            html += '<td class="amount">' + formatAmount(limit.check_cashing_not_on_us) + '</td>';
+            html += '<td class="amount">' + formatAmount(limit.remote_deposit) + '</td>';
+            html += '<td class="amount">' + formatAmount(limit.treasury_solutions_company_wire_limits) + '</td>';
+            html += '<td class="amount">' + formatAmount(limit.fx_wire_limits) + '</td>';
+            html += '<td class="amount">' + formatAmount(limit.overdraft_internal_accounts) + '</td>';
+            html += '<td class="amount">' + formatAmount(limit.overdraft_external_accounts) + '</td>';
+            html += '<td class="amount">' + formatAmount(limit.unavailable_funds_internal_accounts) + '</td>';
+            html += '<td class="amount">' + formatAmount(limit.unavailable_funds_external_accounts) + '</td>';
+            html += '</tr>';
+        }
+        
+        html += '</tbody></table></body></html>';
+        return html;
+    }
+
+    // Helper function to build XML content
+    function buildXMLContent(limits, filterDescription) {
+        var xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+        xml += '<AuthorityLimitsExport>\n';
+        xml += '  <ExportInfo>\n';
+        xml += '    <GeneratedDate>' + new GlideDateTime().getDisplayValue() + '</GeneratedDate>\n';
+        xml += '    <TotalRecords>' + limits.length + '</TotalRecords>\n';
+        xml += '    <FiltersApplied>' + (filterDescription || 'None (All Records)') + '</FiltersApplied>\n';
+        xml += '  </ExportInfo>\n';
+        xml += '  <Limits>\n';
+        
+        for (var i = 0; i < limits.length; i++) {
+            var limit = limits[i];
+            xml += '    <Limit>\n';
+            xml += '      <JobInformation>\n';
+            xml += '        <JobCode>' + escapeXml(limit.job_code_display || '') + '</JobCode>\n';
+            xml += '        <JobTitle>' + escapeXml(limit.job_title || '') + '</JobTitle>\n';
+            xml += '        <LineOfBusiness>' + escapeXml(limit.job_function || '') + '</LineOfBusiness>\n';
+            xml += '      </JobInformation>\n';
+            xml += '      <NonCreditAuthority>\n';
+            xml += '        <ACH>' + (limit.disbursement_ach || '0') + '</ACH>\n';
+            xml += '        <WireTransferInternal>' + (limit.disbursement_wire_transfer_internal || '0') + '</WireTransferInternal>\n';
+            xml += '        <WireTransferExternal>' + (limit.disbursement_wire_transfer_external || '0') + '</WireTransferExternal>\n';
+            xml += '        <OfficialChecksInternal>' + (limit.disbursement_official_checks_internal || '0') + '</OfficialChecksInternal>\n';
+            xml += '        <OfficialChecksExternal>' + (limit.disbursement_official_checks_external || '0') + '</OfficialChecksExternal>\n';
+            xml += '        <CheckCashingOnUs>' + (limit.check_cashing_on_us || '0') + '</CheckCashingOnUs>\n';
+            xml += '        <CheckCashingNotOnUs>' + (limit.check_cashing_not_on_us || '0') + '</CheckCashingNotOnUs>\n';
+            xml += '        <RemoteDeposit>' + (limit.remote_deposit || '0') + '</RemoteDeposit>\n';
+            xml += '        <TreasurySolutions>' + (limit.treasury_solutions_company_wire_limits || '0') + '</TreasurySolutions>\n';
+            xml += '        <FXWire>' + (limit.fx_wire_limits || '0') + '</FXWire>\n';
+            xml += '      </NonCreditAuthority>\n';
+            xml += '      <CreditAuthority>\n';
+            xml += '        <OverdraftInternal>' + (limit.overdraft_internal_accounts || '0') + '</OverdraftInternal>\n';
+            xml += '        <OverdraftExternal>' + (limit.overdraft_external_accounts || '0') + '</OverdraftExternal>\n';
+            xml += '        <UnavailableFundsInternal>' + (limit.unavailable_funds_internal_accounts || '0') + '</UnavailableFundsInternal>\n';
+            xml += '        <UnavailableFundsExternal>' + (limit.unavailable_funds_external_accounts || '0') + '</UnavailableFundsExternal>\n';
+            xml += '      </CreditAuthority>\n';
+            xml += '    </Limit>\n';
+        }
+        
+        xml += '  </Limits>\n';
+        xml += '</AuthorityLimitsExport>';
+        return xml;
+    }
+
+    function formatAmount(value) {
+        if (!value || value === '0' || parseFloat(value) === 0) {
+            return '-';
+        }
+        var numValue = parseFloat(value);
+        if (isNaN(numValue)) return '-';
+        return '$' + numValue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+
+    function escapeXml(str) {
+        if (!str) return '';
+        return str.toString()
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&apos;');
+    }
+})();
 
 
 
@@ -2185,6 +2371,77 @@ api.controller = function($scope, $timeout, spUtil) {
         $scope.$apply();
     }
 
+    // Export to PDF
+    function exportToPDF() {
+        var limitsToExport = c.limits.length > 0 ? c.limits : c.allLimits;
+        var filterDescription = getFilterDescription();
+
+        c.server.get({
+            action: 'exportPDF',
+            limits: limitsToExport,
+            filterDescription: filterDescription
+        }).then(function(response) {
+            if (response.data.pdfSysId) {
+                // Download the PDF
+                var downloadUrl = '/sys_attachment.do?sys_id=' + response.data.pdfSysId;
+                window.open(downloadUrl, '_blank');
+                spUtil.addInfoMessage('PDF export completed successfully');
+            } else {
+                spUtil.addErrorMessage('Failed to generate PDF');
+            }
+        }).catch(function(error) {
+            console.error('PDF export error:', error);
+            spUtil.addErrorMessage('Error exporting to PDF');
+        });
+    }
+
+    // Export to XML
+    function exportToXML() {
+        var limitsToExport = c.limits.length > 0 ? c.limits : c.allLimits;
+        var filterDescription = getFilterDescription();
+
+        c.server.get({
+            action: 'exportXML',
+            limits: limitsToExport,
+            filterDescription: filterDescription
+        }).then(function(response) {
+            if (response.data.xmlContent) {
+                // Create blob and download
+                var blob = new Blob([response.data.xmlContent], { type: 'application/xml' });
+                var url = window.URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = response.data.fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                spUtil.addInfoMessage('XML export completed successfully');
+            } else {
+                spUtil.addErrorMessage('Failed to generate XML');
+            }
+        }).catch(function(error) {
+            console.error('XML export error:', error);
+            spUtil.addErrorMessage('Error exporting to XML');
+        });
+    }
+
+    // Get filter description for export
+    function getFilterDescription() {
+        if (c.activeFilters.length === 0) {
+            return 'None (All Records)';
+        }
+
+        var descriptions = [];
+        c.activeFilters.forEach(function(filter) {
+            descriptions.push(filter.typeLabel + ': ' + filter.display);
+        });
+
+        return descriptions.join('; ');
+    }
+
+    
+
     // Reference field lookup
     function performReferenceLookup(searchValue, filterType, inputId) {
         if (!searchValue || searchValue.length < 2) {
@@ -2411,6 +2668,21 @@ api.controller = function($scope, $timeout, spUtil) {
         if (clearAllBtn) {
             clearAllBtn.addEventListener('click', function() {
                 clearAllFilters();
+            });
+        }
+
+        // Setup export buttons
+        var exportPdfBtn = document.getElementById('exportPdfButton');
+        if (exportPdfBtn) {
+            exportPdfBtn.addEventListener('click', function() {
+                exportToPDF();
+            });
+        }
+
+        var exportXmlBtn = document.getElementById('exportXmlButton');
+        if (exportXmlBtn) {
+            exportXmlBtn.addEventListener('click', function() {
+                exportToXML();
             });
         }
 
