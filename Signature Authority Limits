@@ -1691,14 +1691,14 @@ api.controller = function($scope, $timeout, spUtil) {
     };
 
     c.getPageNumbers = function() {
-        var pages = [];
-        var maxPagesToShow = 5;
-        var startPage = 1;
-        var endPage = c.totalPages;
+    var pages = [];
+    var maxPagesToShow = 5;
+    var startPage = 1;
+    var endPage = c.totalPages;
 
-        if (c.totalPages > maxPagesToShow) {
-            var middlePage = Math.floor(maxPagesToShow / 2);
-            if (c.currentPage <= middlePage) {
+    if (c.totalPages > maxPagesToShow) {
+        var middlePage = parseInt(maxPagesToShow / 2);
+        if (c.currentPage <= middlePage) {
                 endPage = maxPagesToShow;
             } else if (c.currentPage >= c.totalPages - middlePage) {
                 startPage = c.totalPages - maxPagesToShow + 1;
@@ -1729,10 +1729,10 @@ api.controller = function($scope, $timeout, spUtil) {
         }).then(function(response) {
             $timeout(function() {
                 c.allLimits = response.data.limits || [];
-                c.limits = c.allLimits.slice();
-                c.currentPage = 1;
-                c.totalPages = Math.ceil(c.limits.length / c.pageSize);
-                c.loading = false;
+c.limits = c.allLimits.slice();
+c.currentPage = 1;
+c.totalPages = parseInt((c.limits.length + c.pageSize - 1) / c.pageSize);
+c.loading = false;
 
                 $timeout(function() {
                     setupColumnFilters();
@@ -2004,46 +2004,51 @@ api.controller = function($scope, $timeout, spUtil) {
             }
 
             // Amount filters (AND across different limit types)
-            if (filtersByCategory.amount.length > 0) {
-                filteredLimits = filteredLimits.filter(function(limit) {
-                    // ALL amount filters must match (AND logic)
-                    return filtersByCategory.amount.every(function(filter) {
-                        var limitValue = parseFloat(limit[filter.limitType]) || 0;
-                        var minValue = parseFloat(filter.value) || 0;
-                        return limitValue >= minValue;
-                    });
-                });
+if (filtersByCategory.amount.length > 0) {
+    filteredLimits = filteredLimits.filter(function(limit) {
+        // ALL amount filters must match (AND logic)
+        return filtersByCategory.amount.every(function(filter) {
+            var limitValue = parseFloat(limit[filter.limitType]) || 0;
+            var minValue = parseFloat(filter.value) || 0;
+            return limitValue >= minValue;
+        });
+    });
 
-                // Highlight ALL active amount filter columns
-                // Store all active limit types for highlighting
-                var activeLimitTypes = filtersByCategory.amount.map(function(filter) {
-                    return filter.limitType;
-                });
+    // Highlight ALL active amount filter columns
+    // Store all active limit types for highlighting
+    var activeLimitTypes = filtersByCategory.amount.map(function(filter) {
+        return filter.limitType;
+    });
 
-                filteredLimits.forEach(function(limit) {
-                    limit.activeLimitTypes = activeLimitTypes;
-                });
+    filteredLimits.forEach(function(limit) {
+        limit.activeLimitTypes = activeLimitTypes;
+    });
 
-                // Auto-sort by the first amount filter column (descending - high to low)
-                var sortColumn = filtersByCategory.amount[0].limitType;
-                c.sortColumn = sortColumn;
-                c.sortDirection = 'desc';
-                
-                filteredLimits.sort(function(a, b) {
-                    var aVal = parseFloat(a[sortColumn]) || 0;
-                    var bVal = parseFloat(b[sortColumn]) || 0;
-                    return bVal - aVal; // Descending order
-                });
-            } else {
-                // Clear highlighting if no amount filters
-                filteredLimits.forEach(function(limit) {
-                    limit.activeLimitTypes = [];
-                });
-                c.sortColumn = null;
-                c.sortDirection = 'asc';
-            }
+    // Auto-sort by the first amount filter column (descending - high to low)
+    var sortColumn = filtersByCategory.amount[0].limitType;
+    c.sortColumn = sortColumn;  // This sets the sort column
+    c.sortDirection = 'desc';    // This sets the direction
+    
+    filteredLimits.sort(function(a, b) {
+        var aVal = parseFloat(a[sortColumn]) || 0;
+        var bVal = parseFloat(b[sortColumn]) || 0;
+        return bVal - aVal; // Descending order
+    });
+} else {
+    // Clear highlighting if no amount filters
+    filteredLimits.forEach(function(limit) {
+        limit.activeLimitTypes = [];
+    });
+    // Don't reset sort if no amount filters - REMOVED LINE THAT WAS RESETTING SORT
+}
 
-            c.limits = filteredLimits;
+c.limits = filteredLimits;
+}
+
+c.currentPage = 1;
+c.totalPages = parseInt((c.limits.length + c.pageSize - 1) / c.pageSize);
+
+$scope.$apply();
         }
 
         c.currentPage = 1;
@@ -2151,19 +2156,25 @@ api.controller = function($scope, $timeout, spUtil) {
     }
 
     // Clear all filters
-    function clearAllFilters() {
-        c.activeFilters = [];
-        updateActiveFiltersDisplay();
-        updateFilterBadges();
-        
-        c.limits = c.allLimits.slice();
-        c.currentPage = 1;
-        c.totalPages = Math.ceil(c.limits.length / c.pageSize);
-        c.sortColumn = null;
-        c.sortDirection = 'asc';
-        
-        $scope.$apply();
-    }
+function clearAllFilters() {
+    c.activeFilters = [];
+    updateActiveFiltersDisplay();
+    updateFilterBadges();
+    
+    c.limits = c.allLimits.slice();
+    
+    // Clear all highlighting from limits
+    c.limits.forEach(function(limit) {
+        limit.activeLimitTypes = [];
+    });
+    
+    c.currentPage = 1;
+    c.totalPages = parseInt((c.limits.length + c.pageSize - 1) / c.pageSize);
+    c.sortColumn = null;
+    c.sortDirection = 'asc';
+    
+    $scope.$apply();
+}
 
     // Reference field lookup
     function performReferenceLookup(searchValue, filterType, inputId) {
