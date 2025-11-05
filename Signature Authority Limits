@@ -2460,48 +2460,119 @@ api.controller = function($scope, $timeout, spUtil) {
         return '"' + value + '"';
     }
 
-    // Export to PDF
-    function exportToPDF() {
-        var limitsToExport = c.limits.length > 0 ? c.limits : c.allLimits;
+    /function exportToPDF() {
+    var limitsToExport = c.limits.length > 0 ? c.limits : c.allLimits;
 
-        if (limitsToExport.length === 0) {
-            spUtil.addInfoMessage('No data to export');
-            return;
-        }
-
-        var filterDescription = getFilterDescription();
-
-        spUtil.addInfoMessage('Generating PDF, please wait...');
-
-        c.server.get({
-            action: 'exportPDF',
-            limits: limitsToExport,
-            filterDescription: filterDescription
-        }).then(function(response) {
-            if (response.data.success && response.data.attachmentId) {
-                // Download the PDF directly
-                var downloadUrl = '/sys_attachment.do?sys_id=' + response.data.attachmentId;
-
-                // Create invisible iframe to trigger download
-                var iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                iframe.src = downloadUrl;
-                document.body.appendChild(iframe);
-
-                // Remove iframe after download starts
-                setTimeout(function() {
-                    document.body.removeChild(iframe);
-                }, 5000);
-
-                spUtil.addInfoMessage('PDF export completed successfully');
-            } else {
-                spUtil.addErrorMessage('Failed to generate PDF: ' + (response.data.error || 'Unknown error'));
-            }
-        }).catch(function(error) {
-            console.error('PDF export error:', error);
-            spUtil.addErrorMessage('Error exporting to PDF');
-        });
+    if (limitsToExport.length === 0) {
+        spUtil.addInfoMessage('No data to export');
+        return;
     }
+
+    // Create a printable HTML version
+    var printWindow = window.open('', '_blank');
+    var filterDescription = getFilterDescription();
+    
+    var htmlContent = buildPrintableHTML(limitsToExport, filterDescription);
+    
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    
+    // Wait for content to load, then trigger print dialog
+    printWindow.onload = function() {
+        printWindow.print();
+    };
+}
+
+// Add this helper function to build printable HTML:
+function buildPrintableHTML(limits, filterDescription) {
+    var html = '<!DOCTYPE html><html><head>';
+    html += '<title>Signature Authority Limits Report</title>';
+    html += '<style>';
+    html += 'body { font-family: Arial, sans-serif; margin: 20px; }';
+    html += 'h1 { color: #2c3e50; font-size: 24px; }';
+    html += '.report-info { background: #f8f9fa; padding: 15px; margin-bottom: 20px; border-radius: 4px; }';
+    html += '.report-info p { margin: 5px 0; }';
+    html += 'table { width: 100%; border-collapse: collapse; font-size: 10px; }';
+    html += 'th { background: #2c3e50; color: white; padding: 8px 4px; text-align: left; border: 1px solid #34495e; }';
+    html += 'td { padding: 6px 4px; border: 1px solid #ddd; }';
+    html += 'tr:nth-child(even) { background: #f8f9fa; }';
+    html += '.section-header { text-align: center; font-weight: bold; }';
+    html += '.non-credit-header { background: #27ae60 !important; }';
+    html += '.credit-header { background: #e74c3c !important; }';
+    html += '.amount-cell { text-align: right; }';
+    html += '@media print { body { margin: 0; } }';
+    html += '</style>';
+    html += '</head><body>';
+    
+    html += '<h1>Signature Authority Limits Report</h1>';
+    
+    html += '<div class="report-info">';
+    html += '<p><strong>Generated:</strong> ' + new Date().toLocaleString() + '</p>';
+    html += '<p><strong>Total Records:</strong> ' + limits.length + '</p>';
+    if (filterDescription && filterDescription !== 'None (All Records)') {
+        html += '<p><strong>Filters Applied:</strong> ' + escapeHtml(filterDescription) + '</p>';
+    }
+    html += '</div>';
+    
+    html += '<table>';
+    html += '<thead>';
+    html += '<tr>';
+    html += '<th colspan="3" class="section-header">Job Information</th>';
+    html += '<th colspan="10" class="section-header non-credit-header">Non-Credit Authority</th>';
+    html += '<th colspan="4" class="section-header credit-header">Credit Authority</th>';
+    html += '</tr>';
+    html += '<tr>';
+    html += '<th>Job Code</th><th>Job Title</th><th>Line of Business</th>';
+    html += '<th>ACH</th><th>Wire Int.</th><th>Wire Ext.</th><th>Check Int.</th><th>Check Ext.</th>';
+    html += '<th>Cash On-Us</th><th>Cash Not On-Us</th><th>Remote Dep.</th><th>Treasury</th><th>FX Wire</th>';
+    html += '<th>OD Int.</th><th>OD Ext.</th><th>UF Int.</th><th>UF Ext.</th>';
+    html += '</tr>';
+    html += '</thead>';
+    html += '<tbody>';
+    
+    limits.forEach(function(limit) {
+        html += '<tr>';
+        html += '<td>' + escapeHtml(limit.job_code_display || '-') + '</td>';
+        html += '<td>' + escapeHtml(limit.job_title || '-') + '</td>';
+        html += '<td>' + escapeHtml(limit.job_function || '-') + '</td>';
+        html += '<td class="amount-cell">' + formatAmountForPDF(limit.disbursement_ach) + '</td>';
+        html += '<td class="amount-cell">' + formatAmountForPDF(limit.disbursement_wire_transfer_internal) + '</td>';
+        html += '<td class="amount-cell">' + formatAmountForPDF(limit.disbursement_wire_transfer_external) + '</td>';
+        html += '<td class="amount-cell">' + formatAmountForPDF(limit.disbursement_official_checks_internal) + '</td>';
+        html += '<td class="amount-cell">' + formatAmountForPDF(limit.disbursement_official_checks_external) + '</td>';
+        html += '<td class="amount-cell">' + formatAmountForPDF(limit.check_cashing_on_us) + '</td>';
+        html += '<td class="amount-cell">' + formatAmountForPDF(limit.check_cashing_not_on_us) + '</td>';
+        html += '<td class="amount-cell">' + formatAmountForPDF(limit.remote_deposit) + '</td>';
+        html += '<td class="amount-cell">' + formatAmountForPDF(limit.treasury_solutions_company_wire_limits) + '</td>';
+        html += '<td class="amount-cell">' + formatAmountForPDF(limit.fx_wire_limits) + '</td>';
+        html += '<td class="amount-cell">' + formatAmountForPDF(limit.overdraft_internal_accounts) + '</td>';
+        html += '<td class="amount-cell">' + formatAmountForPDF(limit.overdraft_external_accounts) + '</td>';
+        html += '<td class="amount-cell">' + formatAmountForPDF(limit.unavailable_funds_internal_accounts) + '</td>';
+        html += '<td class="amount-cell">' + formatAmountForPDF(limit.unavailable_funds_external_accounts) + '</td>';
+        html += '</tr>';
+    });
+    
+    html += '</tbody></table>';
+    html += '</body></html>';
+    
+    return html;
+}
+
+function formatAmountForPDF(value) {
+    if (!value || value === '0' || parseFloat(value) === 0) {
+        return '-';
+    }
+    var numValue = parseFloat(value);
+    if (isNaN(numValue)) return '-';
+    return '$' + numValue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    var div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
 
     // Get filter description for export
     function getFilterDescription() {
