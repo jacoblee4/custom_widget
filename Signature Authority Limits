@@ -2442,15 +2442,14 @@ function buildPrintableHTML(limits, filterDescription) {
     html += 'table { width: 100%; border-collapse: collapse; font-size: 9px; margin-top: 15px; }';
     html += 'table, th, td { border: 1px solid #ccc; }';
     
-    // Section headers with borders instead of backgrounds
-    html += 'th.section-header { padding: 8px 4px; text-align: center; font-weight: bold; font-size: 10px; border: 2px solid #666; }';
-    html += 'th.job-info-section { color: #000; font-weight: bold; border: 2px solid #666; }';
-    html += 'th.non-credit-section { color: #155724; font-weight: bold; border: 3px solid #28a745; border-top: 3px solid #28a745; }';
-    html += 'th.credit-section { color: #721c24; font-weight: bold; border: 3px solid #dc3545; border-top: 3px solid #dc3545; }';
+    // Section headers - cleaner without boxes
+    html += 'th.section-header { padding: 10px 4px; text-align: center; font-weight: bold; font-size: 11px; border: 1px solid #ccc; }';
+    html += 'th.job-info-section { color: #495057; background: #e9ecef !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
+    html += 'th.non-credit-section { color: #155724; background: #d4edda !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
+    html += 'th.credit-section { color: #721c24; background: #f8d7da !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
     
-    // Column headers with distinct styling
-    html += 'th { padding: 6px 4px; text-align: left; font-weight: 600; font-size: 9px; color: #fff; }';
-    html += 'th:not(.section-header) { background: #2c3e50 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
+    // Column headers with grey instead of black
+    html += 'th { padding: 6px 4px; text-align: left; font-weight: 600; font-size: 9px; color: #fff; background: #6c757d !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
     html += 'th.non-credit-col { background: #28a745 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
     html += 'th.credit-col { background: #dc3545 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
     
@@ -2463,10 +2462,10 @@ function buildPrintableHTML(limits, filterDescription) {
     html += 'td.job-code-cell { font-weight: bold; color: #000; }';
     html += 'td.job-info-cell { color: #495057; }';
     
-    // Amount cells with subtle borders for visual separation
+    // Amount cells with subtle backgrounds
     html += 'td.amount-cell { text-align: right; font-weight: 500; color: #000; }';
-    html += 'td.non-credit-cell { background: #e8f5e9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; border-left: 2px solid #c8e6c9; }';
-    html += 'td.credit-cell { background: #ffebee !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; border-left: 2px solid #ffcdd2; }';
+    html += 'td.non-credit-cell { background: #e8f5e9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
+    html += 'td.credit-cell { background: #ffebee !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
     
     // Print-specific adjustments
     html += '@media print { ';
@@ -2816,6 +2815,8 @@ function escapeHtml(str) {
                 exportToExcel();
             });
         }
+
+        // Note: PDF export button uses ng-click in HTML, so no listener needed here
 
         var exportPdfBtn = document.getElementById('exportPdfButton');
         if (exportPdfBtn) {
