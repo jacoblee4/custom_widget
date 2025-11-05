@@ -189,23 +189,17 @@
     </div>
   </div>
 
-  <!-- Active Filters Display -->
+ <!-- Active Filters Display -->
   <div id="activeFiltersContainer" style="display: none;" class="active-filters-section">
     <div class="active-filters-header">Active Filters:</div>
     <div id="activeFilters" class="active-filters-list"></div>
   </div>
 
-  <!-- Button Group - Always Visible -->
-  <div class="button-group-container">
-    <div class="button-group">
-      <button id="clearAllButton" class="btn btn-clear-all">Clear All Filters</button>
-     <button id="exportExcelButton" class="btn btn-export-excel">
-      <i class="fa fa-file-excel-o"></i> Export Excel
-      </button>
-    <button ng-click="c.exportPdf()" class="btn btn-export-pdf">
-      <i class="fa fa-file-pdf-o"></i> Export PDF
+  <!-- Clear All Button - Only shows when filters are active -->
+  <div id="clearAllContainer" style="display: none;" class="clear-all-container">
+    <button id="clearAllButton" class="btn btn-clear-all">
+      <i class="fa fa-times-circle"></i> Clear All Filters
     </button>
-    </div>
   </div>
 
   <!-- Loading Indicator -->
@@ -223,22 +217,33 @@
   <!-- Results Table -->
   <div ng-if="!c.loading && c.limits.length > 0" class="results-container">
     <div class="results-header">
-      <h4>
-        <i class="fa fa-list"></i>
-        Authority Limits
-        <span class="results-count">({{c.limits.length}} total)</span>
-      </h4>
+      <div class="results-header-left">
+        <h4>
+          <i class="fa fa-list"></i>
+          Authority Limits
+          <span class="results-count">({{c.limits.length}} total)</span>
+        </h4>
 
-      <div class="column-filter">
-        <span class="filter-label">Show Columns:</span>
-        <label class="filter-checkbox">
-          <input type="checkbox" id="showNonCredit" checked>
-          <span>Non-Credit Authority</span>
-        </label>
-        <label class="filter-checkbox">
-          <input type="checkbox" id="showCredit" checked>
-          <span>Credit Authority</span>
-        </label>
+        <div class="column-filter">
+          <span class="filter-label">Show Columns:</span>
+          <label class="filter-checkbox">
+            <input type="checkbox" id="showNonCredit" checked>
+            <span>Non-Credit Authority</span>
+          </label>
+          <label class="filter-checkbox">
+            <input type="checkbox" id="showCredit" checked>
+            <span>Credit Authority</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="results-header-right">
+        <button id="exportExcelButton" class="btn btn-export-excel">
+          <i class="fa fa-file-excel-o"></i> Export Excel
+        </button>
+        <button ng-click="c.exportPdf()" class="btn btn-export-pdf">
+          <i class="fa fa-file-pdf-o"></i> Export PDF
+        </button>
       </div>
     </div>
 
@@ -1321,6 +1326,71 @@
   }
 }
 
+/* Clear All Container - only shows when filters active */
+.clear-all-container {
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.btn-clear-all {
+  background: #e74c3c;
+  color: white;
+}
+
+.btn-clear-all:hover {
+  background: #c0392b;
+}
+
+.btn-clear-all i {
+  margin-right: 6px;
+}
+
+/* Results header layout - split left and right */
+.results-header {
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.results-header-left {
+  flex: 1;
+}
+
+.results-header-right {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.results-header h4 {
+  color: #2c3e50;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.column-filter {
+  margin-top: 0;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+@media (max-width: 968px) {
+  .results-header {
+    flex-direction: column;
+  }
+  
+  .results-header-right {
+    width: 100%;
+  }
+}
+
 
 <!-- ============================================ -->
 <!-- SERVER SCRIPT -->
@@ -2114,15 +2184,21 @@ api.controller = function($scope, $timeout, spUtil) {
     }
     // Update active filters display with grouping by category
     function updateActiveFiltersDisplay() {
-        var container = document.getElementById('activeFiltersContainer');
-        var filtersList = document.getElementById('activeFilters');
+    var container = document.getElementById('activeFiltersContainer');
+    var filtersList = document.getElementById('activeFilters');
+    var clearAllContainer = document.getElementById('clearAllContainer');
 
-        if (c.activeFilters.length === 0) {
-            container.style.display = 'none';
-        } else {
-            container.style.display = 'block';
-            filtersList.innerHTML = '';
-
+    if (c.activeFilters.length === 0) {
+        container.style.display = 'none';
+        if (clearAllContainer) {
+            clearAllContainer.style.display = 'none';
+        }
+    } else {
+        container.style.display = 'block';
+        if (clearAllContainer) {
+            clearAllContainer.style.display = 'block';
+        }
+        filtersList.innerHTML = '';
             // Group filters by category
             var filtersByCategory = {
                 amount: [],
@@ -2346,28 +2422,53 @@ api.controller = function($scope, $timeout, spUtil) {
     };
 }
 
-// Add this helper function to build printable HTML:
 function buildPrintableHTML(limits, filterDescription) {
     var html = '<!DOCTYPE html><html><head>';
     html += '<title>Signature Authority Limits Report</title>';
     html += '<style>';
-    html += 'body { font-family: Arial, sans-serif; margin: 20px; }';
-    html += 'h1 { color: #2c3e50; font-size: 24px; }';
-    html += '.report-info { background: #f8f9fa; padding: 15px; margin-bottom: 20px; border-radius: 4px; }';
-    html += '.report-info p { margin: 5px 0; }';
-    html += 'table { width: 100%; border-collapse: collapse; font-size: 10px; }';
-    html += 'th { background: #2c3e50; color: white; padding: 8px 4px; text-align: left; border: 1px solid #34495e; }';
-    html += 'td { padding: 6px 4px; border: 1px solid #ddd; }';
+    html += '@page { size: landscape; margin: 0.5in; }';
+    html += 'body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }';
+    html += 'h1 { color: #2c3e50; font-size: 22px; margin-bottom: 15px; border-bottom: 3px solid #3498db; padding-bottom: 10px; }';
+    html += '.report-info { background: #f8f9fa; padding: 12px; margin-bottom: 20px; border-radius: 6px; border-left: 4px solid #3498db; }';
+    html += '.report-info p { margin: 4px 0; font-size: 11px; color: #495057; }';
+    html += '.report-info strong { color: #2c3e50; }';
+    html += 'table { width: 100%; border-collapse: collapse; font-size: 9px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }';
+    
+    // Section headers (Job Info, Non-Credit, Credit)
+    html += 'th.section-header { padding: 10px 6px; text-align: center; font-weight: bold; font-size: 10px; border: 1px solid #dee2e6; }';
+    html += 'th.job-info-section { background: #e9ecef !important; color: #495057; }';
+    html += 'th.non-credit-section { background: #d4edda !important; color: #155724; border-left: 3px solid #27ae60; }';
+    html += 'th.credit-section { background: #f8d7da !important; color: #721c24; border-left: 3px solid #e74c3c; }';
+    
+    // Column headers
+    html += 'th { background: #34495e; color: white; padding: 8px 4px; text-align: left; border: 1px solid #2c3e50; font-weight: 600; font-size: 8px; }';
+    html += 'th.non-credit-col { background: #27ae60; }';
+    html += 'th.credit-col { background: #e74c3c; }';
+    
+    // Table cells
+    html += 'td { padding: 6px 4px; border: 1px solid #dee2e6; font-size: 8px; }';
     html += 'tr:nth-child(even) { background: #f8f9fa; }';
-    html += '.section-header { text-align: center; font-weight: bold; }';
-    html += '.non-credit-header { background: #27ae60 !important; }';
-    html += '.credit-header { background: #e74c3c !important; }';
-    html += '.amount-cell { text-align: right; }';
-    html += '@media print { body { margin: 0; } }';
+    html += 'tr:nth-child(odd) { background: white; }';
+    
+    // Job info cells
+    html += 'td.job-code-cell { font-weight: bold; color: #2c3e50; background: #f1f3f5 !important; }';
+    html += 'td.job-info-cell { color: #6c757d; }';
+    
+    // Amount cells with color backgrounds
+    html += 'td.amount-cell { text-align: right; font-weight: 500; }';
+    html += 'td.non-credit-cell { background: #f1f9f4 !important; }';
+    html += 'td.credit-cell { background: #fef5f6 !important; }';
+    
+    html += '@media print { ';
+    html += '  body { margin: 0; padding: 10px; }';
+    html += '  table { page-break-inside: auto; }';
+    html += '  tr { page-break-inside: avoid; page-break-after: auto; }';
+    html += '  thead { display: table-header-group; }';
+    html += '}';
     html += '</style>';
     html += '</head><body>';
     
-    html += '<h1>Signature Authority Limits Report</h1>';
+    html += '<h1>📊 Signature Authority Limits Report</h1>';
     
     html += '<div class="report-info">';
     html += '<p><strong>Generated:</strong> ' + new Date().toLocaleString() + '</p>';
@@ -2380,38 +2481,51 @@ function buildPrintableHTML(limits, filterDescription) {
     html += '<table>';
     html += '<thead>';
     html += '<tr>';
-    html += '<th colspan="3" class="section-header">Job Information</th>';
-    html += '<th colspan="10" class="section-header non-credit-header">Non-Credit Authority</th>';
-    html += '<th colspan="4" class="section-header credit-header">Credit Authority</th>';
+    html += '<th colspan="3" class="section-header job-info-section">📋 Job Information</th>';
+    html += '<th colspan="10" class="section-header non-credit-section">💰 Non-Credit Authority</th>';
+    html += '<th colspan="4" class="section-header credit-section">💳 Credit Authority</th>';
     html += '</tr>';
     html += '<tr>';
-    html += '<th>Job Code</th><th>Job Title</th><th>Line of Business</th>';
-    html += '<th>ACH</th><th>Wire Int.</th><th>Wire Ext.</th><th>Check Int.</th><th>Check Ext.</th>';
-    html += '<th>Cash On-Us</th><th>Cash Not On-Us</th><th>Remote Dep.</th><th>Treasury</th><th>FX Wire</th>';
-    html += '<th>OD Int.</th><th>OD Ext.</th><th>UF Int.</th><th>UF Ext.</th>';
+    html += '<th>Job Code</th>';
+    html += '<th>Job Title</th>';
+    html += '<th>Line of Business</th>';
+    html += '<th class="non-credit-col">ACH</th>';
+    html += '<th class="non-credit-col">Wire Int.</th>';
+    html += '<th class="non-credit-col">Wire Ext.</th>';
+    html += '<th class="non-credit-col">Check Int.</th>';
+    html += '<th class="non-credit-col">Check Ext.</th>';
+    html += '<th class="non-credit-col">Cash On-Us</th>';
+    html += '<th class="non-credit-col">Cash Not On-Us</th>';
+    html += '<th class="non-credit-col">Remote Dep.</th>';
+    html += '<th class="non-credit-col">Treasury</th>';
+    html += '<th class="non-credit-col">FX Wire</th>';
+    html += '<th class="credit-col">OD Int.</th>';
+    html += '<th class="credit-col">OD Ext.</th>';
+    html += '<th class="credit-col">UF Int.</th>';
+    html += '<th class="credit-col">UF Ext.</th>';
     html += '</tr>';
     html += '</thead>';
     html += '<tbody>';
     
     limits.forEach(function(limit) {
         html += '<tr>';
-        html += '<td>' + escapeHtml(limit.job_code_display || '-') + '</td>';
-        html += '<td>' + escapeHtml(limit.job_title || '-') + '</td>';
-        html += '<td>' + escapeHtml(limit.job_function || '-') + '</td>';
-        html += '<td class="amount-cell">' + formatAmountForPDF(limit.disbursement_ach) + '</td>';
-        html += '<td class="amount-cell">' + formatAmountForPDF(limit.disbursement_wire_transfer_internal) + '</td>';
-        html += '<td class="amount-cell">' + formatAmountForPDF(limit.disbursement_wire_transfer_external) + '</td>';
-        html += '<td class="amount-cell">' + formatAmountForPDF(limit.disbursement_official_checks_internal) + '</td>';
-        html += '<td class="amount-cell">' + formatAmountForPDF(limit.disbursement_official_checks_external) + '</td>';
-        html += '<td class="amount-cell">' + formatAmountForPDF(limit.check_cashing_on_us) + '</td>';
-        html += '<td class="amount-cell">' + formatAmountForPDF(limit.check_cashing_not_on_us) + '</td>';
-        html += '<td class="amount-cell">' + formatAmountForPDF(limit.remote_deposit) + '</td>';
-        html += '<td class="amount-cell">' + formatAmountForPDF(limit.treasury_solutions_company_wire_limits) + '</td>';
-        html += '<td class="amount-cell">' + formatAmountForPDF(limit.fx_wire_limits) + '</td>';
-        html += '<td class="amount-cell">' + formatAmountForPDF(limit.overdraft_internal_accounts) + '</td>';
-        html += '<td class="amount-cell">' + formatAmountForPDF(limit.overdraft_external_accounts) + '</td>';
-        html += '<td class="amount-cell">' + formatAmountForPDF(limit.unavailable_funds_internal_accounts) + '</td>';
-        html += '<td class="amount-cell">' + formatAmountForPDF(limit.unavailable_funds_external_accounts) + '</td>';
+        html += '<td class="job-code-cell">' + escapeHtml(limit.job_code_display || '-') + '</td>';
+        html += '<td class="job-info-cell">' + escapeHtml(limit.job_title || '-') + '</td>';
+        html += '<td class="job-info-cell">' + escapeHtml(limit.job_function || '-') + '</td>';
+        html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.disbursement_ach) + '</td>';
+        html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.disbursement_wire_transfer_internal) + '</td>';
+        html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.disbursement_wire_transfer_external) + '</td>';
+        html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.disbursement_official_checks_internal) + '</td>';
+        html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.disbursement_official_checks_external) + '</td>';
+        html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.check_cashing_on_us) + '</td>';
+        html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.check_cashing_not_on_us) + '</td>';
+        html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.remote_deposit) + '</td>';
+        html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.treasury_solutions_company_wire_limits) + '</td>';
+        html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.fx_wire_limits) + '</td>';
+        html += '<td class="amount-cell credit-cell">' + formatAmountForPDF(limit.overdraft_internal_accounts) + '</td>';
+        html += '<td class="amount-cell credit-cell">' + formatAmountForPDF(limit.overdraft_external_accounts) + '</td>';
+        html += '<td class="amount-cell credit-cell">' + formatAmountForPDF(limit.unavailable_funds_internal_accounts) + '</td>';
+        html += '<td class="amount-cell credit-cell">' + formatAmountForPDF(limit.unavailable_funds_external_accounts) + '</td>';
         html += '</tr>';
     });
     
