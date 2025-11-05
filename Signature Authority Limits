@@ -12,27 +12,27 @@
   <div class="search-controls-side-nav">
     <div class="filter-nav-sidebar">
       <button class="filter-nav-tab" data-filter="amount">
-        <span class="filter-nav-icon">💵</span>
+        <span class="filter-nav-icon"></span>
         <span class="filter-nav-label">Limit Amount</span>
         <span class="filter-nav-badge" style="display: none;">0</span>
       </button>
       <button class="filter-nav-tab" data-filter="job_code">
-        <span class="filter-nav-icon">🔢</span>
+        <span class="filter-nav-icon"></span>
         <span class="filter-nav-label">Job Code</span>
         <span class="filter-nav-badge" style="display: none;">0</span>
       </button>
       <button class="filter-nav-tab" data-filter="job_title">
-        <span class="filter-nav-icon">💼</span>
+        <span class="filter-nav-icon"></span>
         <span class="filter-nav-label">Job Title</span>
         <span class="filter-nav-badge" style="display: none;">0</span>
       </button>
       <button class="filter-nav-tab" data-filter="job_function">
-        <span class="filter-nav-icon">🏢</span>
+        <span class="filter-nav-icon"></span>
         <span class="filter-nav-label">Line of Business</span>
         <span class="filter-nav-badge" style="display: none;">0</span>
       </button>
       <button class="filter-nav-tab" data-filter="employee">
-        <span class="filter-nav-icon">👤</span>
+        <span class="filter-nav-icon"></span>
         <span class="filter-nav-label">Employee</span>
         <span class="filter-nav-badge" style="display: none;">0</span>
       </button>
@@ -195,9 +195,17 @@
     <div id="activeFilters" class="active-filters-list"></div>
   </div>
 
-  <!-- Clear All Button - Hidden by default -->
-  <div id="clearAllContainer" class="clear-all-container" style="display: none;">
-    <button id="clearAllButton" class="btn btn-clear-all">Clear All Filters</button>
+  <!-- Button Group - Always Visible -->
+  <div class="button-group-container">
+    <div class="button-group">
+      <button id="clearAllButton" class="btn btn-clear-all">Clear All Filters</button>
+     <button id="exportExcelButton" class="btn btn-export-excel">
+      <i class="fa fa-file-excel-o"></i> Export Excel
+      </button>
+    <button id="exportPdfButton" class="btn btn-export-pdf">
+      <i class="fa fa-file-pdf-o"></i> Export PDF
+    </button>
+    </div>
   </div>
 
   <!-- Loading Indicator -->
@@ -215,32 +223,22 @@
   <!-- Results Table -->
   <div ng-if="!c.loading && c.limits.length > 0" class="results-container">
     <div class="results-header">
-      <div class="results-header-left">
-        <h4>
-          <i class="fa fa-list"></i>
-          Authority Limits
-          <span class="results-count">({{c.limits.length}} total)</span>
-        </h4>
-        <div class="column-filter">
-          <span class="filter-label">Show Columns:</span>
-          <label class="filter-checkbox">
-            <input type="checkbox" id="showNonCredit" checked>
-            <span>Non-Credit Authority</span>
-          </label>
-          <label class="filter-checkbox">
-            <input type="checkbox" id="showCredit" checked>
-            <span>Credit Authority</span>
-          </label>
-        </div>
-      </div>
+      <h4>
+        <i class="fa fa-list"></i>
+        Authority Limits
+        <span class="results-count">({{c.limits.length}} total)</span>
+      </h4>
 
-      <div class="export-buttons">
-        <button id="exportExcelButton" class="btn btn-export-excel">
-          <i class="fa fa-file-excel-o"></i> Export Excel
-        </button>
-        <button id="exportPdfButton" class="btn btn-export-pdf">
-          <i class="fa fa-file-pdf-o"></i> Export PDF
-        </button>
+      <div class="column-filter">
+        <span class="filter-label">Show Columns:</span>
+        <label class="filter-checkbox">
+          <input type="checkbox" id="showNonCredit" checked>
+          <span>Non-Credit Authority</span>
+        </label>
+        <label class="filter-checkbox">
+          <input type="checkbox" id="showCredit" checked>
+          <span>Credit Authority</span>
+        </label>
       </div>
     </div>
 
@@ -475,12 +473,10 @@
 
 
 
-
 <!-- ============================================ -->
 <!-- CSS -->
 <!-- ============================================ -->
 
-<style>
 .authority-lookup-widget {
   padding: 20px;
   font-family: 'Source Sans Pro', Arial, sans-serif;
@@ -724,27 +720,6 @@
   opacity: 1;
 }
 
-/* Clear All Button Container */
-.clear-all-container {
-  margin-bottom: 16px;
-}
-
-.btn-clear-all {
-  background: #e74c3c;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
-  font-weight: 600;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s ease;
-}
-
-.btn-clear-all:hover {
-  background: #c0392b;
-}
-
 /* Line of Business Select Styling */
 .lob-select {
   max-height: 200px;
@@ -917,6 +892,15 @@
   font-style: italic;
 }
 
+.button-group-container {
+  margin-bottom: 24px;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+}
+
 .btn {
   padding: 10px 20px;
   border: none;
@@ -925,6 +909,19 @@
   cursor: pointer;
   font-size: 14px;
   transition: all 0.2s ease;
+}
+
+.btn-clear-all {
+  background: #e74c3c;
+  color: white;
+}
+
+.btn-clear-all:hover {
+  background: #c0392b;
+}
+
+.btn-clear-all:hover {
+  background: #c0392b;
 }
 
 .btn-export-excel {
@@ -978,62 +975,22 @@
 
 .results-header {
   margin-bottom: 16px;
+}
+
+.results-header h4 {
+  color: #2c3e50;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 20px;
-}
-
-.results-header-left {
-  flex: 1;
-}
-
-.results-header-left h4 {
-  margin: 0 0 12px 0;
+  align-items: center;
+  gap: 8px;
 }
 
 .results-count {
   font-size: 14px;
   color: #7f8c8d;
   font-weight: normal;
-}
-
-.column-filter {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.filter-label {
-  font-size: 14px;
-  color: #495057;
-  font-weight: 600;
-}
-
-.filter-checkbox {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  color: #495057;
-  user-select: none;
-}
-
-.filter-checkbox input[type="checkbox"] {
-  cursor: pointer;
-  width: 16px;
-  height: 16px;
-}
-
-.filter-checkbox:hover {
-  color: #2c3e50;
-}
-
-.export-buttons {
-  display: flex;
-  gap: 10px;
-  flex-shrink: 0;
 }
 
 .table-container {
@@ -1304,6 +1261,39 @@
   margin-right: 4px;
 }
 
+.column-filter {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.filter-label {
+  font-size: 14px;
+  color: #495057;
+  font-weight: 600;
+}
+
+.filter-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #495057;
+  user-select: none;
+}
+
+.filter-checkbox input[type="checkbox"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+.filter-checkbox:hover {
+  color: #2c3e50;
+}
+
 .hide-non-credit .section-header.non-credit-header,
 .hide-non-credit th.non-credit-col,
 .hide-non-credit td.non-credit-col {
@@ -1329,20 +1319,7 @@
   .pagination-info {
     text-align: center;
   }
-
-  .results-header {
-    flex-direction: column;
-  }
-
-  .export-buttons {
-    width: 100%;
-  }
-
-  .export-buttons .btn {
-    flex: 1;
-  }
 }
-</style>
 
 
 <!-- ============================================ -->
@@ -1353,74 +1330,37 @@
 (function() {
     'use strict';
 
-    // Log the incoming action for debugging
-    var actionReceived = (input && input.action) ? input.action : 'undefined';
-    gs.info('SIGNATURE AUTHORITY: Server script called with action: ' + actionReceived);
-
-    // Initialize data object if not exists
-    if (typeof data === 'undefined') {
-        data = {};
-    }
-
     // Handle PDF Export
     if (input && input.action === 'exportPDF') {
         var limits = input.limits || [];
         var filterDescription = input.filterDescription || '';
         
-        gs.info('SIGNATURE AUTHORITY: PDF Export started. Records to export: ' + limits.length);
-        
         try {
             // Build HTML for PDF
             var html = buildPDFHTML(limits, filterDescription);
-            gs.info('SIGNATURE AUTHORITY: PDF HTML built successfully. Length: ' + html.length);
             
-            // Generate unique filename
-            var fileName = 'Authority_Limits_' + new GlideDateTime().getNumericValue();
-            gs.info('SIGNATURE AUTHORITY: PDF filename: ' + fileName);
+            // Use a temporary sys_user record to attach the PDF to
+            var userSysId = gs.getUserID();
             
             // Create PDF using the API
             var pdfGen = new sn_pdfgeneratorutils.PDFGenerationAPI();
-            var userSysId = gs.getUserID();
+            var fileName = 'Authority_Limits_' + new GlideDateTime().getNumericValue();
             
-            gs.info('SIGNATURE AUTHORITY: Generating PDF bytes for user: ' + userSysId);
+            // Generate PDF and attach to user record
+            var attachmentId = pdfGen.convertToPDF(html, 'sys_user', userSysId, fileName);
             
-            // Generate PDF with proper configuration
-            var pdfBytes = pdfGen.convertHTMLStringToPDFBytes(html);
-            
-            if (pdfBytes) {
-                gs.info('SIGNATURE AUTHORITY: PDF bytes generated successfully');
-                
-                // Create attachment
-                var sa = new GlideSysAttachment();
-                var attachmentId = sa.write({
-                    table_name: 'sys_user',
-                    table_sys_id: userSysId,
-                    file_name: fileName + '.pdf',
-                    content_type: 'application/pdf',
-                    data: pdfBytes
-                });
-                
-                if (attachmentId) {
-                    gs.info('SIGNATURE AUTHORITY: PDF attachment created successfully. ID: ' + attachmentId);
-                    data.success = true;
-                    data.attachmentId = attachmentId;
-                    data.fileName = fileName + '.pdf';
-                    data.downloadUrl = '/sys_attachment.do?sys_id=' + attachmentId;
-                } else {
-                    gs.error('SIGNATURE AUTHORITY: Failed to create PDF attachment');
-                    data.success = false;
-                    data.error = 'Failed to create attachment';
-                }
+            if (attachmentId) {
+                data.success = true;
+                data.attachmentId = attachmentId;
+                data.fileName = fileName + '.pdf';
             } else {
-                gs.error('SIGNATURE AUTHORITY: Failed to generate PDF bytes');
                 data.success = false;
-                data.error = 'Failed to generate PDF bytes';
+                data.error = 'Failed to generate PDF attachment';
             }
         } catch (e) {
-            gs.error('SIGNATURE AUTHORITY: PDF Export Error: ' + e.message);
-            gs.error('SIGNATURE AUTHORITY: Stack trace: ' + e.stack);
             data.success = false;
             data.error = e.message || 'Unknown error occurred';
+            gs.error('PDF Export Error: ' + e.message);
         }
         return;
     }
@@ -1430,8 +1370,6 @@
         var searchType = input.search_type;
         var searchValue = input.search_value;
         var results = [];
-
-        gs.info('SIGNATURE AUTHORITY: Reference lookup - Type: ' + searchType + ', Value: ' + searchValue);
 
         if (searchType === 'job_code') {
             var gr = new GlideRecord('x_banun_rbac_job_code');
@@ -1500,7 +1438,6 @@
             }
         }
 
-        gs.info('SIGNATURE AUTHORITY: Reference lookup returned ' + results.length + ' results');
         data.results = results;
         return;
     }
@@ -1526,26 +1463,21 @@
             }
         }
 
-        gs.info('SIGNATURE AUTHORITY: LOB options loaded: ' + lobs.length + ' unique values');
         data.lobs = lobs;
         return;
     }
 
-    // Handle search limits - including the 'all' case and undefined action
-    if (input && (input.action === 'searchLimits' || input.search_type === 'all' || !input.action)) {
-        var searchType = input.search_type || 'all';
-        var searchValue = input.search_value || '';
-        var limitType = input.limit_type || '';
-        var minAmount = input.min_amount || '';
-
-        gs.info('SIGNATURE AUTHORITY: Search limits - Type: ' + searchType);
+    if (input && input.action === 'searchLimits') {
+        var searchType = input.search_type;
+        var searchValue = input.search_value;
+        var limitType = input.limit_type;
+        var minAmount = input.min_amount;
 
         var limits = [];
 
         var gr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
         gr.addQuery('active', true);
 
-        // Apply filters based on search type
         if (searchType === 'job_code' && searchValue) {
             gr.addQuery('job_code', searchValue);
 
@@ -1585,7 +1517,6 @@
                 gr.addQuery(limitType, '>=', minAmountNum);
             }
         }
-        // If searchType is 'all' or undefined, no additional filters are applied
 
         gr.orderBy('job_code.job_code');
         gr.query();
@@ -1633,14 +1564,8 @@
             limits.push(limit);
         }
 
-        gs.info('SIGNATURE AUTHORITY: Search returned ' + limits.length + ' limits');
         data.limits = limits;
-        return;
     }
-
-    // If we reach here, unknown action - log it
-    gs.warn('SIGNATURE AUTHORITY: Unknown or unhandled action: ' + actionReceived);
-    data.limits = [];
 
     // Helper function to build PDF HTML
     function buildPDFHTML(limits, filterDescription) {
@@ -2124,7 +2049,6 @@ api.controller = function($scope, $timeout, spUtil) {
         clearPanelInputs(filterType);
         updateActiveFiltersDisplay();
         updateFilterBadges();
-        updateClearAllButtonVisibility();
         applyFilters();
     }
 
@@ -2146,18 +2070,6 @@ api.controller = function($scope, $timeout, spUtil) {
 
             if (searchInput) searchInput.value = '';
             if (searchInputValue) searchInputValue.value = '';
-        }
-    }
-
-    // Update Clear All button visibility
-    function updateClearAllButtonVisibility() {
-        var clearAllContainer = document.getElementById('clearAllContainer');
-        if (clearAllContainer) {
-            if (c.activeFilters.length > 0) {
-                clearAllContainer.style.display = 'block';
-            } else {
-                clearAllContainer.style.display = 'none';
-            }
         }
     }
 
@@ -2276,8 +2188,8 @@ api.controller = function($scope, $timeout, spUtil) {
 
                 // Auto-sort by the first amount filter column (descending - high to low)
                 var sortColumn = filtersByCategory.amount[0].limitType;
-                c.sortColumn = sortColumn;
-                c.sortDirection = 'desc';
+                c.sortColumn = sortColumn; // This sets the sort column
+                c.sortDirection = 'desc'; // This sets the direction
 
                 filteredLimits.sort(function(a, b) {
                     var aVal = parseFloat(a[sortColumn]) || 0;
@@ -2289,6 +2201,7 @@ api.controller = function($scope, $timeout, spUtil) {
                 filteredLimits.forEach(function(limit) {
                     limit.activeLimitTypes = [];
                 });
+                // Don't reset sort if no amount filters - REMOVED LINE THAT WAS RESETTING SORT
             }
 
             c.limits = filteredLimits;
@@ -2299,10 +2212,6 @@ api.controller = function($scope, $timeout, spUtil) {
 
         $scope.$apply();
     }
-
-    // CONTINUES IN PART 2...
-    // CONTINUATION FROM PART 1...
-
     // Update active filters display with grouping by category
     function updateActiveFiltersDisplay() {
         var container = document.getElementById('activeFiltersContainer');
@@ -2396,7 +2305,6 @@ api.controller = function($scope, $timeout, spUtil) {
         c.activeFilters.splice(index, 1);
         updateActiveFiltersDisplay();
         updateFilterBadges();
-        updateClearAllButtonVisibility();
         applyFilters();
     }
 
@@ -2405,7 +2313,6 @@ api.controller = function($scope, $timeout, spUtil) {
         c.activeFilters = [];
         updateActiveFiltersDisplay();
         updateFilterBadges();
-        updateClearAllButtonVisibility();
 
         c.limits = c.allLimits.slice();
 
@@ -2533,32 +2440,27 @@ api.controller = function($scope, $timeout, spUtil) {
             filterDescription: filterDescription
         }).then(function(response) {
             if (response.data.success && response.data.attachmentId) {
-                // Use the download URL from the server response
-                var downloadUrl = response.data.downloadUrl || ('/sys_attachment.do?sys_id=' + response.data.attachmentId);
+                // Download the PDF directly
+                var downloadUrl = '/sys_attachment.do?sys_id=' + response.data.attachmentId;
                 
-                // Force download using window.open with proper parameters
-                var fileName = response.data.fileName || 'Authority_Limits.pdf';
+                // Create invisible iframe to trigger download
+                var iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = downloadUrl;
+                document.body.appendChild(iframe);
                 
-                // Create a temporary anchor element for download
-                var link = document.createElement('a');
-                link.href = downloadUrl;
-                link.download = fileName;
-                link.target = '_blank';
-                document.body.appendChild(link);
-                link.click();
-                
-                // Clean up
+                // Remove iframe after download starts
                 setTimeout(function() {
-                    document.body.removeChild(link);
-                }, 100);
+                    document.body.removeChild(iframe);
+                }, 5000);
                 
-                spUtil.addInfoMessage('PDF export completed successfully. Check your downloads.');
+                spUtil.addInfoMessage('PDF export completed successfully');
             } else {
                 spUtil.addErrorMessage('Failed to generate PDF: ' + (response.data.error || 'Unknown error'));
             }
         }).catch(function(error) {
             console.error('PDF export error:', error);
-            spUtil.addErrorMessage('Error exporting to PDF: ' + (error.message || 'Unknown error'));
+            spUtil.addErrorMessage('Error exporting to PDF');
         });
     }
 
@@ -2946,8 +2848,5 @@ api.controller = function($scope, $timeout, spUtil) {
         $timeout(function() {
             setupColumnFilters();
         }, 1000);
-
-        // Initialize Clear All button visibility
-        updateClearAllButtonVisibility();
     }
 };
