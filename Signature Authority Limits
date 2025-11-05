@@ -242,7 +242,6 @@
     </button>
   </div>
 </div>
-    </div>
 
     <div class="table-container">
       <table class="limits-table">
@@ -984,33 +983,17 @@
   flex-wrap: wrap;
 }
 
-.results-header-left h4 {
-  color: #2c3e50;
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .results-count {
   font-size: 14px;
   color: #7f8c8d;
   font-weight: normal;
 }
 
-.results-header-right {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
 .column-filter {
   display: flex;
   align-items: center;
   gap: 20px;
+  margin-left: auto; 
 }
 
 .filter-label {
@@ -1367,28 +1350,36 @@
 (function() {
     'use strict';
 
+    gs.info('SIGNATURE AUTHORITY: Server script called with action: ' + (input ? input.action : 'undefined'));
+
     // Handle PDF Export
     if (input && input.action === 'exportPDF') {
         var limits = input.limits || [];
         var filterDescription = input.filterDescription || '';
         
+        gs.info('SIGNATURE AUTHORITY: PDF Export started. Records to export: ' + limits.length);
+        
         try {
             // Build HTML for PDF
             var html = buildPDFHTML(limits, filterDescription);
+            gs.info('SIGNATURE AUTHORITY: PDF HTML built successfully. Length: ' + html.length);
             
             // Generate unique filename
             var fileName = 'Authority_Limits_' + new GlideDateTime().getNumericValue();
+            gs.info('SIGNATURE AUTHORITY: PDF filename: ' + fileName);
             
             // Create PDF using the API
             var pdfGen = new sn_pdfgeneratorutils.PDFGenerationAPI();
-            
-            // Create a temporary record to attach the PDF to (using sys_user_session)
             var userSysId = gs.getUserID();
+            
+            gs.info('SIGNATURE AUTHORITY: Generating PDF bytes for user: ' + userSysId);
             
             // Generate PDF with proper configuration
             var pdfBytes = pdfGen.convertHTMLStringToPDFBytes(html);
             
             if (pdfBytes) {
+                gs.info('SIGNATURE AUTHORITY: PDF bytes generated successfully');
+                
                 // Create attachment
                 var sa = new GlideSysAttachment();
                 var attachmentId = sa.write({
@@ -1400,23 +1391,26 @@
                 });
                 
                 if (attachmentId) {
+                    gs.info('SIGNATURE AUTHORITY: PDF attachment created successfully. ID: ' + attachmentId);
                     data.success = true;
                     data.attachmentId = attachmentId;
                     data.fileName = fileName + '.pdf';
                     data.downloadUrl = '/sys_attachment.do?sys_id=' + attachmentId;
                 } else {
+                    gs.error('SIGNATURE AUTHORITY: Failed to create PDF attachment');
                     data.success = false;
                     data.error = 'Failed to create attachment';
                 }
             } else {
+                gs.error('SIGNATURE AUTHORITY: Failed to generate PDF bytes');
                 data.success = false;
                 data.error = 'Failed to generate PDF bytes';
             }
         } catch (e) {
+            gs.error('SIGNATURE AUTHORITY: PDF Export Error: ' + e.message);
+            gs.error('SIGNATURE AUTHORITY: Stack trace: ' + e.stack);
             data.success = false;
             data.error = e.message || 'Unknown error occurred';
-            gs.error('PDF Export Error: ' + e.message);
-            gs.error('Stack trace: ' + e.stack);
         }
         return;
     }
@@ -1426,6 +1420,8 @@
         var searchType = input.search_type;
         var searchValue = input.search_value;
         var results = [];
+
+        gs.info('SIGNATURE AUTHORITY: Reference lookup - Type: ' + searchType + ', Value: ' + searchValue);
 
         if (searchType === 'job_code') {
             var gr = new GlideRecord('x_banun_rbac_job_code');
@@ -1494,6 +1490,7 @@
             }
         }
 
+        gs.info('SIGNATURE AUTHORITY: Reference lookup returned ' + results.length + ' results');
         data.results = results;
         return;
     }
@@ -1519,6 +1516,7 @@
             }
         }
 
+        gs.info('SIGNATURE AUTHORITY: LOB options loaded: ' + lobs.length + ' unique values');
         data.lobs = lobs;
         return;
     }
@@ -1528,6 +1526,8 @@
         var searchValue = input.search_value;
         var limitType = input.limit_type;
         var minAmount = input.min_amount;
+
+        gs.info('SIGNATURE AUTHORITY: Search limits - Type: ' + searchType);
 
         var limits = [];
 
@@ -1620,6 +1620,7 @@
             limits.push(limit);
         }
 
+        gs.info('SIGNATURE AUTHORITY: Search returned ' + limits.length + ' limits');
         data.limits = limits;
     }
 
