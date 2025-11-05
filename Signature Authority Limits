@@ -1330,71 +1330,6 @@
 (function() {
     'use strict';
 
-    // Handle PDF Export
-    if (input && input.action === 'exportPDF') {
-        var limits = input.limits || [];
-        var filterDescription = input.filterDescription || '';
-        
-        try {
-            // Build HTML for PDF
-            var html = buildPDFHTML(limits, filterDescription);
-            
-            // Use GeneralPDF to create the PDF
-            var landscape = true; // Use landscape for wide table
-            var pageSize = 'letter'; // or 'a4'
-            
-            // Create PDF Document
-            var pdfDoc = new GeneralPDF.Document(landscape, null, null, html, pageSize, null);
-            
-            // Create GeneralPDF instance
-            var generalPDF = new GeneralPDF(pdfDoc, null, null);
-            
-            // Set document template info
-            generalPDF.setDocTempleInfo(null, null, null, null, null, pageSize);
-            
-            // Start HTML parser
-            generalPDF.startHTMLParser();
-            
-            // Add the HTML content
-            generalPDF.addHTML(html);
-            
-            // Stop parser
-            generalPDF.stopHTMLParser();
-            
-            // Get the PDF stream
-            var pdfStream = generalPDF.get();
-            
-            // Create attachment
-            var fileName = 'Authority_Limits_' + new GlideDateTime().getNumericValue() + '.pdf';
-            var userSysId = gs.getUserID();
-            
-            var attachment = new GeneralPDF.Attachment(
-                userSysId,
-                'sys_user',
-                fileName,
-                pdfStream,
-                GeneralPDF.ATTACHMENT_TYPE
-            );
-            
-            var attachmentId = GeneralPDF.attach(attachment);
-            
-            if (attachmentId) {
-                data.success = true;
-                data.attachmentId = attachmentId;
-                data.fileName = fileName;
-            } else {
-                data.success = false;
-                data.error = 'Failed to generate PDF attachment';
-            }
-        } catch (e) {
-            data.success = false;
-            data.error = e.message || 'Unknown error occurred';
-            gs.error('PDF Export Error: ' + e.message);
-            gs.error('Stack trace: ' + e.stack);
-        }
-        return;
-    }
-
     // Handle reference field lookups
     if (input && input.action === 'lookupReference') {
         var searchType = input.search_type;
@@ -1595,78 +1530,6 @@
         }
 
         data.limits = limits;
-    }
-
-    // Helper function to build PDF HTML - simplified for GeneralPDF
-    function buildPDFHTML(limits, filterDescription) {
-        var html = '<div style="font-family: Arial, sans-serif; font-size: 8px;">';
-        
-        html += '<h1 style="font-size: 16px; margin-bottom: 10px; color: #2c3e50;">Signature Authority Limits Report</h1>';
-        
-        html += '<div style="margin-bottom: 15px; padding: 8px; background: #f8f9fa; border-radius: 4px;">';
-        html += '<p style="margin: 3px 0; font-size: 9px;"><strong>Generated:</strong> ' + new GlideDateTime().getDisplayValue() + '</p>';
-        html += '<p style="margin: 3px 0; font-size: 9px;"><strong>Total Records:</strong> ' + limits.length + '</p>';
-        if (filterDescription && filterDescription !== 'None (All Records)') {
-            html += '<p style="margin: 3px 0; font-size: 9px;"><strong>Filters Applied:</strong> ' + escapeHtml(filterDescription) + '</p>';
-        }
-        html += '</div>';
-        
-        html += '<table style="width: 100%; border-collapse: collapse; margin-top: 8px;">';
-        html += '<thead>';
-        html += '<tr>';
-        html += '<th colspan="3" style="background: #2c3e50; color: white; padding: 6px 3px; text-align: center; font-size: 8px; border: 1px solid #34495e;">Job Information</th>';
-        html += '<th colspan="10" style="background: #27ae60; color: white; padding: 6px 3px; text-align: center; font-size: 8px; border: 1px solid #229954;">Non-Credit Authority</th>';
-        html += '<th colspan="4" style="background: #e74c3c; color: white; padding: 6px 3px; text-align: center; font-size: 8px; border: 1px solid #c0392b;">Credit Authority</th>';
-        html += '</tr>';
-        html += '<tr>';
-        html += '<th style="background: #34495e; color: white; padding: 5px 2px; text-align: left; font-size: 7px; border: 1px solid #2c3e50;">Job Code</th>';
-        html += '<th style="background: #34495e; color: white; padding: 5px 2px; text-align: left; font-size: 7px; border: 1px solid #2c3e50;">Job Title</th>';
-        html += '<th style="background: #34495e; color: white; padding: 5px 2px; text-align: left; font-size: 7px; border: 1px solid #2c3e50;">Line of Business</th>';
-        html += '<th style="background: #34495e; color: white; padding: 5px 2px; text-align: left; font-size: 7px; border: 1px solid #2c3e50;">ACH</th>';
-        html += '<th style="background: #34495e; color: white; padding: 5px 2px; text-align: left; font-size: 7px; border: 1px solid #2c3e50;">Wire Int.</th>';
-        html += '<th style="background: #34495e; color: white; padding: 5px 2px; text-align: left; font-size: 7px; border: 1px solid #2c3e50;">Wire Ext.</th>';
-        html += '<th style="background: #34495e; color: white; padding: 5px 2px; text-align: left; font-size: 7px; border: 1px solid #2c3e50;">Check Int.</th>';
-        html += '<th style="background: #34495e; color: white; padding: 5px 2px; text-align: left; font-size: 7px; border: 1px solid #2c3e50;">Check Ext.</th>';
-        html += '<th style="background: #34495e; color: white; padding: 5px 2px; text-align: left; font-size: 7px; border: 1px solid #2c3e50;">Cash On-Us</th>';
-        html += '<th style="background: #34495e; color: white; padding: 5px 2px; text-align: left; font-size: 7px; border: 1px solid #2c3e50;">Cash Not On-Us</th>';
-        html += '<th style="background: #34495e; color: white; padding: 5px 2px; text-align: left; font-size: 7px; border: 1px solid #2c3e50;">Remote Dep.</th>';
-        html += '<th style="background: #34495e; color: white; padding: 5px 2px; text-align: left; font-size: 7px; border: 1px solid #2c3e50;">Treasury</th>';
-        html += '<th style="background: #34495e; color: white; padding: 5px 2px; text-align: left; font-size: 7px; border: 1px solid #2c3e50;">FX Wire</th>';
-        html += '<th style="background: #34495e; color: white; padding: 5px 2px; text-align: left; font-size: 7px; border: 1px solid #2c3e50;">OD Int.</th>';
-        html += '<th style="background: #34495e; color: white; padding: 5px 2px; text-align: left; font-size: 7px; border: 1px solid #2c3e50;">OD Ext.</th>';
-        html += '<th style="background: #34495e; color: white; padding: 5px 2px; text-align: left; font-size: 7px; border: 1px solid #2c3e50;">UF Int.</th>';
-        html += '<th style="background: #34495e; color: white; padding: 5px 2px; text-align: left; font-size: 7px; border: 1px solid #2c3e50;">UF Ext.</th>';
-        html += '</tr>';
-        html += '</thead>';
-        html += '<tbody>';
-        
-        for (var i = 0; i < limits.length; i++) {
-            var limit = limits[i];
-            var rowBg = (i % 2 === 0) ? '#f8f9fa' : 'white';
-            html += '<tr>';
-            html += '<td style="border: 1px solid #ddd; padding: 4px 2px; font-size: 7px; background: ' + rowBg + ';">' + escapeHtml(limit.job_code_display || '-') + '</td>';
-            html += '<td style="border: 1px solid #ddd; padding: 4px 2px; font-size: 7px; background: ' + rowBg + ';">' + escapeHtml(limit.job_title || '-') + '</td>';
-            html += '<td style="border: 1px solid #ddd; padding: 4px 2px; font-size: 7px; background: ' + rowBg + ';">' + escapeHtml(limit.job_function || '-') + '</td>';
-            html += '<td style="border: 1px solid #ddd; padding: 4px 2px; font-size: 7px; text-align: right; background: ' + rowBg + ';">' + formatAmount(limit.disbursement_ach) + '</td>';
-            html += '<td style="border: 1px solid #ddd; padding: 4px 2px; font-size: 7px; text-align: right; background: ' + rowBg + ';">' + formatAmount(limit.disbursement_wire_transfer_internal) + '</td>';
-            html += '<td style="border: 1px solid #ddd; padding: 4px 2px; font-size: 7px; text-align: right; background: ' + rowBg + ';">' + formatAmount(limit.disbursement_wire_transfer_external) + '</td>';
-            html += '<td style="border: 1px solid #ddd; padding: 4px 2px; font-size: 7px; text-align: right; background: ' + rowBg + ';">' + formatAmount(limit.disbursement_official_checks_internal) + '</td>';
-            html += '<td style="border: 1px solid #ddd; padding: 4px 2px; font-size: 7px; text-align: right; background: ' + rowBg + ';">' + formatAmount(limit.disbursement_official_checks_external) + '</td>';
-            html += '<td style="border: 1px solid #ddd; padding: 4px 2px; font-size: 7px; text-align: right; background: ' + rowBg + ';">' + formatAmount(limit.check_cashing_on_us) + '</td>';
-            html += '<td style="border: 1px solid #ddd; padding: 4px 2px; font-size: 7px; text-align: right; background: ' + rowBg + ';">' + formatAmount(limit.check_cashing_not_on_us) + '</td>';
-            html += '<td style="border: 1px solid #ddd; padding: 4px 2px; font-size: 7px; text-align: right; background: ' + rowBg + ';">' + formatAmount(limit.remote_deposit) + '</td>';
-            html += '<td style="border: 1px solid #ddd; padding: 4px 2px; font-size: 7px; text-align: right; background: ' + rowBg + ';">' + formatAmount(limit.treasury_solutions_company_wire_limits) + '</td>';
-            html += '<td style="border: 1px solid #ddd; padding: 4px 2px; font-size: 7px; text-align: right; background: ' + rowBg + ';">' + formatAmount(limit.fx_wire_limits) + '</td>';
-            html += '<td style="border: 1px solid #ddd; padding: 4px 2px; font-size: 7px; text-align: right; background: ' + rowBg + ';">' + formatAmount(limit.overdraft_internal_accounts) + '</td>';
-            html += '<td style="border: 1px solid #ddd; padding: 4px 2px; font-size: 7px; text-align: right; background: ' + rowBg + ';">' + formatAmount(limit.overdraft_external_accounts) + '</td>';
-            html += '<td style="border: 1px solid #ddd; padding: 4px 2px; font-size: 7px; text-align: right; background: ' + rowBg + ';">' + formatAmount(limit.unavailable_funds_internal_accounts) + '</td>';
-            html += '<td style="border: 1px solid #ddd; padding: 4px 2px; font-size: 7px; text-align: right; background: ' + rowBg + ';">' + formatAmount(limit.unavailable_funds_external_accounts) + '</td>';
-            html += '</tr>';
-        }
-        
-        html += '</tbody></table>';
-        html += '</div>';
-        return html;
     }
 
     function formatAmount(value) {
@@ -2960,17 +2823,7 @@ function escapeHtml(str) {
         }, 1000);
     }
     c.exportPdf = function() {
-        c.server.get({
-            action: 'exportPDF',
-            limits: c.limits,
-            filterDescription: c.buildFilterDescription ? c.buildFilterDescription() : ''
-        }).then(function(response) {
-            if (response.data.success) {
-                window.open('/sys_attachment.do?sys_id=' + response.data.attachmentId);
-            } else {
-                spUtil.addErrorMessage(response.data.error || 'PDF failed');
-            }
-        });
+        exportToPDF();  // This calls the client-side print function
     };
 
 };
