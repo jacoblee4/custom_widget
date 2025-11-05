@@ -1345,7 +1345,11 @@
             // Create PDF using the API
             var pdfGen = new sn_pdfgeneratorutils.PDFGenerationAPI();
             var fileName = 'Authority_Limits_' + new GlideDateTime().getNumericValue();
-            
+
+            html = html.replace(/<\/?[^>]+(>|$)/g, function(match){
+            return match.length > 500 ? '' : match; // basic sanitize
+            });
+
             // Generate PDF and attach to user record
             var attachmentId = pdfGen.convertToPDF(html, 'sys_user', userSysId, fileName);
             
@@ -2852,7 +2856,26 @@ api.controller = function($scope, $timeout, spUtil) {
 c.exportPdf = function () {
   c.server.get({
     action: 'exportPDF',
-    limits: c.limits,
+    limits: c.limits.map(l => ({
+  job_code_display: l.job_code_display,
+  job_title: l.job_title,
+  job_function: l.job_function,
+  disbursement_ach: l.disbursement_ach,
+  disbursement_wire_transfer_internal: l.disbursement_wire_transfer_internal,
+  disbursement_wire_transfer_external: l.disbursement_wire_transfer_external,
+  disbursement_official_checks_internal: l.disbursement_official_checks_internal,
+  disbursement_official_checks_external: l.disbursement_official_checks_external,
+  check_cashing_on_us: l.check_cashing_on_us,
+  check_cashing_not_on_us: l.check_cashing_not_on_us,
+  remote_deposit: l.remote_deposit,
+  treasury_solutions_company_wire_limits: l.treasury_solutions_company_wire_limits,
+  fx_wire_limits: l.fx_wire_limits,
+  overdraft_internal_accounts: l.overdraft_internal_accounts,
+  overdraft_external_accounts: l.overdraft_external_accounts,
+  unavailable_funds_internal_accounts: l.unavailable_funds_internal_accounts,
+  unavailable_funds_external_accounts: l.unavailable_funds_external_accounts
+}))
+
     filterDescription: c.buildFilterDescription ? c.buildFilterDescription() : ''
   }).then(function(response) {
     if (response.data.success) {
