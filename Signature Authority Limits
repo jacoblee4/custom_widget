@@ -202,7 +202,7 @@
      <button id="exportExcelButton" class="btn btn-export-excel">
       <i class="fa fa-file-excel-o"></i> Export Excel
       </button>
-    <button id="exportPdfButton" class="btn btn-export-pdf">
+    <button ng-click="c.exportPdf()" class="btn btn-export-pdf">
       <i class="fa fa-file-pdf-o"></i> Export PDF
     </button>
     </div>
@@ -2849,4 +2849,18 @@ api.controller = function($scope, $timeout, spUtil) {
             setupColumnFilters();
         }, 1000);
     }
+c.exportPdf = function () {
+  c.server.get({
+    action: 'exportPDF',
+    limits: c.limits,
+    filterDescription: c.buildFilterDescription ? c.buildFilterDescription() : ''
+  }).then(function(response) {
+    if (response.data.success) {
+      window.open('/sys_attachment.do?sys_id=' + response.data.attachmentId);
+    } else {
+      spUtil.addErrorMessage(response.data.error || 'PDF failed');
+    }
+  });
+};
+
 };
