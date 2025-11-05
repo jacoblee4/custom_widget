@@ -214,37 +214,34 @@
 
   <!-- Results Table -->
   <div ng-if="!c.loading && c.limits.length > 0" class="results-container">
-    <div class="results-header">
-      <div class="results-header-left">
-        <h4>
-          <i class="fa fa-list"></i>
-          Authority Limits
-          <span class="results-count">({{c.limits.length}} total)</span>
-        </h4>
-      </div>
+   <div class="results-header">
+  <h4>
+    <i class="fa fa-list"></i>
+    Authority Limits
+    <span class="results-count">({{c.limits.length}} total)</span>
+  </h4>
 
-      <div class="results-header-right">
-        <div class="column-filter">
-          <span class="filter-label">Show Columns:</span>
-          <label class="filter-checkbox">
-            <input type="checkbox" id="showNonCredit" checked>
-            <span>Non-Credit Authority</span>
-          </label>
-          <label class="filter-checkbox">
-            <input type="checkbox" id="showCredit" checked>
-            <span>Credit Authority</span>
-          </label>
-        </div>
+  <div class="column-filter">
+    <span class="filter-label">Show Columns:</span>
+    <label class="filter-checkbox">
+      <input type="checkbox" id="showNonCredit" checked>
+      <span>Non-Credit Authority</span>
+    </label>
+    <label class="filter-checkbox">
+      <input type="checkbox" id="showCredit" checked>
+      <span>Credit Authority</span>
+    </label>
+  </div>
 
-        <div class="export-buttons">
-          <button id="exportExcelButton" class="btn btn-export-excel">
-            <i class="fa fa-file-excel-o"></i> Export Excel
-          </button>
-          <button id="exportPdfButton" class="btn btn-export-pdf">
-            <i class="fa fa-file-pdf-o"></i> Export PDF
-          </button>
-        </div>
-      </div>
+  <div class="export-buttons">
+    <button id="exportExcelButton" class="btn btn-export-excel">
+      <i class="fa fa-file-excel-o"></i> Export Excel
+    </button>
+    <button id="exportPdfButton" class="btn btn-export-pdf">
+      <i class="fa fa-file-pdf-o"></i> Export PDF
+    </button>
+  </div>
+</div>
     </div>
 
     <div class="table-container">
@@ -1715,7 +1712,7 @@
 <!-- CLIENT CONTROLLER -->
 <!-- ============================================ -->
 
-api.controller = function($scope, $timeout, spUtil, $window) {
+api.controller = function($scope, $timeout, spUtil) {
     var c = this;
 
     // Initialize variables
