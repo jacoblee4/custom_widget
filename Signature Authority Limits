@@ -2460,7 +2460,7 @@ api.controller = function($scope, $timeout, spUtil) {
         return '"' + value + '"';
     }
 
-    /function exportToPDF() {
+    function exportToPDF() {
     var limitsToExport = c.limits.length > 0 ? c.limits : c.allLimits;
 
     if (limitsToExport.length === 0) {
