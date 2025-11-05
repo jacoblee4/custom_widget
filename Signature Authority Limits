@@ -479,6 +479,7 @@
 <!-- CSS -->
 <!-- ============================================ -->
 
+<style>
 .authority-lookup-widget {
   padding: 20px;
   font-family: 'Source Sans Pro', Arial, sans-serif;
@@ -1338,19 +1339,26 @@
     flex: 1;
   }
 }
-
-
-
+</style>
+-e 
 
 
 <!-- ============================================ -->
 <!-- SERVER SCRIPT -->
 <!-- ============================================ -->
 
+
 (function() {
     'use strict';
 
-    gs.info('SIGNATURE AUTHORITY: Server script called with action: ' + (input ? input.action : 'undefined'));
+    // Log the incoming action for debugging
+    var actionReceived = (input && input.action) ? input.action : 'undefined';
+    gs.info('SIGNATURE AUTHORITY: Server script called with action: ' + actionReceived);
+
+    // Initialize data object if not exists
+    if (typeof data === 'undefined') {
+        data = {};
+    }
 
     // Handle PDF Export
     if (input && input.action === 'exportPDF') {
@@ -1521,11 +1529,12 @@
         return;
     }
 
-    if (input && input.action === 'searchLimits') {
-        var searchType = input.search_type;
-        var searchValue = input.search_value;
-        var limitType = input.limit_type;
-        var minAmount = input.min_amount;
+    // Handle search limits - including the 'all' case and undefined action
+    if (input && (input.action === 'searchLimits' || input.search_type === 'all' || !input.action)) {
+        var searchType = input.search_type || 'all';
+        var searchValue = input.search_value || '';
+        var limitType = input.limit_type || '';
+        var minAmount = input.min_amount || '';
 
         gs.info('SIGNATURE AUTHORITY: Search limits - Type: ' + searchType);
 
@@ -1534,6 +1543,7 @@
         var gr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
         gr.addQuery('active', true);
 
+        // Apply filters based on search type
         if (searchType === 'job_code' && searchValue) {
             gr.addQuery('job_code', searchValue);
 
@@ -1573,6 +1583,7 @@
                 gr.addQuery(limitType, '>=', minAmountNum);
             }
         }
+        // If searchType is 'all' or undefined, no additional filters are applied
 
         gr.orderBy('job_code.job_code');
         gr.query();
@@ -1622,7 +1633,12 @@
 
         gs.info('SIGNATURE AUTHORITY: Search returned ' + limits.length + ' limits');
         data.limits = limits;
+        return;
     }
+
+    // If we reach here, unknown action - log it
+    gs.warn('SIGNATURE AUTHORITY: Unknown or unhandled action: ' + actionReceived);
+    data.limits = [];
 
     // Helper function to build PDF HTML
     function buildPDFHTML(limits, filterDescription) {
@@ -1707,11 +1723,13 @@
             .replace(/'/g, '&#39;');
     }
 })();
+-e 
 
 
 <!-- ============================================ -->
 <!-- CLIENT CONTROLLER -->
 <!-- ============================================ -->
+
 
 api.controller = function($scope, $timeout, spUtil) {
     var c = this;
@@ -2281,6 +2299,9 @@ api.controller = function($scope, $timeout, spUtil) {
         $scope.$apply();
     }
 
+    // CONTINUES IN PART 2...
+    // CONTINUATION FROM PART 1...
+
     // Update active filters display with grouping by category
     function updateActiveFiltersDisplay() {
         var container = document.getElementById('activeFiltersContainer');
@@ -2492,7 +2513,7 @@ api.controller = function($scope, $timeout, spUtil) {
         return '"' + value + '"';
     }
 
-    // Export to PDF - FIXED VERSION
+    // Export to PDF
     function exportToPDF() {
         var limitsToExport = c.limits.length > 0 ? c.limits : c.allLimits;
         
