@@ -1689,7 +1689,7 @@ api.controller = function($scope, $timeout, spUtil) {
             search_value: '',
             limit_type: '',
             min_amount: ''
-        }).then(function(response) {
+       }).then(function(response) {
             $timeout(function() {
                 c.allLimits = response.data.limits || [];
                 c.limits = c.allLimits.slice();
@@ -1699,6 +1699,7 @@ api.controller = function($scope, $timeout, spUtil) {
 
                 $timeout(function() {
                     setupColumnFilters();
+                    setupExportButtons(); // ADD THIS LINE
                 }, 100);
             });
         }).catch(function(error) {
@@ -2546,6 +2547,24 @@ api.controller = function($scope, $timeout, spUtil) {
         }
     }
 
+// Setup export button handlers
+    function setupExportButtons() {
+        var exportExcelBtn = document.getElementById('exportExcelButton');
+        if (exportExcelBtn) {
+            // Remove any existing listeners first
+            var newExcelBtn = exportExcelBtn.cloneNode(true);
+            exportExcelBtn.parentNode.replaceChild(newExcelBtn, exportExcelBtn);
+            
+            newExcelBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Excel export clicked'); // Debug log
+                exportToExcel();
+            });
+        } else {
+            console.error('Excel export button not found');
+        }
+    }
+
     // Initialize widget
     function initializeWidget() {
         // Setup filter tabs
@@ -2642,14 +2661,6 @@ api.controller = function($scope, $timeout, spUtil) {
         if (clearAllBtn) {
             clearAllBtn.addEventListener('click', function() {
                 clearAllFilters();
-            });
-        }
-
-        // Setup export buttons
-        var exportExcelBtn = document.getElementById('exportExcelButton');
-        if (exportExcelBtn) {
-            exportExcelBtn.addEventListener('click', function() {
-                exportToExcel();
             });
         }
 
