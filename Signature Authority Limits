@@ -1,7 +1,3 @@
-<!-- ============================================ -->
-<!-- HTML TEMPLATE -->
-<!-- ============================================ -->
-
 <div class="authority-lookup-widget">
   <div class="widget-header">
     <h2>Signature Authority Limits Lookup</h2>
@@ -194,17 +190,9 @@
     <div id="activeFilters" class="active-filters-list"></div>
   </div>
 
-  <!-- Button Group - Always Visible -->
-  <div class="button-group-container">
-    <div class="button-group">
-      <button id="clearAllButton" class="btn btn-clear-all">Clear All Filters</button>
-     <button id="exportExcelButton" class="btn btn-export-excel">
-      <i class="fa fa-file-excel-o"></i> Export Excel
-      </button>
-    <button id="exportPdfButton" class="btn btn-export-pdf">
-      <i class="fa fa-file-pdf-o"></i> Export PDF
-    </button>
-    </div>
+  <!-- Clear All Button - Hidden by default -->
+  <div id="clearAllContainer" class="clear-all-container" style="display: none;">
+    <button id="clearAllButton" class="btn btn-clear-all">Clear All Filters</button>
   </div>
 
   <!-- Loading Indicator -->
@@ -222,22 +210,35 @@
   <!-- Results Table -->
   <div ng-if="!c.loading && c.limits.length > 0" class="results-container">
     <div class="results-header">
-      <h4>
-        <i class="fa fa-list"></i>
-        Authority Limits
-        <span class="results-count">({{c.limits.length}} total)</span>
-      </h4>
+      <div class="results-header-left">
+        <h4>
+          <i class="fa fa-list"></i>
+          Authority Limits
+          <span class="results-count">({{c.limits.length}} total)</span>
+        </h4>
+      </div>
 
-      <div class="column-filter">
-        <span class="filter-label">Show Columns:</span>
-        <label class="filter-checkbox">
-          <input type="checkbox" id="showNonCredit" checked>
-          <span>Non-Credit Authority</span>
-        </label>
-        <label class="filter-checkbox">
-          <input type="checkbox" id="showCredit" checked>
-          <span>Credit Authority</span>
-        </label>
+      <div class="results-header-right">
+        <div class="column-filter">
+          <span class="filter-label">Show Columns:</span>
+          <label class="filter-checkbox">
+            <input type="checkbox" id="showNonCredit" checked>
+            <span>Non-Credit Authority</span>
+          </label>
+          <label class="filter-checkbox">
+            <input type="checkbox" id="showCredit" checked>
+            <span>Credit Authority</span>
+          </label>
+        </div>
+
+        <div class="export-buttons">
+          <button id="exportExcelButton" class="btn btn-export-excel">
+            <i class="fa fa-file-excel-o"></i> Export Excel
+          </button>
+          <button id="exportPdfButton" class="btn btn-export-pdf">
+            <i class="fa fa-file-pdf-o"></i> Export PDF
+          </button>
+        </div>
       </div>
     </div>
 
@@ -720,6 +721,27 @@
   opacity: 1;
 }
 
+/* Clear All Button Container */
+.clear-all-container {
+  margin-bottom: 16px;
+}
+
+.btn-clear-all {
+  background: #e74c3c;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.btn-clear-all:hover {
+  background: #c0392b;
+}
+
 /* Line of Business Select Styling */
 .lob-select {
   max-height: 200px;
@@ -892,15 +914,6 @@
   font-style: italic;
 }
 
-.button-group-container {
-  margin-bottom: 24px;
-}
-
-.button-group {
-  display: flex;
-  gap: 10px;
-}
-
 .btn {
   padding: 10px 20px;
   border: none;
@@ -909,19 +922,6 @@
   cursor: pointer;
   font-size: 14px;
   transition: all 0.2s ease;
-}
-
-.btn-clear-all {
-  background: #e74c3c;
-  color: white;
-}
-
-.btn-clear-all:hover {
-  background: #c0392b;
-}
-
-.btn-clear-all:hover {
-  background: #c0392b;
 }
 
 .btn-export-excel {
@@ -975,9 +975,14 @@
 
 .results-header {
   margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
-.results-header h4 {
+.results-header-left h4 {
   color: #2c3e50;
   font-size: 18px;
   font-weight: 600;
@@ -991,6 +996,50 @@
   font-size: 14px;
   color: #7f8c8d;
   font-weight: normal;
+}
+
+.results-header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.column-filter {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.filter-label {
+  font-size: 14px;
+  color: #495057;
+  font-weight: 600;
+}
+
+.filter-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #495057;
+  user-select: none;
+}
+
+.filter-checkbox input[type="checkbox"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+.filter-checkbox:hover {
+  color: #2c3e50;
+}
+
+.export-buttons {
+  display: flex;
+  gap: 10px;
 }
 
 .table-container {
@@ -1261,39 +1310,6 @@
   margin-right: 4px;
 }
 
-.column-filter {
-  margin-top: 12px;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.filter-label {
-  font-size: 14px;
-  color: #495057;
-  font-weight: 600;
-}
-
-.filter-checkbox {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  color: #495057;
-  user-select: none;
-}
-
-.filter-checkbox input[type="checkbox"] {
-  cursor: pointer;
-  width: 16px;
-  height: 16px;
-}
-
-.filter-checkbox:hover {
-  color: #2c3e50;
-}
-
 .hide-non-credit .section-header.non-credit-header,
 .hide-non-credit th.non-credit-col,
 .hide-non-credit td.non-credit-col {
@@ -1319,6 +1335,23 @@
   .pagination-info {
     text-align: center;
   }
+
+  .results-header {
+    flex-direction: column;
+  }
+
+  .results-header-right {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .export-buttons {
+    width: 100%;
+  }
+
+  .export-buttons .btn {
+    flex: 1;
+  }
 }
 
 
@@ -1341,28 +1374,47 @@
             // Build HTML for PDF
             var html = buildPDFHTML(limits, filterDescription);
             
-            // Use a temporary sys_user record to attach the PDF to
-            var userSysId = gs.getUserID();
+            // Generate unique filename
+            var fileName = 'Authority_Limits_' + new GlideDateTime().getNumericValue();
             
             // Create PDF using the API
             var pdfGen = new sn_pdfgeneratorutils.PDFGenerationAPI();
-            var fileName = 'Authority_Limits_' + new GlideDateTime().getNumericValue();
             
-            // Generate PDF and attach to user record
-            var attachmentId = pdfGen.convertToPDF(html, 'sys_user', userSysId, fileName);
+            // Create a temporary record to attach the PDF to (using sys_user_session)
+            var userSysId = gs.getUserID();
             
-            if (attachmentId) {
-                data.success = true;
-                data.attachmentId = attachmentId;
-                data.fileName = fileName + '.pdf';
+            // Generate PDF with proper configuration
+            var pdfBytes = pdfGen.convertHTMLStringToPDFBytes(html);
+            
+            if (pdfBytes) {
+                // Create attachment
+                var sa = new GlideSysAttachment();
+                var attachmentId = sa.write({
+                    table_name: 'sys_user',
+                    table_sys_id: userSysId,
+                    file_name: fileName + '.pdf',
+                    content_type: 'application/pdf',
+                    data: pdfBytes
+                });
+                
+                if (attachmentId) {
+                    data.success = true;
+                    data.attachmentId = attachmentId;
+                    data.fileName = fileName + '.pdf';
+                    data.downloadUrl = '/sys_attachment.do?sys_id=' + attachmentId;
+                } else {
+                    data.success = false;
+                    data.error = 'Failed to create attachment';
+                }
             } else {
                 data.success = false;
-                data.error = 'Failed to generate PDF attachment';
+                data.error = 'Failed to generate PDF bytes';
             }
         } catch (e) {
             data.success = false;
             data.error = e.message || 'Unknown error occurred';
             gs.error('PDF Export Error: ' + e.message);
+            gs.error('Stack trace: ' + e.stack);
         }
         return;
     }
@@ -1654,12 +1706,15 @@
 })();
 
 
+<!-- ============================================ -->
+<!-- CLIENT CONTROLLER -->
+<!-- ============================================ -->
 
 <!-- ============================================ -->
 <!-- CLIENT CONTROLLER -->
 <!-- ============================================ -->
 
-api.controller = function($scope, $timeout, spUtil) {
+api.controller = function($scope, $timeout, spUtil, $window) {
     var c = this;
 
     // Initialize variables
@@ -2051,6 +2106,7 @@ api.controller = function($scope, $timeout, spUtil) {
         clearPanelInputs(filterType);
         updateActiveFiltersDisplay();
         updateFilterBadges();
+        updateClearAllButtonVisibility();
         applyFilters();
     }
 
@@ -2072,6 +2128,18 @@ api.controller = function($scope, $timeout, spUtil) {
 
             if (searchInput) searchInput.value = '';
             if (searchInputValue) searchInputValue.value = '';
+        }
+    }
+
+    // Update Clear All button visibility
+    function updateClearAllButtonVisibility() {
+        var clearAllContainer = document.getElementById('clearAllContainer');
+        if (clearAllContainer) {
+            if (c.activeFilters.length > 0) {
+                clearAllContainer.style.display = 'block';
+            } else {
+                clearAllContainer.style.display = 'none';
+            }
         }
     }
 
@@ -2190,8 +2258,8 @@ api.controller = function($scope, $timeout, spUtil) {
 
                 // Auto-sort by the first amount filter column (descending - high to low)
                 var sortColumn = filtersByCategory.amount[0].limitType;
-                c.sortColumn = sortColumn; // This sets the sort column
-                c.sortDirection = 'desc'; // This sets the direction
+                c.sortColumn = sortColumn;
+                c.sortDirection = 'desc';
 
                 filteredLimits.sort(function(a, b) {
                     var aVal = parseFloat(a[sortColumn]) || 0;
@@ -2203,7 +2271,6 @@ api.controller = function($scope, $timeout, spUtil) {
                 filteredLimits.forEach(function(limit) {
                     limit.activeLimitTypes = [];
                 });
-                // Don't reset sort if no amount filters - REMOVED LINE THAT WAS RESETTING SORT
             }
 
             c.limits = filteredLimits;
@@ -2214,6 +2281,7 @@ api.controller = function($scope, $timeout, spUtil) {
 
         $scope.$apply();
     }
+
     // Update active filters display with grouping by category
     function updateActiveFiltersDisplay() {
         var container = document.getElementById('activeFiltersContainer');
@@ -2307,6 +2375,7 @@ api.controller = function($scope, $timeout, spUtil) {
         c.activeFilters.splice(index, 1);
         updateActiveFiltersDisplay();
         updateFilterBadges();
+        updateClearAllButtonVisibility();
         applyFilters();
     }
 
@@ -2315,6 +2384,7 @@ api.controller = function($scope, $timeout, spUtil) {
         c.activeFilters = [];
         updateActiveFiltersDisplay();
         updateFilterBadges();
+        updateClearAllButtonVisibility();
 
         c.limits = c.allLimits.slice();
 
@@ -2423,7 +2493,7 @@ api.controller = function($scope, $timeout, spUtil) {
         return '"' + value + '"';
     }
 
-    // Export to PDF
+    // Export to PDF - FIXED VERSION
     function exportToPDF() {
         var limitsToExport = c.limits.length > 0 ? c.limits : c.allLimits;
         
@@ -2442,27 +2512,32 @@ api.controller = function($scope, $timeout, spUtil) {
             filterDescription: filterDescription
         }).then(function(response) {
             if (response.data.success && response.data.attachmentId) {
-                // Download the PDF directly
-                var downloadUrl = '/sys_attachment.do?sys_id=' + response.data.attachmentId;
+                // Use the download URL from the server response
+                var downloadUrl = response.data.downloadUrl || ('/sys_attachment.do?sys_id=' + response.data.attachmentId);
                 
-                // Create invisible iframe to trigger download
-                var iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                iframe.src = downloadUrl;
-                document.body.appendChild(iframe);
+                // Force download using window.open with proper parameters
+                var fileName = response.data.fileName || 'Authority_Limits.pdf';
                 
-                // Remove iframe after download starts
+                // Create a temporary anchor element for download
+                var link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = fileName;
+                link.target = '_blank';
+                document.body.appendChild(link);
+                link.click();
+                
+                // Clean up
                 setTimeout(function() {
-                    document.body.removeChild(iframe);
-                }, 5000);
+                    document.body.removeChild(link);
+                }, 100);
                 
-                spUtil.addInfoMessage('PDF export completed successfully');
+                spUtil.addInfoMessage('PDF export completed successfully. Check your downloads.');
             } else {
                 spUtil.addErrorMessage('Failed to generate PDF: ' + (response.data.error || 'Unknown error'));
             }
         }).catch(function(error) {
             console.error('PDF export error:', error);
-            spUtil.addErrorMessage('Error exporting to PDF');
+            spUtil.addErrorMessage('Error exporting to PDF: ' + (error.message || 'Unknown error'));
         });
     }
 
@@ -2850,5 +2925,8 @@ api.controller = function($scope, $timeout, spUtil) {
         $timeout(function() {
             setupColumnFilters();
         }, 1000);
+
+        // Initialize Clear All button visibility
+        updateClearAllButtonVisibility();
     }
 };
