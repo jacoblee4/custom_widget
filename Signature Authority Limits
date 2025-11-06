@@ -888,9 +888,6 @@
  .btn-clear-all:hover {
      background: #c0392b;
 }
- .btn-clear-all:hover {
-     background: #c0392b;
-}
  .btn-export-excel {
      background: #27ae60;
      color: white;
@@ -1217,13 +1214,6 @@
      .pagination-info {
          text-align: center;
     }
-}
- .btn-clear-all {
-     background: #e74c3c;
-     color: white;
-}
- .btn-clear-all:hover {
-     background: #c0392b;
 }
  .btn-clear-all i {
      margin-right: 6px;
