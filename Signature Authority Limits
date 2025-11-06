@@ -294,35 +294,35 @@
                      </span>
                   </th>
                   <th class="non-credit-col sortable" ng-click="c.sortBy('disbursement_wire_transfer_external')">
-                     Wire External
+                     Wire Transfer External
                      <span class="sort-arrows">
                      <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_wire_transfer_external' && c.sortDirection === 'asc'}"></i>
                      <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'disbursement_wire_transfer_external' && c.sortDirection === 'desc'}"></i>
                      </span>
                   </th>
                   <th class="non-credit-col sortable" ng-click="c.sortBy('disbursement_official_checks_internal')">
-                     Checks Internal
+                     Official Checks Internal
                      <span class="sort-arrows">
                      <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_official_checks_internal' && c.sortDirection === 'asc'}"></i>
                      <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'disbursement_official_checks_internal' && c.sortDirection === 'desc'}"></i>
                      </span>
                   </th>
                   <th class="non-credit-col sortable" ng-click="c.sortBy('disbursement_official_checks_external')">
-                     Checks External
+                     Official Checks External
                      <span class="sort-arrows">
                      <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_official_checks_external' && c.sortDirection === 'asc'}"></i>
                      <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'disbursement_official_checks_external' && c.sortDirection === 'desc'}"></i>
                      </span>
                   </th>
                   <th class="non-credit-col sortable" ng-click="c.sortBy('check_cashing_on_us')">
-                     Check Cash On-Us
+                     Check Cashing On-Us
                      <span class="sort-arrows">
                      <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'check_cashing_on_us' && c.sortDirection === 'asc'}"></i>
                      <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'check_cashing_on_us' && c.sortDirection === 'desc'}"></i>
                      </span>
                   </th>
                   <th class="non-credit-col sortable" ng-click="c.sortBy('check_cashing_not_on_us')">
-                     Check Cash Not On-Us
+                     Check Cashing Not On-Us
                      <span class="sort-arrows">
                      <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'check_cashing_not_on_us' && c.sortDirection === 'asc'}"></i>
                      <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'check_cashing_not_on_us' && c.sortDirection === 'desc'}"></i>
@@ -336,14 +336,14 @@
                      </span>
                   </th>
                   <th class="non-credit-col sortable" ng-click="c.sortBy('treasury_solutions_company_wire_limits')">
-                     Treasury Solutions
+                      Treasury Solutions Company Wire Limits
                      <span class="sort-arrows">
                      <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'treasury_solutions_company_wire_limits' && c.sortDirection === 'asc'}"></i>
                      <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'treasury_solutions_company_wire_limits' && c.sortDirection === 'desc'}"></i>
                      </span>
                   </th>
                   <th class="non-credit-col sortable" ng-click="c.sortBy('fx_wire_limits')">
-                     FX Wire
+                     FX Wire Limits
                      <span class="sort-arrows">
                      <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'fx_wire_limits' && c.sortDirection === 'asc'}"></i>
                      <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'fx_wire_limits' && c.sortDirection === 'desc'}"></i>
@@ -365,14 +365,14 @@
                      </span>
                   </th>
                   <th class="credit-col sortable" ng-click="c.sortBy('unavailable_funds_internal_accounts')">
-                     Unavailable Internal
+                     Unavailable Funds Internal
                      <span class="sort-arrows">
                      <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'unavailable_funds_internal_accounts' && c.sortDirection === 'asc'}"></i>
                      <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'unavailable_funds_internal_accounts' && c.sortDirection === 'desc'}"></i>
                      </span>
                   </th>
                   <th class="credit-col sortable" ng-click="c.sortBy('unavailable_funds_external_accounts')">
-                     Unavailable External
+                     Unavailable Funds External
                      <span class="sort-arrows">
                      <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'unavailable_funds_external_accounts' && c.sortDirection === 'asc'}"></i>
                      <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'unavailable_funds_external_accounts' && c.sortDirection === 'desc'}"></i>
@@ -1230,6 +1230,20 @@
      .results-header-right {
          width: 100%;
     }
+}
+.limits-table th {
+     background: #f8f9fa;
+     font-weight: 600;
+     color: #495057;
+     padding: 10px 8px;
+     text-align: left;
+     border-bottom: 2px solid #dee2e6;
+     white-space: normal; /* Changed from nowrap */
+     font-size: 12px;
+     border-right: 1px solid #e9ecef;
+     vertical-align: middle;
+     line-height: 1.3;
+     min-width: 80px; /* Add minimum width */
 }
  
 
@@ -2168,7 +2182,11 @@ api.controller = function($scope, $timeout, spUtil) {
         if (link.download !== undefined) {
             var url = URL.createObjectURL(blob);
             link.setAttribute('href', url);
-            link.setAttribute('download', 'Authority_Limits_Export_' + new Date().getTime() + '.csv');
+            var today = new Date();
+var dateStr = today.getFullYear() + 
+    ('0' + (today.getMonth() + 1)).slice(-2) + 
+    ('0' + today.getDate()).slice(-2);
+link.setAttribute('download', 'Signature_Authority_Limits_Export_' + dateStr + '.csv');
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
@@ -2292,8 +2310,7 @@ api.controller = function($scope, $timeout, spUtil) {
         html += 'th.credit-section { color: #721c24; background: #f8d7da !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
 
         // Column headers with grey instead of black
-        html += 'th { padding: 6px 4px; text-align: left; font-weight: 600; font-size: 9px; color: #fff; background: #6c757d !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
-        html += 'th.non-credit-col { background: #28a745 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
+html += 'th { padding: 6px 4px; text-align: left; font-weight: 600; font-size: 9px; color: #fff; background: #6c757d !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; white-space: normal; vertical-align: middle; line-height: 1.2; }';        html += 'th.non-credit-col { background: #28a745 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
         html += 'th.credit-col { background: #dc3545 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
 
         // Table cells with alternating rows
@@ -2347,19 +2364,19 @@ api.controller = function($scope, $timeout, spUtil) {
         html += '<th>Job Title</th>';
         html += '<th>Line of Business</th>';
         html += '<th class="non-credit-col">ACH</th>';
-        html += '<th class="non-credit-col">Wire Int.</th>';
-        html += '<th class="non-credit-col">Wire Ext.</th>';
-        html += '<th class="non-credit-col">Check Int.</th>';
-        html += '<th class="non-credit-col">Check Ext.</th>';
-        html += '<th class="non-credit-col">Cash On-Us</th>';
-        html += '<th class="non-credit-col">Cash Not On-Us</th>';
-        html += '<th class="non-credit-col">Remote Dep.</th>';
-        html += '<th class="non-credit-col">Treasury</th>';
-        html += '<th class="non-credit-col">FX Wire</th>';
-        html += '<th class="credit-col">OD Int.</th>';
-        html += '<th class="credit-col">OD Ext.</th>';
-        html += '<th class="credit-col">UF Int.</th>';
-        html += '<th class="credit-col">UF Ext.</th>';
+         html += '<th class="non-credit-col">Wire Transfer Internal</th>';
+html += '<th class="non-credit-col">Wire Transfer External</th>';
+html += '<th class="non-credit-col">Official Checks Internal</th>';
+html += '<th class="non-credit-col">Official Checks External</th>';
+html += '<th class="non-credit-col">Check Cashing On-Us</th>';
+html += '<th class="non-credit-col">Check Cashing Not On-Us</th>';
+html += '<th class="non-credit-col">Remote Deposit</th>';
+html += '<th class="non-credit-col">Treasury Solutions Company Wire Limits</th>';
+html += '<th class="non-credit-col">FX Wire Limits</th>';
+html += '<th class="credit-col">Overdraft Internal</th>';
+html += '<th class="credit-col">Overdraft External</th>';
+html += '<th class="credit-col">Unavailable Funds Internal</th>';
+html += '<th class="credit-col">Unavailable Funds External</th>';
         html += '</tr>';
         html += '</thead>';
         html += '<tbody>';
