@@ -1,5 +1,5 @@
 <!-- ============================================ -->
-<!-- HTML TEMPLATE -->
+<!-- UPDATED HTML TEMPLATE - SIGNATURE AUTHORITY LIMITS -->
 <!-- ============================================ -->
 
 
@@ -381,9 +381,10 @@
                </tr>
             </thead>
             <tbody>
-               <tr ng-repeat="limit in c.getCurrentPageLimits()" ng-class="{'highlight-row': limit.highlighted}">
-                  <td class="sticky-col job-code-cell">
+               <tr ng-repeat="limit in c.limits" ng-class="{'highlight-row': limit.highlighted}">
+                  <td class="sticky-col job-code-cell job-code-clickable" ng-click="c.selectJobCode(limit)">
                      <strong>{{limit.job_code_display}}</strong>
+                     <i class="fa fa-external-link job-code-icon"></i>
                   </td>
                   <td class="job-info-cell">{{limit.job_title || '-'}}</td>
                   <td class="job-info-cell">{{limit.job_function || '-'}}</td>
@@ -435,30 +436,6 @@
             </tbody>
          </table>
       </div>
-      <!-- Pagination -->
-      <div ng-if="c.totalPages > 1" class="pagination-controls">
-         <nav aria-label="Limits pagination">
-            <ul class="pagination">
-               <li class="page-item" ng-class="{disabled: c.currentPage === 1}">
-                  <a class="page-link" href="javascript:void(0)" ng-click="c.previousPage()" aria-label="Previous">
-                  <span aria-hidden="true">&laquo;</span>
-                  </a>
-               </li>
-               <li class="page-item" ng-repeat="page in c.getPageNumbers()" 
-                  ng-class="{active: page === c.currentPage}">
-                  <a class="page-link" href="javascript:void(0)" ng-click="c.goToPage(page)">{{page}}</a>
-               </li>
-               <li class="page-item" ng-class="{disabled: c.currentPage === c.totalPages}">
-                  <a class="page-link" href="javascript:void(0)" ng-click="c.nextPage()" aria-label="Next">
-                  <span aria-hidden="true">&raquo;</span>
-                  </a>
-               </li>
-            </ul>
-         </nav>
-         <div class="pagination-info">
-            Showing {{c.getStartIndex() + 1}}-{{c.getEndIndex()}} of {{c.limits.length}} records
-         </div>
-      </div>
    </div>
 </div>
 
@@ -466,7 +443,7 @@
 
 
 <!-- ============================================ -->
-<!-- CSS -->
+<!-- UPDATED CSS -->
 <!-- ============================================ -->
 
 .authority-lookup-widget {
@@ -724,7 +701,6 @@
      opacity: 1;
 }
 
-Responsive */
  @media (max-width: 968px) {
      .search-controls-side-nav {
          flex-direction: column;
@@ -1086,6 +1062,32 @@ Responsive */
      font-weight: 600;
      color: #2c3e50;
 }
+
+/* NEW STYLES FOR CLICKABLE JOB CODES */
+ .job-code-clickable {
+     cursor: pointer;
+     color: #3498db !important;
+     transition: all 0.2s ease;
+     position: relative;
+}
+
+ .job-code-clickable:hover {
+     color: #2980b9 !important;
+     background-color: #e3f2fd !important;
+     transform: translateX(2px);
+}
+
+ .job-code-icon {
+     margin-left: 6px;
+     font-size: 11px;
+     opacity: 0.7;
+     transition: opacity 0.2s ease;
+}
+
+ .job-code-clickable:hover .job-code-icon {
+     opacity: 1;
+}
+
  .limits-table tbody tr:hover .job-code-cell {
      background-color: #f8f9fa;
 }
@@ -1285,11 +1287,11 @@ Responsive */
      max-width: 1400px;
 }
 
- 
+
 
 
 <!-- ============================================ -->
-<!-- SERVER SCRIPT - IMPROVED VERSION -->
+<!-- SERVER SCRIPT - NO CHANGES NEEDED -->
 <!-- ============================================ -->
 
 (function() {
@@ -1456,18 +1458,21 @@ Responsive */
             var jobCodeDisplay = '';
             var jobTitle = '';
             var jobFunction = '';
+            var jobCodeValue = '';
 
             var jobCodeGr = new GlideRecord('x_banun_rbac_job_code');
             if (jobCodeGr.get(jobCodeSysId)) {
                 jobCodeDisplay = jobCodeGr.getValue('job_code') || '';
                 jobTitle = jobCodeGr.getValue('job_description') || '';
                 jobFunction = jobCodeGr.getValue('job_function_description') || '';
+                jobCodeValue = jobCodeGr.getValue('job_code') || '';
             }
 
             var limit = {
                 sys_id: gr.getUniqueValue(),
                 job_code_sys_id: jobCodeSysId,
                 job_code_display: jobCodeDisplay,
+                job_code_value: jobCodeValue,
                 job_title: jobTitle,
                 job_function: jobFunction,
 
@@ -1521,10 +1526,10 @@ Responsive */
 
 
 <!-- ============================================ -->
-<!-- CLIENT CONTROLLER - IMPROVED VERSION -->
+<!-- CLIENT CONTROLLER - UPDATED WITH JOB CODE CLICK HANDLER -->
 <!-- ============================================ -->
 
-api.controller = function($scope, $timeout, spUtil) {
+api.controller = function($scope, $timeout, $rootScope, spUtil) {
     var c = this;
 
     // Initialize variables
@@ -1541,9 +1546,9 @@ api.controller = function($scope, $timeout, spUtil) {
     c.sortColumn = null;
     c.sortDirection = 'asc';
 
-    // Pagination
+    // NO PAGINATION - Show all records
     c.currentPage = 1;
-    c.pageSize = 10;
+    c.pageSize = 999999; // Show all records
     c.totalPages = 1;
 
     // Reference field dropdown states
@@ -1577,6 +1582,21 @@ api.controller = function($scope, $timeout, spUtil) {
             loadLOBOptions();
             switchFilterTab('amount');
         }, 500);
+    };
+
+    // NEW FUNCTION: Handle job code click and broadcast to employee widget
+    c.selectJobCode = function(limit) {
+        console.log('Job code clicked:', limit.job_code_display, limit.job_code_value);
+        
+        // Broadcast event to employee lookup widget
+        $rootScope.$broadcast('jobCodeSelected', {
+            jobCode: limit.job_code_value,
+            jobCodeDisplay: limit.job_code_display,
+            jobCodeSysId: limit.job_code_sys_id
+        });
+        
+        // Visual feedback
+        spUtil.addInfoMessage('Loading employees for job code: ' + limit.job_code_display);
     };
 
     // Switch between filter tabs
@@ -1616,16 +1636,13 @@ api.controller = function($scope, $timeout, spUtil) {
 
     // Sorting function
     c.sortBy = function(column) {
-        // Check if this is a numeric column (all columns except the three job info ones)
         var isNumericColumn = column !== 'job_code_display' &&
             column !== 'job_title' &&
             column !== 'job_function';
 
         if (c.sortColumn === column) {
-            // Toggle direction if clicking same column
             c.sortDirection = c.sortDirection === 'asc' ? 'desc' : 'asc';
         } else {
-            // New column - numeric columns default to descending (high to low), text columns to ascending
             c.sortColumn = column;
             c.sortDirection = isNumericColumn ? 'desc' : 'asc';
         }
@@ -1676,65 +1693,6 @@ api.controller = function($scope, $timeout, spUtil) {
         return formattedValue.replace(/[^\d]/g, '');
     };
 
-    // Pagination functions
-    c.getCurrentPageLimits = function() {
-        var start = (c.currentPage - 1) * c.pageSize;
-        var end = start + c.pageSize;
-        return c.limits.slice(start, end);
-    };
-
-    c.getStartIndex = function() {
-        return (c.currentPage - 1) * c.pageSize;
-    };
-
-    c.getEndIndex = function() {
-        var end = c.currentPage * c.pageSize;
-        return end > c.limits.length ? c.limits.length : end;
-    };
-
-    c.previousPage = function() {
-        if (c.currentPage > 1) {
-            c.currentPage--;
-        }
-    };
-
-    c.nextPage = function() {
-        if (c.currentPage < c.totalPages) {
-            c.currentPage++;
-        }
-    };
-
-    c.goToPage = function(page) {
-        if (page >= 1 && page <= c.totalPages) {
-            c.currentPage = page;
-        }
-    };
-
-    c.getPageNumbers = function() {
-        var pages = [];
-        var maxPagesToShow = 5;
-        var startPage = 1;
-        var endPage = c.totalPages;
-
-        if (c.totalPages > maxPagesToShow) {
-            var middlePage = parseInt(maxPagesToShow / 2);
-            if (c.currentPage <= middlePage) {
-                endPage = maxPagesToShow;
-            } else if (c.currentPage >= c.totalPages - middlePage) {
-                startPage = c.totalPages - maxPagesToShow + 1;
-            } else {
-                startPage = c.currentPage - middlePage;
-                endPage = c.currentPage + middlePage;
-            }
-        }
-
-        for (var i = startPage; i <= endPage; i++) {
-            pages.push(i);
-        }
-
-        return pages;
-    };
-
     // Load all limits initially
     function loadAllLimits() {
         c.loading = true;
@@ -1751,7 +1709,7 @@ api.controller = function($scope, $timeout, spUtil) {
                 c.allLimits = response.data.limits || [];
                 c.limits = c.allLimits.slice();
                 c.currentPage = 1;
-                c.totalPages = parseInt((c.limits.length + c.pageSize - 1) / c.pageSize);
+                c.totalPages = 1; // Show all records
                 c.loading = false;
 
                 $timeout(function() {
@@ -1789,7 +1747,6 @@ api.controller = function($scope, $timeout, spUtil) {
             searchDisplay = selectedOption.text + ' >= $' + c.formatCurrency(minAmount);
             searchValue = minAmount;
 
-            // Check if this limit type already exists - if so, REPLACE it
             var existingIndex = -1;
             c.activeFilters.forEach(function(filter, index) {
                 if (filter.type === 'amount' && filter.limitType === limitType) {
@@ -1798,7 +1755,6 @@ api.controller = function($scope, $timeout, spUtil) {
             });
 
             if (existingIndex >= 0) {
-                // Replace existing filter for this limit type
                 c.activeFilters[existingIndex] = {
                     type: filterType,
                     typeLabel: 'Amount',
@@ -1808,7 +1764,6 @@ api.controller = function($scope, $timeout, spUtil) {
                 };
                 spUtil.addInfoMessage('Updated ' + selectedOption.text + ' filter to $' + c.formatCurrency(minAmount));
             } else {
-                // Add new filter
                 c.activeFilters.push({
                     type: filterType,
                     typeLabel: 'Amount',
@@ -1829,7 +1784,6 @@ api.controller = function($scope, $timeout, spUtil) {
             }
             searchDisplay = lobInput.value;
 
-            // Check if this exact LOB already exists
             var filterExists = c.activeFilters.some(function(filter) {
                 return filter.type === 'job_function' && filter.value.toLowerCase() === searchValue.toLowerCase();
             });
@@ -1839,7 +1793,6 @@ api.controller = function($scope, $timeout, spUtil) {
                 return;
             }
 
-            // Add new LOB filter (allows multiple LOBs)
             c.activeFilters.push({
                 type: filterType,
                 typeLabel: 'Line of Business',
@@ -1849,7 +1802,6 @@ api.controller = function($scope, $timeout, spUtil) {
             });
 
         } else {
-            // job_code, job_title, employee
             var inputId = filterType === 'job_code' ? 'jobCodeInput' :
                 filterType === 'job_title' ? 'jobTitleInput' : 'employeeInput';
             var valueId = inputId + 'Value';
@@ -1865,14 +1817,11 @@ api.controller = function($scope, $timeout, spUtil) {
 
             searchDisplay = searchInput.value;
 
-            // For employee, verify they have a valid job code
             if (filterType === 'employee' && !searchValue) {
                 spUtil.addInfoMessage('Selected employee does not have a valid job code');
                 return;
             }
 
-            // Check if this exact filter already exists
-            // For employees, check by display name (not value/job code) to allow same job code but different employees
             var filterExists = c.activeFilters.some(function(filter) {
                 if (filterType === 'employee') {
                     return filter.type === filterType && filter.display.toLowerCase() === searchDisplay.toLowerCase();
@@ -1888,7 +1837,6 @@ api.controller = function($scope, $timeout, spUtil) {
                 return;
             }
 
-            // Determine label
             var filterTypeLabel = '';
             switch (filterType) {
                 case 'job_code':
@@ -1902,7 +1850,6 @@ api.controller = function($scope, $timeout, spUtil) {
                     break;
             }
 
-            // Add new filter (allows multiple)
             c.activeFilters.push({
                 type: filterType,
                 typeLabel: filterTypeLabel,
@@ -1961,19 +1908,16 @@ api.controller = function($scope, $timeout, spUtil) {
         });
     }
 
-    // Apply all active filters (Hybrid AND/OR logic)
-    // OR within same category, AND across categories
+    // Apply all active filters
     function applyFilters() {
         if (c.activeFilters.length === 0) {
             c.limits = c.allLimits.slice();
-            // Clear all highlighting
             c.limits.forEach(function(limit) {
                 limit.activeLimitTypes = [];
             });
             c.sortColumn = null;
             c.sortDirection = 'asc';
         } else {
-            // Group filters by category
             var filtersByCategory = {
                 job_code: [],
                 job_title: [],
@@ -1986,13 +1930,8 @@ api.controller = function($scope, $timeout, spUtil) {
                 filtersByCategory[filter.type].push(filter);
             });
 
-            // Start with all limits
             var filteredLimits = c.allLimits.slice();
 
-            // Apply each category with AND logic between categories
-            // Within each category, use OR logic
-
-            // Job Code filters (OR within category)
             if (filtersByCategory.job_code.length > 0) {
                 filteredLimits = filteredLimits.filter(function(limit) {
                     return filtersByCategory.job_code.some(function(filter) {
@@ -2002,7 +1941,6 @@ api.controller = function($scope, $timeout, spUtil) {
                 });
             }
 
-            // Job Title filters (OR within category)
             if (filtersByCategory.job_title.length > 0) {
                 filteredLimits = filteredLimits.filter(function(limit) {
                     return filtersByCategory.job_title.some(function(filter) {
@@ -2012,7 +1950,6 @@ api.controller = function($scope, $timeout, spUtil) {
                 });
             }
 
-            // Line of Business filters (OR within category)
             if (filtersByCategory.job_function.length > 0) {
                 filteredLimits = filteredLimits.filter(function(limit) {
                     return filtersByCategory.job_function.some(function(filter) {
@@ -2022,21 +1959,16 @@ api.controller = function($scope, $timeout, spUtil) {
                 });
             }
 
-            // Employee filters (OR within category)
-            // Employee filters work by matching the job code sys_id
             if (filtersByCategory.employee.length > 0) {
                 filteredLimits = filteredLimits.filter(function(limit) {
                     return filtersByCategory.employee.some(function(filter) {
-                        // Filter value is the job code sys_id
                         return limit.job_code_sys_id === filter.value;
                     });
                 });
             }
 
-            // Amount filters (AND across different limit types)
             if (filtersByCategory.amount.length > 0) {
                 filteredLimits = filteredLimits.filter(function(limit) {
-                    // ALL amount filters must match (AND logic)
                     return filtersByCategory.amount.every(function(filter) {
                         var limitValue = parseFloat(limit[filter.limitType]) || 0;
                         var minValue = parseFloat(filter.value) || 0;
@@ -2044,8 +1976,6 @@ api.controller = function($scope, $timeout, spUtil) {
                     });
                 });
 
-                // Highlight ALL active amount filter columns
-                // Store all active limit types for highlighting
                 var activeLimitTypes = filtersByCategory.amount.map(function(filter) {
                     return filter.limitType;
                 });
@@ -2054,7 +1984,6 @@ api.controller = function($scope, $timeout, spUtil) {
                     limit.activeLimitTypes = activeLimitTypes;
                 });
 
-                // Auto-sort by the first amount filter column (descending - high to low)
                 var sortColumn = filtersByCategory.amount[0].limitType;
                 c.sortColumn = sortColumn;
                 c.sortDirection = 'desc';
@@ -2065,7 +1994,6 @@ api.controller = function($scope, $timeout, spUtil) {
                     return bVal - aVal;
                 });
             } else {
-                // Clear highlighting if no amount filters
                 filteredLimits.forEach(function(limit) {
                     limit.activeLimitTypes = [];
                 });
@@ -2075,12 +2003,12 @@ api.controller = function($scope, $timeout, spUtil) {
         }
 
         c.currentPage = 1;
-        c.totalPages = parseInt((c.limits.length + c.pageSize - 1) / c.pageSize);
+        c.totalPages = 1; // Show all records
 
         $scope.$apply();
     }
 
-    // Update active filters display with grouping by category
+    // Update active filters display
     function updateActiveFiltersDisplay() {
         var container = document.getElementById('activeFiltersContainer');
         var filtersList = document.getElementById('activeFilters');
@@ -2097,7 +2025,7 @@ api.controller = function($scope, $timeout, spUtil) {
                 clearAllContainer.style.display = 'block';
             }
             filtersList.innerHTML = '';
-            // Group filters by category
+            
             var filtersByCategory = {
                 amount: [],
                 job_code: [],
@@ -2118,7 +2046,6 @@ api.controller = function($scope, $timeout, spUtil) {
                 var categoryFilters = filtersByCategory[categoryType];
                 if (categoryFilters.length === 0) return;
 
-                // Add AND separator between categories
                 if (addedCategories > 0) {
                     var andSeparator = document.createElement('span');
                     andSeparator.className = 'filter-separator';
@@ -2126,15 +2053,12 @@ api.controller = function($scope, $timeout, spUtil) {
                     filtersList.appendChild(andSeparator);
                 }
 
-                // Add category group
                 var categoryGroup = document.createElement('div');
                 categoryGroup.className = 'filter-category-group';
 
                 categoryFilters.forEach(function(filter, catIndex) {
-                    // Add separator within category
                     if (catIndex > 0) {
                         var separator = document.createElement('span');
-                        // Amount filters use AND, others use OR
                         if (categoryType === 'amount') {
                             separator.className = 'filter-and-separator';
                             separator.textContent = 'AND';
@@ -2190,20 +2114,19 @@ api.controller = function($scope, $timeout, spUtil) {
 
         c.limits = c.allLimits.slice();
 
-        // Clear all highlighting from limits
         c.limits.forEach(function(limit) {
             limit.activeLimitTypes = [];
         });
 
         c.currentPage = 1;
-        c.totalPages = parseInt((c.limits.length + c.pageSize - 1) / c.pageSize);
+        c.totalPages = 1;
         c.sortColumn = null;
         c.sortDirection = 'asc';
 
         $scope.$apply();
     }
 
-    // Export to Excel (CSV format)
+    // Export to Excel
     function exportToExcel() {
         var limitsToExport = c.limits.length > 0 ? c.limits : c.allLimits;
 
@@ -2212,10 +2135,8 @@ api.controller = function($scope, $timeout, spUtil) {
             return;
         }
 
-        // Create CSV content client-side
         var csv = buildCSVContent(limitsToExport);
 
-        // Create blob and download
         var blob = new Blob([csv], {
             type: 'text/csv;charset=utf-8;'
         });
@@ -2240,7 +2161,6 @@ api.controller = function($scope, $timeout, spUtil) {
     function buildCSVContent(limits) {
         var csv = '';
 
-        // Add column headers
         var headers = [
             'Job Code',
             'Job Title',
@@ -2262,7 +2182,6 @@ api.controller = function($scope, $timeout, spUtil) {
         ];
         csv += headers.join(',') + '\n';
 
-        // Add data rows
         limits.forEach(function(limit) {
             var row = [
                 escapeCSV(limit.job_code_display || ''),
@@ -2289,7 +2208,6 @@ api.controller = function($scope, $timeout, spUtil) {
         return csv;
     }
 
-    // Escape CSV values
     function escapeCSV(value) {
         if (value === null || value === undefined) {
             return '""';
@@ -2309,7 +2227,6 @@ api.controller = function($scope, $timeout, spUtil) {
             return;
         }
 
-        // Create a printable HTML version
         var printWindow = window.open('', '_blank');
         var filterDescription = getFilterDescription();
 
@@ -2318,7 +2235,6 @@ api.controller = function($scope, $timeout, spUtil) {
         printWindow.document.write(htmlContent);
         printWindow.document.close();
 
-        // Wait for content to load, then trigger print dialog
         printWindow.onload = function() {
             printWindow.print();
         };
@@ -2332,7 +2248,6 @@ api.controller = function($scope, $timeout, spUtil) {
         html += '@page { size: landscape; margin: 0.5in; }';
         html += 'body { font-family: Arial, sans-serif; margin: 0; padding: 15px; background: white; }';
 
-        // Header styling
         html += '.report-header { margin-bottom: 20px; border-bottom: 3px solid #0066cc; padding-bottom: 10px; }';
         html += '.report-title { color: #0066cc; font-size: 20px; font-weight: bold; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px; }';
         html += '.report-icon { font-size: 24px; }';
@@ -2340,36 +2255,29 @@ api.controller = function($scope, $timeout, spUtil) {
         html += '.report-meta p { margin: 4px 0; font-size: 11px; color: #333; }';
         html += '.report-meta strong { color: #000; font-weight: 600; }';
 
-        // Table styling
         html += 'table { width: 100%; border-collapse: collapse; font-size: 9px; margin-top: 15px; }';
         html += 'table, th, td { border: 1px solid #ccc; }';
 
-        // Section headers - cleaner without boxes
         html += 'th.section-header { padding: 10px 4px; text-align: center; font-weight: bold; font-size: 11px; border: 1px solid #ccc; }';
         html += 'th.job-info-section { color: #495057; background: #e9ecef !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
         html += 'th.non-credit-section { color: #155724; background: #d4edda !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
         html += 'th.credit-section { color: #721c24; background: #f8d7da !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
 
-        // Column headers with grey instead of black
         html += 'th { padding: 6px 4px; text-align: left; font-weight: 600; font-size: 9px; color: #fff; background: #6c757d !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; white-space: normal; vertical-align: middle; line-height: 1.2; }';
         html += 'th.non-credit-col { background: #28a745 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
         html += 'th.credit-col { background: #dc3545 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
 
-        // Table cells with alternating rows
         html += 'td { padding: 5px 4px; font-size: 9px; }';
         html += 'tr:nth-child(even) { background: #f8f9fa !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
         html += 'tr:nth-child(odd) { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
 
-        // Job info cells
         html += 'td.job-code-cell { font-weight: bold; color: #000; }';
         html += 'td.job-info-cell { color: #495057; }';
 
-        // Amount cells with subtle backgrounds
         html += 'td.amount-cell { text-align: right; font-weight: 500; color: #000; }';
         html += 'td.non-credit-cell { background: #e8f5e9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
         html += 'td.credit-cell { background: #ffebee !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
 
-        // Print-specific adjustments
         html += '@media print { ';
         html += '  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }';
         html += '  body { margin: 0; padding: 10px; }';
@@ -2381,7 +2289,6 @@ api.controller = function($scope, $timeout, spUtil) {
         html += '</style>';
         html += '</head><body>';
 
-        // Header
         html += '<div class="report-header">';
         html += '<div class="report-title">Signature Authority Limits Report</div>';
         html += '<div class="report-meta">';
@@ -2393,7 +2300,6 @@ api.controller = function($scope, $timeout, spUtil) {
         html += '</div>';
         html += '</div>';
 
-        // Table
         html += '<table>';
         html += '<thead>';
         html += '<tr>';
@@ -2467,7 +2373,6 @@ api.controller = function($scope, $timeout, spUtil) {
         return div.innerHTML;
     }
 
-    // Get filter description for export
     function getFilterDescription() {
         if (c.activeFilters.length === 0) {
             return 'None (All Records)';
@@ -2558,7 +2463,6 @@ api.controller = function($scope, $timeout, spUtil) {
             var searchInputValue = document.getElementById(inputId + 'Value');
             searchInput.value = result.display;
 
-            // For employee, store the job code sys_id instead of user sys_id
             if (inputId === 'employeeInput' && result.jobCodeSysId) {
                 searchInputValue.value = result.jobCodeSysId;
                 searchInputValue.setAttribute('data-user-name', result.display);
@@ -2592,7 +2496,6 @@ api.controller = function($scope, $timeout, spUtil) {
         var results = dropdown.querySelector('.dropdown-results');
         var noResults = dropdown.querySelector('.dropdown-no-results');
 
-        // Filter LOB options client-side
         var searchLower = searchValue.toLowerCase();
         var filteredOptions = (c.lobOptions || []).filter(function(lob) {
             return lob.display.toLowerCase().indexOf(searchLower) >= 0;
@@ -2698,14 +2601,12 @@ api.controller = function($scope, $timeout, spUtil) {
 
     // Initialize widget
     function initializeWidget() {
-        // Setup filter tabs
         document.querySelectorAll('.filter-nav-tab').forEach(function(tab) {
             tab.addEventListener('click', function() {
                 switchFilterTab(this.getAttribute('data-filter'));
             });
         });
 
-        // Setup "Apply Filter" buttons
         var addAmountBtn = document.getElementById('addAmountFilter');
         if (addAmountBtn) {
             addAmountBtn.addEventListener('click', function() {
@@ -2741,7 +2642,6 @@ api.controller = function($scope, $timeout, spUtil) {
             });
         }
 
-        // Setup "Clear" buttons
         var clearAmountBtn = document.getElementById('clearAmountFilter');
         if (clearAmountBtn) {
             clearAmountBtn.addEventListener('click', function() {
@@ -2777,7 +2677,6 @@ api.controller = function($scope, $timeout, spUtil) {
             });
         }
 
-        // Setup "Clear All" button
         var clearAllBtn = document.getElementById('clearAllButton');
         if (clearAllBtn) {
             clearAllBtn.addEventListener('click', function() {
@@ -2792,7 +2691,6 @@ api.controller = function($scope, $timeout, spUtil) {
             });
         }
 
-        // Setup reference field inputs
         var jobCodeInput = document.getElementById('jobCodeInput');
         var jobCodeDebounce;
         if (jobCodeInput) {
@@ -2862,7 +2760,6 @@ api.controller = function($scope, $timeout, spUtil) {
             });
         }
 
-        // Setup LOB input
         var jobFunctionInput = document.getElementById('jobFunctionInput');
         var jobFunctionDebounce;
         if (jobFunctionInput) {
@@ -2888,7 +2785,6 @@ api.controller = function($scope, $timeout, spUtil) {
             });
         }
 
-        // Setup amount input
         var amountInput = document.getElementById('amountInput');
         if (amountInput) {
             var isUpdating = false;
@@ -2923,7 +2819,6 @@ api.controller = function($scope, $timeout, spUtil) {
             });
         }
 
-        // Click outside to close dropdowns
         document.addEventListener('click', function(e) {
             var refWrappers = document.querySelectorAll('.reference-field-wrapper');
             var clickedInside = false;
@@ -2941,7 +2836,6 @@ api.controller = function($scope, $timeout, spUtil) {
             }
         });
 
-        // Setup column filters
         $timeout(function() {
             setupColumnFilters();
         }, 1000);
