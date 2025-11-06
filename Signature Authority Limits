@@ -133,25 +133,33 @@
             </div>
          </div>
          <!-- Line of Business Content -->
-         <div class="filter-content-panel" id="filterPanel-job_function">
-            <h3 class="filter-content-title">Line of Business Filter</h3>
-            <div class="form-group">
-               <label for="jobFunctionInput">Select or Type Line of Business</label>
-               <input type="text" 
-                  id="jobFunctionInput" 
-                  class="form-control" 
-                  list="jobFunctionDatalist"
-                  placeholder="Start typing or select from dropdown..."
-                  autocomplete="off">
-               <datalist id="jobFunctionDatalist">
-                  <option value="">Loading...</option>
-               </datalist>
+<div class="filter-content-panel" id="filterPanel-job_function">
+   <h3 class="filter-content-title">Line of Business Filter</h3>
+   <div class="form-group">
+      <label for="jobFunctionInput">Search Line of Business</label>
+      <div class="reference-field-wrapper">
+         <input type="text" 
+            id="jobFunctionInput" 
+            class="form-control reference-input" 
+            placeholder="Start typing to search..."
+            autocomplete="off">
+         <input type="hidden" id="jobFunctionInputValue">
+         <div id="jobFunctionDropdown" class="reference-dropdown" style="display: none;">
+            <div class="dropdown-loading" style="display: none;">
+               <i class="fa fa-spinner fa-spin"></i> Loading...
             </div>
-            <div class="filter-actions">
-               <button class="btn btn-add-filter" id="addJobFunctionFilter">Apply Filter</button>
-               <button class="btn btn-clear-filter" id="clearJobFunctionFilter">Clear</button>
+            <div class="dropdown-results"></div>
+            <div class="dropdown-no-results" style="display: none;">
+               No results found
             </div>
          </div>
+      </div>
+   </div>
+   <div class="filter-actions">
+      <button class="btn btn-add-filter" id="addJobFunctionFilter">Apply Filter</button>
+      <button class="btn btn-clear-filter" id="clearJobFunctionFilter">Clear</button>
+   </div>
+</div>
          <!-- Employee Content -->
          <div class="filter-content-panel" id="filterPanel-employee">
             <h3 class="filter-content-title">Employee Filter</h3>
@@ -675,10 +683,7 @@
  .filter-tag-remove:hover {
      opacity: 1;
 }
-/* Line of Business Select Styling */
- .lob-select {
-     max-height: 200px;
-}
+
 /* Responsive */
  @media (max-width: 968px) {
      .search-controls-side-nav {
@@ -1502,6 +1507,11 @@ api.controller = function($scope, $timeout, spUtil) {
             visible: false,
             results: [],
             selectedIndex: -1
+        },
+        jobFunction: {
+            visible: false,
+            results: [],
+            selectedIndex: -1
         }
     };
 
@@ -1542,18 +1552,10 @@ api.controller = function($scope, $timeout, spUtil) {
             action: 'getLOBOptions'
         }).then(function(response) {
             var lobOptions = response.data.lobs || [];
-
-            var datalist = document.getElementById('jobFunctionDatalist');
-            if (datalist) {
-                datalist.innerHTML = '';
-                lobOptions.forEach(function(lob) {
-                    var option = document.createElement('option');
-                    option.value = lob.display;
-                    datalist.appendChild(option);
-                });
-            }
+            c.lobOptions = lobOptions;
         }).catch(function(error) {
-            console.error('Error loading LOB options:', error);
+            spUtil.addErrorMessage('Failed to load Line of Business options');
+            c.lobOptions = [];
         });
     }
 
@@ -1699,11 +1701,10 @@ api.controller = function($scope, $timeout, spUtil) {
 
                 $timeout(function() {
                     setupColumnFilters();
-                    setupExportButtons(); // ADD THIS LINE
+                    setupExportButtons();
                 }, 100);
             });
         }).catch(function(error) {
-            console.error('Error loading limits:', error);
             spUtil.addErrorMessage('Failed to load authority limits');
             c.allLimits = [];
             c.limits = [];
@@ -1764,12 +1765,14 @@ api.controller = function($scope, $timeout, spUtil) {
 
         } else if (filterType === 'job_function') {
             var lobInput = document.getElementById('jobFunctionInput');
-            searchValue = lobInput.value.trim();
+            var lobInputValue = document.getElementById('jobFunctionInputValue');
+            
+            searchValue = lobInputValue.value || lobInput.value.trim();
             if (!searchValue) {
-                spUtil.addInfoMessage('Please enter or select a line of business');
+                spUtil.addInfoMessage('Please select a line of business');
                 return;
             }
-            searchDisplay = searchValue;
+            searchDisplay = lobInput.value;
 
             // Check if this exact LOB already exists
             var filterExists = c.activeFilters.some(function(filter) {
@@ -1867,7 +1870,9 @@ api.controller = function($scope, $timeout, spUtil) {
             if (amountInput) amountInput.value = '';
         } else if (filterType === 'job_function') {
             var lobInput = document.getElementById('jobFunctionInput');
+            var lobInputValue = document.getElementById('jobFunctionInputValue');
             if (lobInput) lobInput.value = '';
+            if (lobInputValue) lobInputValue.value = '';
         } else {
             var inputId = filterType === 'job_code' ? 'jobCodeInput' :
                 filterType === 'job_title' ? 'jobTitleInput' : 'employeeInput';
@@ -1996,20 +2001,19 @@ api.controller = function($scope, $timeout, spUtil) {
 
                 // Auto-sort by the first amount filter column (descending - high to low)
                 var sortColumn = filtersByCategory.amount[0].limitType;
-                c.sortColumn = sortColumn; // This sets the sort column
-                c.sortDirection = 'desc'; // This sets the direction
+                c.sortColumn = sortColumn;
+                c.sortDirection = 'desc';
 
                 filteredLimits.sort(function(a, b) {
                     var aVal = parseFloat(a[sortColumn]) || 0;
                     var bVal = parseFloat(b[sortColumn]) || 0;
-                    return bVal - aVal; // Descending order
+                    return bVal - aVal;
                 });
             } else {
                 // Clear highlighting if no amount filters
                 filteredLimits.forEach(function(limit) {
                     limit.activeLimitTypes = [];
                 });
-                // Don't reset sort if no amount filters - REMOVED LINE THAT WAS RESETTING SORT
             }
 
             c.limits = filteredLimits;
@@ -2020,6 +2024,7 @@ api.controller = function($scope, $timeout, spUtil) {
 
         $scope.$apply();
     }
+
     // Update active filters display with grouping by category
     function updateActiveFiltersDisplay() {
         var container = document.getElementById('activeFiltersContainer');
@@ -2047,7 +2052,7 @@ api.controller = function($scope, $timeout, spUtil) {
             };
 
             c.activeFilters.forEach(function(filter, index) {
-                filter.originalIndex = index; // Store original index for removal
+                filter.originalIndex = index;
                 filtersByCategory[filter.type].push(filter);
             });
 
@@ -2480,7 +2485,6 @@ api.controller = function($scope, $timeout, spUtil) {
                 noResults.style.display = 'block';
             }
         }).catch(function(error) {
-            console.error('Reference lookup error:', error);
             loading.style.display = 'none';
             hideDropdown(inputId);
         });
@@ -2520,6 +2524,78 @@ api.controller = function($scope, $timeout, spUtil) {
         }
     }
 
+    // LOB field lookup
+    function performLOBLookup(searchValue) {
+        var dropdown = document.getElementById('jobFunctionDropdown');
+        if (!dropdown) return;
+
+        var loading = dropdown.querySelector('.dropdown-loading');
+        var results = dropdown.querySelector('.dropdown-results');
+        var noResults = dropdown.querySelector('.dropdown-no-results');
+
+        // Filter LOB options client-side
+        var searchLower = searchValue.toLowerCase();
+        var filteredOptions = (c.lobOptions || []).filter(function(lob) {
+            return lob.display.toLowerCase().indexOf(searchLower) >= 0;
+        });
+
+        dropdownStates.jobFunction.visible = true;
+        dropdownStates.jobFunction.results = filteredOptions;
+        dropdownStates.jobFunction.selectedIndex = -1;
+
+        loading.style.display = 'none';
+        results.innerHTML = '';
+        
+        if (filteredOptions.length > 0) {
+            filteredOptions.forEach(function(lob, index) {
+                var item = document.createElement('div');
+                item.className = 'dropdown-item';
+                item.dataset.index = index;
+
+                var primary = document.createElement('div');
+                primary.className = 'dropdown-item-primary';
+                primary.textContent = lob.display;
+                item.appendChild(primary);
+
+                item.addEventListener('click', function() {
+                    selectLOBItem(index);
+                });
+
+                results.appendChild(item);
+            });
+            noResults.style.display = 'none';
+            dropdown.style.display = 'block';
+        } else {
+            noResults.style.display = 'block';
+            dropdown.style.display = 'block';
+        }
+    }
+
+    function selectLOBItem(index) {
+        var results = dropdownStates.jobFunction.results;
+        if (index >= 0 && index < results.length) {
+            var result = results[index];
+            var lobInput = document.getElementById('jobFunctionInput');
+            var lobInputValue = document.getElementById('jobFunctionInputValue');
+            
+            lobInput.value = result.display;
+            lobInputValue.value = result.value;
+            
+            hideLOBDropdown();
+        }
+    }
+
+    function hideLOBDropdown() {
+        var dropdown = document.getElementById('jobFunctionDropdown');
+        if (dropdown) {
+            dropdown.style.display = 'none';
+        }
+        if (dropdownStates.jobFunction) {
+            dropdownStates.jobFunction.visible = false;
+            dropdownStates.jobFunction.selectedIndex = -1;
+        }
+    }
+
     // Setup column filter checkboxes
     function setupColumnFilters() {
         var showNonCreditCheckbox = document.getElementById('showNonCredit');
@@ -2547,21 +2623,17 @@ api.controller = function($scope, $timeout, spUtil) {
         }
     }
 
-// Setup export button handlers
+    // Setup export button handlers
     function setupExportButtons() {
         var exportExcelBtn = document.getElementById('exportExcelButton');
         if (exportExcelBtn) {
-            // Remove any existing listeners first
             var newExcelBtn = exportExcelBtn.cloneNode(true);
             exportExcelBtn.parentNode.replaceChild(newExcelBtn, exportExcelBtn);
             
             newExcelBtn.addEventListener('click', function(e) {
                 e.preventDefault();
-                console.log('Excel export clicked'); // Debug log
                 exportToExcel();
             });
-        } else {
-            console.error('Excel export button not found');
         }
     }
 
@@ -2646,16 +2718,6 @@ api.controller = function($scope, $timeout, spUtil) {
             });
         }
 
-        // Setup LOB input
-        var jobFunctionInput = document.getElementById('jobFunctionInput');
-        if (jobFunctionInput) {
-            jobFunctionInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    addFilterFromPanel('job_function');
-                }
-            });
-        }
-
         // Setup "Clear All" button
         var clearAllBtn = document.getElementById('clearAllButton');
         if (clearAllBtn) {
@@ -2663,8 +2725,6 @@ api.controller = function($scope, $timeout, spUtil) {
                 clearAllFilters();
             });
         }
-
-        // Note: PDF export button uses ng-click in HTML, so no listener needed here
 
         var exportPdfBtn = document.getElementById('exportPdfButton');
         if (exportPdfBtn) {
@@ -2743,6 +2803,32 @@ api.controller = function($scope, $timeout, spUtil) {
             });
         }
 
+        // Setup LOB input
+        var jobFunctionInput = document.getElementById('jobFunctionInput');
+        var jobFunctionDebounce;
+        if (jobFunctionInput) {
+            jobFunctionInput.addEventListener('input', function(e) {
+                clearTimeout(jobFunctionDebounce);
+                jobFunctionDebounce = setTimeout(function() {
+                    performLOBLookup(e.target.value);
+                }, 200);
+            });
+
+            jobFunctionInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    addFilterFromPanel('job_function');
+                } else if (e.key === 'Escape') {
+                    hideLOBDropdown();
+                }
+            });
+            
+            jobFunctionInput.addEventListener('focus', function(e) {
+                if (e.target.value.length >= 0) {
+                    performLOBLookup(e.target.value);
+                }
+            });
+        }
+
         // Setup amount input
         var amountInput = document.getElementById('amountInput');
         if (amountInput) {
@@ -2792,6 +2878,7 @@ api.controller = function($scope, $timeout, spUtil) {
                 hideDropdown('jobCodeInput');
                 hideDropdown('jobTitleInput');
                 hideDropdown('employeeInput');
+                hideLOBDropdown();
             }
         });
 
@@ -2800,8 +2887,9 @@ api.controller = function($scope, $timeout, spUtil) {
             setupColumnFilters();
         }, 1000);
     }
+
     c.exportPdf = function() {
-        exportToPDF(); // This calls the client-side print function
+        exportToPDF();
     };
 
 };
