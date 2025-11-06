@@ -381,10 +381,9 @@
                </tr>
             </thead>
             <tbody>
-               <tr ng-repeat="limit in c.limits" ng-class="{'highlight-row': limit.highlighted}">
+               <tr ng-repeat="limit in c.getCurrentPageLimits()" ng-class="{'highlight-row': limit.highlighted}">
                   <td class="sticky-col job-code-cell job-code-clickable" ng-click="c.selectJobCode(limit)">
                      <strong>{{limit.job_code_display}}</strong>
-                     <i class="fa fa-external-link job-code-icon"></i>
                   </td>
                   <td class="job-info-cell">{{limit.job_title || '-'}}</td>
                   <td class="job-info-cell">{{limit.job_function || '-'}}</td>
@@ -435,6 +434,31 @@
                </tr>
             </tbody>
          </table>
+      </div>
+      
+      <!-- Pagination -->
+      <div ng-if="c.totalPages > 1" class="pagination-controls">
+         <nav aria-label="Limits pagination">
+            <ul class="pagination">
+               <li class="page-item" ng-class="{disabled: c.currentPage === 1}">
+                  <a class="page-link" href="javascript:void(0)" ng-click="c.previousPage()" aria-label="Previous">
+                  <span aria-hidden="true">&laquo;</span>
+                  </a>
+               </li>
+               <li class="page-item" ng-repeat="page in c.getPageNumbers()" 
+                  ng-class="{active: page === c.currentPage}">
+                  <a class="page-link" href="javascript:void(0)" ng-click="c.goToPage(page)">{{page}}</a>
+               </li>
+               <li class="page-item" ng-class="{disabled: c.currentPage === c.totalPages}">
+                  <a class="page-link" href="javascript:void(0)" ng-click="c.nextPage()" aria-label="Next">
+                  <span aria-hidden="true">&raquo;</span>
+                  </a>
+               </li>
+            </ul>
+         </nav>
+         <div class="pagination-info">
+            Showing {{c.getStartIndex() + 1}}-{{c.getEndIndex()}} of {{c.limits.length}} records
+         </div>
       </div>
    </div>
 </div>
@@ -1077,17 +1101,6 @@
      transform: translateX(2px);
 }
 
- .job-code-icon {
-     margin-left: 6px;
-     font-size: 11px;
-     opacity: 0.7;
-     transition: opacity 0.2s ease;
-}
-
- .job-code-clickable:hover .job-code-icon {
-     opacity: 1;
-}
-
  .limits-table tbody tr:hover .job-code-cell {
      background-color: #f8f9fa;
 }
@@ -1546,9 +1559,9 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
     c.sortColumn = null;
     c.sortDirection = 'asc';
 
-    // NO PAGINATION - Show all records
+    // Pagination - 10 items per page
     c.currentPage = 1;
-    c.pageSize = 999999; // Show all records
+    c.pageSize = 10;
     c.totalPages = 1;
 
     // Reference field dropdown states
@@ -1594,9 +1607,6 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
             jobCodeDisplay: limit.job_code_display,
             jobCodeSysId: limit.job_code_sys_id
         });
-        
-        // Visual feedback
-        spUtil.addInfoMessage('Loading employees for job code: ' + limit.job_code_display);
     };
 
     // Switch between filter tabs
@@ -1709,7 +1719,7 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
                 c.allLimits = response.data.limits || [];
                 c.limits = c.allLimits.slice();
                 c.currentPage = 1;
-                c.totalPages = 1; // Show all records
+                c.totalPages = Math.ceil(c.limits.length / c.pageSize);
                 c.loading = false;
 
                 $timeout(function() {
@@ -2003,7 +2013,7 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
         }
 
         c.currentPage = 1;
-        c.totalPages = 1; // Show all records
+        c.totalPages = Math.ceil(c.limits.length / c.pageSize);
 
         $scope.$apply();
     }
@@ -2119,7 +2129,7 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
         });
 
         c.currentPage = 1;
-        c.totalPages = 1;
+        c.totalPages = Math.ceil(c.limits.length / c.pageSize);
         c.sortColumn = null;
         c.sortDirection = 'asc';
 
