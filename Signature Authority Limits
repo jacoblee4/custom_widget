@@ -52,7 +52,7 @@
                      <option value="check_cashing_on_us">Check Cashing - On-Us</option>
                      <option value="check_cashing_not_on_us">Check Cashing - Not On-Us</option>
                      <option value="remote_deposit">Remote Deposit</option>
-                     <option value="treasury_solutions_company_wire_limits">Treasury Solutions Company Wire Limits</option>
+                     <option value="treasury_solutions_company_wire_limits">TS Company Wire Limits</option>
                      <option value="fx_wire_limits">FX Wire Limits</option>
                   </optgroup>
                   <optgroup label="Credit Authority">
@@ -336,7 +336,7 @@
                      </span>
                   </th>
                   <th class="non-credit-col sortable" ng-click="c.sortBy('treasury_solutions_company_wire_limits')">
-                      Treasury Solutions Company Wire Limits
+                      TS Company Wire Limits
                      <span class="sort-arrows">
                      <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'treasury_solutions_company_wire_limits' && c.sortDirection === 'asc'}"></i>
                      <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'treasury_solutions_company_wire_limits' && c.sortDirection === 'desc'}"></i>
@@ -1705,7 +1705,7 @@ api.controller = function($scope, $timeout, spUtil) {
             search_value: '',
             limit_type: '',
             min_amount: ''
-       }).then(function(response) {
+        }).then(function(response) {
             $timeout(function() {
                 c.allLimits = response.data.limits || [];
                 c.limits = c.allLimits.slice();
@@ -1780,7 +1780,7 @@ api.controller = function($scope, $timeout, spUtil) {
         } else if (filterType === 'job_function') {
             var lobInput = document.getElementById('jobFunctionInput');
             var lobInputValue = document.getElementById('jobFunctionInputValue');
-            
+
             searchValue = lobInputValue.value || lobInput.value.trim();
             if (!searchValue) {
                 spUtil.addInfoMessage('Please select a line of business');
@@ -2183,10 +2183,10 @@ api.controller = function($scope, $timeout, spUtil) {
             var url = URL.createObjectURL(blob);
             link.setAttribute('href', url);
             var today = new Date();
-var dateStr = today.getFullYear() + 
-    ('0' + (today.getMonth() + 1)).slice(-2) + 
-    ('0' + today.getDate()).slice(-2);
-link.setAttribute('download', 'Signature_Authority_Limits_Export_' + dateStr + '.csv');
+            var dateStr = today.getFullYear() +
+                ('0' + (today.getMonth() + 1)).slice(-2) +
+                ('0' + today.getDate()).slice(-2);
+            link.setAttribute('download', 'Signature_Authority_Limits_Export_' + dateStr + '.csv');
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
@@ -2212,8 +2212,8 @@ link.setAttribute('download', 'Signature_Authority_Limits_Export_' + dateStr + '
             'Check Cashing On-Us',
             'Check Cashing Not On-Us',
             'Remote Deposit',
-            'Treasury Solutions',
-            'FX Wire',
+            'Treasury Solutions Company Wire Limits',
+            'FX Wire Limits',
             'Overdraft Internal',
             'Overdraft External',
             'Unavailable Funds Internal',
@@ -2310,7 +2310,8 @@ link.setAttribute('download', 'Signature_Authority_Limits_Export_' + dateStr + '
         html += 'th.credit-section { color: #721c24; background: #f8d7da !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
 
         // Column headers with grey instead of black
-html += 'th { padding: 6px 4px; text-align: left; font-weight: 600; font-size: 9px; color: #fff; background: #6c757d !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; white-space: normal; vertical-align: middle; line-height: 1.2; }';        html += 'th.non-credit-col { background: #28a745 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
+        html += 'th { padding: 6px 4px; text-align: left; font-weight: 600; font-size: 9px; color: #fff; background: #6c757d !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; white-space: normal; vertical-align: middle; line-height: 1.2; }';
+        html += 'th.non-credit-col { background: #28a745 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
         html += 'th.credit-col { background: #dc3545 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
 
         // Table cells with alternating rows
@@ -2364,19 +2365,19 @@ html += 'th { padding: 6px 4px; text-align: left; font-weight: 600; font-size: 9
         html += '<th>Job Title</th>';
         html += '<th>Line of Business</th>';
         html += '<th class="non-credit-col">ACH</th>';
-         html += '<th class="non-credit-col">Wire Transfer Internal</th>';
-html += '<th class="non-credit-col">Wire Transfer External</th>';
-html += '<th class="non-credit-col">Official Checks Internal</th>';
-html += '<th class="non-credit-col">Official Checks External</th>';
-html += '<th class="non-credit-col">Check Cashing On-Us</th>';
-html += '<th class="non-credit-col">Check Cashing Not On-Us</th>';
-html += '<th class="non-credit-col">Remote Deposit</th>';
-html += '<th class="non-credit-col">Treasury Solutions Company Wire Limits</th>';
-html += '<th class="non-credit-col">FX Wire Limits</th>';
-html += '<th class="credit-col">Overdraft Internal</th>';
-html += '<th class="credit-col">Overdraft External</th>';
-html += '<th class="credit-col">Unavailable Funds Internal</th>';
-html += '<th class="credit-col">Unavailable Funds External</th>';
+        html += '<th class="non-credit-col">Wire Transfer Internal</th>';
+        html += '<th class="non-credit-col">Wire Transfer External</th>';
+        html += '<th class="non-credit-col">Official Checks Internal</th>';
+        html += '<th class="non-credit-col">Official Checks External</th>';
+        html += '<th class="non-credit-col">Check Cashing On-Us</th>';
+        html += '<th class="non-credit-col">Check Cashing Not On-Us</th>';
+        html += '<th class="non-credit-col">Remote Deposit</th>';
+        html += '<th class="non-credit-col">TS Company Wire Limits</th>';
+        html += '<th class="non-credit-col">FX Wire Limits</th>';
+        html += '<th class="credit-col">Overdraft Internal</th>';
+        html += '<th class="credit-col">Overdraft External</th>';
+        html += '<th class="credit-col">Unavailable Funds Internal</th>';
+        html += '<th class="credit-col">Unavailable Funds External</th>';
         html += '</tr>';
         html += '</thead>';
         html += '<tbody>';
@@ -2562,7 +2563,7 @@ html += '<th class="credit-col">Unavailable Funds External</th>';
 
         loading.style.display = 'none';
         results.innerHTML = '';
-        
+
         if (filteredOptions.length > 0) {
             filteredOptions.forEach(function(lob, index) {
                 var item = document.createElement('div');
@@ -2594,10 +2595,10 @@ html += '<th class="credit-col">Unavailable Funds External</th>';
             var result = results[index];
             var lobInput = document.getElementById('jobFunctionInput');
             var lobInputValue = document.getElementById('jobFunctionInputValue');
-            
+
             lobInput.value = result.display;
             lobInputValue.value = result.value;
-            
+
             hideLOBDropdown();
         }
     }
@@ -2646,7 +2647,7 @@ html += '<th class="credit-col">Unavailable Funds External</th>';
         if (exportExcelBtn) {
             var newExcelBtn = exportExcelBtn.cloneNode(true);
             exportExcelBtn.parentNode.replaceChild(newExcelBtn, exportExcelBtn);
-            
+
             newExcelBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 exportToExcel();
@@ -2838,7 +2839,7 @@ html += '<th class="credit-col">Unavailable Funds External</th>';
                     hideLOBDropdown();
                 }
             });
-            
+
             jobFunctionInput.addEventListener('focus', function(e) {
                 if (e.target.value.length >= 0) {
                     performLOBLookup(e.target.value);
