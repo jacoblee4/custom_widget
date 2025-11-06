@@ -7,7 +7,7 @@
    <div class="widget-header">
       <h2>Signature Authority Limits Lookup</h2>
    </div>
-   <!-- Search Controls - Side Navigation Style -->
+   <!-- Search Controls -->
    <div class="search-controls-side-nav">
       <div class="filter-nav-sidebar">
          <button class="filter-nav-tab" data-filter="amount">
@@ -500,7 +500,6 @@
      text-align: left;
      max-width: 1400px;
 }
-/* Results take full width */
  .results-container {
      margin-top: 24px;
      width: 100%;
@@ -527,7 +526,6 @@
  .limits-table {
      width: 100%;
      min-width: 1800px;
-    /* Force table to be wider */
      border-collapse: collapse;
      font-size: 13px;
 }
@@ -725,7 +723,8 @@
  .filter-tag-remove:hover {
      opacity: 1;
 }
-/* Responsive */
+
+Responsive */
  @media (max-width: 968px) {
      .search-controls-side-nav {
          flex-direction: column;
@@ -999,7 +998,6 @@
      font-size: 12px;
      border-right: 1px solid #e9ecef;
 }
-/* Sortable columns styling */
  .limits-table th.sortable {
      cursor: pointer;
      user-select: none;
@@ -1215,10 +1213,6 @@
          text-align: center;
     }
 }
- .btn-clear-all i {
-     margin-right: 6px;
-}
-/* Results header layout - split left and right */
  .results-header {
      margin-bottom: 16px;
      display: flex;
@@ -1265,21 +1259,17 @@
      text-align: left;
      border-bottom: 2px solid #dee2e6;
      white-space: normal;
-    /* Changed from nowrap */
      font-size: 12px;
      border-right: 1px solid #e9ecef;
      vertical-align: middle;
      line-height: 1.3;
      min-width: 80px;
-    /* Add minimum width */
 }
-/* Constrain only the search controls, not the whole widget */
  .search-controls-side-nav {
      display: flex;
      gap: 20px;
      margin-bottom: 24px;
      max-width: 1400px;
-    /* or whatever width you want for the filters */
 }
  .active-filters-section {
      background: #f8f9fa;
@@ -1288,13 +1278,11 @@
      padding: 16px;
      margin-bottom: 16px;
      max-width: 1400px;
-    /* match the search controls width */
 }
  .clear-all-container {
      margin-bottom: 16px;
      text-align: left;
      max-width: 1400px;
-    /* match the search controls width */
 }
 
  
@@ -1307,163 +1295,85 @@
 (function() {
     'use strict';
 
-    /**
-     * Handle reference field lookups
-     */
+    // Handle reference field lookups
     if (input && input.action === 'lookupReference') {
         var searchType = input.search_type;
-        var searchValue = input.search_value || '';
+        var searchValue = input.search_value;
         var results = [];
 
         if (searchType === 'job_code') {
-            results = lookupJobCode(searchValue);
+            var gr = new GlideRecord('x_banun_rbac_job_code');
+            gr.addQuery('job_code', 'CONTAINS', searchValue);
+            gr.orderBy('job_code');
+            gr.query();
+
+            while (gr.next()) {
+                results.push({
+                    value: gr.getUniqueValue(),
+                    display: gr.getValue('job_code'),
+                    secondary: gr.getValue('job_description')
+                });
+            }
+
         } else if (searchType === 'job_title') {
-            results = lookupJobTitle(searchValue);
+            var titleGr = new GlideRecord('x_banun_rbac_job_code');
+            titleGr.addQuery('job_description', 'CONTAINS', searchValue);
+            titleGr.orderBy('job_description');
+            titleGr.query();
+
+            while (titleGr.next()) {
+                results.push({
+                    value: titleGr.getValue('job_description'),
+                    display: titleGr.getValue('job_description'),
+                    secondary: titleGr.getValue('job_code')
+                });
+            }
+
         } else if (searchType === 'employee') {
-            results = lookupEmployee(searchValue);
+            var userGr = new GlideRecord('sys_user');
+            userGr.addQuery('name', 'CONTAINS', searchValue);
+            userGr.addQuery('active', true);
+            userGr.orderBy('name');
+            userGr.query();
+
+            while (userGr.next()) {
+                var userJobCode = userGr.getValue('u_job_code') || '';
+                var jobTitle = userGr.getValue('title') || '';
+
+                var jobCodeSysId = '';
+                if (userJobCode) {
+                    var jobCodeGr = new GlideRecord('x_banun_rbac_job_code');
+                    jobCodeGr.addQuery('job_code', userJobCode);
+                    jobCodeGr.query();
+                    if (jobCodeGr.next()) {
+                        jobCodeSysId = jobCodeGr.getUniqueValue();
+                    }
+                }
+
+                var secondaryText = '';
+                if (jobTitle && userJobCode) {
+                    secondaryText = jobTitle + ' - Job Code: ' + userJobCode;
+                } else if (jobTitle) {
+                    secondaryText = jobTitle;
+                } else if (userJobCode) {
+                    secondaryText = 'Job Code: ' + userJobCode;
+                }
+
+                results.push({
+                    value: userGr.getUniqueValue(),
+                    display: userGr.getValue('name'),
+                    secondary: secondaryText,
+                    jobCodeSysId: jobCodeSysId
+                });
+            }
         }
 
         data.results = results;
         return;
     }
 
-    /**
-     * Handle Line of Business options loading
-     */
+    // Handle LOB options loading
     if (input && input.action === 'getLOBOptions') {
-        data.lobs = getLOBOptions();
-        return;
-    }
-
-    /**
-     * Handle authority limits search
-     */
-    if (input && input.action === 'searchLimits') {
-        var searchType = input.search_type || '';
-        var searchValue = input.search_value || '';
-        var limitType = input.limit_type || '';
-        var minAmount = input.min_amount || '';
-
-        data.limits = searchLimits(searchType, searchValue, limitType, minAmount);
-        return;
-    }
-
-    /**
-     * Lookup job codes by code
-     * @param {string} searchValue - Search term
-     * @returns {Array} Array of matching results
-     */
-    function lookupJobCode(searchValue) {
-        var results = [];
-        var gr = new GlideRecord('x_banun_rbac_job_code');
-        gr.addQuery('job_code', 'CONTAINS', searchValue);
-        gr.orderBy('job_code');
-        gr.setLimit(20); // Limit results for performance
-        gr.query();
-
-        while (gr.next()) {
-            results.push({
-                value: gr.getUniqueValue(),
-                display: gr.getValue('job_code'),
-                secondary: gr.getValue('job_description')
-            });
-        }
-
-        return results;
-    }
-
-    /**
-     * Lookup job titles by description
-     * @param {string} searchValue - Search term
-     * @returns {Array} Array of matching results
-     */
-    function lookupJobTitle(searchValue) {
-        var results = [];
-        var gr = new GlideRecord('x_banun_rbac_job_code');
-        gr.addQuery('job_description', 'CONTAINS', searchValue);
-        gr.orderBy('job_description');
-        gr.setLimit(20); // Limit results for performance
-        gr.query();
-
-        while (gr.next()) {
-            results.push({
-                value: gr.getValue('job_description'),
-                display: gr.getValue('job_description'),
-                secondary: gr.getValue('job_code')
-            });
-        }
-
-        return results;
-    }
-
-    /**
-     * Lookup employees by name
-     * @param {string} searchValue - Search term
-     * @returns {Array} Array of matching results
-     */
-    function lookupEmployee(searchValue) {
-        var results = [];
-        var userGr = new GlideRecord('sys_user');
-        userGr.addQuery('name', 'CONTAINS', searchValue);
-        userGr.addQuery('active', true);
-        userGr.orderBy('name');
-        userGr.setLimit(20); // Limit results for performance
-        userGr.query();
-
-        while (userGr.next()) {
-            var userJobCode = userGr.getValue('u_job_code') || '';
-            var jobTitle = userGr.getValue('title') || '';
-            var jobCodeSysId = '';
-
-            // Get job code sys_id if job code exists
-            if (userJobCode) {
-                var jobCodeGr = new GlideRecord('x_banun_rbac_job_code');
-                jobCodeGr.addQuery('job_code', userJobCode);
-                jobCodeGr.query();
-                
-                if (jobCodeGr.next()) {
-                    jobCodeSysId = jobCodeGr.getUniqueValue();
-                }
-            }
-
-            // Build secondary display text
-            var secondaryText = buildSecondaryText(jobTitle, userJobCode);
-
-            results.push({
-                value: userGr.getUniqueValue(),
-                display: userGr.getValue('name'),
-                secondary: secondaryText,
-                jobCodeSysId: jobCodeSysId
-            });
-        }
-
-        return results;
-    }
-
-    /**
-     * Build secondary display text for employee results
-     * @param {string} jobTitle - Job title
-     * @param {string} userJobCode - Job code
-     * @returns {string} Formatted secondary text
-     */
-    function buildSecondaryText(jobTitle, userJobCode) {
-        if (jobTitle && userJobCode) {
-            return jobTitle + ' - Job Code: ' + userJobCode;
-        }
-        if (jobTitle) {
-            return jobTitle;
-        }
-        if (userJobCode) {
-            return 'Job Code: ' + userJobCode;
-        }
-        return '';
-    }
-
-    /**
-     * Get unique Line of Business options
-     * @returns {Array} Array of LOB options
-     */
-    function getLOBOptions() {
         var lobs = [];
         var seen = {};
 
@@ -1483,39 +1393,54 @@
             }
         }
 
-        return lobs;
+        data.lobs = lobs;
+        return;
     }
 
-    /**
-     * Search for authority limits based on criteria
-     * @param {string} searchType - Type of search
-     * @param {string} searchValue - Search value
-     * @param {string} limitType - Type of limit for amount search
-     * @param {string} minAmount - Minimum amount for amount search
-     * @returns {Array} Array of matching limits
-     */
-    function searchLimits(searchType, searchValue, limitType, minAmount) {
+    if (input && input.action === 'searchLimits') {
+        var searchType = input.search_type;
+        var searchValue = input.search_value;
+        var limitType = input.limit_type;
+        var minAmount = input.min_amount;
+
         var limits = [];
 
         var gr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
         gr.addQuery('active', true);
 
-        // Apply search criteria based on type
         if (searchType === 'job_code' && searchValue) {
             gr.addQuery('job_code', searchValue);
+
         } else if (searchType === 'job_title' && searchValue) {
             gr.addQuery('job_code.job_description', searchValue);
+
         } else if (searchType === 'job_function' && searchValue) {
             gr.addQuery('job_code.job_function_description', searchValue);
+
         } else if (searchType === 'employee' && searchValue) {
-            // Get job code from employee
-            var jobCodeSysId = getEmployeeJobCode(searchValue);
-            if (jobCodeSysId) {
-                gr.addQuery('job_code', jobCodeSysId);
+            var userGr = new GlideRecord('sys_user');
+            if (userGr.get(searchValue)) {
+                var userJobCode = userGr.getValue('u_job_code');
+                if (userJobCode) {
+                    var jobCodeGr = new GlideRecord('x_banun_rbac_job_code');
+                    jobCodeGr.addQuery('job_code', userJobCode);
+                    jobCodeGr.query();
+
+                    if (jobCodeGr.next()) {
+                        gr.addQuery('job_code', jobCodeGr.getUniqueValue());
+                    } else {
+                        data.limits = [];
+                        return;
+                    }
+                } else {
+                    data.limits = [];
+                    return;
+                }
             } else {
-                // No valid job code found, return empty
-                return limits;
+                data.limits = [];
+                return;
             }
+
         } else if (searchType === 'amount' && limitType && minAmount) {
             var minAmountNum = parseFloat(minAmount);
             if (!isNaN(minAmountNum) && minAmountNum >= 0) {
@@ -1527,85 +1452,69 @@
         gr.query();
 
         while (gr.next()) {
-            var limit = buildLimitObject(gr, limitType);
+            var jobCodeSysId = gr.getValue('job_code');
+            var jobCodeDisplay = '';
+            var jobTitle = '';
+            var jobFunction = '';
+
+            var jobCodeGr = new GlideRecord('x_banun_rbac_job_code');
+            if (jobCodeGr.get(jobCodeSysId)) {
+                jobCodeDisplay = jobCodeGr.getValue('job_code') || '';
+                jobTitle = jobCodeGr.getValue('job_description') || '';
+                jobFunction = jobCodeGr.getValue('job_function_description') || '';
+            }
+
+            var limit = {
+                sys_id: gr.getUniqueValue(),
+                job_code_sys_id: jobCodeSysId,
+                job_code_display: jobCodeDisplay,
+                job_title: jobTitle,
+                job_function: jobFunction,
+
+                disbursement_ach: gr.getValue('disbursement_ach') || '0',
+                disbursement_wire_transfer_external: gr.getValue('disbursement_wire_transfer_external') || '0',
+                disbursement_wire_transfer_internal: gr.getValue('disbursement_wire_transfer_internal') || '0',
+                disbursement_official_checks_external: gr.getValue('disbursement_official_checks_external') || '0',
+                disbursement_official_checks_internal: gr.getValue('disbursement_official_checks_internal') || '0',
+                check_cashing_on_us: gr.getValue('check_cashing_on_us') || '0',
+                check_cashing_not_on_us: gr.getValue('check_cashing_not_on_us') || '0',
+                remote_deposit: gr.getValue('remote_deposit') || '0',
+                treasury_solutions_company_wire_limits: gr.getValue('treasury_solutions_company_wire_limits') || '0',
+                fx_wire_limits: gr.getValue('fx_wire_limits') || '0',
+
+                overdraft_external_accounts: gr.getValue('overdraft_external_accounts') || '0',
+                overdraft_internal_accounts: gr.getValue('overdraft_internal_accounts') || '0',
+                unavailable_funds_external_accounts: gr.getValue('unavailable_funds_external_accounts') || '0',
+                unavailable_funds_internal_accounts: gr.getValue('unavailable_funds_internal_accounts') || '0',
+
+                highlightField: (searchType === 'amount') ? limitType : '',
+                highlighted: false
+            };
+
             limits.push(limit);
         }
 
-        return limits;
+        data.limits = limits;
     }
 
-    /**
-     * Get job code sys_id for an employee
-     * @param {string} userSysId - User sys_id
-     * @returns {string} Job code sys_id or empty string
-     */
-    function getEmployeeJobCode(userSysId) {
-        var userGr = new GlideRecord('sys_user');
-        if (userGr.get(userSysId)) {
-            var userJobCode = userGr.getValue('u_job_code');
-            if (userJobCode) {
-                var jobCodeGr = new GlideRecord('x_banun_rbac_job_code');
-                jobCodeGr.addQuery('job_code', userJobCode);
-                jobCodeGr.query();
-
-                if (jobCodeGr.next()) {
-                    return jobCodeGr.getUniqueValue();
-                }
-            }
+    function formatAmount(value) {
+        if (!value || value === '0' || parseFloat(value) === 0) {
+            return '-';
         }
-        return '';
+        var numValue = parseFloat(value);
+        if (isNaN(numValue)) return '-';
+        return '$' + numValue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     }
 
-    /**
-     * Build limit object from GlideRecord
-     * @param {GlideRecord} gr - Authority limits record
-     * @param {string} highlightField - Field to highlight (for amount searches)
-     * @returns {Object} Limit object
-     */
-    function buildLimitObject(gr, highlightField) {
-        var jobCodeSysId = gr.getValue('job_code');
-        var jobCodeDisplay = '';
-        var jobTitle = '';
-        var jobFunction = '';
-
-        // Get job code details
-        var jobCodeGr = new GlideRecord('x_banun_rbac_job_code');
-        if (jobCodeGr.get(jobCodeSysId)) {
-            jobCodeDisplay = jobCodeGr.getValue('job_code') || '';
-            jobTitle = jobCodeGr.getValue('job_description') || '';
-            jobFunction = jobCodeGr.getValue('job_function_description') || '';
-        }
-
-        return {
-            sys_id: gr.getUniqueValue(),
-            job_code_sys_id: jobCodeSysId,
-            job_code_display: jobCodeDisplay,
-            job_title: jobTitle,
-            job_function: jobFunction,
-
-            // Non-credit authority values
-            disbursement_ach: gr.getValue('disbursement_ach') || '0',
-            disbursement_wire_transfer_external: gr.getValue('disbursement_wire_transfer_external') || '0',
-            disbursement_wire_transfer_internal: gr.getValue('disbursement_wire_transfer_internal') || '0',
-            disbursement_official_checks_external: gr.getValue('disbursement_official_checks_external') || '0',
-            disbursement_official_checks_internal: gr.getValue('disbursement_official_checks_internal') || '0',
-            check_cashing_on_us: gr.getValue('check_cashing_on_us') || '0',
-            check_cashing_not_on_us: gr.getValue('check_cashing_not_on_us') || '0',
-            remote_deposit: gr.getValue('remote_deposit') || '0',
-            treasury_solutions_company_wire_limits: gr.getValue('treasury_solutions_company_wire_limits') || '0',
-            fx_wire_limits: gr.getValue('fx_wire_limits') || '0',
-
-            // Credit authority values
-            overdraft_external_accounts: gr.getValue('overdraft_external_accounts') || '0',
-            overdraft_internal_accounts: gr.getValue('overdraft_internal_accounts') || '0',
-            unavailable_funds_external_accounts: gr.getValue('unavailable_funds_external_accounts') || '0',
-            unavailable_funds_internal_accounts: gr.getValue('unavailable_funds_internal_accounts') || '0',
-
-            highlightField: highlightField || '',
-            highlighted: false
-        };
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.toString()
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
-
 })();
 
 
@@ -1618,65 +1527,70 @@
 api.controller = function($scope, $timeout, spUtil) {
     var c = this;
 
-    // Configuration constants
-    var CONFIG = {
-        DEBOUNCE_DELAY: 300,
-        INIT_DELAY: 500,
-        MIN_SEARCH_LENGTH: 2,
-        DECIMAL_RADIX: 10,
-        MAX_PAGES_DISPLAY: 5
-    };
-
-    // Initialize widget state
+    // Initialize variables
     c.limits = [];
     c.allLimits = [];
     c.loading = false;
     c.searchPerformed = false;
     c.currentFilterType = 'amount';
+
+    // Multiple filters support
     c.activeFilters = [];
-    
-    // Sorting configuration
+
+    // Sorting
     c.sortColumn = null;
     c.sortDirection = 'asc';
-    
-    // Pagination settings
+
+    // Pagination
     c.currentPage = 1;
     c.pageSize = 10;
     c.totalPages = 1;
 
-    // Track dropdown states for reference fields
+    // Reference field dropdown states
     var dropdownStates = {
-        jobCode: { visible: false, results: [], selectedIndex: -1 },
-        jobTitle: { visible: false, results: [], selectedIndex: -1 },
-        employee: { visible: false, results: [], selectedIndex: -1 },
-        jobFunction: { visible: false, results: [], selectedIndex: -1 }
+        jobCode: {
+            visible: false,
+            results: [],
+            selectedIndex: -1
+        },
+        jobTitle: {
+            visible: false,
+            results: [],
+            selectedIndex: -1
+        },
+        employee: {
+            visible: false,
+            results: [],
+            selectedIndex: -1
+        },
+        jobFunction: {
+            visible: false,
+            results: [],
+            selectedIndex: -1
+        }
     };
 
-    /**
-     * Initialize widget on load
-     */
     c.$onInit = function() {
         $timeout(function() {
             initializeWidget();
             loadAllLimits();
             loadLOBOptions();
             switchFilterTab('amount');
-        }, CONFIG.INIT_DELAY);
+        }, 500);
     };
 
-    /**
-     * Switch between different filter tabs
-     * @param {string} filterType - The type of filter to display
-     */
+    // Switch between filter tabs
     function switchFilterTab(filterType) {
         c.currentFilterType = filterType;
 
-        // Update tab active states
         document.querySelectorAll('.filter-nav-tab').forEach(function(tab) {
-            tab.classList.toggle('active', tab.getAttribute('data-filter') === filterType);
+            if (tab.getAttribute('data-filter') === filterType) {
+                tab.classList.add('active');
+            } else {
+                tab.classList.remove('active');
+            }
         });
 
-        // Show selected filter panel
         document.querySelectorAll('.filter-content-panel').forEach(function(panel) {
             panel.classList.remove('active');
         });
@@ -1687,35 +1601,32 @@ api.controller = function($scope, $timeout, spUtil) {
         }
     }
 
-    /**
-     * Load Line of Business options from server
-     */
+    // Load Line of Business options
     function loadLOBOptions() {
         c.server.get({
             action: 'getLOBOptions'
         }).then(function(response) {
-            c.lobOptions = response.data.lobs || [];
+            var lobOptions = response.data.lobs || [];
+            c.lobOptions = lobOptions;
         }).catch(function(error) {
             spUtil.addErrorMessage('Failed to load Line of Business options');
             c.lobOptions = [];
         });
     }
 
-    /**
-     * Sort table by specified column
-     * @param {string} column - Column name to sort by
-     */
+    // Sorting function
     c.sortBy = function(column) {
-        // Determine if this is a numeric or text column
-        var isNumericColumn = column !== 'job_code_display' && 
-                              column !== 'job_title' && 
-                              column !== 'job_function';
+        // Check if this is a numeric column (all columns except the three job info ones)
+        var isNumericColumn = column !== 'job_code_display' &&
+            column !== 'job_title' &&
+            column !== 'job_function';
 
         if (c.sortColumn === column) {
+            // Toggle direction if clicking same column
             c.sortDirection = c.sortDirection === 'asc' ? 'desc' : 'asc';
         } else {
+            // New column - numeric columns default to descending (high to low), text columns to ascending
             c.sortColumn = column;
-            // Numeric columns default to descending, text to ascending
             c.sortDirection = isNumericColumn ? 'desc' : 'asc';
         }
 
@@ -1731,19 +1642,19 @@ api.controller = function($scope, $timeout, spUtil) {
                 bVal = (bVal || '').toString().toLowerCase();
             }
 
-            if (aVal < bVal) return c.sortDirection === 'asc' ? -1 : 1;
-            if (aVal > bVal) return c.sortDirection === 'asc' ? 1 : -1;
+            if (aVal < bVal) {
+                return c.sortDirection === 'asc' ? -1 : 1;
+            }
+            if (aVal > bVal) {
+                return c.sortDirection === 'asc' ? 1 : -1;
+            }
             return 0;
         });
 
         c.currentPage = 1;
     };
 
-    /**
-     * Format numeric amount for display
-     * @param {string|number} value - Amount to format
-     * @returns {string} Formatted amount or dash if zero/empty
-     */
+    // Format amount for display
     c.formatAmount = function(value) {
         if (!value || value === '0' || parseFloat(value) === 0) {
             return '-';
@@ -1753,97 +1664,64 @@ api.controller = function($scope, $timeout, spUtil) {
         return '$' + numValue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     };
 
-    /**
-     * Format currency input with thousand separators
-     * @param {string} value - Raw input value
-     * @returns {string} Formatted value with commas
-     */
+    // Format currency for input
     c.formatCurrency = function(value) {
         if (!value) return '';
         var numStr = value.toString().replace(/[^\d]/g, '');
         return numStr.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     };
 
-    /**
-     * Extract numeric value from formatted currency
-     * @param {string} formattedValue - Formatted currency string
-     * @returns {string} Raw numeric value
-     */
     c.getCurrencyValue = function(formattedValue) {
         if (!formattedValue) return '';
         return formattedValue.replace(/[^\d]/g, '');
     };
 
-    /**
-     * Get limits for current page
-     * @returns {Array} Subset of limits for current page
-     */
+    // Pagination functions
     c.getCurrentPageLimits = function() {
         var start = (c.currentPage - 1) * c.pageSize;
         var end = start + c.pageSize;
         return c.limits.slice(start, end);
     };
 
-    /**
-     * Get starting index for pagination display
-     * @returns {number} Starting index
-     */
     c.getStartIndex = function() {
         return (c.currentPage - 1) * c.pageSize;
     };
 
-    /**
-     * Get ending index for pagination display
-     * @returns {number} Ending index
-     */
     c.getEndIndex = function() {
         var end = c.currentPage * c.pageSize;
         return end > c.limits.length ? c.limits.length : end;
     };
 
-    /**
-     * Navigate to previous page
-     */
     c.previousPage = function() {
         if (c.currentPage > 1) {
             c.currentPage--;
         }
     };
 
-    /**
-     * Navigate to next page
-     */
     c.nextPage = function() {
         if (c.currentPage < c.totalPages) {
             c.currentPage++;
         }
     };
 
-    /**
-     * Navigate to specific page
-     * @param {number} page - Page number to navigate to
-     */
     c.goToPage = function(page) {
         if (page >= 1 && page <= c.totalPages) {
             c.currentPage = page;
         }
     };
 
-    /**
-     * Calculate page numbers to display in pagination
-     * @returns {Array} Array of page numbers
-     */
     c.getPageNumbers = function() {
         var pages = [];
+        var maxPagesToShow = 5;
         var startPage = 1;
         var endPage = c.totalPages;
 
-        if (c.totalPages > CONFIG.MAX_PAGES_DISPLAY) {
-            var middlePage = parseInt(CONFIG.MAX_PAGES_DISPLAY / 2, CONFIG.DECIMAL_RADIX);
+        if (c.totalPages > maxPagesToShow) {
+            var middlePage = parseInt(maxPagesToShow / 2);
             if (c.currentPage <= middlePage) {
-                endPage = CONFIG.MAX_PAGES_DISPLAY;
+                endPage = maxPagesToShow;
             } else if (c.currentPage >= c.totalPages - middlePage) {
-                startPage = c.totalPages - CONFIG.MAX_PAGES_DISPLAY + 1;
+                startPage = c.totalPages - maxPagesToShow + 1;
             } else {
                 startPage = c.currentPage - middlePage;
                 endPage = c.currentPage + middlePage;
@@ -1857,9 +1735,7 @@ api.controller = function($scope, $timeout, spUtil) {
         return pages;
     };
 
-    /**
-     * Load all authority limits from server
-     */
+    // Load all limits initially
     function loadAllLimits() {
         c.loading = true;
         c.searchPerformed = true;
@@ -1875,7 +1751,7 @@ api.controller = function($scope, $timeout, spUtil) {
                 c.allLimits = response.data.limits || [];
                 c.limits = c.allLimits.slice();
                 c.currentPage = 1;
-                c.totalPages = parseInt((c.limits.length + c.pageSize - 1) / c.pageSize, CONFIG.DECIMAL_RADIX);
+                c.totalPages = parseInt((c.limits.length + c.pageSize - 1) / c.pageSize);
                 c.loading = false;
 
                 $timeout(function() {
@@ -1891,10 +1767,7 @@ api.controller = function($scope, $timeout, spUtil) {
         });
     }
 
-    /**
-     * Add filter from current active panel
-     * @param {string} filterType - Type of filter to add
-     */
+    // Add filter from current panel
     function addFilterFromPanel(filterType) {
         var searchValue = '';
         var searchDisplay = '';
@@ -1916,7 +1789,7 @@ api.controller = function($scope, $timeout, spUtil) {
             searchDisplay = selectedOption.text + ' >= $' + c.formatCurrency(minAmount);
             searchValue = minAmount;
 
-            // Check if this limit type already exists - replace if so
+            // Check if this limit type already exists - if so, REPLACE it
             var existingIndex = -1;
             c.activeFilters.forEach(function(filter, index) {
                 if (filter.type === 'amount' && filter.limitType === limitType) {
@@ -1925,6 +1798,7 @@ api.controller = function($scope, $timeout, spUtil) {
             });
 
             if (existingIndex >= 0) {
+                // Replace existing filter for this limit type
                 c.activeFilters[existingIndex] = {
                     type: filterType,
                     typeLabel: 'Amount',
@@ -1934,6 +1808,7 @@ api.controller = function($scope, $timeout, spUtil) {
                 };
                 spUtil.addInfoMessage('Updated ' + selectedOption.text + ' filter to $' + c.formatCurrency(minAmount));
             } else {
+                // Add new filter
                 c.activeFilters.push({
                     type: filterType,
                     typeLabel: 'Amount',
@@ -1954,7 +1829,7 @@ api.controller = function($scope, $timeout, spUtil) {
             }
             searchDisplay = lobInput.value;
 
-            // Check if this LOB already exists
+            // Check if this exact LOB already exists
             var filterExists = c.activeFilters.some(function(filter) {
                 return filter.type === 'job_function' && filter.value.toLowerCase() === searchValue.toLowerCase();
             });
@@ -1964,6 +1839,7 @@ api.controller = function($scope, $timeout, spUtil) {
                 return;
             }
 
+            // Add new LOB filter (allows multiple LOBs)
             c.activeFilters.push({
                 type: filterType,
                 typeLabel: 'Line of Business',
@@ -1973,7 +1849,7 @@ api.controller = function($scope, $timeout, spUtil) {
             });
 
         } else {
-            // Handle job_code, job_title, employee filters
+            // job_code, job_title, employee
             var inputId = filterType === 'job_code' ? 'jobCodeInput' :
                 filterType === 'job_title' ? 'jobTitleInput' : 'employeeInput';
             var valueId = inputId + 'Value';
@@ -1989,31 +1865,44 @@ api.controller = function($scope, $timeout, spUtil) {
 
             searchDisplay = searchInput.value;
 
-            // For employee, verify job code exists
+            // For employee, verify they have a valid job code
             if (filterType === 'employee' && !searchValue) {
                 spUtil.addInfoMessage('Selected employee does not have a valid job code');
                 return;
             }
 
-            // Check if filter already exists
-            var isDuplicate = c.activeFilters.some(function(filter) {
+            // Check if this exact filter already exists
+            // For employees, check by display name (not value/job code) to allow same job code but different employees
+            var filterExists = c.activeFilters.some(function(filter) {
                 if (filterType === 'employee') {
                     return filter.type === filterType && filter.display.toLowerCase() === searchDisplay.toLowerCase();
+                } else {
+                    return filter.type === filterType && filter.value === searchValue;
                 }
-                return filter.type === filterType && filter.value === searchValue;
             });
 
-            if (isDuplicate) {
-                var filterLabel = filterType === 'employee' ? 'Employee' :
+            if (filterExists) {
+                var existingFilterLabel = filterType === 'employee' ? 'Employee' :
                     filterType === 'job_code' ? 'Job Code' : 'Job Title';
-                spUtil.addInfoMessage('This ' + filterLabel + ' filter is already active');
+                spUtil.addInfoMessage('This ' + existingFilterLabel + ' filter is already active');
                 return;
             }
 
             // Determine label
-            var filterTypeLabel = filterType === 'employee' ? 'Employee' :
-                filterType === 'job_code' ? 'Job Code' : 'Job Title';
+            var filterTypeLabel = '';
+            switch (filterType) {
+                case 'job_code':
+                    filterTypeLabel = 'Job Code';
+                    break;
+                case 'job_title':
+                    filterTypeLabel = 'Job Title';
+                    break;
+                case 'employee':
+                    filterTypeLabel = 'Employee';
+                    break;
+            }
 
+            // Add new filter (allows multiple)
             c.activeFilters.push({
                 type: filterType,
                 typeLabel: filterTypeLabel,
@@ -2029,29 +1918,30 @@ api.controller = function($scope, $timeout, spUtil) {
         applyFilters();
     }
 
-    /**
-     * Clear input fields for specified filter type
-     * @param {string} filterType - Type of filter panel to clear
-     */
+    // Clear panel inputs
     function clearPanelInputs(filterType) {
-        var inputMap = {
-            'amount': ['amountInput'],
-            'job_function': ['jobFunctionInput', 'jobFunctionInputValue'],
-            'job_code': ['jobCodeInput', 'jobCodeInputValue'],
-            'job_title': ['jobTitleInput', 'jobTitleInputValue'],
-            'employee': ['employeeInput', 'employeeInputValue']
-        };
+        if (filterType === 'amount') {
+            var amountInput = document.getElementById('amountInput');
+            if (amountInput) amountInput.value = '';
+        } else if (filterType === 'job_function') {
+            var lobInput = document.getElementById('jobFunctionInput');
+            var lobInputValue = document.getElementById('jobFunctionInputValue');
+            if (lobInput) lobInput.value = '';
+            if (lobInputValue) lobInputValue.value = '';
+        } else {
+            var inputId = filterType === 'job_code' ? 'jobCodeInput' :
+                filterType === 'job_title' ? 'jobTitleInput' : 'employeeInput';
+            var valueId = inputId + 'Value';
 
-        var inputs = inputMap[filterType] || [];
-        inputs.forEach(function(inputId) {
-            var input = document.getElementById(inputId);
-            if (input) input.value = '';
-        });
+            var searchInput = document.getElementById(inputId);
+            var searchInputValue = document.getElementById(valueId);
+
+            if (searchInput) searchInput.value = '';
+            if (searchInputValue) searchInputValue.value = '';
+        }
     }
 
-    /**
-     * Update filter count badges on navigation tabs
-     */
+    // Update filter badges
     function updateFilterBadges() {
         var counts = {};
         c.activeFilters.forEach(function(filter) {
@@ -2071,13 +1961,12 @@ api.controller = function($scope, $timeout, spUtil) {
         });
     }
 
-    /**
-     * Apply all active filters to the limits dataset
-     * Uses OR logic within categories and AND logic across categories
-     */
+    // Apply all active filters (Hybrid AND/OR logic)
+    // OR within same category, AND across categories
     function applyFilters() {
         if (c.activeFilters.length === 0) {
             c.limits = c.allLimits.slice();
+            // Clear all highlighting
             c.limits.forEach(function(limit) {
                 limit.activeLimitTypes = [];
             });
@@ -2097,9 +1986,13 @@ api.controller = function($scope, $timeout, spUtil) {
                 filtersByCategory[filter.type].push(filter);
             });
 
+            // Start with all limits
             var filteredLimits = c.allLimits.slice();
 
-            // Apply Job Code filters (OR within category)
+            // Apply each category with AND logic between categories
+            // Within each category, use OR logic
+
+            // Job Code filters (OR within category)
             if (filtersByCategory.job_code.length > 0) {
                 filteredLimits = filteredLimits.filter(function(limit) {
                     return filtersByCategory.job_code.some(function(filter) {
@@ -2109,7 +2002,7 @@ api.controller = function($scope, $timeout, spUtil) {
                 });
             }
 
-            // Apply Job Title filters (OR within category)
+            // Job Title filters (OR within category)
             if (filtersByCategory.job_title.length > 0) {
                 filteredLimits = filteredLimits.filter(function(limit) {
                     return filtersByCategory.job_title.some(function(filter) {
@@ -2119,7 +2012,7 @@ api.controller = function($scope, $timeout, spUtil) {
                 });
             }
 
-            // Apply Line of Business filters (OR within category)
+            // Line of Business filters (OR within category)
             if (filtersByCategory.job_function.length > 0) {
                 filteredLimits = filteredLimits.filter(function(limit) {
                     return filtersByCategory.job_function.some(function(filter) {
@@ -2129,18 +2022,21 @@ api.controller = function($scope, $timeout, spUtil) {
                 });
             }
 
-            // Apply Employee filters (OR within category)
+            // Employee filters (OR within category)
+            // Employee filters work by matching the job code sys_id
             if (filtersByCategory.employee.length > 0) {
                 filteredLimits = filteredLimits.filter(function(limit) {
                     return filtersByCategory.employee.some(function(filter) {
+                        // Filter value is the job code sys_id
                         return limit.job_code_sys_id === filter.value;
                     });
                 });
             }
 
-            // Apply Amount filters (AND across different limit types)
+            // Amount filters (AND across different limit types)
             if (filtersByCategory.amount.length > 0) {
                 filteredLimits = filteredLimits.filter(function(limit) {
+                    // ALL amount filters must match (AND logic)
                     return filtersByCategory.amount.every(function(filter) {
                         var limitValue = parseFloat(limit[filter.limitType]) || 0;
                         var minValue = parseFloat(filter.value) || 0;
@@ -2148,7 +2044,8 @@ api.controller = function($scope, $timeout, spUtil) {
                     });
                 });
 
-                // Highlight active amount filter columns
+                // Highlight ALL active amount filter columns
+                // Store all active limit types for highlighting
                 var activeLimitTypes = filtersByCategory.amount.map(function(filter) {
                     return filter.limitType;
                 });
@@ -2157,7 +2054,7 @@ api.controller = function($scope, $timeout, spUtil) {
                     limit.activeLimitTypes = activeLimitTypes;
                 });
 
-                // Auto-sort by first amount filter column (high to low)
+                // Auto-sort by the first amount filter column (descending - high to low)
                 var sortColumn = filtersByCategory.amount[0].limitType;
                 c.sortColumn = sortColumn;
                 c.sortDirection = 'desc';
@@ -2168,6 +2065,7 @@ api.controller = function($scope, $timeout, spUtil) {
                     return bVal - aVal;
                 });
             } else {
+                // Clear highlighting if no amount filters
                 filteredLimits.forEach(function(limit) {
                     limit.activeLimitTypes = [];
                 });
@@ -2177,12 +2075,12 @@ api.controller = function($scope, $timeout, spUtil) {
         }
 
         c.currentPage = 1;
-        c.totalPages = parseInt((c.limits.length + c.pageSize - 1) / c.pageSize, CONFIG.DECIMAL_RADIX);
+        c.totalPages = parseInt((c.limits.length + c.pageSize - 1) / c.pageSize);
+
+        $scope.$apply();
     }
 
-    /**
-     * Update the active filters display with visual grouping
-     */
+    // Update active filters display with grouping by category
     function updateActiveFiltersDisplay() {
         var container = document.getElementById('activeFiltersContainer');
         var filtersList = document.getElementById('activeFilters');
@@ -2193,94 +2091,90 @@ api.controller = function($scope, $timeout, spUtil) {
             if (clearAllContainer) {
                 clearAllContainer.style.display = 'none';
             }
-            return;
-        }
-
-        container.style.display = 'block';
-        if (clearAllContainer) {
-            clearAllContainer.style.display = 'block';
-        }
-        filtersList.innerHTML = '';
-
-        // Group filters by category
-        var filtersByCategory = {
-            amount: [],
-            job_code: [],
-            job_title: [],
-            job_function: [],
-            employee: []
-        };
-
-        c.activeFilters.forEach(function(filter, index) {
-            filter.originalIndex = index;
-            filtersByCategory[filter.type].push(filter);
-        });
-
-        var categoryOrder = ['employee', 'job_code', 'job_title', 'job_function', 'amount'];
-        var addedCategories = 0;
-
-        categoryOrder.forEach(function(categoryType) {
-            var categoryFilters = filtersByCategory[categoryType];
-            if (categoryFilters.length === 0) return;
-
-            // Add AND separator between categories
-            if (addedCategories > 0) {
-                var andSeparator = document.createElement('span');
-                andSeparator.className = 'filter-separator';
-                andSeparator.textContent = 'AND';
-                filtersList.appendChild(andSeparator);
+        } else {
+            container.style.display = 'block';
+            if (clearAllContainer) {
+                clearAllContainer.style.display = 'block';
             }
+            filtersList.innerHTML = '';
+            // Group filters by category
+            var filtersByCategory = {
+                amount: [],
+                job_code: [],
+                job_title: [],
+                job_function: [],
+                employee: []
+            };
 
-            // Create category group
-            var categoryGroup = document.createElement('div');
-            categoryGroup.className = 'filter-category-group';
-
-            categoryFilters.forEach(function(filter, catIndex) {
-                // Add separator within category
-                if (catIndex > 0) {
-                    var separator = document.createElement('span');
-                    if (categoryType === 'amount') {
-                        separator.className = 'filter-and-separator';
-                        separator.textContent = 'AND';
-                    } else {
-                        separator.className = 'filter-or-separator';
-                        separator.textContent = 'OR';
-                    }
-                    categoryGroup.appendChild(separator);
-                }
-
-                var tag = document.createElement('div');
-                tag.className = 'filter-tag';
-
-                var label = document.createElement('span');
-                label.className = 'filter-tag-label';
-                label.textContent = filter.typeLabel + ':';
-                tag.appendChild(label);
-
-                var value = document.createElement('span');
-                value.textContent = filter.display;
-                tag.appendChild(value);
-
-                var removeBtn = document.createElement('button');
-                removeBtn.className = 'filter-tag-remove';
-                removeBtn.innerHTML = '&times;';
-                removeBtn.onclick = function() {
-                    removeFilter(filter.originalIndex);
-                };
-                tag.appendChild(removeBtn);
-
-                categoryGroup.appendChild(tag);
+            c.activeFilters.forEach(function(filter, index) {
+                filter.originalIndex = index;
+                filtersByCategory[filter.type].push(filter);
             });
 
-            filtersList.appendChild(categoryGroup);
-            addedCategories++;
-        });
+            var categoryOrder = ['employee', 'job_code', 'job_title', 'job_function', 'amount'];
+            var addedCategories = 0;
+
+            categoryOrder.forEach(function(categoryType) {
+                var categoryFilters = filtersByCategory[categoryType];
+                if (categoryFilters.length === 0) return;
+
+                // Add AND separator between categories
+                if (addedCategories > 0) {
+                    var andSeparator = document.createElement('span');
+                    andSeparator.className = 'filter-separator';
+                    andSeparator.textContent = 'AND';
+                    filtersList.appendChild(andSeparator);
+                }
+
+                // Add category group
+                var categoryGroup = document.createElement('div');
+                categoryGroup.className = 'filter-category-group';
+
+                categoryFilters.forEach(function(filter, catIndex) {
+                    // Add separator within category
+                    if (catIndex > 0) {
+                        var separator = document.createElement('span');
+                        // Amount filters use AND, others use OR
+                        if (categoryType === 'amount') {
+                            separator.className = 'filter-and-separator';
+                            separator.textContent = 'AND';
+                        } else {
+                            separator.className = 'filter-or-separator';
+                            separator.textContent = 'OR';
+                        }
+                        categoryGroup.appendChild(separator);
+                    }
+
+                    var tag = document.createElement('div');
+                    tag.className = 'filter-tag';
+
+                    var label = document.createElement('span');
+                    label.className = 'filter-tag-label';
+                    label.textContent = filter.typeLabel + ':';
+                    tag.appendChild(label);
+
+                    var value = document.createElement('span');
+                    value.textContent = filter.display;
+                    tag.appendChild(value);
+
+                    var removeBtn = document.createElement('button');
+                    removeBtn.className = 'filter-tag-remove';
+                    removeBtn.innerHTML = '&times;';
+                    removeBtn.onclick = function() {
+                        removeFilter(filter.originalIndex);
+                    };
+                    tag.appendChild(removeBtn);
+
+                    categoryGroup.appendChild(tag);
+                });
+
+                filtersList.appendChild(categoryGroup);
+                addedCategories++;
+            });
+        }
     }
 
-    /**
-     * Remove specific filter by index
-     * @param {number} index - Index of filter to remove
-     */
+    // Remove specific filter
     function removeFilter(index) {
         c.activeFilters.splice(index, 1);
         updateActiveFiltersDisplay();
@@ -2288,28 +2182,28 @@ api.controller = function($scope, $timeout, spUtil) {
         applyFilters();
     }
 
-    /**
-     * Clear all active filters and reset view
-     */
+    // Clear all filters
     function clearAllFilters() {
         c.activeFilters = [];
         updateActiveFiltersDisplay();
         updateFilterBadges();
 
         c.limits = c.allLimits.slice();
+
+        // Clear all highlighting from limits
         c.limits.forEach(function(limit) {
             limit.activeLimitTypes = [];
         });
 
         c.currentPage = 1;
-        c.totalPages = parseInt((c.limits.length + c.pageSize - 1) / c.pageSize, CONFIG.DECIMAL_RADIX);
+        c.totalPages = parseInt((c.limits.length + c.pageSize - 1) / c.pageSize);
         c.sortColumn = null;
         c.sortDirection = 'asc';
+
+        $scope.$apply();
     }
 
-    /**
-     * Export current limits to Excel (CSV format)
-     */
+    // Export to Excel (CSV format)
     function exportToExcel() {
         var limitsToExport = c.limits.length > 0 ? c.limits : c.allLimits;
 
@@ -2318,46 +2212,53 @@ api.controller = function($scope, $timeout, spUtil) {
             return;
         }
 
+        // Create CSV content client-side
         var csv = buildCSVContent(limitsToExport);
-        var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        
+
+        // Create blob and download
+        var blob = new Blob([csv], {
+            type: 'text/csv;charset=utf-8;'
+        });
         var link = document.createElement('a');
         if (link.download !== undefined) {
             var url = URL.createObjectURL(blob);
             link.setAttribute('href', url);
-            
             var today = new Date();
             var dateStr = today.getFullYear() +
                 ('0' + (today.getMonth() + 1)).slice(-2) +
                 ('0' + today.getDate()).slice(-2);
             link.setAttribute('download', 'Signature_Authority_Limits_Export_' + dateStr + '.csv');
-            
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            
             spUtil.addInfoMessage('Excel export completed successfully');
         }
     }
 
-    /**
-     * Build CSV content from limits data
-     * @param {Array} limits - Array of limit records
-     * @returns {string} CSV formatted string
-     */
+    // Build CSV content
     function buildCSVContent(limits) {
         var csv = '';
 
         // Add column headers
         var headers = [
-            'Job Code', 'Job Title', 'Line of Business',
-            'ACH', 'Wire Transfer Internal', 'Wire Transfer External',
-            'Official Checks Internal', 'Official Checks External',
-            'Check Cashing On-Us', 'Check Cashing Not On-Us',
-            'Remote Deposit', 'Treasury Solutions Company Wire Limits', 'FX Wire Limits',
-            'Overdraft Internal', 'Overdraft External',
-            'Unavailable Funds Internal', 'Unavailable Funds External'
+            'Job Code',
+            'Job Title',
+            'Line of Business',
+            'ACH',
+            'Wire Transfer Internal',
+            'Wire Transfer External',
+            'Official Checks Internal',
+            'Official Checks External',
+            'Check Cashing On-Us',
+            'Check Cashing Not On-Us',
+            'Remote Deposit',
+            'Treasury Solutions Company Wire Limits',
+            'FX Wire Limits',
+            'Overdraft Internal',
+            'Overdraft External',
+            'Unavailable Funds Internal',
+            'Unavailable Funds External'
         ];
         csv += headers.join(',') + '\n';
 
@@ -2388,11 +2289,7 @@ api.controller = function($scope, $timeout, spUtil) {
         return csv;
     }
 
-    /**
-     * Escape CSV values to prevent injection and formatting issues
-     * @param {string} value - Value to escape
-     * @returns {string} Escaped value
-     */
+    // Escape CSV values
     function escapeCSV(value) {
         if (value === null || value === undefined) {
             return '""';
@@ -2404,9 +2301,6 @@ api.controller = function($scope, $timeout, spUtil) {
         return '"' + value + '"';
     }
 
-    /**
-     * Export to PDF using print dialog
-     */
     function exportToPDF() {
         var limitsToExport = c.limits.length > 0 ? c.limits : c.allLimits;
 
@@ -2415,24 +2309,21 @@ api.controller = function($scope, $timeout, spUtil) {
             return;
         }
 
+        // Create a printable HTML version
         var printWindow = window.open('', '_blank');
         var filterDescription = getFilterDescription();
+
         var htmlContent = buildPrintableHTML(limitsToExport, filterDescription);
 
         printWindow.document.write(htmlContent);
         printWindow.document.close();
 
+        // Wait for content to load, then trigger print dialog
         printWindow.onload = function() {
             printWindow.print();
         };
     }
 
-    /**
-     * Build printable HTML for PDF export
-     * @param {Array} limits - Limits to include
-     * @param {string} filterDescription - Description of active filters
-     * @returns {string} Complete HTML document
-     */
     function buildPrintableHTML(limits, filterDescription) {
         var html = '<!DOCTYPE html><html><head>';
         html += '<title>Signature Authority Limits Report</title>';
@@ -2440,40 +2331,45 @@ api.controller = function($scope, $timeout, spUtil) {
         html += '<style>';
         html += '@page { size: landscape; margin: 0.5in; }';
         html += 'body { font-family: Arial, sans-serif; margin: 0; padding: 15px; background: white; }';
-        
+
         // Header styling
         html += '.report-header { margin-bottom: 20px; border-bottom: 3px solid #0066cc; padding-bottom: 10px; }';
         html += '.report-title { color: #0066cc; font-size: 20px; font-weight: bold; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px; }';
+        html += '.report-icon { font-size: 24px; }';
         html += '.report-meta { background: #f4f4f4; padding: 10px; border-left: 3px solid #0066cc; margin: 10px 0; }';
         html += '.report-meta p { margin: 4px 0; font-size: 11px; color: #333; }';
         html += '.report-meta strong { color: #000; font-weight: 600; }';
-        
+
         // Table styling
         html += 'table { width: 100%; border-collapse: collapse; font-size: 9px; margin-top: 15px; }';
         html += 'table, th, td { border: 1px solid #ccc; }';
-        
-        // Section headers
+
+        // Section headers - cleaner without boxes
         html += 'th.section-header { padding: 10px 4px; text-align: center; font-weight: bold; font-size: 11px; border: 1px solid #ccc; }';
         html += 'th.job-info-section { color: #495057; background: #e9ecef !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
         html += 'th.non-credit-section { color: #155724; background: #d4edda !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
         html += 'th.credit-section { color: #721c24; background: #f8d7da !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
-        
-        // Column headers
+
+        // Column headers with grey instead of black
         html += 'th { padding: 6px 4px; text-align: left; font-weight: 600; font-size: 9px; color: #fff; background: #6c757d !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; white-space: normal; vertical-align: middle; line-height: 1.2; }';
         html += 'th.non-credit-col { background: #28a745 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
         html += 'th.credit-col { background: #dc3545 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
-        
-        // Table cells
+
+        // Table cells with alternating rows
         html += 'td { padding: 5px 4px; font-size: 9px; }';
         html += 'tr:nth-child(even) { background: #f8f9fa !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
         html += 'tr:nth-child(odd) { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
+
+        // Job info cells
         html += 'td.job-code-cell { font-weight: bold; color: #000; }';
         html += 'td.job-info-cell { color: #495057; }';
+
+        // Amount cells with subtle backgrounds
         html += 'td.amount-cell { text-align: right; font-weight: 500; color: #000; }';
         html += 'td.non-credit-cell { background: #e8f5e9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
         html += 'td.credit-cell { background: #ffebee !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
-        
-        // Print adjustments
+
+        // Print-specific adjustments
         html += '@media print { ';
         html += '  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }';
         html += '  body { margin: 0; padding: 10px; }';
@@ -2484,8 +2380,8 @@ api.controller = function($scope, $timeout, spUtil) {
         html += '}';
         html += '</style>';
         html += '</head><body>';
-        
-        // Build header
+
+        // Header
         html += '<div class="report-header">';
         html += '<div class="report-title">Signature Authority Limits Report</div>';
         html += '<div class="report-meta">';
@@ -2494,17 +2390,21 @@ api.controller = function($scope, $timeout, spUtil) {
         if (filterDescription && filterDescription !== 'None (All Records)') {
             html += '<p><strong>Filters Applied:</strong> ' + escapeHtml(filterDescription) + '</p>';
         }
-        html += '</div></div>';
-        
-        // Build table
-        html += '<table><thead>';
+        html += '</div>';
+        html += '</div>';
+
+        // Table
+        html += '<table>';
+        html += '<thead>';
         html += '<tr>';
         html += '<th colspan="3" class="section-header job-info-section">Job Information</th>';
         html += '<th colspan="10" class="section-header non-credit-section">Non-Credit Authority</th>';
         html += '<th colspan="4" class="section-header credit-section">Credit Authority</th>';
         html += '</tr>';
         html += '<tr>';
-        html += '<th>Job Code</th><th>Job Title</th><th>Line of Business</th>';
+        html += '<th>Job Code</th>';
+        html += '<th>Job Title</th>';
+        html += '<th>Line of Business</th>';
         html += '<th class="non-credit-col">ACH</th>';
         html += '<th class="non-credit-col">Wire Transfer Internal</th>';
         html += '<th class="non-credit-col">Wire Transfer External</th>';
@@ -2519,9 +2419,10 @@ api.controller = function($scope, $timeout, spUtil) {
         html += '<th class="credit-col">Overdraft External</th>';
         html += '<th class="credit-col">Unavailable Funds Internal</th>';
         html += '<th class="credit-col">Unavailable Funds External</th>';
-        html += '</tr></thead><tbody>';
-        
-        // Add data rows
+        html += '</tr>';
+        html += '</thead>';
+        html += '<tbody>';
+
         limits.forEach(function(limit) {
             html += '<tr>';
             html += '<td class="job-code-cell">' + escapeHtml(limit.job_code_display || '-') + '</td>';
@@ -2543,16 +2444,13 @@ api.controller = function($scope, $timeout, spUtil) {
             html += '<td class="amount-cell credit-cell">' + formatAmountForPDF(limit.unavailable_funds_external_accounts) + '</td>';
             html += '</tr>';
         });
-        
-        html += '</tbody></table></body></html>';
+
+        html += '</tbody></table>';
+        html += '</body></html>';
+
         return html;
     }
 
-    /**
-     * Format amount for PDF display
-     * @param {string|number} value - Amount to format
-     * @returns {string} Formatted amount
-     */
     function formatAmountForPDF(value) {
         if (!value || value === '0' || parseFloat(value) === 0) {
             return '-';
@@ -2562,11 +2460,6 @@ api.controller = function($scope, $timeout, spUtil) {
         return '$' + numValue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     }
 
-    /**
-     * Escape HTML to prevent XSS
-     * @param {string} str - String to escape
-     * @returns {string} Escaped string
-     */
     function escapeHtml(str) {
         if (!str) return '';
         var div = document.createElement('div');
@@ -2574,10 +2467,7 @@ api.controller = function($scope, $timeout, spUtil) {
         return div.innerHTML;
     }
 
-    /**
-     * Get description of active filters for export
-     * @returns {string} Filter description
-     */
+    // Get filter description for export
     function getFilterDescription() {
         if (c.activeFilters.length === 0) {
             return 'None (All Records)';
@@ -2591,14 +2481,9 @@ api.controller = function($scope, $timeout, spUtil) {
         return descriptions.join('; ');
     }
 
-    /**
-     * Perform reference field lookup with debouncing
-     * @param {string} searchValue - Search term
-     * @param {string} filterType - Type of reference field
-     * @param {string} inputId - Input element ID
-     */
+    // Reference field lookup
     function performReferenceLookup(searchValue, filterType, inputId) {
-        if (!searchValue || searchValue.length < CONFIG.MIN_SEARCH_LENGTH) {
+        if (!searchValue || searchValue.length < 2) {
             hideDropdown(inputId);
             return;
         }
@@ -2664,22 +2549,16 @@ api.controller = function($scope, $timeout, spUtil) {
         });
     }
 
-    /**
-     * Select item from dropdown
-     * @param {number} index - Index of item to select
-     * @param {string} inputId - Input element ID
-     * @param {string} stateKey - State key for dropdown
-     */
     function selectDropdownItem(index, inputId, stateKey) {
         var results = dropdownStates[stateKey].results;
         if (index >= 0 && index < results.length) {
             var result = results[index];
+
             var searchInput = document.getElementById(inputId);
             var searchInputValue = document.getElementById(inputId + 'Value');
-            
             searchInput.value = result.display;
 
-            // For employee, store job code sys_id instead of user sys_id
+            // For employee, store the job code sys_id instead of user sys_id
             if (inputId === 'employeeInput' && result.jobCodeSysId) {
                 searchInputValue.value = result.jobCodeSysId;
                 searchInputValue.setAttribute('data-user-name', result.display);
@@ -2691,17 +2570,12 @@ api.controller = function($scope, $timeout, spUtil) {
         }
     }
 
-    /**
-     * Hide dropdown for specified input
-     * @param {string} inputId - Input element ID
-     */
     function hideDropdown(inputId) {
         var dropdownId = inputId.replace('Input', 'Dropdown');
         var dropdown = document.getElementById(dropdownId);
         if (dropdown) {
             dropdown.style.display = 'none';
         }
-        
         var stateKey = inputId.replace('Input', '');
         if (dropdownStates[stateKey]) {
             dropdownStates[stateKey].visible = false;
@@ -2709,10 +2583,7 @@ api.controller = function($scope, $timeout, spUtil) {
         }
     }
 
-    /**
-     * Perform Line of Business field lookup
-     * @param {string} searchValue - Search term
-     */
+    // LOB field lookup
     function performLOBLookup(searchValue) {
         var dropdown = document.getElementById('jobFunctionDropdown');
         if (!dropdown) return;
@@ -2759,10 +2630,6 @@ api.controller = function($scope, $timeout, spUtil) {
         }
     }
 
-    /**
-     * Select Line of Business item
-     * @param {number} index - Index of item to select
-     */
     function selectLOBItem(index) {
         var results = dropdownStates.jobFunction.results;
         if (index >= 0 && index < results.length) {
@@ -2777,9 +2644,6 @@ api.controller = function($scope, $timeout, spUtil) {
         }
     }
 
-    /**
-     * Hide Line of Business dropdown
-     */
     function hideLOBDropdown() {
         var dropdown = document.getElementById('jobFunctionDropdown');
         if (dropdown) {
@@ -2791,9 +2655,7 @@ api.controller = function($scope, $timeout, spUtil) {
         }
     }
 
-    /**
-     * Setup column filter checkboxes for showing/hiding columns
-     */
+    // Setup column filter checkboxes
     function setupColumnFilters() {
         var showNonCreditCheckbox = document.getElementById('showNonCredit');
         var showCreditCheckbox = document.getElementById('showCredit');
@@ -2801,20 +2663,26 @@ api.controller = function($scope, $timeout, spUtil) {
 
         if (showNonCreditCheckbox && tableContainer) {
             showNonCreditCheckbox.addEventListener('change', function() {
-                tableContainer.classList.toggle('hide-non-credit', !this.checked);
+                if (this.checked) {
+                    tableContainer.classList.remove('hide-non-credit');
+                } else {
+                    tableContainer.classList.add('hide-non-credit');
+                }
             });
         }
 
         if (showCreditCheckbox && tableContainer) {
             showCreditCheckbox.addEventListener('change', function() {
-                tableContainer.classList.toggle('hide-credit', !this.checked);
+                if (this.checked) {
+                    tableContainer.classList.remove('hide-credit');
+                } else {
+                    tableContainer.classList.add('hide-credit');
+                }
             });
         }
     }
 
-    /**
-     * Setup export button event handlers
-     */
+    // Setup export button handlers
     function setupExportButtons() {
         var exportExcelBtn = document.getElementById('exportExcelButton');
         if (exportExcelBtn) {
@@ -2828,11 +2696,9 @@ api.controller = function($scope, $timeout, spUtil) {
         }
     }
 
-    /**
-     * Initialize all widget components and event listeners
-     */
+    // Initialize widget
     function initializeWidget() {
-        // Setup filter tab navigation
+        // Setup filter tabs
         document.querySelectorAll('.filter-nav-tab').forEach(function(tab) {
             tab.addEventListener('click', function() {
                 switchFilterTab(this.getAttribute('data-filter'));
@@ -2840,57 +2706,161 @@ api.controller = function($scope, $timeout, spUtil) {
         });
 
         // Setup "Apply Filter" buttons
-        var filterButtons = {
-            'addAmountFilter': 'amount',
-            'addJobCodeFilter': 'job_code',
-            'addJobTitleFilter': 'job_title',
-            'addJobFunctionFilter': 'job_function',
-            'addEmployeeFilter': 'employee'
-        };
+        var addAmountBtn = document.getElementById('addAmountFilter');
+        if (addAmountBtn) {
+            addAmountBtn.addEventListener('click', function() {
+                addFilterFromPanel('amount');
+            });
+        }
 
-        Object.keys(filterButtons).forEach(function(buttonId) {
-            var button = document.getElementById(buttonId);
-            if (button) {
-                button.addEventListener('click', function() {
-                    addFilterFromPanel(filterButtons[buttonId]);
-                });
-            }
-        });
+        var addJobCodeBtn = document.getElementById('addJobCodeFilter');
+        if (addJobCodeBtn) {
+            addJobCodeBtn.addEventListener('click', function() {
+                addFilterFromPanel('job_code');
+            });
+        }
+
+        var addJobTitleBtn = document.getElementById('addJobTitleFilter');
+        if (addJobTitleBtn) {
+            addJobTitleBtn.addEventListener('click', function() {
+                addFilterFromPanel('job_title');
+            });
+        }
+
+        var addJobFunctionBtn = document.getElementById('addJobFunctionFilter');
+        if (addJobFunctionBtn) {
+            addJobFunctionBtn.addEventListener('click', function() {
+                addFilterFromPanel('job_function');
+            });
+        }
+
+        var addEmployeeBtn = document.getElementById('addEmployeeFilter');
+        if (addEmployeeBtn) {
+            addEmployeeBtn.addEventListener('click', function() {
+                addFilterFromPanel('employee');
+            });
+        }
 
         // Setup "Clear" buttons
-        var clearButtons = {
-            'clearAmountFilter': 'amount',
-            'clearJobCodeFilter': 'job_code',
-            'clearJobTitleFilter': 'job_title',
-            'clearJobFunctionFilter': 'job_function',
-            'clearEmployeeFilter': 'employee'
-        };
+        var clearAmountBtn = document.getElementById('clearAmountFilter');
+        if (clearAmountBtn) {
+            clearAmountBtn.addEventListener('click', function() {
+                clearPanelInputs('amount');
+            });
+        }
 
-        Object.keys(clearButtons).forEach(function(buttonId) {
-            var button = document.getElementById(buttonId);
-            if (button) {
-                button.addEventListener('click', function() {
-                    clearPanelInputs(clearButtons[buttonId]);
-                });
-            }
-        });
+        var clearJobCodeBtn = document.getElementById('clearJobCodeFilter');
+        if (clearJobCodeBtn) {
+            clearJobCodeBtn.addEventListener('click', function() {
+                clearPanelInputs('job_code');
+            });
+        }
+
+        var clearJobTitleBtn = document.getElementById('clearJobTitleFilter');
+        if (clearJobTitleBtn) {
+            clearJobTitleBtn.addEventListener('click', function() {
+                clearPanelInputs('job_title');
+            });
+        }
+
+        var clearJobFunctionBtn = document.getElementById('clearJobFunctionFilter');
+        if (clearJobFunctionBtn) {
+            clearJobFunctionBtn.addEventListener('click', function() {
+                clearPanelInputs('job_function');
+            });
+        }
+
+        var clearEmployeeBtn = document.getElementById('clearEmployeeFilter');
+        if (clearEmployeeBtn) {
+            clearEmployeeBtn.addEventListener('click', function() {
+                clearPanelInputs('employee');
+            });
+        }
 
         // Setup "Clear All" button
         var clearAllBtn = document.getElementById('clearAllButton');
         if (clearAllBtn) {
-            clearAllBtn.addEventListener('click', clearAllFilters);
+            clearAllBtn.addEventListener('click', function() {
+                clearAllFilters();
+            });
         }
 
-        // Setup export PDF button
         var exportPdfBtn = document.getElementById('exportPdfButton');
         if (exportPdfBtn) {
-            exportPdfBtn.addEventListener('click', exportToPDF);
+            exportPdfBtn.addEventListener('click', function() {
+                exportToPDF();
+            });
         }
 
-        // Setup reference field inputs with debouncing
-        setupReferenceInput('jobCodeInput', 'job_code');
-        setupReferenceInput('jobTitleInput', 'job_title');
-        setupReferenceInput('employeeInput', 'employee');
+        // Setup reference field inputs
+        var jobCodeInput = document.getElementById('jobCodeInput');
+        var jobCodeDebounce;
+        if (jobCodeInput) {
+            jobCodeInput.addEventListener('input', function(e) {
+                clearTimeout(jobCodeDebounce);
+                jobCodeDebounce = setTimeout(function() {
+                    if (e.target.value.length >= 2) {
+                        performReferenceLookup(e.target.value, 'job_code', 'jobCodeInput');
+                    } else {
+                        hideDropdown('jobCodeInput');
+                    }
+                }, 300);
+            });
+
+            jobCodeInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    addFilterFromPanel('job_code');
+                } else if (e.key === 'Escape') {
+                    hideDropdown('jobCodeInput');
+                }
+            });
+        }
+
+        var jobTitleInput = document.getElementById('jobTitleInput');
+        var jobTitleDebounce;
+        if (jobTitleInput) {
+            jobTitleInput.addEventListener('input', function(e) {
+                clearTimeout(jobTitleDebounce);
+                jobTitleDebounce = setTimeout(function() {
+                    if (e.target.value.length >= 2) {
+                        performReferenceLookup(e.target.value, 'job_title', 'jobTitleInput');
+                    } else {
+                        hideDropdown('jobTitleInput');
+                    }
+                }, 300);
+            });
+
+            jobTitleInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    addFilterFromPanel('job_title');
+                } else if (e.key === 'Escape') {
+                    hideDropdown('jobTitleInput');
+                }
+            });
+        }
+
+        var employeeInput = document.getElementById('employeeInput');
+        var employeeDebounce;
+        if (employeeInput) {
+            employeeInput.addEventListener('input', function(e) {
+                clearTimeout(employeeDebounce);
+                employeeDebounce = setTimeout(function() {
+                    if (e.target.value.length >= 2) {
+                        performReferenceLookup(e.target.value, 'employee', 'employeeInput');
+                    } else {
+                        hideDropdown('employeeInput');
+                    }
+                }, 300);
+            });
+
+            employeeInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    addFilterFromPanel('employee');
+                } else if (e.key === 'Escape') {
+                    hideDropdown('employeeInput');
+                }
+            });
+        }
 
         // Setup LOB input
         var jobFunctionInput = document.getElementById('jobFunctionInput');
@@ -2900,7 +2870,7 @@ api.controller = function($scope, $timeout, spUtil) {
                 clearTimeout(jobFunctionDebounce);
                 jobFunctionDebounce = setTimeout(function() {
                     performLOBLookup(e.target.value);
-                }, CONFIG.DEBOUNCE_DELAY);
+                }, 200);
             });
 
             jobFunctionInput.addEventListener('keydown', function(e) {
@@ -2912,15 +2882,16 @@ api.controller = function($scope, $timeout, spUtil) {
             });
 
             jobFunctionInput.addEventListener('focus', function(e) {
-                performLOBLookup(e.target.value);
+                if (e.target.value.length >= 0) {
+                    performLOBLookup(e.target.value);
+                }
             });
         }
 
-        // Setup amount input with currency formatting
+        // Setup amount input
         var amountInput = document.getElementById('amountInput');
         if (amountInput) {
             var isUpdating = false;
-            
             amountInput.addEventListener('input', function(event) {
                 if (isUpdating) return;
                 isUpdating = true;
@@ -2934,9 +2905,8 @@ api.controller = function($scope, $timeout, spUtil) {
 
                 var newLength = formattedValue.length;
                 var lengthDiff = newLength - oldLength;
-                var newCursorPosition = cursorPosition + lengthDiff;
-                
-                setTimeout(function() {
+                var newCursorPosition = Math.max(0, cursorPosition + lengthDiff);
+                setTimeout(() => {
                     event.target.setSelectionRange(newCursorPosition, newCursorPosition);
                 }, 0);
 
@@ -2947,18 +2917,16 @@ api.controller = function($scope, $timeout, spUtil) {
                 if (e.key === 'Enter') {
                     addFilterFromPanel('amount');
                 }
-                // Prevent decimal points and commas
                 if (e.key === '.' || e.key === ',') {
                     e.preventDefault();
                 }
             });
         }
 
-        // Close dropdowns when clicking outside
+        // Click outside to close dropdowns
         document.addEventListener('click', function(e) {
             var refWrappers = document.querySelectorAll('.reference-field-wrapper');
             var clickedInside = false;
-            
             refWrappers.forEach(function(wrapper) {
                 if (wrapper.contains(e.target)) {
                     clickedInside = true;
@@ -2973,45 +2941,14 @@ api.controller = function($scope, $timeout, spUtil) {
             }
         });
 
-        // Initialize column filters
+        // Setup column filters
         $timeout(function() {
             setupColumnFilters();
         }, 1000);
     }
 
-    /**
-     * Setup reference input with debouncing and keyboard navigation
-     * @param {string} inputId - Input element ID
-     * @param {string} filterType - Type of filter
-     */
-    function setupReferenceInput(inputId, filterType) {
-        var input = document.getElementById(inputId);
-        var debounceTimer;
-        
-        if (input) {
-            input.addEventListener('input', function(e) {
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(function() {
-                    if (e.target.value.length >= CONFIG.MIN_SEARCH_LENGTH) {
-                        performReferenceLookup(e.target.value, filterType, inputId);
-                    } else {
-                        hideDropdown(inputId);
-                    }
-                }, CONFIG.DEBOUNCE_DELAY);
-            });
-
-            input.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') {
-                    addFilterFromPanel(filterType);
-                } else if (e.key === 'Escape') {
-                    hideDropdown(inputId);
-                }
-            });
-        }
-    }
-
-    // Export PDF function for ng-click
     c.exportPdf = function() {
         exportToPDF();
     };
+
 };
