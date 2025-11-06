@@ -8,34 +8,34 @@
       <h2>Signature Authority Limits Lookup</h2>
    </div>
    <!-- Search Controls - Side Navigation Style -->
-   <div class="search-controls-side-nav">
-      <div class="filter-nav-sidebar">
-         <button class="filter-nav-tab" data-filter="amount">
-         <span class="filter-nav-icon"></span>
-         <span class="filter-nav-label">Limit Amount</span>
-         <span class="filter-nav-badge" style="display: none;">0</span>
-         </button>
-         <button class="filter-nav-tab" data-filter="job_code">
-         <span class="filter-nav-icon"></span>
-         <span class="filter-nav-label">Job Code</span>
-         <span class="filter-nav-badge" style="display: none;">0</span>
-         </button>
-         <button class="filter-nav-tab" data-filter="job_title">
-         <span class="filter-nav-icon"></span>
-         <span class="filter-nav-label">Job Title</span>
-         <span class="filter-nav-badge" style="display: none;">0</span>
-         </button>
-         <button class="filter-nav-tab" data-filter="job_function">
-         <span class="filter-nav-icon"></span>
-         <span class="filter-nav-label">Line of Business</span>
-         <span class="filter-nav-badge" style="display: none;">0</span>
-         </button>
-         <button class="filter-nav-tab" data-filter="employee">
-         <span class="filter-nav-icon"></span>
-         <span class="filter-nav-label">Employee</span>
-         <span class="filter-nav-badge" style="display: none;">0</span>
-         </button>
-      </div>
+  <div class="search-controls-side-nav">
+    <div class="filter-nav-sidebar">
+      <button class="filter-nav-tab" data-filter="amount">
+        <span class="filter-nav-icon">💵</span>
+        <span class="filter-nav-label">Limit Amount</span>
+        <span class="filter-nav-badge" style="display: none;">0</span>
+      </button>
+      <button class="filter-nav-tab" data-filter="job_code">
+        <span class="filter-nav-icon">🔢</span>
+        <span class="filter-nav-label">Job Code</span>
+        <span class="filter-nav-badge" style="display: none;">0</span>
+      </button>
+      <button class="filter-nav-tab" data-filter="job_title">
+        <span class="filter-nav-icon">💼</span>
+        <span class="filter-nav-label">Job Title</span>
+        <span class="filter-nav-badge" style="display: none;">0</span>
+      </button>
+      <button class="filter-nav-tab" data-filter="job_function">
+        <span class="filter-nav-icon">🏢</span>
+        <span class="filter-nav-label">Line of Business</span>
+        <span class="filter-nav-badge" style="display: none;">0</span>
+      </button>
+      <button class="filter-nav-tab" data-filter="employee">
+        <span class="filter-nav-icon">👤</span>
+        <span class="filter-nav-label">Employee</span>
+        <span class="filter-nav-badge" style="display: none;">0</span>
+      </button>
+    </div>
       <div class="filter-content-area">
          <!-- Limit Amount Content -->
          <div class="filter-content-panel" id="filterPanel-amount">
@@ -287,7 +287,7 @@
                      </span>
                   </th>
                   <th class="non-credit-col sortable" ng-click="c.sortBy('disbursement_wire_transfer_internal')">
-                     Wire Internal
+                     Wire Transfer Internal
                      <span class="sort-arrows">
                      <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_wire_transfer_internal' && c.sortDirection === 'asc'}"></i>
                      <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'disbursement_wire_transfer_internal' && c.sortDirection === 'desc'}"></i>
