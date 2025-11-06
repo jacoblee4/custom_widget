@@ -474,9 +474,71 @@
 .authority-lookup-widget {
      padding: 20px;
      font-family: 'Source Sans Pro', Arial, sans-serif;
-     max-width: none; /* Remove width restriction */
      width: 100%;
-     margin: 0 auto;
+     margin: 0;
+}
+
+.widget-header {
+     margin-bottom: 24px;
+     padding-bottom: 16px;
+     border-bottom: 2px solid #e8e8e8;
+     max-width: 1400px;
+}
+
+.search-controls-side-nav {
+     display: flex;
+     gap: 20px;
+     margin-bottom: 24px;
+     max-width: 1400px;
+}
+
+.active-filters-section {
+     background: #f8f9fa;
+     border: 1px solid #dee2e6;
+     border-radius: 6px;
+     padding: 16px;
+     margin-bottom: 16px;
+     max-width: 1400px;
+}
+
+.clear-all-container {
+     margin-bottom: 16px;
+     text-align: left;
+     max-width: 1400px;
+}
+
+/* Results take full width */
+.results-container {
+     margin-top: 24px;
+     width: 100%;
+     max-width: none !important;
+}
+
+.results-header {
+     margin-bottom: 16px;
+     display: flex;
+     justify-content: space-between;
+     align-items: flex-start;
+     gap: 20px;
+     width: 100%;
+     max-width: none !important;
+}
+
+.table-container {
+     overflow-x: auto;
+     border: 1px solid #dee2e6;
+     border-radius: 6px;
+     background: white;
+     margin-bottom: 20px;
+     width: 100%;
+     max-width: none !important;
+}
+
+.limits-table {
+     width: 100%;
+     min-width: 1800px; /* Force table to be wider */
+     border-collapse: collapse;
+     font-size: 13px;
 }
  .widget-header {
      margin-bottom: 24px;
@@ -488,11 +550,6 @@
      font-size: 20px;
      font-weight: 600;
      margin: 0;
-}
- .search-controls-side-nav {
-     display: flex;
-     gap: 20px;
-     margin-bottom: 24px;
 }
  .filter-nav-sidebar {
      display: flex;
@@ -603,13 +660,6 @@
 }
  .btn-clear-filter:hover {
      background: #dee2e6;
-}
- .active-filters-section {
-     background: #f8f9fa;
-     border: 1px solid #dee2e6;
-     border-radius: 6px;
-     padding: 16px;
-     margin-bottom: 16px;
 }
  .active-filters-header {
      font-weight: 600;
@@ -1178,11 +1228,6 @@
          text-align: center;
     }
 }
-/* Clear All Container - only shows when filters active */
- .clear-all-container {
-     margin-bottom: 16px;
-     text-align: left;
-}
  .btn-clear-all {
      background: #e74c3c;
      color: white;
@@ -1245,22 +1290,6 @@
      vertical-align: middle;
      line-height: 1.3;
      min-width: 80px; /* Add minimum width */
-}
-/* Make the results container and table full-width */
-.results-container {
-     margin-top: 24px;
-     width: 100%;
-     max-width: 100%;
-}
-
-.table-container {
-     overflow-x: auto;
-     border: 1px solid #dee2e6;
-     border-radius: 6px;
-     background: white;
-     margin-bottom: 20px;
-     width: 100%;
-     max-width: none; /* Remove any max-width restriction */
 }
 
 /* Constrain only the search controls, not the whole widget */
