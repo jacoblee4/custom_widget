@@ -474,7 +474,8 @@
 .authority-lookup-widget {
      padding: 20px;
      font-family: 'Source Sans Pro', Arial, sans-serif;
-     max-width: 100%;
+     max-width: none; /* Remove width restriction */
+     width: 100%;
      margin: 0 auto;
 }
  .widget-header {
@@ -1244,6 +1245,45 @@
      vertical-align: middle;
      line-height: 1.3;
      min-width: 80px; /* Add minimum width */
+}
+/* Make the results container and table full-width */
+.results-container {
+     margin-top: 24px;
+     width: 100%;
+     max-width: 100%;
+}
+
+.table-container {
+     overflow-x: auto;
+     border: 1px solid #dee2e6;
+     border-radius: 6px;
+     background: white;
+     margin-bottom: 20px;
+     width: 100%;
+     max-width: none; /* Remove any max-width restriction */
+}
+
+/* Constrain only the search controls, not the whole widget */
+.search-controls-side-nav {
+     display: flex;
+     gap: 20px;
+     margin-bottom: 24px;
+     max-width: 1400px; /* or whatever width you want for the filters */
+}
+
+.active-filters-section {
+     background: #f8f9fa;
+     border: 1px solid #dee2e6;
+     border-radius: 6px;
+     padding: 16px;
+     margin-bottom: 16px;
+     max-width: 1400px; /* match the search controls width */
+}
+
+.clear-all-container {
+     margin-bottom: 16px;
+     text-align: left;
+     max-width: 1400px; /* match the search controls width */
 }
  
 
