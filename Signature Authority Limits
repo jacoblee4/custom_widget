@@ -8,34 +8,34 @@
       <h2>Signature Authority Limits Lookup</h2>
    </div>
    <!-- Search Controls - Side Navigation Style -->
-  <div class="search-controls-side-nav">
-    <div class="filter-nav-sidebar">
-      <button class="filter-nav-tab" data-filter="amount">
-        <span class="filter-nav-icon">💵</span>
-        <span class="filter-nav-label">Limit Amount</span>
-        <span class="filter-nav-badge" style="display: none;">0</span>
-      </button>
-      <button class="filter-nav-tab" data-filter="job_code">
-        <span class="filter-nav-icon">🔢</span>
-        <span class="filter-nav-label">Job Code</span>
-        <span class="filter-nav-badge" style="display: none;">0</span>
-      </button>
-      <button class="filter-nav-tab" data-filter="job_title">
-        <span class="filter-nav-icon">💼</span>
-        <span class="filter-nav-label">Job Title</span>
-        <span class="filter-nav-badge" style="display: none;">0</span>
-      </button>
-      <button class="filter-nav-tab" data-filter="job_function">
-        <span class="filter-nav-icon">🏢</span>
-        <span class="filter-nav-label">Line of Business</span>
-        <span class="filter-nav-badge" style="display: none;">0</span>
-      </button>
-      <button class="filter-nav-tab" data-filter="employee">
-        <span class="filter-nav-icon">👤</span>
-        <span class="filter-nav-label">Employee</span>
-        <span class="filter-nav-badge" style="display: none;">0</span>
-      </button>
-    </div>
+   <div class="search-controls-side-nav">
+      <div class="filter-nav-sidebar">
+         <button class="filter-nav-tab" data-filter="amount">
+         <span class="filter-nav-icon">💵</span>
+         <span class="filter-nav-label">Limit Amount</span>
+         <span class="filter-nav-badge" style="display: none;">0</span>
+         </button>
+         <button class="filter-nav-tab" data-filter="job_code">
+         <span class="filter-nav-icon">🔢</span>
+         <span class="filter-nav-label">Job Code</span>
+         <span class="filter-nav-badge" style="display: none;">0</span>
+         </button>
+         <button class="filter-nav-tab" data-filter="job_title">
+         <span class="filter-nav-icon">💼</span>
+         <span class="filter-nav-label">Job Title</span>
+         <span class="filter-nav-badge" style="display: none;">0</span>
+         </button>
+         <button class="filter-nav-tab" data-filter="job_function">
+         <span class="filter-nav-icon">🏢</span>
+         <span class="filter-nav-label">Line of Business</span>
+         <span class="filter-nav-badge" style="display: none;">0</span>
+         </button>
+         <button class="filter-nav-tab" data-filter="employee">
+         <span class="filter-nav-icon">👤</span>
+         <span class="filter-nav-label">Employee</span>
+         <span class="filter-nav-badge" style="display: none;">0</span>
+         </button>
+      </div>
       <div class="filter-content-area">
          <!-- Limit Amount Content -->
          <div class="filter-content-panel" id="filterPanel-amount">
@@ -133,33 +133,33 @@
             </div>
          </div>
          <!-- Line of Business Content -->
-<div class="filter-content-panel" id="filterPanel-job_function">
-   <h3 class="filter-content-title">Line of Business Filter</h3>
-   <div class="form-group">
-      <label for="jobFunctionInput">Search Line of Business</label>
-      <div class="reference-field-wrapper">
-         <input type="text" 
-            id="jobFunctionInput" 
-            class="form-control reference-input" 
-            placeholder="Start typing to search..."
-            autocomplete="off">
-         <input type="hidden" id="jobFunctionInputValue">
-         <div id="jobFunctionDropdown" class="reference-dropdown" style="display: none;">
-            <div class="dropdown-loading" style="display: none;">
-               <i class="fa fa-spinner fa-spin"></i> Loading...
+         <div class="filter-content-panel" id="filterPanel-job_function">
+            <h3 class="filter-content-title">Line of Business Filter</h3>
+            <div class="form-group">
+               <label for="jobFunctionInput">Search Line of Business</label>
+               <div class="reference-field-wrapper">
+                  <input type="text" 
+                     id="jobFunctionInput" 
+                     class="form-control reference-input" 
+                     placeholder="Start typing to search..."
+                     autocomplete="off">
+                  <input type="hidden" id="jobFunctionInputValue">
+                  <div id="jobFunctionDropdown" class="reference-dropdown" style="display: none;">
+                     <div class="dropdown-loading" style="display: none;">
+                        <i class="fa fa-spinner fa-spin"></i> Loading...
+                     </div>
+                     <div class="dropdown-results"></div>
+                     <div class="dropdown-no-results" style="display: none;">
+                        No results found
+                     </div>
+                  </div>
+               </div>
             </div>
-            <div class="dropdown-results"></div>
-            <div class="dropdown-no-results" style="display: none;">
-               No results found
+            <div class="filter-actions">
+               <button class="btn btn-add-filter" id="addJobFunctionFilter">Apply Filter</button>
+               <button class="btn btn-clear-filter" id="clearJobFunctionFilter">Clear</button>
             </div>
          </div>
-      </div>
-   </div>
-   <div class="filter-actions">
-      <button class="btn btn-add-filter" id="addJobFunctionFilter">Apply Filter</button>
-      <button class="btn btn-clear-filter" id="clearJobFunctionFilter">Clear</button>
-   </div>
-</div>
          <!-- Employee Content -->
          <div class="filter-content-panel" id="filterPanel-employee">
             <h3 class="filter-content-title">Employee Filter</h3>
@@ -336,7 +336,7 @@
                      </span>
                   </th>
                   <th class="non-credit-col sortable" ng-click="c.sortBy('treasury_solutions_company_wire_limits')">
-                      TS Company Wire Limits
+                     TS Company Wire Limits
                      <span class="sort-arrows">
                      <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'treasury_solutions_company_wire_limits' && c.sortDirection === 'asc'}"></i>
                      <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'treasury_solutions_company_wire_limits' && c.sortDirection === 'desc'}"></i>
@@ -465,8 +465,6 @@
 
 
 
-
-
 <!-- ============================================ -->
 <!-- CSS -->
 <!-- ============================================ -->
@@ -477,22 +475,19 @@
      width: 100%;
      margin: 0;
 }
-
-.widget-header {
+ .widget-header {
      margin-bottom: 24px;
      padding-bottom: 16px;
      border-bottom: 2px solid #e8e8e8;
      max-width: 1400px;
 }
-
-.search-controls-side-nav {
+ .search-controls-side-nav {
      display: flex;
      gap: 20px;
      margin-bottom: 24px;
      max-width: 1400px;
 }
-
-.active-filters-section {
+ .active-filters-section {
      background: #f8f9fa;
      border: 1px solid #dee2e6;
      border-radius: 6px;
@@ -500,21 +495,18 @@
      margin-bottom: 16px;
      max-width: 1400px;
 }
-
-.clear-all-container {
+ .clear-all-container {
      margin-bottom: 16px;
      text-align: left;
      max-width: 1400px;
 }
-
 /* Results take full width */
-.results-container {
+ .results-container {
      margin-top: 24px;
      width: 100%;
      max-width: none !important;
 }
-
-.results-header {
+ .results-header {
      margin-bottom: 16px;
      display: flex;
      justify-content: space-between;
@@ -523,8 +515,7 @@
      width: 100%;
      max-width: none !important;
 }
-
-.table-container {
+ .table-container {
      overflow-x: auto;
      border: 1px solid #dee2e6;
      border-radius: 6px;
@@ -533,10 +524,10 @@
      width: 100%;
      max-width: none !important;
 }
-
-.limits-table {
+ .limits-table {
      width: 100%;
-     min-width: 1800px; /* Force table to be wider */
+     min-width: 1800px;
+    /* Force table to be wider */
      border-collapse: collapse;
      font-size: 13px;
 }
@@ -734,7 +725,6 @@
  .filter-tag-remove:hover {
      opacity: 1;
 }
-
 /* Responsive */
  @media (max-width: 968px) {
      .search-controls-side-nav {
@@ -1277,50 +1267,52 @@
          width: 100%;
     }
 }
-.limits-table th {
+ .limits-table th {
      background: #f8f9fa;
      font-weight: 600;
      color: #495057;
      padding: 10px 8px;
      text-align: left;
      border-bottom: 2px solid #dee2e6;
-     white-space: normal; /* Changed from nowrap */
+     white-space: normal;
+    /* Changed from nowrap */
      font-size: 12px;
      border-right: 1px solid #e9ecef;
      vertical-align: middle;
      line-height: 1.3;
-     min-width: 80px; /* Add minimum width */
+     min-width: 80px;
+    /* Add minimum width */
 }
-
 /* Constrain only the search controls, not the whole widget */
-.search-controls-side-nav {
+ .search-controls-side-nav {
      display: flex;
      gap: 20px;
      margin-bottom: 24px;
-     max-width: 1400px; /* or whatever width you want for the filters */
+     max-width: 1400px;
+    /* or whatever width you want for the filters */
 }
-
-.active-filters-section {
+ .active-filters-section {
      background: #f8f9fa;
      border: 1px solid #dee2e6;
      border-radius: 6px;
      padding: 16px;
      margin-bottom: 16px;
-     max-width: 1400px; /* match the search controls width */
+     max-width: 1400px;
+    /* match the search controls width */
 }
-
-.clear-all-container {
+ .clear-all-container {
      margin-bottom: 16px;
      text-align: left;
-     max-width: 1400px; /* match the search controls width */
+     max-width: 1400px;
+    /* match the search controls width */
 }
+
  
 
 
 <!-- ============================================ -->
 <!-- SERVER SCRIPT -->
 <!-- ============================================ -->
-
 
 (function() {
     'use strict';
@@ -1547,10 +1539,12 @@
     }
 })();
 
+
+
+
 <!-- ============================================ -->
 <!-- CLIENT CONTROLLER -->
 <!-- ============================================ -->
-
 
 api.controller = function($scope, $timeout, spUtil) {
     var c = this;
