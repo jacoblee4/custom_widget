@@ -1,0 +1,639 @@
+<!-- ============================================ -->
+<!-- HTML TEMPLATE - EMPLOYEE LOOKUP BY JOB CODE -->
+<!-- ============================================ -->
+
+<div class="employee-lookup-widget">
+  <div class="widget-header">
+    <h2>
+      <i class="fa fa-users"></i>
+      Employees by Job Code
+    </h2>
+  </div>
+  
+  <!-- No Job Code Selected Message -->
+  <div ng-if="!c.jobCode" class="info-message">
+    <i class="fa fa-info-circle info-icon"></i>
+    <div class="info-content">
+      <h3>Select a Job Code to View Employees</h3>
+      <p>Click on any job code in the Signature Authority Limits table above to view all employees with that job code.</p>
+    </div>
+  </div>
+  
+  <!-- Loading Indicator -->
+  <div ng-if="c.jobCode && c.loading" class="text-center loading-container">
+    <i class="fa fa-spinner fa-spin fa-2x"></i>
+    <p>Loading employees for job code {{c.jobCodeDisplay}}...</p>
+  </div>
+  
+  <!-- No Employees Found -->
+  <div ng-if="c.jobCode && !c.loading && c.employees.length === 0" class="alert alert-warning">
+    <i class="fa fa-exclamation-triangle"></i>
+    No active employees found for job code <strong>{{c.jobCodeDisplay}}</strong>
+  </div>
+  
+  <!-- Employees Table -->
+  <div ng-if="c.jobCode && !c.loading && c.employees.length > 0" class="employees-container">
+    <div class="employees-header">
+      <div class="header-left">
+        <h4>
+          <i class="fa fa-users"></i>
+          Employees With Job Code: <strong>{{c.jobCodeDisplay}}</strong>
+        </h4>
+        <span class="employee-count">{{c.employees.length}} active {{c.employees.length === 1 ? 'employee' : 'employees'}}</span>
+      </div>
+      <div class="header-right">
+        <button ng-click="c.exportToExcel()" class="btn btn-export">
+          <i class="fa fa-file-excel-o"></i> Export to Excel
+        </button>
+      </div>
+    </div>
+    
+    <div class="table-responsive">
+      <table class="employees-table">
+        <thead>
+          <tr>
+            <th class="sortable" ng-click="c.sortBy('name')">
+              Name
+              <span class="sort-arrows">
+                <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'name' && c.sortDirection === 'asc'}"></i>
+                <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'name' && c.sortDirection === 'desc'}"></i>
+              </span>
+            </th>
+            <th class="sortable" ng-click="c.sortBy('title')">
+              Title
+              <span class="sort-arrows">
+                <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'title' && c.sortDirection === 'asc'}"></i>
+                <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'title' && c.sortDirection === 'desc'}"></i>
+              </span>
+            </th>
+            <th class="sortable" ng-click="c.sortBy('u_officer_title')">
+              Officer Title
+              <span class="sort-arrows">
+                <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'u_officer_title' && c.sortDirection === 'asc'}"></i>
+                <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'u_officer_title' && c.sortDirection === 'desc'}"></i>
+              </span>
+            </th>
+            <th class="sortable" ng-click="c.sortBy('department_display')">
+              Department
+              <span class="sort-arrows">
+                <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'department_display' && c.sortDirection === 'asc'}"></i>
+                <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'department_display' && c.sortDirection === 'desc'}"></i>
+              </span>
+            </th>
+            <th class="sortable" ng-click="c.sortBy('manager_display')">
+              Manager
+              <span class="sort-arrows">
+                <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'manager_display' && c.sortDirection === 'asc'}"></i>
+                <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'manager_display' && c.sortDirection === 'desc'}"></i>
+              </span>
+            </th>
+            <th>Email</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="employee in c.employees">
+            <td class="name-cell">
+              <strong>{{employee.name}}</strong>
+            </td>
+            <td class="text-cell">{{employee.title || '-'}}</td>
+            <td class="text-cell">{{employee.u_officer_title || '-'}}</td>
+            <td class="text-cell">{{employee.department_display || '-'}}</td>
+            <td class="text-cell">{{employee.manager_display || '-'}}</td>
+            <td class="email-cell">
+              <a ng-if="employee.email" href="mailto:{{employee.email}}" class="email-link">
+                <i class="fa fa-envelope"></i> {{employee.email}}
+              </a>
+              <span ng-if="!employee.email">-</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+
+
+
+<!-- ============================================ -->
+<!-- CSS -->
+<!-- ============================================ -->
+
+.employee-lookup-widget {
+  padding: 20px;
+  font-family: 'Source Sans Pro', Arial, sans-serif;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-top: 24px;
+}
+
+.widget-header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e8e8e8;
+}
+
+.widget-header h2 {
+  color: #333;
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Info Message Styles */
+.info-message {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 30px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  color: white;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.info-icon {
+  font-size: 48px;
+  opacity: 0.9;
+  flex-shrink: 0;
+}
+
+.info-content h3 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: white;
+}
+
+.info-content p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  opacity: 0.95;
+}
+
+/* Loading Container */
+.loading-container {
+  text-align: center;
+  padding: 40px;
+}
+
+.loading-container .fa-spinner {
+  color: #3498db;
+  margin-bottom: 12px;
+}
+
+.loading-container p {
+  color: #6c757d;
+  font-size: 14px;
+  margin-top: 12px;
+}
+
+/* Alert Styles */
+.alert {
+  padding: 12px 15px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.alert-warning {
+  background-color: #fff3cd;
+  border-color: #ffeeba;
+  color: #856404;
+}
+
+.alert i {
+  font-size: 18px;
+}
+
+/* Employees Container */
+.employees-container {
+  margin-top: 0;
+}
+
+.employees-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.header-left {
+  flex: 1;
+}
+
+.employees-header h4 {
+  color: #2c3e50;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.employee-count {
+  display: inline-block;
+  background: #3498db;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.header-right {
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-export {
+  background: #27ae60;
+  color: white;
+}
+
+.btn-export:hover {
+  background: #229954;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Table Styles */
+.table-responsive {
+  overflow-x: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  background: white;
+}
+
+.employees-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.employees-table thead {
+  background: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.employees-table th {
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #495057;
+  white-space: nowrap;
+  border-right: 1px solid #e9ecef;
+  position: relative;
+}
+
+.employees-table th:last-child {
+  border-right: none;
+}
+
+.employees-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  padding-right: 28px;
+  transition: background-color 0.2s;
+}
+
+.employees-table th.sortable:hover {
+  background: #e9ecef;
+}
+
+.sort-arrows {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  line-height: 0.6;
+}
+
+.sort-arrows i {
+  font-size: 10px;
+  color: #cbd5e0;
+  transition: color 0.2s;
+}
+
+.sort-arrows i.active-sort {
+  color: #3498db;
+  font-weight: bold;
+}
+
+.employees-table tbody td {
+  padding: 12px;
+  border-bottom: 1px solid #e9ecef;
+  vertical-align: middle;
+  border-right: 1px solid #f1f3f5;
+}
+
+.employees-table tbody td:last-child {
+  border-right: none;
+}
+
+.employees-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.employees-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.name-cell {
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.text-cell {
+  color: #6c757d;
+}
+
+.email-cell {
+  font-family: 'Courier New', monospace;
+}
+
+.email-link {
+  color: #3498db;
+  text-decoration: none;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.email-link:hover {
+  color: #2980b9;
+  text-decoration: underline;
+}
+
+.email-link i {
+  font-size: 14px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .employees-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .header-right {
+    width: 100%;
+  }
+  
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .employees-table {
+    font-size: 13px;
+  }
+  
+  .employees-table th,
+  .employees-table td {
+    padding: 8px;
+  }
+}
+
+.fa {
+  margin-right: 0;
+}
+
+
+
+
+<!-- ============================================ -->
+<!-- SERVER SCRIPT -->
+<!-- ============================================ -->
+
+(function() {
+  'use strict';
+
+  if (input && input.action === 'getEmployeesByJobCode') {
+    var jobCode = input.job_code;
+    var employees = [];
+    
+    if (jobCode) {
+      // Query the sys_user table for active users with this job code
+      var userGr = new GlideRecord('sys_user');
+      userGr.addQuery('u_job_code', jobCode);
+      userGr.addQuery('active', true);
+      userGr.orderBy('name');
+      userGr.query();
+      
+      while (userGr.next()) {
+        var employee = {
+          sys_id: userGr.getValue('sys_id'),
+          name: userGr.getValue('name') || '',
+          title: userGr.getValue('title') || '',
+          u_officer_title: userGr.getValue('u_officer_title') || '',
+          department: userGr.getValue('department'),
+          department_display: userGr.department.getDisplayValue() || '',
+          manager: userGr.getValue('manager'),
+          manager_display: userGr.manager.getDisplayValue() || '',
+          email: userGr.getValue('email') || ''
+        };
+        
+        employees.push(employee);
+      }
+    }
+    
+    data.employees = employees;
+    data.jobCode = jobCode;
+  }
+})();
+
+
+
+
+<!-- ============================================ -->
+<!-- CLIENT CONTROLLER -->
+<!-- ============================================ -->
+
+api.controller = function($scope, $rootScope, $timeout, spUtil) {
+  var c = this;
+  
+  // Initialize variables
+  c.jobCode = '';
+  c.jobCodeDisplay = '';
+  c.jobCodeSysId = '';
+  c.employees = [];
+  c.loading = false;
+  
+  // Sorting
+  c.sortColumn = 'name';
+  c.sortDirection = 'asc';
+  
+  c.$onInit = function() {
+    console.log('Employee Lookup Widget initialized');
+    
+    // Listen for job code selection from Signature Authority Limits widget
+    $scope.$on('jobCodeSelected', function(event, data) {
+      console.log('Received jobCodeSelected event:', data);
+      
+      c.jobCode = data.jobCode;
+      c.jobCodeDisplay = data.jobCodeDisplay;
+      c.jobCodeSysId = data.jobCodeSysId;
+      
+      // Load employees for this job code
+      c.loadEmployees();
+    });
+  };
+  
+  // Load employees by job code
+  c.loadEmployees = function() {
+    console.log('Loading employees for job code:', c.jobCode);
+    
+    if (!c.jobCode) {
+      c.employees = [];
+      return;
+    }
+    
+    c.loading = true;
+    
+    c.server.get({
+      action: 'getEmployeesByJobCode',
+      job_code: c.jobCode
+    }).then(function(response) {
+      console.log('Server response:', response);
+      c.employees = response.data.employees || [];
+      
+      // Apply default sorting
+      c.sortEmployees();
+      
+      c.loading = false;
+      
+      // Show success message
+      if (c.employees.length > 0) {
+        spUtil.addInfoMessage('Found ' + c.employees.length + ' employee(s) with job code ' + c.jobCodeDisplay);
+      }
+    }).catch(function(error) {
+      console.error('Error loading employees:', error);
+      spUtil.addErrorMessage('Failed to load employees');
+      c.employees = [];
+      c.loading = false;
+    });
+  };
+  
+  // Sorting function
+  c.sortBy = function(column) {
+    if (c.sortColumn === column) {
+      // Toggle direction if clicking same column
+      c.sortDirection = c.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      // New column - default to ascending
+      c.sortColumn = column;
+      c.sortDirection = 'asc';
+    }
+    
+    c.sortEmployees();
+  };
+  
+  // Sort employees array
+  c.sortEmployees = function() {
+    c.employees.sort(function(a, b) {
+      var aVal = a[c.sortColumn] || '';
+      var bVal = b[c.sortColumn] || '';
+      
+      // Convert to lowercase for case-insensitive sorting
+      aVal = aVal.toString().toLowerCase();
+      bVal = bVal.toString().toLowerCase();
+      
+      if (aVal < bVal) {
+        return c.sortDirection === 'asc' ? -1 : 1;
+      }
+      if (aVal > bVal) {
+        return c.sortDirection === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+  };
+  
+  // Export to Excel (CSV format)
+  c.exportToExcel = function() {
+    if (c.employees.length === 0) {
+      spUtil.addInfoMessage('No employees to export');
+      return;
+    }
+    
+    // Create CSV content
+    var csv = '';
+    
+    // Add header
+    csv += 'Name,Title,Officer Title,Department,Manager,Email\n';
+    
+    // Add data rows
+    c.employees.forEach(function(emp) {
+      var row = [
+        escapeCSV(emp.name),
+        escapeCSV(emp.title),
+        escapeCSV(emp.u_officer_title),
+        escapeCSV(emp.department_display),
+        escapeCSV(emp.manager_display),
+        escapeCSV(emp.email)
+      ];
+      csv += row.join(',') + '\n';
+    });
+    
+    // Create blob and download
+    var blob = new Blob([csv], {
+      type: 'text/csv;charset=utf-8;'
+    });
+    var link = document.createElement('a');
+    if (link.download !== undefined) {
+      var url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      var today = new Date();
+      var dateStr = today.getFullYear() +
+        ('0' + (today.getMonth() + 1)).slice(-2) +
+        ('0' + today.getDate()).slice(-2);
+      var filename = 'Employees_JobCode_' + c.jobCode + '_' + dateStr + '.csv';
+      link.setAttribute('download', filename);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      spUtil.addInfoMessage('Excel export completed successfully');
+    }
+  };
+  
+  // Escape CSV values
+  function escapeCSV(value) {
+    if (value === null || value === undefined) {
+      return '""';
+    }
+    value = value.toString().replace(/"/g, '""');
+    if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+      return '"' + value + '"';
+    }
+    return '"' + value + '"';
+  }
+};
