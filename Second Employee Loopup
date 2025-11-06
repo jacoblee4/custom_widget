@@ -6,7 +6,8 @@
   <div class="widget-header">
     <h2>
       <i class="fa fa-users"></i>
-      Employees by Job Code
+      <span ng-if="!c.jobCode">Employees by Job Code</span>
+      <span ng-if="c.jobCode">Employees with Job Code: <strong>{{c.jobCodeDisplay}}</strong></span>
     </h2>
   </div>
   
@@ -33,19 +34,8 @@
   
   <!-- Employees Table -->
   <div ng-if="c.jobCode && !c.loading && c.employees.length > 0" class="employees-container">
-    <div class="employees-header">
-      <div class="header-left">
-        <h4>
-          <i class="fa fa-users"></i>
-          Employees With Job Code: <strong>{{c.jobCodeDisplay}}</strong>
-        </h4>
-        <span class="employee-count">{{c.employees.length}} active {{c.employees.length === 1 ? 'employee' : 'employees'}}</span>
-      </div>
-      <div class="header-right">
-        <button ng-click="c.exportToExcel()" class="btn btn-export">
-          <i class="fa fa-file-excel-o"></i> Export to Excel
-        </button>
-      </div>
+    <div class="employees-count-badge">
+      {{c.employees.length}} active {{c.employees.length === 1 ? 'employee' : 'employees'}}
     </div>
     
     <div class="table-responsive">
@@ -219,66 +209,23 @@
   margin-top: 0;
 }
 
-.employees-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-  gap: 15px;
-}
-
-.header-left {
-  flex: 1;
-}
-
-.employees-header h4 {
-  color: #2c3e50;
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0 0 8px 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.employee-count {
+.employees-count-badge {
   display: inline-block;
   background: #3498db;
   color: white;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.header-right {
-  display: flex;
-  gap: 10px;
-}
-
-.btn {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
-  font-weight: 600;
-  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 20px;
   font-size: 14px;
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+  font-weight: 600;
+  margin-bottom: 20px;
 }
 
-.btn-export {
-  background: #27ae60;
-  color: white;
+.text-cell {
+  color: #6c757d;
 }
 
-.btn-export:hover {
-  background: #229954;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+.email-cell {
+  /* Regular font, not monospace */
 }
 
 /* Table Styles */
@@ -375,10 +322,6 @@
   color: #6c757d;
 }
 
-.email-cell {
-  font-family: 'Courier New', monospace;
-}
-
 .email-link {
   color: #3498db;
   text-decoration: none;
@@ -399,20 +342,6 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .employees-header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .header-right {
-    width: 100%;
-  }
-  
-  .btn {
-    width: 100%;
-    justify-content: center;
-  }
-  
   .employees-table {
     font-size: 13px;
   }
@@ -530,11 +459,6 @@ api.controller = function($scope, $rootScope, $timeout, spUtil) {
       c.sortEmployees();
       
       c.loading = false;
-      
-      // Show success message
-      if (c.employees.length > 0) {
-        spUtil.addInfoMessage('Found ' + c.employees.length + ' employee(s) with job code ' + c.jobCodeDisplay);
-      }
     }).catch(function(error) {
       console.error('Error loading employees:', error);
       spUtil.addErrorMessage('Failed to load employees');
@@ -576,64 +500,4 @@ api.controller = function($scope, $rootScope, $timeout, spUtil) {
       return 0;
     });
   };
-  
-  // Export to Excel (CSV format)
-  c.exportToExcel = function() {
-    if (c.employees.length === 0) {
-      spUtil.addInfoMessage('No employees to export');
-      return;
-    }
-    
-    // Create CSV content
-    var csv = '';
-    
-    // Add header
-    csv += 'Name,Title,Officer Title,Department,Manager,Email\n';
-    
-    // Add data rows
-    c.employees.forEach(function(emp) {
-      var row = [
-        escapeCSV(emp.name),
-        escapeCSV(emp.title),
-        escapeCSV(emp.u_officer_title),
-        escapeCSV(emp.department_display),
-        escapeCSV(emp.manager_display),
-        escapeCSV(emp.email)
-      ];
-      csv += row.join(',') + '\n';
-    });
-    
-    // Create blob and download
-    var blob = new Blob([csv], {
-      type: 'text/csv;charset=utf-8;'
-    });
-    var link = document.createElement('a');
-    if (link.download !== undefined) {
-      var url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      var today = new Date();
-      var dateStr = today.getFullYear() +
-        ('0' + (today.getMonth() + 1)).slice(-2) +
-        ('0' + today.getDate()).slice(-2);
-      var filename = 'Employees_JobCode_' + c.jobCode + '_' + dateStr + '.csv';
-      link.setAttribute('download', filename);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      spUtil.addInfoMessage('Excel export completed successfully');
-    }
-  };
-  
-  // Escape CSV values
-  function escapeCSV(value) {
-    if (value === null || value === undefined) {
-      return '""';
-    }
-    value = value.toString().replace(/"/g, '""');
-    if (value.includes(',') || value.includes('"') || value.includes('\n')) {
-      return '"' + value + '"';
-    }
-    return '"' + value + '"';
-  }
 };
