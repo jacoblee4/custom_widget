@@ -16,7 +16,7 @@
     <i class="fa fa-info-circle info-icon"></i>
     <div class="info-content">
       <h3>Select a Job Code to View Employees</h3>
-      <p>Click on any job code in the Signature Authority Limits table above to view all employees with that job code.</p>
+      <p>Select any of the job codes in the Authority Limits table above to view all employees with that job code.</p>
     </div>
   </div>
   
@@ -35,7 +35,7 @@
   <!-- Employees Table -->
   <div ng-if="c.jobCode && !c.loading && c.employees.length > 0" class="employees-container">
     <div class="employees-count-badge">
-      {{c.employees.length}} active {{c.employees.length === 1 ? 'employee' : 'employees'}}
+      {{c.employees.length}} {{c.employees.length === 1 ? 'Employee' : 'Employees'}}
     </div>
     
     <div class="table-responsive">
@@ -480,65 +480,6 @@ api.controller = function($scope, $rootScope, $timeout, spUtil) {
     
     c.sortEmployees();
   };
-
-// Pagination functions - ADD THESE if they're missing
-c.getCurrentPageLimits = function() {
-    var start = (c.currentPage - 1) * c.pageSize;
-    var end = start + c.pageSize;
-    return c.limits.slice(start, end);
-};
-
-c.getStartIndex = function() {
-    return (c.currentPage - 1) * c.pageSize;
-};
-
-c.getEndIndex = function() {
-    var end = c.currentPage * c.pageSize;
-    return end > c.limits.length ? c.limits.length : end;
-};
-
-c.previousPage = function() {
-    if (c.currentPage > 1) {
-        c.currentPage--;
-    }
-};
-
-c.nextPage = function() {
-    if (c.currentPage < c.totalPages) {
-        c.currentPage++;
-    }
-};
-
-c.goToPage = function(page) {
-    if (page >= 1 && page <= c.totalPages) {
-        c.currentPage = page;
-    }
-};
-
-c.getPageNumbers = function() {
-    var pages = [];
-    var maxPagesToShow = 5;
-    var startPage = 1;
-    var endPage = c.totalPages;
-    
-    if (c.totalPages > maxPagesToShow) {
-        var middlePage = Math.floor(maxPagesToShow / 2);
-        if (c.currentPage <= middlePage) {
-            endPage = maxPagesToShow;
-        } else if (c.currentPage >= c.totalPages - middlePage) {
-            startPage = c.totalPages - maxPagesToShow + 1;
-        } else {
-            startPage = c.currentPage - middlePage;
-            endPage = c.currentPage + middlePage;
-        }
-    }
-    
-    for (var i = startPage; i <= endPage; i++) {
-        pages.push(i);
-    }
-    
-    return pages;
-};
   
   // Sort employees array
   c.sortEmployees = function() {
