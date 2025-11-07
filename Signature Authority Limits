@@ -956,10 +956,7 @@
      border-collapse: collapse;
      font-size: 13px;
 }
- .limits-table thead {
-     position: sticky;
-     top: 0;
-     z-index: 10;
+.limits-table thead {
      background: white;
 }
  .section-header {
@@ -1063,8 +1060,8 @@
 .sticky-col {
      position: -webkit-sticky;
      position: sticky;
-     left: 0;
-     z-index: 10;
+     left: 0 !important;
+     z-index: 15 !important;
      background-color: #f8f9fa !important;
      box-shadow: 2px 0 4px rgba(0,0,0,0.1);
 }
