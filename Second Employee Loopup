@@ -480,6 +480,65 @@ api.controller = function($scope, $rootScope, $timeout, spUtil) {
     
     c.sortEmployees();
   };
+
+// Pagination functions - ADD THESE if they're missing
+c.getCurrentPageLimits = function() {
+    var start = (c.currentPage - 1) * c.pageSize;
+    var end = start + c.pageSize;
+    return c.limits.slice(start, end);
+};
+
+c.getStartIndex = function() {
+    return (c.currentPage - 1) * c.pageSize;
+};
+
+c.getEndIndex = function() {
+    var end = c.currentPage * c.pageSize;
+    return end > c.limits.length ? c.limits.length : end;
+};
+
+c.previousPage = function() {
+    if (c.currentPage > 1) {
+        c.currentPage--;
+    }
+};
+
+c.nextPage = function() {
+    if (c.currentPage < c.totalPages) {
+        c.currentPage++;
+    }
+};
+
+c.goToPage = function(page) {
+    if (page >= 1 && page <= c.totalPages) {
+        c.currentPage = page;
+    }
+};
+
+c.getPageNumbers = function() {
+    var pages = [];
+    var maxPagesToShow = 5;
+    var startPage = 1;
+    var endPage = c.totalPages;
+    
+    if (c.totalPages > maxPagesToShow) {
+        var middlePage = Math.floor(maxPagesToShow / 2);
+        if (c.currentPage <= middlePage) {
+            endPage = maxPagesToShow;
+        } else if (c.currentPage >= c.totalPages - middlePage) {
+            startPage = c.totalPages - maxPagesToShow + 1;
+        } else {
+            startPage = c.currentPage - middlePage;
+            endPage = c.currentPage + middlePage;
+        }
+    }
+    
+    for (var i = startPage; i <= endPage; i++) {
+        pages.push(i);
+    }
+    
+    return pages;
+};
   
   // Sort employees array
   c.sortEmployees = function() {
