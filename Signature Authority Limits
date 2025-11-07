@@ -2811,7 +2811,7 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
 
                 var newLength = formattedValue.length;
                 var lengthDiff = newLength - oldLength;
-                var newCursorPosition = Math.max(0, cursorPosition + lengthDiff);
+                var newCursorPosition = (cursorPosition + lengthDiff) > 0 ? (cursorPosition + lengthDiff) : 0;
                 setTimeout(() => {
                     event.target.setSelectionRange(newCursorPosition, newCursorPosition);
                 }, 0);
