@@ -1058,7 +1058,8 @@
  .credit-col {
      background: #fef5f6;
 }
- .sticky-col {
+.sticky-col {
+     position: -webkit-sticky;
      position: sticky;
      left: 0;
      z-index: 5;
@@ -1077,11 +1078,12 @@
  .limits-table tbody tr.highlight-row {
      background-color: #fff3cd !important;
 }
- .job-code-cell {
+.job-code-cell {
+     position: -webkit-sticky;
      position: sticky;
      left: 0;
      z-index: 4;
-     background-color: white;
+     background-color: white !important;
      box-shadow: 2px 0 4px rgba(0,0,0,0.1);
      font-weight: 600;
      color: #2c3e50;
