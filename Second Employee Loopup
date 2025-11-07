@@ -81,7 +81,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr ng-repeat="employee in c.employees">
+          <tr ng-repeat="employee in c.getCurrentPageEmployees()">
             <td class="name-cell">
               <strong>{{employee.name}}</strong>
             </td>
@@ -98,6 +98,31 @@
           </tr>
         </tbody>
       </table>
+    </div>
+    
+    <!-- Pagination -->
+    <div ng-if="c.totalPages > 1" class="pagination-controls">
+      <nav aria-label="Employee pagination">
+        <ul class="pagination">
+          <li class="page-item" ng-class="{disabled: c.currentPage === 1}">
+            <a class="page-link" href="javascript:void(0)" ng-click="c.previousPage()" aria-label="Previous">
+            <span aria-hidden="true">&laquo;</span>
+            </a>
+          </li>
+          <li class="page-item" ng-repeat="page in c.getPageNumbers()" 
+              ng-class="{active: page === c.currentPage}">
+            <a class="page-link" href="javascript:void(0)" ng-click="c.goToPage(page)">{{page}}</a>
+          </li>
+          <li class="page-item" ng-class="{disabled: c.currentPage === c.totalPages}">
+            <a class="page-link" href="javascript:void(0)" ng-click="c.nextPage()" aria-label="Next">
+            <span aria-hidden="true">&raquo;</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+      <div class="pagination-info">
+        Showing {{c.getStartIndex() + 1}}-{{c.getEndIndex()}} of {{c.employees.length}} employees
+      </div>
     </div>
   </div>
 </div>
@@ -340,6 +365,66 @@
   font-size: 14px;
 }
 
+/* Pagination Styles */
+.pagination-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  padding-top: 16px;
+  margin-top: 20px;
+  border-top: 1px solid #e9ecef;
+}
+
+.pagination {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  gap: 5px;
+}
+
+.page-item {
+  display: inline-block;
+}
+
+.page-link {
+  display: block;
+  padding: 6px 12px;
+  color: #3498db;
+  text-decoration: none;
+  background-color: white;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.page-link:hover {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.page-item.active .page-link {
+  background-color: #3498db;
+  border-color: #3498db;
+  color: white;
+}
+
+.page-item.disabled .page-link {
+  color: #6c757d;
+  pointer-events: none;
+  cursor: not-allowed;
+  background-color: #fff;
+  border-color: #dee2e6;
+  opacity: 0.5;
+}
+
+.pagination-info {
+  color: #6c757d;
+  font-size: 14px;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .employees-table {
@@ -421,6 +506,11 @@ api.controller = function($scope, $rootScope, $timeout, spUtil) {
   c.sortColumn = 'name';
   c.sortDirection = 'asc';
   
+  // Pagination - 25 items per page
+  c.currentPage = 1;
+  c.pageSize = 25;
+  c.totalPages = 1;
+  
   c.$onInit = function() {
     console.log('Employee Lookup Widget initialized');
     
@@ -457,6 +547,10 @@ api.controller = function($scope, $rootScope, $timeout, spUtil) {
       
       // Apply default sorting
       c.sortEmployees();
+      
+      // Calculate pagination
+      c.currentPage = 1;
+      c.totalPages = parseInt((c.employees.length + c.pageSize - 1) / c.pageSize);
       
       c.loading = false;
     }).catch(function(error) {
@@ -499,5 +593,64 @@ api.controller = function($scope, $rootScope, $timeout, spUtil) {
       }
       return 0;
     });
+// Pagination functions
+  c.getCurrentPageEmployees = function() {
+    var start = (c.currentPage - 1) * c.pageSize;
+    var end = start + c.pageSize;
+    return c.employees.slice(start, end);
+  };
+
+  c.getStartIndex = function() {
+    return (c.currentPage - 1) * c.pageSize;
+  };
+
+  c.getEndIndex = function() {
+    var end = c.currentPage * c.pageSize;
+    return end > c.employees.length ? c.employees.length : end;
+  };
+
+  c.previousPage = function() {
+    if (c.currentPage > 1) {
+      c.currentPage--;
+    }
+  };
+
+  c.nextPage = function() {
+    if (c.currentPage < c.totalPages) {
+      c.currentPage++;
+    }
+  };
+
+  c.goToPage = function(page) {
+    if (page >= 1 && page <= c.totalPages) {
+      c.currentPage = page;
+    }
+  };
+
+  c.getPageNumbers = function() {
+    var pages = [];
+    var maxPagesToShow = 5;
+    var startPage = 1;
+    var endPage = c.totalPages;
+    
+    if (c.totalPages > maxPagesToShow) {
+      var middlePage = parseInt(maxPagesToShow / 2);
+      if (c.currentPage <= middlePage) {
+        endPage = maxPagesToShow;
+      } else if (c.currentPage >= c.totalPages - middlePage) {
+        startPage = c.totalPages - maxPagesToShow + 1;
+      } else {
+        startPage = c.currentPage - middlePage;
+        endPage = c.currentPage + middlePage;
+      }
+    }
+    
+    for (var i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    
+    return pages;
+  };
+};
   };
 };
