@@ -372,24 +372,34 @@ api.controller = function($scope, $uibModal, nowAttachmentHandler, spUtil) {
     }
 
     $scope.refreshVariables = function() {
-        var variables = new Array(4);
-        var variable_names = ['invoice_numbers', 'invoice_amounts', 'credit_memos', 'attachment_ids'];
-        var property_names = ['invoice_number', 'invoice_amount', 'credit_memo', 'id'];
+    var variables = new Array(4);
+    var variable_names = ['invoice_numbers', 'invoice_amounts', 'credit_memos', 'attachment_ids'];
+    var property_names = ['invoice_number', 'invoice_amount', 'credit_memo', 'id'];
+    
+    // Get the values from the catalog item form
+    var invoice_account_toggle = g_form.getValue('invoice_account_toggle');
+    var invoice_pdf_date = g_form.getValue('invoice_pdf_date');
 
-        for (var i = 0; i < c.data.rows.length; i++) {
-            for (var j = 0; j < variables.length; j++) {
-                variables[j] = variables[j] == undefined ? '' : variables[j];
+    for (var i = 0; i < c.data.rows.length; i++) {
+        for (var j = 0; j < variables.length; j++) {
+            variables[j] = variables[j] == undefined ? '' : variables[j];
+            
+            // Special handling for invoice_number when account_number is selected
+            if (j === 0 && invoice_account_toggle === 'account_number' && invoice_pdf_date) {
+                variables[j] += c.data.rows[i][property_names[j]] + '_' + invoice_pdf_date + ',';
+            } else {
                 variables[j] += c.data.rows[i][property_names[j]] + ',';
             }
         }
+    }
 
-        for (var k = 0; k < variables.length; k++) {
-            variables[k] = variables[k].substring(0, variables[k].length - 1);
-            g_form.setValue(variable_names[k], variables[k]);
-        }
+    for (var k = 0; k < variables.length; k++) {
+        variables[k] = variables[k].substring(0, variables[k].length - 1);
+        g_form.setValue(variable_names[k], variables[k]);
+    }
 
-        refreshMandatoryFilled();
-    };
+    refreshMandatoryFilled();
+};
 
     $scope.creditMemoError = false;
     $scope.invoiceAmountError = false;
