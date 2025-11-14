@@ -1,23 +1,9 @@
-I need a custom widget that I will use on a custom type field on a record producer. The idea is there is a field on the record producer "job_code". If no job code is selected the widget should show something like "Please select a job code". Once one is chosen, a lookup should be made to the custom table "x_banun_bunow_si_0_authority_limits". THis table also has a field "job_code" that can be used to lookup. It should also check that the active field is true for the authority limits. If it finds NO authority limits matching the job code and that are active a message should appear saying something like "job code X does not have any existing authority limits". If it DOES find limits a nice view should appear, possibly a table view as there might be multiple rows. The fields it needs to pull back are:
-job_code
-job_code.job_description
-(The next fields are all the authority limits, half are credit and half are non-credit. I'm not sure if there is a way in the view to seperate out them so it's easier to read but here are the values)
-credit limits:
-overdraft_external_accounts
-overdraft_internal_accounts
-unavailable_funds_external_accounts
-unavailable_funds_internal_accounts
-
-non-credit limits:
-disbursement_ach
-disbursement_wire_transfer_external
-disbursement_wire_transfer_internal
-disbursement_official_checks_external
-disbursement_official_checks_internal
-check_cashing_on_us
-check_cashing_not_on_us
-remote_deposit
-treasury_solutions_company_wire_limits
-fx_wire_limits
-
-If the job code field on the record changes this view should be updated to show the approprate message or new authority limits that it found.
+We have a loan decision tree - the way we are going to develop this is with scripts(script includes, client scripts), decision table(work flow studio), and our other core app tables
+ 
+Now this is the simplest way I can put it - Imagine we had a sandwich shop we have different combinations that lead to a type of sandwich, this will be handled by our decision table - now imagine for the sandwhich when you are building it if you choose white bread you can only have the option of provolone and if you chose provolone you can only have the option of spinach etc. So every question is dependent on another. For this we built a self referencing table called our hierarchy table - we reference this table from our main form where we are filling out the details - the questions all have reference qualifiers that should filter the possible toppings to be selected based from the previous question - we are using scripts in order to autofill questions if there is only one possible topping, for example provolone is the only option for white bread so it automatically fills in and you dont have to make a choice -  all of this is happening on the client side so by the time you reach the last question we also have a script that calls the decision table and gives you the final answer before you submit the form.
+ 
+The reason we are doing it this way is because we have 15 questions that depend on previous answers and there are multiple combinations that yield a unique result.
+ 
+Now this is going to be a nightmare to maintain because as soon as you bring in a new question or choice you will have to adjust the scripts, decision table, create new hierarchy reference etc
+ 
+Am I missing something - is there a better way to do this?
