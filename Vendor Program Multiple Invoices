@@ -198,10 +198,10 @@ api.controller = function($scope, $uibModal, nowAttachmentHandler, spUtil) {
             invoice_amount: '',
             credit_memo: '',
             attachmentCount: 0,
-			invoice_error: 'Invalid currency format. Please correct it.',
-			credit_error: 'Invalid currency format. Please correct it.',
-			show_invoice_error: false,
-			show_credit_error: false
+            invoice_error: 'Invalid currency format. Please correct it.',
+            credit_error: 'Invalid currency format. Please correct it.',
+            show_invoice_error: false,
+            show_credit_error: false
         };
 
         c.data.rows.push(row);
@@ -372,34 +372,38 @@ api.controller = function($scope, $uibModal, nowAttachmentHandler, spUtil) {
     }
 
     $scope.refreshVariables = function() {
-    var variables = new Array(4);
-    var variable_names = ['invoice_numbers', 'invoice_amounts', 'credit_memos', 'attachment_ids'];
-    var property_names = ['invoice_number', 'invoice_amount', 'credit_memo', 'id'];
-    
-    // Get the values from the catalog item form
-    var invoice_account_toggle = g_form.getValue('invoice_account_toggle');
-    var invoice_pdf_date = g_form.getValue('invoice_pdf_date');
+        var variables = new Array(4);
+        var variable_names = ['invoice_numbers', 'invoice_amounts', 'credit_memos', 'attachment_ids'];
+        var property_names = ['invoice_number', 'invoice_amount', 'credit_memo', 'id'];
 
-    for (var i = 0; i < c.data.rows.length; i++) {
-        for (var j = 0; j < variables.length; j++) {
-            variables[j] = variables[j] == undefined ? '' : variables[j];
-            
-            // Special handling for invoice_number when account_number is selected
-            if (j === 0 && invoice_account_toggle === 'account_number' && invoice_pdf_date) {
-                variables[j] += c.data.rows[i][property_names[j]] + '_' + invoice_pdf_date + ',';
-            } else {
-                variables[j] += c.data.rows[i][property_names[j]] + ',';
+        var invoiceAccountToggle = g_form.getValue('invoice_account_toggle');
+        var invoicePdfDate = g_form.getValue('invoice_pdf_date');
+
+        var dateObj = new Date(invoicePdfDate);
+        var month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+        var year = dateObj.getFullYear().toString().slice(-2);
+        var invoicePdfDateFormatted = month + year;
+
+        for (var i = 0; i < c.data.rows.length; i++) {
+            for (var j = 0; j < variables.length; j++) {
+                variables[j] = variables[j] == undefined ? '' : variables[j];
+
+                // Special handling for invoice_number when account_number is selected
+                if (j === 0 && invoiceAccountToggle === 'account_number' && invoicePdfDateFormatted) {
+                    variables[j] += c.data.rows[i][property_names[j]] + '_' + invoicePdfDateFormatted + ',';
+                } else {
+                    variables[j] += c.data.rows[i][property_names[j]] + ',';
+                }
             }
         }
-    }
 
-    for (var k = 0; k < variables.length; k++) {
-        variables[k] = variables[k].substring(0, variables[k].length - 1);
-        g_form.setValue(variable_names[k], variables[k]);
-    }
+        for (var k = 0; k < variables.length; k++) {
+            variables[k] = variables[k].substring(0, variables[k].length - 1);
+            g_form.setValue(variable_names[k], variables[k]);
+        }
 
-    refreshMandatoryFilled();
-};
+        refreshMandatoryFilled();
+    };
 
     $scope.creditMemoError = false;
     $scope.invoiceAmountError = false;
@@ -407,51 +411,51 @@ api.controller = function($scope, $uibModal, nowAttachmentHandler, spUtil) {
     var invoiceAmountFilled = false;
 
     $scope.validateCurrency = function(value, field, row_id) {
-      var currencyRegex = /^(((\d{1,3},?)(\d{3},?)+|\d{1,3})|\d+)(\.\d{2})?$/;
-			var rows = c.data.rows;	
+        var currencyRegex = /^(((\d{1,3},?)(\d{3},?)+|\d{1,3})|\d+)(\.\d{2})?$/;
+        var rows = c.data.rows;
 
-      if (!value || currencyRegex.test(value)) {
-          if (field == 'invoiceAmount') {
-              $scope.invoiceAmountError = false;
-              invoiceAmountFilled = true;
+        if (!value || currencyRegex.test(value)) {
+            if (field == 'invoiceAmount') {
+                $scope.invoiceAmountError = false;
+                invoiceAmountFilled = true;
 
-              for (var i = 0; i < rows.length; i++) {
-                  if (rows[i].id == row_id) {
-                      rows[i].show_invoice_error = false;
-                  }
-              }
+                for (var i = 0; i < rows.length; i++) {
+                    if (rows[i].id == row_id) {
+                        rows[i].show_invoice_error = false;
+                    }
+                }
 
-          } else if (field == 'creditMemo') {
-              $scope.creditMemoError = false;
-              creditMemoFilled = true;
-				
-			for (var j = 0; j < rows.length; j++) {
-                  if (rows[j].id == row_id) {
-                      rows[j].show_credit_error = false;
-                  }
-              }
-          }
-      } else {
-          if (field == 'invoiceAmount') {
-              $scope.invoiceAmountError = true;
-              invoiceAmountFilled = false;
-				
-			for (var k = 0; k < rows.length; k++) {
-                  if (rows[k].id == row_id) {
-                      rows[k].show_invoice_error = true;
-                  }
-              }
-          } else if (field == 'creditMemo') {
-              $scope.creditMemoError = true;
-              creditMemoFilled = false;
-				
-			for (var l = 0; l < rows.length; l++) {
-                  if (rows[l].id == row_id) {
-                      rows[l].show_credit_error = true;
-                  }
-              }
-          }
-      }
-      refreshMandatoryFilled();
+            } else if (field == 'creditMemo') {
+                $scope.creditMemoError = false;
+                creditMemoFilled = true;
+
+                for (var j = 0; j < rows.length; j++) {
+                    if (rows[j].id == row_id) {
+                        rows[j].show_credit_error = false;
+                    }
+                }
+            }
+        } else {
+            if (field == 'invoiceAmount') {
+                $scope.invoiceAmountError = true;
+                invoiceAmountFilled = false;
+
+                for (var k = 0; k < rows.length; k++) {
+                    if (rows[k].id == row_id) {
+                        rows[k].show_invoice_error = true;
+                    }
+                }
+            } else if (field == 'creditMemo') {
+                $scope.creditMemoError = true;
+                creditMemoFilled = false;
+
+                for (var l = 0; l < rows.length; l++) {
+                    if (rows[l].id == row_id) {
+                        rows[l].show_credit_error = true;
+                    }
+                }
+            }
+        }
+        refreshMandatoryFilled();
     };
 };
