@@ -187,10 +187,46 @@
 
 // Client Controller
 
+// Client Controller
+
 api.controller = function($scope, $uibModal, nowAttachmentHandler, spUtil) {
     /* widget controller */
     var c = this;
     var g_form = $scope.page.g_form;
+
+    /**
+     * Applies or removes the date suffix to all invoice numbers based on current toggle and date
+     */
+    function applyInvoiceNumberFormatting() {
+        var invoiceAccountToggle = g_form.getValue('invoice_account_toggle');
+        var invoicePdfDate = g_form.getValue('invoice_pdf_date');
+        var invoicePdfDateFormatted = '';
+
+        if (invoicePdfDate) {
+            var dateObj = new Date(invoicePdfDate);
+            if (!isNaN(dateObj.getTime())) {
+                var month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+                var year = dateObj.getFullYear().toString().slice(-2);
+                invoicePdfDateFormatted = month + year;
+            }
+        }
+
+        // Update all rows based on current toggle and date
+        for (var i = 0; i < c.data.rows.length; i++) {
+            var row = c.data.rows[i];
+            
+            // Skip empty invoice numbers
+            if (!row.invoice_number) continue;
+
+            // Remove any existing _MMYY pattern (underscore followed by 4 digits at end)
+            row.invoice_number = row.invoice_number.replace(/_\d{4}$/, '');
+
+            // Add suffix if toggle is account_number and date exists
+            if (invoiceAccountToggle === 'account_number' && invoicePdfDateFormatted) {
+                row.invoice_number += '_' + invoicePdfDateFormatted;
+            }
+        }
+    }
 
     $scope.addRow = function() {
         var row = {
@@ -210,14 +246,12 @@ api.controller = function($scope, $uibModal, nowAttachmentHandler, spUtil) {
     };
 
     $scope.deleteRow = function(index, row_id) {
-
         c.server.get({
             action: 'delete_row',
             row_id: row_id
         });
 
         c.data.rows.splice(index, 1);
-
         $scope.refreshVariables();
     };
 
@@ -225,7 +259,6 @@ api.controller = function($scope, $uibModal, nowAttachmentHandler, spUtil) {
      * Attachment Handling
      */
     function setupAttachmentHandler() {
-
         $scope.attachmentHandler = new nowAttachmentHandler(appendDone, appendError);
 
         $scope.$on('dialog.upload_too_large.show', function(e) {
@@ -240,32 +273,8 @@ api.controller = function($scope, $uibModal, nowAttachmentHandler, spUtil) {
     $scope.$watch(function() {
         return g_form.getValue('invoice_account_toggle');
     }, function(newValue, oldValue) {
-        if (newValue !== oldValue) {
-            var invoicePdfDate = g_form.getValue('invoice_pdf_date');
-            var invoicePdfDateFormatted = '';
-
-            if (invoicePdfDate) {
-                var dateObj = new Date(invoicePdfDate);
-                if (!isNaN(dateObj.getTime())) {
-                    var month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
-                    var year = dateObj.getFullYear().toString().slice(-2);
-                    invoicePdfDateFormatted = month + year;
-                }
-            }
-
-            // Update all rows based on toggle change
-            for (var i = 0; i < c.data.rows.length; i++) {
-                var row = c.data.rows[i];
-
-                // Remove any existing _MMYY pattern (underscore followed by 4 digits)
-                row.invoice_number = row.invoice_number.replace(/_\d{4}$/, '');
-
-                // Add suffix if switching to account_number and date exists
-                if (newValue === 'account_number' && invoicePdfDateFormatted) {
-                    row.invoice_number += '_' + invoicePdfDateFormatted;
-                }
-            }
-
+        if (newValue !== oldValue && oldValue !== undefined) {
+            applyInvoiceNumberFormatting();
             $scope.refreshVariables();
         }
     });
@@ -274,35 +283,9 @@ api.controller = function($scope, $uibModal, nowAttachmentHandler, spUtil) {
     $scope.$watch(function() {
         return g_form.getValue('invoice_pdf_date');
     }, function(newValue, oldValue) {
-        if (newValue !== oldValue) {
-            var invoiceAccountToggle = g_form.getValue('invoice_account_toggle');
-            var invoicePdfDateFormatted = '';
-
-            if (newValue) {
-                var dateObj = new Date(newValue);
-                if (!isNaN(dateObj.getTime())) {
-                    var month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
-                    var year = dateObj.getFullYear().toString().slice(-2);
-                    invoicePdfDateFormatted = month + year;
-                }
-            }
-
-            // Only update if toggle is set to account_number
-            if (invoiceAccountToggle === 'account_number') {
-                for (var i = 0; i < c.data.rows.length; i++) {
-                    var row = c.data.rows[i];
-
-                    // Remove any existing _MMYY pattern
-                    row.invoice_number = row.invoice_number.replace(/_\d{4}$/, '');
-
-                    // Add new suffix if date is valid
-                    if (invoicePdfDateFormatted) {
-                        row.invoice_number += '_' + invoicePdfDateFormatted;
-                    }
-                }
-
-                $scope.refreshVariables();
-            }
+        if (newValue !== oldValue && oldValue !== undefined) {
+            applyInvoiceNumberFormatting();
+            $scope.refreshVariables();
         }
     });
 
@@ -311,7 +294,6 @@ api.controller = function($scope, $uibModal, nowAttachmentHandler, spUtil) {
      */
     function appendDone() {
         _updateAttachmentCounter(c.data.current_row_id, 'increment');
-
         $scope.fetchAttachments(c.data.current_row_id);
     }
 
@@ -369,6 +351,7 @@ api.controller = function($scope, $uibModal, nowAttachmentHandler, spUtil) {
             $scope.fetchAttachments(c.data.current_row_id);
         });
     };
+
     /**
      * Updates the attachment counter of the row
      * @param {String} row_id Id of the row
@@ -378,11 +361,9 @@ api.controller = function($scope, $uibModal, nowAttachmentHandler, spUtil) {
         var rows = c.data.rows;
         for (var i = 0; i < rows.length; i++) {
             if (rows[i].id == row_id) {
-
                 if (action == "increment") {
                     rows[i].attachmentCount++;
                 }
-
                 if (action == "decrement") {
                     rows[i].attachmentCount--;
                 }
@@ -443,6 +424,9 @@ api.controller = function($scope, $uibModal, nowAttachmentHandler, spUtil) {
     }
 
     $scope.refreshVariables = function() {
+        // First apply formatting to all invoice numbers based on current toggle/date
+        applyInvoiceNumberFormatting();
+
         var variables = new Array(4);
         var variable_names = ['invoice_numbers', 'invoice_amounts', 'credit_memos', 'attachment_ids'];
         var property_names = ['invoice_number', 'invoice_amount', 'credit_memo', 'id'];
