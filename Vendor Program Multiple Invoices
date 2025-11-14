@@ -235,6 +235,24 @@ api.controller = function($scope, $uibModal, nowAttachmentHandler, spUtil) {
 
     setupAttachmentHandler();
 
+// Watch for changes to invoice_account_toggle
+$scope.$watch(function() {
+    return g_form.getValue('invoice_account_toggle');
+}, function(newValue, oldValue) {
+    if (newValue !== oldValue) {
+        $scope.refreshVariables();
+    }
+});
+
+// Watch for changes to invoice_pdf_date
+$scope.$watch(function() {
+    return g_form.getValue('invoice_pdf_date');
+}, function(newValue, oldValue) {
+    if (newValue !== oldValue) {
+        $scope.refreshVariables();
+    }
+});
+
     /**
      * Called after an attachment is added
      */
@@ -377,25 +395,30 @@ api.controller = function($scope, $uibModal, nowAttachmentHandler, spUtil) {
         var property_names = ['invoice_number', 'invoice_amount', 'credit_memo', 'id'];
 
         var invoiceAccountToggle = g_form.getValue('invoice_account_toggle');
-        var invoicePdfDate = g_form.getValue('invoice_pdf_date');
+var invoicePdfDate = g_form.getValue('invoice_pdf_date');
 
-        var dateObj = new Date(invoicePdfDate);
+var invoicePdfDateFormatted = '';
+if (invoicePdfDate) {
+    var dateObj = new Date(invoicePdfDate);
+    if (!isNaN(dateObj.getTime())) { // Check if date is valid
         var month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
         var year = dateObj.getFullYear().toString().slice(-2);
-        var invoicePdfDateFormatted = month + year;
+        invoicePdfDateFormatted = month + year;
+    }
+}
 
-        for (var i = 0; i < c.data.rows.length; i++) {
-            for (var j = 0; j < variables.length; j++) {
-                variables[j] = variables[j] == undefined ? '' : variables[j];
+for (var i = 0; i < c.data.rows.length; i++) {
+    for (var j = 0; j < variables.length; j++) {
+        variables[j] = variables[j] == undefined ? '' : variables[j];
 
-                // Special handling for invoice_number when account_number is selected
-                if (j === 0 && invoiceAccountToggle === 'account_number' && invoicePdfDateFormatted) {
-                    variables[j] += c.data.rows[i][property_names[j]] + '_' + invoicePdfDateFormatted + ',';
-                } else {
-                    variables[j] += c.data.rows[i][property_names[j]] + ',';
-                }
-            }
+        // Special handling for invoice_number when account_number is selected
+        if (j === 0 && invoiceAccountToggle === 'account_number' && invoicePdfDateFormatted) {
+            variables[j] += c.data.rows[i][property_names[j]] + '_' + invoicePdfDateFormatted + ',';
+        } else {
+            variables[j] += c.data.rows[i][property_names[j]] + ',';
         }
+    }
+}
 
         for (var k = 0; k < variables.length; k++) {
             variables[k] = variables[k].substring(0, variables[k].length - 1);
