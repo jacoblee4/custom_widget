@@ -240,6 +240,31 @@ $scope.$watch(function() {
     return g_form.getValue('invoice_account_toggle');
 }, function(newValue, oldValue) {
     if (newValue !== oldValue) {
+        var invoicePdfDate = g_form.getValue('invoice_pdf_date');
+        var invoicePdfDateFormatted = '';
+        
+        if (invoicePdfDate) {
+            var dateObj = new Date(invoicePdfDate);
+            if (!isNaN(dateObj.getTime())) {
+                var month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+                var year = dateObj.getFullYear().toString().slice(-2);
+                invoicePdfDateFormatted = month + year;
+            }
+        }
+        
+        // Update all rows based on toggle change
+        for (var i = 0; i < c.data.rows.length; i++) {
+            var row = c.data.rows[i];
+            
+            // Remove any existing _MMYY pattern (underscore followed by 4 digits)
+            row.invoice_number = row.invoice_number.replace(/_\d{4}$/, '');
+            
+            // Add suffix if switching to account_number and date exists
+            if (newValue === 'account_number' && invoicePdfDateFormatted) {
+                row.invoice_number += '_' + invoicePdfDateFormatted;
+            }
+        }
+        
         $scope.refreshVariables();
     }
 });
@@ -249,7 +274,34 @@ $scope.$watch(function() {
     return g_form.getValue('invoice_pdf_date');
 }, function(newValue, oldValue) {
     if (newValue !== oldValue) {
-        $scope.refreshVariables();
+        var invoiceAccountToggle = g_form.getValue('invoice_account_toggle');
+        var invoicePdfDateFormatted = '';
+        
+        if (newValue) {
+            var dateObj = new Date(newValue);
+            if (!isNaN(dateObj.getTime())) {
+                var month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+                var year = dateObj.getFullYear().toString().slice(-2);
+                invoicePdfDateFormatted = month + year;
+            }
+        }
+        
+        // Only update if toggle is set to account_number
+        if (invoiceAccountToggle === 'account_number') {
+            for (var i = 0; i < c.data.rows.length; i++) {
+                var row = c.data.rows[i];
+                
+                // Remove any existing _MMYY pattern
+                row.invoice_number = row.invoice_number.replace(/_\d{4}$/, '');
+                
+                // Add new suffix if date is valid
+                if (invoicePdfDateFormatted) {
+                    row.invoice_number += '_' + invoicePdfDateFormatted;
+                }
+            }
+            
+            $scope.refreshVariables();
+        }
     }
 });
 
