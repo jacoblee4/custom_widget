@@ -232,8 +232,10 @@
       </label>
    </div>
    
-   <!-- Disclaimer Section -->
-   <div class="disclaimer-section">
+</div>
+
+<!-- Disclaimer Section -->
+<div class="disclaimer-section">
       <div class="disclaimer-columns">
          <div class="disclaimer-left">
             <h4 class="disclaimer-header">**Regulation O Limits</h4>
@@ -254,8 +256,15 @@
             <i class="fa fa-file-pdf-o"></i> Export PDF
             </button>
          </div>
-      </div>
-      <div class="table-container">
+</div>
+
+<!-- Top Scrollbar -->
+<div class="table-scroll-wrapper">
+   <div class="table-scroll-top" id="topScrollbar">
+      <div class="table-scroll-top-inner" id="topScrollbarInner"></div>
+   </div>
+
+<div class="table-container" id="tableContainer">
          <table class="limits-table">
             <thead>
                <tr>
@@ -463,6 +472,7 @@
             </tbody>
          </table>
       </div>
+</div>
       
       <!-- Pagination -->
       <div ng-if="c.totalPages > 1" class="pagination-controls">
@@ -544,7 +554,7 @@
 }
 .table-container {
      overflow-x: auto;
-     border: 1px solid #dee2e6;
+     border: 2px solid #ffc107;
      border-radius: 0 0 6px 6px;
      border-top: none;
      background: white;
@@ -1108,8 +1118,8 @@
 .job-code-cell {
      position: -webkit-sticky;
      position: sticky;
-     left: 0;
-     z-index: 10;
+     left: 0 !important;
+     z-index: 10 !important;
      background-color: #f8f9fa !important;
      box-shadow: 2px 0 4px rgba(0,0,0,0.1);
      font-weight: 600;
@@ -1245,27 +1255,43 @@
 }
 /* Disclaimer Section Styles */
 .disclaimer-section {
-    margin: 16px 0 0 0;
+    margin: 0;
     background: #fff9e6;
     border: 2px solid #ffc107;
     border-radius: 6px 6px 0 0;
     padding: 16px 20px;
     width: 100%;
+    max-width: 1400px;
+    overflow-x: auto;
 }
 .disclaimer-columns {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 40px;
+    gap: 0;
+    min-width: 1800px;
+}
+.disclaimer-left {
+    padding-right: 20px;
+    border-right: 2px solid #ffc107;
 }
 
-.disclaimer-left,
+.disclaimer-right {
+    padding-left: 20px;
+}
+.disclaimer-left {
+    display: flex;
+    flex-direction: column;
+    padding-right: 20px;
+    border-right: 2px solid #ffc107;
+}
+
 .disclaimer-right {
     display: flex;
     flex-direction: column;
+    padding-left: 20px;
 }
-
 .disclaimer-header {
-    color: #ff0000;
+    color: #ff0000 !important;
     font-size: 14px;
     font-weight: 700;
     margin: 0 0 8px 0;
@@ -1273,7 +1299,6 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
-
 .disclaimer-text {
     color: #000;
     font-size: 12px;
@@ -1341,7 +1366,20 @@
 @media (max-width: 968px) {
     .disclaimer-columns {
         grid-template-columns: 1fr;
-        gap: 20px;
+        gap: 0;
+        min-width: auto;
+    }
+    
+    .disclaimer-left {
+        border-right: none;
+        border-bottom: 2px solid #ffc107;
+        padding-right: 0;
+        padding-bottom: 16px;
+        margin-bottom: 16px;
+    }
+    
+    .disclaimer-right {
+        padding-left: 0;
     }
 }
  @media (max-width: 968px) {
@@ -1392,6 +1430,25 @@
      z-index: 10 !important;
      background-color: #f8f9fa !important;
      box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+}
+/* Dual Scrollbar Container */
+.table-scroll-wrapper {
+    width: 100%;
+    max-width: 1400px;
+}
+
+.table-scroll-top {
+    overflow-x: auto;
+    overflow-y: hidden;
+    border: 2px solid #ffc107;
+    border-bottom: 1px solid #dee2e6;
+    border-radius: 0;
+    background: #f8f9fa;
+    height: 20px;
+}
+
+.table-scroll-top-inner {
+    height: 1px;
 }
 
 
@@ -3005,5 +3062,37 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
     c.exportPdf = function() {
         exportToPDF();
     };
+
+// Sync dual scrollbars
+c.initDualScrollbars = function() {
+    setTimeout(function() {
+        var topScrollbar = document.getElementById('topScrollbar');
+        var tableContainer = document.getElementById('tableContainer');
+        var topScrollbarInner = document.getElementById('topScrollbarInner');
+        var limitsTable = document.querySelector('.limits-table');
+        
+        if (!topScrollbar || !tableContainer || !limitsTable) return;
+        
+        // Set the inner div width to match table width
+        topScrollbarInner.style.width = limitsTable.offsetWidth + 'px';
+        
+        // Sync scrolling from top to bottom
+        topScrollbar.addEventListener('scroll', function() {
+            tableContainer.scrollLeft = topScrollbar.scrollLeft;
+        });
+        
+        // Sync scrolling from bottom to top
+        tableContainer.addEventListener('scroll', function() {
+            topScrollbar.scrollLeft = tableContainer.scrollLeft;
+        });
+    }, 100);
+};
+
+// Call this after data loads
+$scope.$watch('c.limits', function(newVal) {
+    if (newVal && newVal.length > 0) {
+        c.initDualScrollbars();
+    }
+});
 
 };
