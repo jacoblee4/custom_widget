@@ -1348,22 +1348,19 @@
 }
 
 .limits-table th .info-icon {
-    position: absolute; /* CHANGED */
-    top: 6px; /* ADDED */
-    right: 8px; /* ADDED */
     display: inline-block;
-    width: 16px; /* CHANGED from 15px */
-    height: 16px; /* CHANGED from 15px */
+    width: 16px;
+    height: 16px;
     background-color: #17a2b8;
     color: white;
     border-radius: 50%;
     text-align: center;
-    font-size: 11px; /* CHANGED from 10px */
-    line-height: 16px; /* CHANGED from 15px */
+    font-size: 11px;
+    line-height: 16px;
+    margin-right: 6px; /* CHANGED - was margin-left: 4px */
     cursor: help;
     font-weight: normal;
-    z-index: 1; /* ADDED */
-    /* REMOVED: margin-left and vertical-align */
+    vertical-align: middle; /* CHANGED from text-top */
 }
  @media (max-width: 768px) {
      .pagination-controls {
