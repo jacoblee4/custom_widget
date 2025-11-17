@@ -1319,6 +1319,9 @@
     border-bottom: 1px solid #e9ecef;
     vertical-align: middle;
     border-right: 1px solid #f1f3f5;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .limits-table tbody td.sticky-col {
@@ -1411,6 +1414,10 @@
     font-size: 13px;
     color: #2c3e50;
     font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-right: 12px !important;
 }
 
 .highlight-cell {
@@ -1649,12 +1656,12 @@
     max-width: 250px;
 }
 
-/* Fixed widths for all authority limit columns */
+/* Fixed widths for all authority limit columns - wider to accommodate currency */
 .limits-table th:nth-child(n+4),
 .limits-table td:nth-child(n+4) {
-    width: 140px;
-    min-width: 140px;
-    max-width: 140px;
+    width: 160px;
+    min-width: 160px;
+    max-width: 160px;
 }
 
 /* Override for sticky column to ensure it stays fixed */
@@ -1668,11 +1675,11 @@
 /* Ensure table uses fixed layout */
 .limits-table {
     width: 100%;
-    min-width: 1800px;
+    min-width: 2400px;
     border-collapse: separate;
     border-spacing: 0;
     font-size: 13px;
-    table-layout: fixed; /* ADD THIS LINE */
+    table-layout: fixed;
 }
 
 
