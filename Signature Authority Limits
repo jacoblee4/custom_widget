@@ -244,9 +244,8 @@
 
 </div>
 
-<!-- Top Scrollbar -->
+<!-- Disclaimer Section - Top Header of Table -->
 <div class="table-scroll-wrapper">
-   <!-- Disclaimer Section - Top Header of Table -->
    <div class="disclaimer-section">
       <div class="disclaimer-columns">
          <div class="disclaimer-left">
@@ -258,11 +257,7 @@
             <p class="disclaimer-text">Splitting of wire transactions to avoid the constraints imposed by the Signature Authorities document embedded in the wire system should only occur when the wire exceeds the Company's maximum limit of $500 Million. In such situations, wires may be split into two or more wires only with the approval of the individuals that are authorized to approve $500 Million transactions.</p>
          </div>
       </div>
-   </div>
-
-   <div class="table-scroll-top" id="topScrollbar">
-      <div class="table-scroll-top-inner" id="topScrollbarInner"></div>
-   </div>
+</div>
 
 <div class="table-container" id="tableContainer">
          <table class="limits-table">
@@ -1277,13 +1272,12 @@
     border-radius: 6px 6px 0 0;
     padding: 16px 20px;
     width: 100%;
-    overflow-x: auto;
+    max-width: 1400px;
 }
 .disclaimer-columns {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 0;
-    min-width: 1800px;
 }
 .disclaimer-left {
     padding-right: 20px;
@@ -1319,6 +1313,8 @@
     font-size: 12px;
     line-height: 1.6;
     margin: 0;
+    white-space: normal;
+    word-wrap: break-word;
 }
 
 .limits-table th .info-icon {
@@ -1451,19 +1447,6 @@
     width: 100%;
     max-width: 1400px;
 }
-
-.table-scroll-top {
-    overflow-x: auto;
-    overflow-y: hidden;
-    border-left: 2px solid #ffc107;
-    border-right: 2px solid #ffc107;
-    border-bottom: 1px solid #dee2e6;
-    border-top: none;
-    border-radius: 0;
-    background: #f8f9fa;
-    height: 20px;
-}
-
 .table-scroll-top-inner {
     height: 1px;
 }
@@ -3079,37 +3062,4 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
     c.exportPdf = function() {
         exportToPDF();
     };
-
-// Sync dual scrollbars
-c.initDualScrollbars = function() {
-    setTimeout(function() {
-        var topScrollbar = document.getElementById('topScrollbar');
-        var tableContainer = document.getElementById('tableContainer');
-        var topScrollbarInner = document.getElementById('topScrollbarInner');
-        var limitsTable = document.querySelector('.limits-table');
-        
-        if (!topScrollbar || !tableContainer || !limitsTable) return;
-        
-        // Set the inner div width to match table width
-        topScrollbarInner.style.width = limitsTable.offsetWidth + 'px';
-        
-        // Sync scrolling from top to bottom
-        topScrollbar.addEventListener('scroll', function() {
-            tableContainer.scrollLeft = topScrollbar.scrollLeft;
-        });
-        
-        // Sync scrolling from bottom to top
-        tableContainer.addEventListener('scroll', function() {
-            topScrollbar.scrollLeft = tableContainer.scrollLeft;
-        });
-    }, 100);
-};
-
-// Call this after data loads
-$scope.$watch('c.limits', function(newVal) {
-    if (newVal && newVal.length > 0) {
-        c.initDualScrollbars();
-    }
-});
-
 };
