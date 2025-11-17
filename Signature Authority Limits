@@ -1844,6 +1844,11 @@
 <!-- CLIENT CONTROLLER -->
 <!-- ============================================ -->
 
+// ============================================
+// CLIENT CONTROLLER - FIXED PDF & ADDED DISCLAIMERS TO EXPORTS
+// Copy this to ServiceNow Widget "Client Controller" section
+// ============================================
+
 api.controller = function($scope, $timeout, $rootScope, spUtil) {
     var c = this;
 
@@ -2374,7 +2379,7 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
         $scope.$apply();
     }
 
-    // Export to Excel
+    // Export to Excel - WITH DISCLAIMERS
     function exportToExcel() {
         var limitsToExport = c.limits.length > 0 ? c.limits : c.allLimits;
 
@@ -2403,8 +2408,25 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
         }
     }
 
-    // Build CSV content
+    // Build CSV content - WITH DISCLAIMERS
     function buildCSVContent(limits) {
+        var csv = '';
+        
+        // Add title
+        csv += '"Signature Authority Limits Report"\n';
+        csv += '"Generated: ' + new Date().toLocaleString() + '"\n';
+        csv += '"Total Records: ' + limits.length + '"\n';
+        csv += '\n';
+        
+        // Add disclaimers
+        csv += '"**REGULATION O LIMITS"\n';
+        csv += '"No person may authorize an overdraft greater than $1,000 on a personal account belonging to a Director or Executive Officer of BankUnited (Employee/Officer/Director code of \'O\' or \'D\') or payment from uncollected funds that could result in such an overdraft, unless the account is linked through automated funds transfer to another account at the Bank with sufficient funds to cover the overdraft."\n';
+        csv += '\n';
+        csv += '"WIRE TRANSFERS"\n';
+        csv += '"Splitting of wire transactions to avoid the constraints imposed by the Signature Authorities document embedded in the wire system should only occur when the wire exceeds the Company\'s maximum limit of $500 Million. In such situations, wires may be split into two or more wires only with the approval of the individuals that are authorized to approve $500 Million transactions."\n';
+        csv += '\n';
+        
+        // Add headers
         var headers = [
             'Job Code', 'Job Title', 'Line of Business',
             'ACH', 'Wire Transfer Internal', 'Wire Transfer External',
@@ -2415,7 +2437,7 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
             'Unavailable Funds Internal', 'Unavailable Funds External'
         ];
         
-        var csv = headers.join(',') + '\n';
+        csv += headers.join(',') + '\n';
 
         limits.forEach(function(limit) {
             var row = [
@@ -2452,13 +2474,8 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
         return '"' + value + '"';
     }
 
-    // Export to PDF (continued below due to length...)
-    
+    // FIXED PDF Export using original working code - WITH DISCLAIMERS
     c.exportPdf = function() {
-        exportToPDF();
-    };
-
-    function exportToPDF() {
         var limitsToExport = c.limits.length > 0 ? c.limits : c.allLimits;
 
         if (limitsToExport.length === 0) {
@@ -2472,74 +2489,147 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
 
         printWindow.document.write(htmlContent);
         printWindow.document.close();
+
         printWindow.onload = function() {
             printWindow.print();
         };
-    }
+    };
 
     function buildPrintableHTML(limits, filterDescription) {
-        var html = '';
-        html += 'Signature Authority Limits Report';
-        html += '';
-        html += '';
+        var html = '<!DOCTYPE html><html><head>';
+        html += '<title>Signature Authority Limits Report</title>';
+        html += '<meta charset="UTF-8">';
+        html += '<style>';
         html += '@page { size: landscape; margin: 0.5in; }';
         html += 'body { font-family: Arial, sans-serif; margin: 0; padding: 15px; background: white; }';
+        
         html += '.report-header { margin-bottom: 20px; border-bottom: 3px solid #0066cc; padding-bottom: 10px; }';
-        html += '.report-title { color: #0066cc; font-size: 20px; font-weight: bold; margin: 0 0 10px 0; }';
+        html += '.report-title { color: #0066cc; font-size: 20px; font-weight: bold; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px; }';
         html += '.report-meta { background: #f4f4f4; padding: 10px; border-left: 3px solid #0066cc; margin: 10px 0; }';
         html += '.report-meta p { margin: 4px 0; font-size: 11px; color: #333; }';
+        html += '.report-meta strong { color: #000; font-weight: 600; }';
+        
+        // Add disclaimer styles
+        html += '.disclaimer-section { margin: 15px 0; background: #fff9e6; border: 2px solid #ffc107; border-radius: 6px; padding: 12px 16px; }';
+        html += '.disclaimer-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }';
+        html += '.disclaimer-header { color: #ff0000; font-size: 12px; font-weight: 700; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }';
+        html += '.disclaimer-text { color: #000; font-size: 10px; line-height: 1.5; margin: 0; }';
+        html += '.disclaimer-left { padding-right: 10px; border-right: 2px solid #ffc107; }';
+        html += '.disclaimer-right { padding-left: 10px; }';
+        
         html += 'table { width: 100%; border-collapse: collapse; font-size: 9px; margin-top: 15px; }';
         html += 'table, th, td { border: 1px solid #ccc; }';
-        html += 'th { padding: 6px 4px; text-align: left; font-weight: 600; background: #6c757d !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
+        
+        html += 'th.section-header { padding: 10px 4px; text-align: center; font-weight: bold; font-size: 11px; border: 1px solid #ccc; }';
+        html += 'th.job-info-section { color: #495057; background: #e9ecef !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
+        html += 'th.non-credit-section { color: #155724; background: #d4edda !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
+        html += 'th.credit-section { color: #721c24; background: #f8d7da !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
+        
+        html += 'th { padding: 6px 4px; text-align: left; font-weight: 600; font-size: 9px; color: #fff; background: #6c757d !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; white-space: normal; vertical-align: middle; line-height: 1.2; }';
+        html += 'th.non-credit-col { background: #28a745 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
+        html += 'th.credit-col { background: #dc3545 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
+        
         html += 'td { padding: 5px 4px; font-size: 9px; }';
         html += 'tr:nth-child(even) { background: #f8f9fa !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
-        html += 'td.amount-cell { text-align: right; }';
-        html += '';
-        html += '';
+        html += 'tr:nth-child(odd) { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
         
-        html += '';
-        html += 'Signature Authority Limits Report';
-        html += '';
-        html += 'Generated: ' + new Date().toLocaleString() + '';
-        html += 'Total Records: ' + limits.length + '';
+        html += 'td.job-code-cell { font-weight: bold; color: #000; }';
+        html += 'td.job-info-cell { color: #495057; }';
+        
+        html += 'td.amount-cell { text-align: right; font-weight: 500; color: #000; }';
+        html += 'td.non-credit-cell { background: #e8f5e9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
+        html += 'td.credit-cell { background: #ffebee !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
+        
+        html += '@media print { ';
+        html += '  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }';
+        html += '  body { margin: 0; padding: 10px; }';
+        html += '  table { page-break-inside: auto; }';
+        html += '  tr { page-break-inside: avoid; page-break-after: auto; }';
+        html += '  thead { display: table-header-group; }';
+        html += '  th, td { border: 1px solid #999 !important; }';
+        html += '}';
+        html += '</style>';
+        html += '</head><body>';
+        
+        html += '<div class="report-header">';
+        html += '<div class="report-title">Signature Authority Limits Report</div>';
+        html += '<div class="report-meta">';
+        html += '<p><strong>Generated:</strong> ' + new Date().toLocaleString() + '</p>';
+        html += '<p><strong>Total Records:</strong> ' + limits.length + '</p>';
         if (filterDescription && filterDescription !== 'None (All Records)') {
-            html += 'Filters Applied: ' + escapeHtml(filterDescription) + '';
+            html += '<p><strong>Filters Applied:</strong> ' + escapeHtml(filterDescription) + '</p>';
         }
-        html += '';
-
-        html += '';
-        html += 'Job CodeJob TitleLine of Business';
-        html += 'ACHWire Transfer InternalWire Transfer External';
-        html += 'Official Checks InternalOfficial Checks External';
-        html += 'Check Cashing On-UsCheck Cashing Not On-Us';
-        html += 'Remote DepositTS Company Wire LimitsFX Wire Limits';
-        html += 'Overdraft InternalOverdraft External';
-        html += 'Unavailable Funds InternalUnavailable Funds External';
-        html += '';
+        html += '</div>';
+        html += '</div>';
+        
+        // Add disclaimers
+        html += '<div class="disclaimer-section">';
+        html += '<div class="disclaimer-columns">';
+        html += '<div class="disclaimer-left">';
+        html += '<h4 class="disclaimer-header">**REGULATION O LIMITS</h4>';
+        html += '<p class="disclaimer-text">No person may authorize an overdraft greater than $1,000 on a personal account belonging to a Director or Executive Officer of BankUnited (Employee/Officer/Director code of \'O\' or \'D\') or payment from uncollected funds that could result in such an overdraft, unless the account is linked through automated funds transfer to another account at the Bank with sufficient funds to cover the overdraft.</p>';
+        html += '</div>';
+        html += '<div class="disclaimer-right">';
+        html += '<h4 class="disclaimer-header">WIRE TRANSFERS</h4>';
+        html += '<p class="disclaimer-text">Splitting of wire transactions to avoid the constraints imposed by the Signature Authorities document embedded in the wire system should only occur when the wire exceeds the Company\'s maximum limit of $500 Million. In such situations, wires may be split into two or more wires only with the approval of the individuals that are authorized to approve $500 Million transactions.</p>';
+        html += '</div>';
+        html += '</div>';
+        html += '</div>';
+        
+        html += '<table>';
+        html += '<thead>';
+        html += '<tr>';
+        html += '<th colspan="3" class="section-header job-info-section">Job Information</th>';
+        html += '<th colspan="10" class="section-header non-credit-section">Non-Credit Authority</th>';
+        html += '<th colspan="4" class="section-header credit-section">Credit Authority</th>';
+        html += '</tr>';
+        html += '<tr>';
+        html += '<th>Job Code</th>';
+        html += '<th>Job Title</th>';
+        html += '<th>Line of Business</th>';
+        html += '<th class="non-credit-col">ACH</th>';
+        html += '<th class="non-credit-col">Wire Transfer Internal</th>';
+        html += '<th class="non-credit-col">Wire Transfer External</th>';
+        html += '<th class="non-credit-col">Official Checks Internal</th>';
+        html += '<th class="non-credit-col">Official Checks External</th>';
+        html += '<th class="non-credit-col">Check Cashing On-Us</th>';
+        html += '<th class="non-credit-col">Check Cashing Not On-Us</th>';
+        html += '<th class="non-credit-col">Remote Deposit</th>';
+        html += '<th class="non-credit-col">TS Company Wire Limits</th>';
+        html += '<th class="non-credit-col">FX Wire Limits</th>';
+        html += '<th class="credit-col">Overdraft Internal</th>';
+        html += '<th class="credit-col">Overdraft External</th>';
+        html += '<th class="credit-col">Unavailable Funds Internal</th>';
+        html += '<th class="credit-col">Unavailable Funds External</th>';
+        html += '</tr>';
+        html += '</thead>';
+        html += '<tbody>';
 
         limits.forEach(function(limit) {
-            html += '';
-            html += '' + escapeHtml(limit.job_code_display || '-') + '';
-            html += '' + escapeHtml(limit.job_title || '-') + '';
-            html += '' + escapeHtml(limit.job_function || '-') + '';
-            html += '' + formatAmountForPDF(limit.disbursement_ach) + '';
-            html += '' + formatAmountForPDF(limit.disbursement_wire_transfer_internal) + '';
-            html += '' + formatAmountForPDF(limit.disbursement_wire_transfer_external) + '';
-            html += '' + formatAmountForPDF(limit.disbursement_official_checks_internal) + '';
-            html += '' + formatAmountForPDF(limit.disbursement_official_checks_external) + '';
-            html += '' + formatAmountForPDF(limit.check_cashing_on_us) + '';
-            html += '' + formatAmountForPDF(limit.check_cashing_not_on_us) + '';
-            html += '' + formatAmountForPDF(limit.remote_deposit) + '';
-            html += '' + formatAmountForPDF(limit.treasury_solutions_company_wire_limits) + '';
-            html += '' + formatAmountForPDF(limit.fx_wire_limits) + '';
-            html += '' + formatAmountForPDF(limit.overdraft_internal_accounts) + '';
-            html += '' + formatAmountForPDF(limit.overdraft_external_accounts) + '';
-            html += '' + formatAmountForPDF(limit.unavailable_funds_internal_accounts) + '';
-            html += '' + formatAmountForPDF(limit.unavailable_funds_external_accounts) + '';
-            html += '';
+            html += '<tr>';
+            html += '<td class="job-code-cell">' + escapeHtml(limit.job_code_display || '-') + '</td>';
+            html += '<td class="job-info-cell">' + escapeHtml(limit.job_title || '-') + '</td>';
+            html += '<td class="job-info-cell">' + escapeHtml(limit.job_function || '-') + '</td>';
+            html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.disbursement_ach) + '</td>';
+            html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.disbursement_wire_transfer_internal) + '</td>';
+            html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.disbursement_wire_transfer_external) + '</td>';
+            html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.disbursement_official_checks_internal) + '</td>';
+            html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.disbursement_official_checks_external) + '</td>';
+            html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.check_cashing_on_us) + '</td>';
+            html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.check_cashing_not_on_us) + '</td>';
+            html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.remote_deposit) + '</td>';
+            html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.treasury_solutions_company_wire_limits) + '</td>';
+            html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.fx_wire_limits) + '</td>';
+            html += '<td class="amount-cell credit-cell">' + formatAmountForPDF(limit.overdraft_internal_accounts) + '</td>';
+            html += '<td class="amount-cell credit-cell">' + formatAmountForPDF(limit.overdraft_external_accounts) + '</td>';
+            html += '<td class="amount-cell credit-cell">' + formatAmountForPDF(limit.unavailable_funds_internal_accounts) + '</td>';
+            html += '<td class="amount-cell credit-cell">' + formatAmountForPDF(limit.unavailable_funds_external_accounts) + '</td>';
+            html += '</tr>';
         });
 
-        html += '';
+        html += '</tbody></table>';
+        html += '</body></html>';
+
         return html;
     }
 
