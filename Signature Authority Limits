@@ -1295,14 +1295,11 @@
 .column-with-info {
     position: relative;
     padding: 8px 32px 8px 8px !important;
-    display: flex;
-    align-items: center;
 }
 
 .column-with-info .column-text {
-    flex: 1;
+    display: block;
     text-align: left;
-    padding-right: 8px;
 }
 /* Info Icon */
 .limits-table th .info-icon {
