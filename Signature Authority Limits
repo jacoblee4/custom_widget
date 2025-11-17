@@ -281,18 +281,18 @@
    
    <tr>
       <!-- Non-Credit Sub-Categories -->
-      <th colspan="5" class="subsection-header non-credit-col text-center">Disbursement</th>
-      <th colspan="2" class="subsection-header non-credit-col text-center">Check Cashing & Cash Withdrawal</th>
+      <th colspan="5" class="subsection-header non-credit-col text-center subsection-border-green-right">Disbursement</th>
+      <th colspan="2" class="subsection-header non-credit-col text-center subsection-border-green-right">Check Cashing & Cash Withdrawal</th>
       <th colspan="3" class="subsection-header non-credit-col text-center">Product Limits</th>
       
       <!-- Credit Sub-Categories -->
-      <th colspan="2" class="subsection-header credit-col text-center">Overdraft</th>
+      <th colspan="2" class="subsection-header credit-col text-center subsection-border-red-right">Overdraft</th>
       <th colspan="2" class="subsection-header credit-col text-center">Unavailable Funds</th>
    </tr>
    
    <tr>
       <!-- Job Info Columns -->
-      <th class="sticky-col sticky-header sortable" ng-click="c.sortBy('job_code_display')">
+      <th class="sticky-col sticky-header sortable text-center" ng-click="c.sortBy('job_code_display')">
          Job Code 
          <span class="sort-arrows">
             <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'job_code_display' && c.sortDirection === 'asc'}"></i>
@@ -315,7 +315,7 @@
       </th>
       
       <!-- Non-Credit Columns - Disbursement -->
-      <th class="non-credit-col sortable text-center column-with-info" ng-click="c.sortBy('disbursement_ach')">
+      <th class="non-credit-col sortable text-center column-with-info column-border-green-left" ng-click="c.sortBy('disbursement_ach')">
          <span class="info-icon" title="Disbursements – This authority provides approval limits for the disbursement of ACH, Wire Transfers, and/or Official Check transaction types based on the requested and approved selections.">ⓘ</span>
          <span class="column-text">ACH</span>
          <span class="sort-arrows">
@@ -347,7 +347,7 @@
             <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'disbursement_official_checks_internal' && c.sortDirection === 'desc'}"></i>
          </span>
       </th>
-      <th class="non-credit-col sortable text-center column-with-info subsection-last" ng-click="c.sortBy('disbursement_official_checks_external')">
+      <th class="non-credit-col sortable text-center column-with-info column-border-green-right" ng-click="c.sortBy('disbursement_official_checks_external')">
          <span class="info-icon" title="Disbursements – Official Checks for External Accounts (non-BankUnited accounts).">ⓘ</span>
          <span class="column-text">Official Checks External</span>
          <span class="sort-arrows">
@@ -365,7 +365,7 @@
             <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'check_cashing_on_us' && c.sortDirection === 'desc'}"></i>
          </span>
       </th>
-      <th class="non-credit-col sortable text-center column-with-info subsection-last" ng-click="c.sortBy('check_cashing_not_on_us')">
+      <th class="non-credit-col sortable text-center column-with-info column-border-green-right" ng-click="c.sortBy('check_cashing_not_on_us')">
          <span class="info-icon" title="Check Cashing – Ability to approve cashing of checks drawn on another institution (not On-Us).">ⓘ</span>
          <span class="column-text">Check Cashing Not On-Us</span>
          <span class="sort-arrows">
@@ -391,7 +391,7 @@
             <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'treasury_solutions_company_wire_limits' && c.sortDirection === 'desc'}"></i>
          </span>
       </th>
-      <th class="non-credit-col sortable text-center column-with-info subsection-last" ng-click="c.sortBy('fx_wire_limits')">
+      <th class="non-credit-col sortable text-center column-with-info" ng-click="c.sortBy('fx_wire_limits')">
          <span class="info-icon" title="FX Wire Limits – Ability to approve external client wire limits, utilizing the BankUnitedFX Wire Limit Approval Form.">ⓘ</span>
          <span class="column-text">FX Wire Limits</span>
          <span class="sort-arrows">
@@ -401,7 +401,7 @@
       </th>
       
       <!-- Credit Columns - Overdraft -->
-      <th class="credit-col sortable text-center column-with-info" ng-click="c.sortBy('overdraft_internal_accounts')">
+      <th class="credit-col sortable text-center column-with-info column-border-red-left" ng-click="c.sortBy('overdraft_internal_accounts')">
          <span class="info-icon" title="Overdraft – Approval limits for Overdraft transactions. Internal Accounts are defined as BankUnited owned and controlled accounts.">ⓘ</span>
          <span class="column-text">Overdraft Internal</span>
          <span class="sort-arrows">
@@ -409,7 +409,7 @@
             <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'overdraft_internal_accounts' && c.sortDirection === 'desc'}"></i>
          </span>
       </th>
-      <th class="credit-col sortable text-center column-with-info subsection-last" ng-click="c.sortBy('overdraft_external_accounts')">
+      <th class="credit-col sortable text-center column-with-info column-border-red-right" ng-click="c.sortBy('overdraft_external_accounts')">
          <span class="info-icon" title="Overdraft – Approval limits for Overdraft transactions. External Accounts are non-BankUnited accounts.">ⓘ</span>
          <span class="column-text">Overdraft External</span>
          <span class="sort-arrows">
@@ -1085,9 +1085,9 @@
 }
 .sort-arrows {
     position: absolute;
-    bottom: 4px;
-    left: 50%;
-    transform: translateX(-50%);
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
     display: flex;
     flex-direction: column;
     gap: 0;
@@ -1635,6 +1635,120 @@
 /* Add right border to subsection headers for separation */
 .subsection-header:not(:last-child) {
     border-right: 3px solid #6c757d !important;
+}
+/* Text alignment utilities */
+.text-center {
+    text-align: center !important;
+}
+
+.text-left {
+    text-align: left !important;
+}
+
+/* Sticky header for Job Code column - FIXED z-index */
+.sticky-header {
+    position: -webkit-sticky;
+    position: sticky;
+    left: 0 !important;
+    z-index: 12 !important; /* Higher than body cells */
+    background-color: #f8f9fa !important;
+    box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+}
+
+/* Column with info icon - reduced padding and positioning */
+.column-with-info {
+    position: relative;
+    padding-top: 28px !important;
+    padding-bottom: 8px !important;
+    padding-right: 24px !important; /* Make room for sort arrows on right */
+}
+
+.column-with-info .column-text {
+    display: block;
+}
+
+/* Green border separators for non-credit sections */
+.column-border-green-left {
+    border-left: 3px solid #27ae60 !important;
+}
+
+.column-border-green-right {
+    border-right: 3px solid #27ae60 !important;
+}
+
+/* Red border separators for credit sections */
+.column-border-red-left {
+    border-left: 3px solid #e74c3c !important;
+}
+
+.column-border-red-right {
+    border-right: 3px solid #e74c3c !important;
+}
+
+/* Subsection Headers */
+.subsection-header {
+    padding: 8px;
+    font-weight: 600;
+    font-size: 12px;
+    text-align: center;
+    border-bottom: 2px solid #dee2e6;
+    border-right: 1px solid #e9ecef;
+    position: relative;
+}
+
+.subsection-header.non-credit-col {
+    background: #e8f5e9 !important;
+    color: #2e7d32;
+    border-bottom: 2px solid #27ae60;
+}
+
+.subsection-header.credit-col {
+    background: #ffebee !important;
+    color: #c62828;
+    border-bottom: 2px solid #e74c3c;
+}
+
+/* Green borders for subsection headers */
+.subsection-border-green-right {
+    border-right: 3px solid #27ae60 !important;
+}
+
+/* Red borders for subsection headers */
+.subsection-border-red-right {
+    border-right: 3px solid #e74c3c !important;
+}
+
+/* Apply borders to body cells as well */
+.limits-table tbody td:nth-child(4) {
+    border-left: 3px solid #27ae60 !important; /* ACH column */
+}
+
+.limits-table tbody td:nth-child(8) {
+    border-right: 3px solid #27ae60 !important; /* Official Checks External */
+}
+
+.limits-table tbody td:nth-child(10) {
+    border-right: 3px solid #27ae60 !important; /* Check Cashing Not On-Us */
+}
+
+.limits-table tbody td:nth-child(14) {
+    border-left: 3px solid #e74c3c !important; /* Overdraft Internal */
+}
+
+.limits-table tbody td:nth-child(15) {
+    border-right: 3px solid #e74c3c !important; /* Overdraft External */
+}
+
+/* Center red text in disclaimer headers */
+.disclaimer-header {
+    color: #ff0000 !important;
+    font-size: 14px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    padding: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center !important; /* CENTER THE RED TEXT */
 }
 
 
