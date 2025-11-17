@@ -1651,15 +1651,21 @@
     min-width: 250px;
     max-width: 250px;
 }
-
-/* Fixed widths for all authority limit columns - wider to accommodate full currency values */
-.limits-table th:nth-child(n+4),
-.limits-table td:nth-child(n+4) {
-    width: 170px;
-    min-width: 170px;
-    max-width: 170px;
+/* Fixed widths for all authority limit columns - NON-CREDIT (columns 4-13) */
+.limits-table th:nth-child(n+4):nth-child(-n+13),
+.limits-table td:nth-child(n+4):nth-child(-n+13) {
+    width: 150px;
+    min-width: 150px;
+    max-width: 150px;
 }
 
+/* Fixed widths for all authority limit columns - CREDIT (columns 14-17) */
+.limits-table th:nth-child(n+14):nth-child(-n+17),
+.limits-table td:nth-child(n+14):nth-child(-n+17) {
+    width: 150px;
+    min-width: 150px;
+    max-width: 150px;
+}
 /* Override for sticky column to ensure it stays fixed */
 .sticky-col,
 .sticky-header {
@@ -1671,7 +1677,7 @@
 /* Ensure table uses fixed layout */
 .limits-table {
     width: 100%;
-    min-width: 2500px;
+    min-width: 2720px;
     border-collapse: separate;
     border-spacing: 0;
     font-size: 13px;
