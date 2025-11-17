@@ -1028,6 +1028,12 @@
  .limits-table th.sortable:hover {
      background: #e9ecef;
 }
+.limits-table th.sortable {
+     cursor: pointer;
+     user-select: none;
+     position: relative;
+     padding-right: 24px;
+}
  .sort-indicator {
      position: absolute;
      right: 8px;
@@ -1299,14 +1305,6 @@
     cursor: help;
     font-weight: normal;
     vertical-align: text-top;
-}
-
-.limits-table th.sortable {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 4px;
-    flex-wrap: nowrap;
 }
  @media (max-width: 768px) {
      .pagination-controls {
