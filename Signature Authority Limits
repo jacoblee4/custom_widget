@@ -528,19 +528,19 @@
      text-align: left;
      max-width: 1400px;
 }
- .results-container {
+.results-container {
      margin-top: 24px;
      width: 100%;
-     max-width: none !important;
+     max-width: 1400px;
 }
- .results-header {
+.results-header {
      margin-bottom: 16px;
      display: flex;
      justify-content: space-between;
      align-items: flex-start;
      gap: 20px;
      width: 100%;
-     max-width: none !important;
+     max-width: 1400px;
 }
 .table-container {
      overflow-x: auto;
@@ -550,7 +550,7 @@
      background: white;
      margin-bottom: 20px;
      width: 100%;
-     max-width: none !important;
+     max-width: 1400px;
      position: relative;
 }
 .limits-table {
@@ -1089,7 +1089,7 @@
      position: -webkit-sticky;
      position: sticky;
      left: 0 !important;
-     z-index: 15 !important;
+     z-index: 10 !important;
      background-color: #f8f9fa !important;
      box-shadow: 2px 0 4px rgba(0,0,0,0.1);
 }
@@ -1109,34 +1109,24 @@
      position: -webkit-sticky;
      position: sticky;
      left: 0;
-     z-index: 4;
-     background-color: white !important;
+     z-index: 10;
+     background-color: #f8f9fa !important;
      box-shadow: 2px 0 4px rgba(0,0,0,0.1);
      font-weight: 600;
      color: #2c3e50;
 }
 
- .job-code-clickable {
+.job-code-clickable {
      cursor: pointer;
      color: #3498db !important;
      transition: all 0.2s ease;
      position: relative;
 }
 
- .job-code-clickable:hover {
+.job-code-clickable:hover {
      color: #2980b9 !important;
      background-color: #e3f2fd !important;
      transform: translateX(2px);
-}
-.job-code-cell {
-     position: -webkit-sticky;
-     position: sticky;
-     left: 0;
-     z-index: 9;
-     background-color: #f8f9fa !important;
-     box-shadow: 2px 0 4px rgba(0,0,0,0.1);
-     font-weight: 600;
-     color: #2c3e50;
 }
  .limits-table tbody tr:hover .job-code-cell {
      background-color: #f8f9fa;
@@ -1399,11 +1389,10 @@
      position: -webkit-sticky;
      position: sticky;
      left: 0 !important;
-     z-index: 15 !important;
+     z-index: 10 !important;
      background-color: #f8f9fa !important;
      box-shadow: 2px 0 4px rgba(0,0,0,0.1);
 }
-
 
 
 
