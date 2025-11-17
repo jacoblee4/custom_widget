@@ -264,7 +264,8 @@
       <thead>
    <tr>
       <!-- Job Information - spans 3 columns width, 2 rows height -->
-      <th colspan="3" rowspan="2" class="section-header job-info-header text-center sticky-header-multi-row">         <i class="fa fa-briefcase header-icon"></i>Job Information
+      <th colspan="3" rowspan="2" class="section-header job-info-header text-center">      
+         <i class="fa fa-briefcase header-icon"></i>Job Information
       </th>
       
       <!-- Non-Credit Authority - spans 10 columns width, 1 row height -->
@@ -1282,20 +1283,21 @@
 }
 
 .sticky-header {
-    position: -webkit-sticky;
-    position: sticky;
+    position: -webkit-sticky !important;
+    position: sticky !important;
     left: 0 !important;
     z-index: 12 !important;
     background-color: #f8f9fa !important;
-    box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+    box-shadow: 2px 0 4px rgba(0,0,0,0.1) !important;
 }
 
 /* Column with Info Icon */
 .column-with-info {
     position: relative;
-    padding-top: 28px !important;
+    padding-top: 32px !important;
     padding-bottom: 8px !important;
-    padding-right: 24px !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
 }
 
 .column-with-info .column-text {
@@ -1305,7 +1307,7 @@
 /* Info Icon */
 .limits-table th .info-icon {
     position: absolute;
-    top: 6px;
+    top: 4px;
     left: 50%;
     transform: translateX(-50%);
     display: inline-block;
@@ -1321,13 +1323,12 @@
     font-weight: normal;
     z-index: 1;
 }
-
 /* Sort Arrows */
 .sort-arrows {
     position: absolute;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
+    bottom: 6px;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
     flex-direction: column;
     gap: 0;
@@ -1616,15 +1617,6 @@
     .pagination-info {
         text-align: center;
     }
-}
-/* Sticky header for multi-row spanning headers */
-.sticky-header-multi-row {
-    position: -webkit-sticky;
-    position: sticky;
-    left: 0 !important;
-    z-index: 12 !important;
-    background-color: #e9ecef !important;
-    box-shadow: 2px 0 4px rgba(0,0,0,0.1);
 }
 
 
