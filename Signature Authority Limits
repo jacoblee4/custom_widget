@@ -2,11 +2,11 @@
 <!--  HTML TEMPLATE  -->
 <!-- ============================================ -->
 
-
 <div class="authority-lookup-widget">
    <div class="widget-header">
       <h2>Signature Authority Limits Lookup</h2>
    </div>
+   
    <!--  Search Controls  -->
    <div class="search-controls-side-nav">
       <div class="filter-nav-sidebar">
@@ -36,6 +36,7 @@
          <span class="filter-nav-badge" style="display: none;">0</span>
          </button>
       </div>
+      
       <div class="filter-content-area">
          <!-- Limit Amount Content -->
          <div class="filter-content-panel" id="filterPanel-amount">
@@ -76,6 +77,7 @@
                <button class="btn btn-clear-filter" id="clearAmountFilter">Clear</button>
             </div>
          </div>
+         
          <!-- Job Code Content -->
          <div class="filter-content-panel" id="filterPanel-job_code">
             <h3 class="filter-content-title">Job Code Filter</h3>
@@ -104,6 +106,7 @@
                <button class="btn btn-clear-filter" id="clearJobCodeFilter">Clear</button>
             </div>
          </div>
+         
          <!-- Job Title Content -->
          <div class="filter-content-panel" id="filterPanel-job_title">
             <h3 class="filter-content-title">Job Title Filter</h3>
@@ -132,6 +135,7 @@
                <button class="btn btn-clear-filter" id="clearJobTitleFilter">Clear</button>
             </div>
          </div>
+         
          <!-- Line of Business Content -->
          <div class="filter-content-panel" id="filterPanel-job_function">
             <h3 class="filter-content-title">Line of Business Filter</h3>
@@ -160,6 +164,7 @@
                <button class="btn btn-clear-filter" id="clearJobFunctionFilter">Clear</button>
             </div>
          </div>
+         
          <!-- Employee Content -->
          <div class="filter-content-panel" id="filterPanel-employee">
             <h3 class="filter-content-title">Employee Filter</h3>
@@ -190,37 +195,42 @@
          </div>
       </div>
    </div>
+   
    <!-- Active Filters Display -->
    <div id="activeFiltersContainer" style="display: none;" class="active-filters-section">
       <div class="active-filters-header">Active Filters:</div>
       <div id="activeFilters" class="active-filters-list"></div>
    </div>
-   <!-- Clear All Button - Only shows when filters are active -->
+   
+   <!-- Clear All Button -->
    <div id="clearAllContainer" style="display: none;" class="clear-all-container">
       <button id="clearAllButton" class="btn btn-clear-all">
       <i class="fa fa-times-circle"></i> Clear All Filters
       </button>
    </div>
+   
    <!-- Loading Indicator -->
    <div ng-if="c.loading" class="text-center loading-container">
       <i class="fa fa-spinner fa-spin fa-2x"></i>
       <p>Loading authority limits...</p>
    </div>
+   
    <!-- No Results Message -->
    <div ng-if="!c.loading && c.searchPerformed && c.limits.length === 0" class="alert alert-info">
       <i class="fa fa-info-circle"></i>
       No authority limits found matching your search criteria.
    </div>
+   
    <!-- Results Table -->
    <div ng-if="!c.loading && c.limits.length > 0" class="results-container">
       <div class="results-header">
-  <div class="results-header-left">
-   <h4>
-      <i class="fa fa-list"></i>
-      Authority Limits
-      <span class="results-count">({{c.limits.length}} total)</span>
-   </h4>
-</div>
+         <div class="results-header-left">
+            <h4>
+               <i class="fa fa-list"></i>
+               Authority Limits
+               <span class="results-count">({{c.limits.length}} total)</span>
+            </h4>
+         </div>
          <div class="results-header-right">
             <button id="exportExcelButton" class="btn btn-export-excel">
             <i class="fa fa-file-excel-o"></i> Export Excel
@@ -230,291 +240,276 @@
             </button>
          </div>
       </div>
+   </div>
 
-</div>
-
-<!-- Disclaimer Section - Top Header of Table -->
-<div class="table-scroll-wrapper">
-   <div class="disclaimer-section">
-      <div class="disclaimer-columns">
-         <div class="disclaimer-left">
-            <h4 class="disclaimer-header">**REGULATION O LIMITS</h4>
-            <p class="disclaimer-text">No person may authorize an overdraft greater than $1,000 on a personal account belonging to a Director or Executive Officer of BankUnited (Employee/Officer/Director code of 'O' or 'D') or payment from uncollected funds that could result in such an overdraft, unless the account is linked through automated funds transfer to another account at the Bank with sufficient funds to cover the overdraft.</p>
-         </div>
-         <div class="disclaimer-right">
-            <h4 class="disclaimer-header">WIRE TRANSFERS</h4>
-            <p class="disclaimer-text">Splitting of wire transactions to avoid the constraints imposed by the Signature Authorities document embedded in the wire system should only occur when the wire exceeds the Company's maximum limit of $500 Million. In such situations, wires may be split into two or more wires only with the approval of the individuals that are authorized to approve $500 Million transactions.</p>
+   <!-- Disclaimer Section -->
+   <div class="table-scroll-wrapper" ng-if="!c.loading && c.limits.length > 0">
+      <div class="disclaimer-section">
+         <div class="disclaimer-columns">
+            <div class="disclaimer-left">
+               <h4 class="disclaimer-header">**REGULATION O LIMITS</h4>
+               <p class="disclaimer-text">No person may authorize an overdraft greater than $1,000 on a personal account belonging to a Director or Executive Officer of BankUnited (Employee/Officer/Director code of 'O' or 'D') or payment from uncollected funds that could result in such an overdraft, unless the account is linked through automated funds transfer to another account at the Bank with sufficient funds to cover the overdraft.</p>
+            </div>
+            <div class="disclaimer-right">
+               <h4 class="disclaimer-header">WIRE TRANSFERS</h4>
+               <p class="disclaimer-text">Splitting of wire transactions to avoid the constraints imposed by the Signature Authorities document embedded in the wire system should only occur when the wire exceeds the Company's maximum limit of $500 Million. In such situations, wires may be split into two or more wires only with the approval of the individuals that are authorized to approve $500 Million transactions.</p>
+            </div>
          </div>
       </div>
-</div>
 
-<div class="table-container" id="tableContainer">
-   <table class="limits-table">
-      <thead>
-   <tr>
-      <!-- Job Information - spans 3 columns width, 2 rows height -->
-      <th colspan="3" rowspan="2" class="section-header job-info-header text-center">      
-         <i class="fa fa-briefcase header-icon"></i>Job Information
-      </th>
-      
-      <!-- Non-Credit Authority - spans 10 columns width, 1 row height -->
-      <th colspan="10" class="section-header non-credit-header text-left">
-         <i class="fa fa-money header-icon"></i>Non-Credit Authority
-      </th>
-      
-      <!-- Credit Authority - spans 4 columns width, 1 row height -->
-      <th colspan="4" class="section-header credit-header text-left">
-         <i class="fa fa-credit-card header-icon"></i>Credit Authority
-      </th>
-   </tr>
-   
-   <tr>
-      <!-- Non-Credit Sub-Categories -->
-      <th colspan="5" class="subsection-header non-credit-col text-center subsection-border-green-left subsection-border-green-right">Disbursement</th>      <th colspan="2" class="subsection-header non-credit-col text-center subsection-border-green-right">Check Cashing & Cash Withdrawal</th>
-      <th colspan="3" class="subsection-header non-credit-col text-center">Product Limits</th>
-      
-      <!-- Credit Sub-Categories -->
-      <th colspan="2" class="subsection-header credit-col text-center subsection-border-red-left subsection-border-red-right">Overdraft</th>
-      <th colspan="2" class="subsection-header credit-col text-center">Unavailable Funds</th>
-   </tr>
-   
-   <tr>
-      <!-- Job Info Columns -->
-      <th class="sticky-col sticky-header sortable text-center" ng-click="c.sortBy('job_code_display')">
-         Job Code 
-         <span class="sort-arrows">
-            <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'job_code_display' && c.sortDirection === 'asc'}"></i>
-            <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'job_code_display' && c.sortDirection === 'desc'}"></i>
-         </span>
-      </th>
-      <th class="sortable text-center" ng-click="c.sortBy('job_title')">
-         Job Title
-         <span class="sort-arrows">
-            <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'job_title' && c.sortDirection === 'asc'}"></i>
-            <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'job_title' && c.sortDirection === 'desc'}"></i>
-         </span>
-      </th>
-      <th class="sortable text-center" ng-click="c.sortBy('job_function')">
-         Line of Business
-         <span class="sort-arrows">
-            <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'job_function' && c.sortDirection === 'asc'}"></i>
-            <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'job_function' && c.sortDirection === 'desc'}"></i>
-         </span>
-      </th>
-      
-      <!-- Non-Credit Columns - Disbursement -->
-      <th class="non-credit-col sortable text-center column-with-info column-border-green-left" ng-click="c.sortBy('disbursement_ach')">
-         <span class="info-icon" title="Disbursements – This authority provides approval limits for the disbursement of ACH, Wire Transfers, and/or Official Check transaction types based on the requested and approved selections.">ⓘ</span>
-         <span class="column-text">ACH</span>
-         <span class="sort-arrows">
-            <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_ach' && c.sortDirection === 'asc'}"></i>
-            <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'disbursement_ach' && c.sortDirection === 'desc'}"></i>
-         </span>
-      </th>
-      <th class="non-credit-col sortable text-center column-with-info" ng-click="c.sortBy('disbursement_wire_transfer_internal')">
-         <span class="info-icon" title="Disbursements – This authority provides approval limits for the disbursement of ACH, Wire Transfers, and/or Official Check transaction types. Internal Accounts are defined as BankUnited owned and controlled accounts.">ⓘ</span>
-         <span class="column-text">Wire Transfer Internal</span>
-         <span class="sort-arrows">
-            <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_wire_transfer_internal' && c.sortDirection === 'asc'}"></i>
-            <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'disbursement_wire_transfer_internal' && c.sortDirection === 'desc'}"></i>
-         </span>
-      </th>
-      <th class="non-credit-col sortable text-center column-with-info" ng-click="c.sortBy('disbursement_wire_transfer_external')">
-         <span class="info-icon" title="Disbursements – This authority provides approval limits for the disbursement of ACH, Wire Transfers, and/or Official Check transaction types. External Accounts are non-BankUnited accounts.">ⓘ</span>
-         <span class="column-text">Wire Transfer External</span>
-         <span class="sort-arrows">
-            <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_wire_transfer_external' && c.sortDirection === 'asc'}"></i>
-            <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'disbursement_wire_transfer_external' && c.sortDirection === 'desc'}"></i>
-         </span>
-      </th>
-      <th class="non-credit-col sortable text-center column-with-info" ng-click="c.sortBy('disbursement_official_checks_internal')">
-         <span class="info-icon" title="Disbursements – Official Checks for Internal Accounts (BankUnited owned and controlled accounts).">ⓘ</span>
-         <span class="column-text">Official Checks Internal</span>
-         <span class="sort-arrows">
-            <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_official_checks_internal' && c.sortDirection === 'asc'}"></i>
-            <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'disbursement_official_checks_internal' && c.sortDirection === 'desc'}"></i>
-         </span>
-      </th>
-      <th class="non-credit-col sortable text-center column-with-info column-border-green-right" ng-click="c.sortBy('disbursement_official_checks_external')">
-         <span class="info-icon" title="Disbursements – Official Checks for External Accounts (non-BankUnited accounts).">ⓘ</span>
-         <span class="column-text">Official Checks External</span>
-         <span class="sort-arrows">
-            <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_official_checks_external' && c.sortDirection === 'asc'}"></i>
-            <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'disbursement_official_checks_external' && c.sortDirection === 'desc'}"></i>
-         </span>
-      </th>
-      
-      <!-- Non-Credit Columns - Check Cashing -->
-      <th class="non-credit-col sortable text-center column-with-info" ng-click="c.sortBy('check_cashing_on_us')">
-         <span class="info-icon" title="Check Cashing – Ability to approve cash withdrawals and cashing of checks drawn on BankUnited (On-Us).">ⓘ</span>
-         <span class="column-text">Check Cashing On-Us</span>
-         <span class="sort-arrows">
-            <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'check_cashing_on_us' && c.sortDirection === 'asc'}"></i>
-            <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'check_cashing_on_us' && c.sortDirection === 'desc'}"></i>
-         </span>
-      </th>
-      <th class="non-credit-col sortable text-center column-with-info column-border-green-right" ng-click="c.sortBy('check_cashing_not_on_us')">
-         <span class="info-icon" title="Check Cashing – Ability to approve cashing of checks drawn on another institution (not On-Us).">ⓘ</span>
-         <span class="column-text">Check Cashing Not On-Us</span>
-         <span class="sort-arrows">
-            <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'check_cashing_not_on_us' && c.sortDirection === 'asc'}"></i>
-            <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'check_cashing_not_on_us' && c.sortDirection === 'desc'}"></i>
-         </span>
-      </th>
-      
-      <!-- Non-Credit Columns - Product Limits -->
-      <th class="non-credit-col sortable text-center column-with-info" ng-click="c.sortBy('remote_deposit')">
-         <span class="info-icon" title="Remote Deposit – Ability to approve external client Remote Deposit limits, utilizing the TS Daily Remote Deposit Capture Limit Approval Form.">ⓘ</span>
-         <span class="column-text">Remote Deposit</span>
-         <span class="sort-arrows">
-            <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'remote_deposit' && c.sortDirection === 'asc'}"></i>
-            <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'remote_deposit' && c.sortDirection === 'desc'}"></i>
-         </span>
-      </th>
-      <th class="non-credit-col sortable text-center column-with-info" ng-click="c.sortBy('treasury_solutions_company_wire_limits')">
-         <span class="info-icon" title="Treasury Solutions Company Wire Limits – Ability to approve external client wire limits, utilizing the TS Daily Wire Limit Approval Form.">ⓘ</span>
-         <span class="column-text">Treasury Solutions Company Wire Limits</span>
-         <span class="sort-arrows">
-            <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'treasury_solutions_company_wire_limits' && c.sortDirection === 'asc'}"></i>
-            <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'treasury_solutions_company_wire_limits' && c.sortDirection === 'desc'}"></i>
-         </span>
-      </th>
-      <th class="non-credit-col sortable text-center column-with-info" ng-click="c.sortBy('fx_wire_limits')">
-         <span class="info-icon" title="FX Wire Limits – Ability to approve external client wire limits, utilizing the BankUnitedFX Wire Limit Approval Form.">ⓘ</span>
-         <span class="column-text">FX Wire Limits</span>
-         <span class="sort-arrows">
-            <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'fx_wire_limits' && c.sortDirection === 'asc'}"></i>
-            <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'fx_wire_limits' && c.sortDirection === 'desc'}"></i>
-         </span>
-      </th>
-      
-      <!-- Credit Columns - Overdraft -->
-      <th class="credit-col sortable text-center column-with-info column-border-red-left" ng-click="c.sortBy('overdraft_internal_accounts')">
-         <span class="info-icon" title="Overdraft – Approval limits for Overdraft transactions. Internal Accounts are defined as BankUnited owned and controlled accounts.">ⓘ</span>
-         <span class="column-text">Overdraft Internal</span>
-         <span class="sort-arrows">
-            <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'overdraft_internal_accounts' && c.sortDirection === 'asc'}"></i>
-            <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'overdraft_internal_accounts' && c.sortDirection === 'desc'}"></i>
-         </span>
-      </th>
-      <th class="credit-col sortable text-center column-with-info column-border-red-right" ng-click="c.sortBy('overdraft_external_accounts')">
-         <span class="info-icon" title="Overdraft – Approval limits for Overdraft transactions. External Accounts are non-BankUnited accounts.">ⓘ</span>
-         <span class="column-text">Overdraft External</span>
-         <span class="sort-arrows">
-            <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'overdraft_external_accounts' && c.sortDirection === 'asc'}"></i>
-            <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'overdraft_external_accounts' && c.sortDirection === 'desc'}"></i>
-         </span>
-      </th>
-      
-      <!-- Credit Columns - Unavailable Funds -->
-      <th class="credit-col sortable text-center column-with-info" ng-click="c.sortBy('unavailable_funds_internal_accounts')">
-         <span class="info-icon" title="Unavailable Funds – Approval limits for Unavailable Funds transactions. Internal Accounts are defined as BankUnited owned and controlled accounts.">ⓘ</span>
-         <span class="column-text">Unavailable Funds Internal</span>
-         <span class="sort-arrows">
-            <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'unavailable_funds_internal_accounts' && c.sortDirection === 'asc'}"></i>
-            <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'unavailable_funds_internal_accounts' && c.sortDirection === 'desc'}"></i>
-         </span>
-      </th>
-      <th class="credit-col sortable text-center column-with-info" ng-click="c.sortBy('unavailable_funds_external_accounts')">
-         <span class="info-icon" title="Unavailable Funds – Approval limits for Unavailable Funds transactions. External Accounts are non-BankUnited accounts.">ⓘ</span>
-         <span class="column-text">Unavailable Funds External</span>
-         <span class="sort-arrows">
-            <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'unavailable_funds_external_accounts' && c.sortDirection === 'asc'}"></i>
-            <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'unavailable_funds_external_accounts' && c.sortDirection === 'desc'}"></i>
-         </span>
-      </th>
-   </tr>
-</thead>
-      <tbody>
-         <tr ng-repeat="limit in c.getCurrentPageLimits()" ng-class="{'highlight-row': limit.highlighted}">
-            <td class="sticky-col job-code-cell job-code-clickable" ng-click="c.selectJobCode(limit)">
-               <strong>{{limit.job_code_display}}</strong>
-            </td>
-            <td class="job-info-cell">{{limit.job_title || '-'}}</td>
-            <td class="job-info-cell">{{limit.job_function || '-'}}</td>
-            
-            <!-- Non-Credit Values -->
-            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('disbursement_ach') >= 0}">
-               {{c.formatAmount(limit.disbursement_ach)}}
-            </td>
-            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('disbursement_wire_transfer_internal') >= 0}">
-               {{c.formatAmount(limit.disbursement_wire_transfer_internal)}}
-            </td>
-            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('disbursement_wire_transfer_external') >= 0}">
-               {{c.formatAmount(limit.disbursement_wire_transfer_external)}}
-            </td>
-            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('disbursement_official_checks_internal') >= 0}">
-               {{c.formatAmount(limit.disbursement_official_checks_internal)}}
-            </td>
-            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('disbursement_official_checks_external') >= 0}">
-               {{c.formatAmount(limit.disbursement_official_checks_external)}}
-            </td>
-            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('check_cashing_on_us') >= 0}">
-               {{c.formatAmount(limit.check_cashing_on_us)}}
-            </td>
-            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('check_cashing_not_on_us') >= 0}">
-               {{c.formatAmount(limit.check_cashing_not_on_us)}}
-            </td>
-            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('remote_deposit') >= 0}">
-               {{c.formatAmount(limit.remote_deposit)}}
-            </td>
-            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('treasury_solutions_company_wire_limits') >= 0}">
-               {{c.formatAmount(limit.treasury_solutions_company_wire_limits)}}
-            </td>
-            <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('fx_wire_limits') >= 0}">
-               {{c.formatAmount(limit.fx_wire_limits)}}
-            </td>
-            
-            <!-- Credit Values -->
-            <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('overdraft_internal_accounts') >= 0}">
-               {{c.formatAmount(limit.overdraft_internal_accounts)}}
-            </td>
-            <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('overdraft_external_accounts') >= 0}">
-               {{c.formatAmount(limit.overdraft_external_accounts)}}
-            </td>
-            <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('unavailable_funds_internal_accounts') >= 0}">
-               {{c.formatAmount(limit.unavailable_funds_internal_accounts)}}
-            </td>
-            <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('unavailable_funds_external_accounts') >= 0}">
-               {{c.formatAmount(limit.unavailable_funds_external_accounts)}}
-            </td>
-         </tr>
-      </tbody>
-   </table>
-</div>
+      <div class="table-container" id="tableContainer">
+         <table class="limits-table">
+            <thead>
+               <tr>
+                  <th colspan="3" rowspan="2" class="section-header job-info-header text-center">      
+                     <i class="fa fa-briefcase header-icon"></i>Job Information
+                  </th>
+                  <th colspan="10" class="section-header non-credit-header text-left">
+                     <i class="fa fa-money header-icon"></i>Non-Credit Authority
+                  </th>
+                  <th colspan="4" class="section-header credit-header text-left">
+                     <i class="fa fa-credit-card header-icon"></i>Credit Authority
+                  </th>
+               </tr>
+               
+               <tr>
+                  <th colspan="5" class="subsection-header non-credit-col text-center subsection-border-green-left subsection-border-green-right">Disbursement</th>
+                  <th colspan="2" class="subsection-header non-credit-col text-center subsection-border-green-right">Check Cashing & Cash Withdrawal</th>
+                  <th colspan="3" class="subsection-header non-credit-col text-center">Product Limits</th>
+                  <th colspan="2" class="subsection-header credit-col text-center subsection-border-red-left subsection-border-red-right">Overdraft</th>
+                  <th colspan="2" class="subsection-header credit-col text-center">Unavailable Funds</th>
+               </tr>
+               
+               <tr>
+                  <th class="sticky-col sticky-header sortable text-center col-job-code" ng-click="c.sortBy('job_code_display')">
+                     Job Code 
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'job_code_display' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'job_code_display' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  <th class="sortable text-center col-job-title" ng-click="c.sortBy('job_title')">
+                     Job Title
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'job_title' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'job_title' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  <th class="sortable text-center col-job-function" ng-click="c.sortBy('job_function')">
+                     Line of Business
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'job_function' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'job_function' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  
+                  <!-- Non-Credit Columns -->
+                  <th class="non-credit-col sortable text-center column-with-info column-border-green-left col-currency" ng-click="c.sortBy('disbursement_ach')">
+                     <span class="info-icon" title="Disbursements – This authority provides approval limits for the disbursement of ACH, Wire Transfers, and/or Official Check transaction types based on the requested and approved selections.">ⓘ</span>
+                     <span class="column-text">ACH</span>
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_ach' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'disbursement_ach' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  <th class="non-credit-col sortable text-center column-with-info col-currency" ng-click="c.sortBy('disbursement_wire_transfer_internal')">
+                     <span class="info-icon" title="Disbursements – Wire Transfers for Internal Accounts (BankUnited owned and controlled accounts).">ⓘ</span>
+                     <span class="column-text">Wire Transfer Internal</span>
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_wire_transfer_internal' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'disbursement_wire_transfer_internal' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  <th class="non-credit-col sortable text-center column-with-info col-currency" ng-click="c.sortBy('disbursement_wire_transfer_external')">
+                     <span class="info-icon" title="Disbursements – Wire Transfers for External Accounts (non-BankUnited accounts).">ⓘ</span>
+                     <span class="column-text">Wire Transfer External</span>
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_wire_transfer_external' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'disbursement_wire_transfer_external' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  <th class="non-credit-col sortable text-center column-with-info col-currency" ng-click="c.sortBy('disbursement_official_checks_internal')">
+                     <span class="info-icon" title="Disbursements – Official Checks for Internal Accounts.">ⓘ</span>
+                     <span class="column-text">Official Checks Internal</span>
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_official_checks_internal' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'disbursement_official_checks_internal' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  <th class="non-credit-col sortable text-center column-with-info column-border-green-right col-currency" ng-click="c.sortBy('disbursement_official_checks_external')">
+                     <span class="info-icon" title="Disbursements – Official Checks for External Accounts.">ⓘ</span>
+                     <span class="column-text">Official Checks External</span>
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_official_checks_external' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'disbursement_official_checks_external' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  <th class="non-credit-col sortable text-center column-with-info col-currency" ng-click="c.sortBy('check_cashing_on_us')">
+                     <span class="info-icon" title="Check Cashing – Ability to approve cash withdrawals and cashing of checks drawn on BankUnited (On-Us).">ⓘ</span>
+                     <span class="column-text">Check Cashing On-Us</span>
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'check_cashing_on_us' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'check_cashing_on_us' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  <th class="non-credit-col sortable text-center column-with-info column-border-green-right col-currency" ng-click="c.sortBy('check_cashing_not_on_us')">
+                     <span class="info-icon" title="Check Cashing – Ability to approve cashing of checks drawn on another institution (not On-Us).">ⓘ</span>
+                     <span class="column-text">Check Cashing Not On-Us</span>
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'check_cashing_not_on_us' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'check_cashing_not_on_us' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  <th class="non-credit-col sortable text-center column-with-info col-currency" ng-click="c.sortBy('remote_deposit')">
+                     <span class="info-icon" title="Remote Deposit – Ability to approve external client Remote Deposit limits.">ⓘ</span>
+                     <span class="column-text">Remote Deposit</span>
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'remote_deposit' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'remote_deposit' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  <th class="non-credit-col sortable text-center column-with-info col-currency" ng-click="c.sortBy('treasury_solutions_company_wire_limits')">
+                     <span class="info-icon" title="Treasury Solutions Company Wire Limits – Ability to approve external client wire limits.">ⓘ</span>
+                     <span class="column-text">Treasury Solutions Company Wire Limits</span>
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'treasury_solutions_company_wire_limits' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'treasury_solutions_company_wire_limits' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  <th class="non-credit-col sortable text-center column-with-info col-currency" ng-click="c.sortBy('fx_wire_limits')">
+                     <span class="info-icon" title="FX Wire Limits – Ability to approve external client wire limits.">ⓘ</span>
+                     <span class="column-text">FX Wire Limits</span>
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'fx_wire_limits' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'fx_wire_limits' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  
+                  <!-- Credit Columns -->
+                  <th class="credit-col sortable text-center column-with-info column-border-red-left col-currency" ng-click="c.sortBy('overdraft_internal_accounts')">
+                     <span class="info-icon" title="Overdraft – Approval limits for Overdraft transactions (Internal Accounts).">ⓘ</span>
+                     <span class="column-text">Overdraft Internal</span>
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'overdraft_internal_accounts' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'overdraft_internal_accounts' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  <th class="credit-col sortable text-center column-with-info column-border-red-right col-currency" ng-click="c.sortBy('overdraft_external_accounts')">
+                     <span class="info-icon" title="Overdraft – Approval limits for Overdraft transactions (External Accounts).">ⓘ</span>
+                     <span class="column-text">Overdraft External</span>
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'overdraft_external_accounts' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'overdraft_external_accounts' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  <th class="credit-col sortable text-center column-with-info col-currency" ng-click="c.sortBy('unavailable_funds_internal_accounts')">
+                     <span class="info-icon" title="Unavailable Funds – Approval limits for Unavailable Funds transactions (Internal Accounts).">ⓘ</span>
+                     <span class="column-text">Unavailable Funds Internal</span>
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'unavailable_funds_internal_accounts' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'unavailable_funds_internal_accounts' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  <th class="credit-col sortable text-center column-with-info col-currency" ng-click="c.sortBy('unavailable_funds_external_accounts')">
+                     <span class="info-icon" title="Unavailable Funds – Approval limits for Unavailable Funds transactions (External Accounts).">ⓘ</span>
+                     <span class="column-text">Unavailable Funds External</span>
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'unavailable_funds_external_accounts' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'unavailable_funds_external_accounts' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+               </tr>
+            </thead>
+            <tbody>
+               <tr ng-repeat="limit in c.getCurrentPageLimits()" ng-class="{'highlight-row': limit.highlighted}">
+                  <td class="sticky-col job-code-cell job-code-clickable" ng-click="c.selectJobCode(limit)">
+                     <strong>{{limit.job_code_display}}</strong>
+                  </td>
+                  <td class="job-info-cell">{{limit.job_title || '-'}}</td>
+                  <td class="job-info-cell">{{limit.job_function || '-'}}</td>
+                  
+                  <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('disbursement_ach') >= 0}">
+                     {{c.formatAmount(limit.disbursement_ach)}}
+                  </td>
+                  <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('disbursement_wire_transfer_internal') >= 0}">
+                     {{c.formatAmount(limit.disbursement_wire_transfer_internal)}}
+                  </td>
+                  <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('disbursement_wire_transfer_external') >= 0}">
+                     {{c.formatAmount(limit.disbursement_wire_transfer_external)}}
+                  </td>
+                  <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('disbursement_official_checks_internal') >= 0}">
+                     {{c.formatAmount(limit.disbursement_official_checks_internal)}}
+                  </td>
+                  <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('disbursement_official_checks_external') >= 0}">
+                     {{c.formatAmount(limit.disbursement_official_checks_external)}}
+                  </td>
+                  <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('check_cashing_on_us') >= 0}">
+                     {{c.formatAmount(limit.check_cashing_on_us)}}
+                  </td>
+                  <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('check_cashing_not_on_us') >= 0}">
+                     {{c.formatAmount(limit.check_cashing_not_on_us)}}
+                  </td>
+                  <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('remote_deposit') >= 0}">
+                     {{c.formatAmount(limit.remote_deposit)}}
+                  </td>
+                  <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('treasury_solutions_company_wire_limits') >= 0}">
+                     {{c.formatAmount(limit.treasury_solutions_company_wire_limits)}}
+                  </td>
+                  <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('fx_wire_limits') >= 0}">
+                     {{c.formatAmount(limit.fx_wire_limits)}}
+                  </td>
+                  
+                  <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('overdraft_internal_accounts') >= 0}">
+                     {{c.formatAmount(limit.overdraft_internal_accounts)}}
+                  </td>
+                  <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('overdraft_external_accounts') >= 0}">
+                     {{c.formatAmount(limit.overdraft_external_accounts)}}
+                  </td>
+                  <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('unavailable_funds_internal_accounts') >= 0}">
+                     {{c.formatAmount(limit.unavailable_funds_internal_accounts)}}
+                  </td>
+                  <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('unavailable_funds_external_accounts') >= 0}">
+                     {{c.formatAmount(limit.unavailable_funds_external_accounts)}}
+                  </td>
+               </tr>
+            </tbody>
+         </table>
+      </div>
       
       <!-- Pagination -->
-<div ng-if="c.totalPages > 1" class="pagination-footer">
-   <div class="pagination-controls">
-      <nav aria-label="Limits pagination">
-         <ul class="pagination">
-            <li class="page-item" ng-class="{disabled: c.currentPage === 1}">
-               <a class="page-link" href="javascript:void(0)" ng-click="c.previousPage()" aria-label="Previous">
-               <span aria-hidden="true">&laquo;</span>
-               </a>
-            </li>
-            <li class="page-item" ng-repeat="page in c.getPageNumbers()" 
-               ng-class="{active: page === c.currentPage}">
-               <a class="page-link" href="javascript:void(0)" ng-click="c.goToPage(page)">{{page}}</a>
-            </li>
-            <li class="page-item" ng-class="{disabled: c.currentPage === c.totalPages}">
-               <a class="page-link" href="javascript:void(0)" ng-click="c.nextPage()" aria-label="Next">
-               <span aria-hidden="true">&raquo;</span>
-               </a>
-            </li>
-         </ul>
-      </nav>
-      <div class="pagination-info">
-         Showing {{c.getStartIndex() + 1}}-{{c.getEndIndex()}} of {{c.limits.length}} records
+      <div ng-if="c.totalPages > 1" class="pagination-footer">
+         <div class="pagination-controls">
+            <nav aria-label="Limits pagination">
+               <ul class="pagination">
+                  <li class="page-item" ng-class="{disabled: c.currentPage === 1}">
+                     <a class="page-link" href="javascript:void(0)" ng-click="c.previousPage()" aria-label="Previous">
+                     <span aria-hidden="true">&laquo;</span>
+                     </a>
+                  </li>
+                  <li class="page-item" ng-repeat="page in c.getPageNumbers()" 
+                     ng-class="{active: page === c.currentPage}">
+                     <a class="page-link" href="javascript:void(0)" ng-click="c.goToPage(page)">{{page}}</a>
+                  </li>
+                  <li class="page-item" ng-class="{disabled: c.currentPage === c.totalPages}">
+                     <a class="page-link" href="javascript:void(0)" ng-click="c.nextPage()" aria-label="Next">
+                     <span aria-hidden="true">&raquo;</span>
+                     </a>
+                  </li>
+               </ul>
+            </nav>
+            <div class="pagination-info">
+               Showing {{c.getStartIndex() + 1}}-{{c.getEndIndex()}} of {{c.limits.length}} records
+            </div>
+         </div>
       </div>
    </div>
 </div>
 
 
 
-<!-- ============================================ -->
-<!-- UPDATED CSS -->
-<!-- ============================================ -->
+/* ============================================ */
+/* CSS STYLES - Copy this to ServiceNow Widget CSS section */
+/* ============================================ */
 
 .authority-lookup-widget {
     padding: 20px;
@@ -537,6 +532,7 @@
     margin: 0;
 }
 
+/* ========== SEARCH CONTROLS ========== */
 .search-controls-side-nav {
     display: flex;
     gap: 20px;
@@ -638,16 +634,20 @@
     margin-top: 20px;
 }
 
-.btn-add-filter {
-    background: #3498db;
-    color: white;
-    padding: 10px 24px;
+/* ========== BUTTONS ========== */
+.btn {
+    padding: 10px 20px;
     border: none;
     border-radius: 4px;
     font-weight: 600;
     cursor: pointer;
     font-size: 14px;
     transition: all 0.2s ease;
+}
+
+.btn-add-filter {
+    background: #3498db;
+    color: white;
 }
 
 .btn-add-filter:hover {
@@ -657,19 +657,44 @@
 .btn-clear-filter {
     background: #e9ecef;
     color: #495057;
-    padding: 10px 24px;
-    border: none;
-    border-radius: 4px;
-    font-weight: 600;
-    cursor: pointer;
-    font-size: 14px;
-    transition: all 0.2s ease;
 }
 
 .btn-clear-filter:hover {
     background: #dee2e6;
 }
 
+.btn-clear-all {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn-clear-all:hover {
+    background: #c0392b;
+}
+
+.btn-export-excel {
+    background: #27ae60;
+    color: white;
+}
+
+.btn-export-excel:hover {
+    background: #229954;
+}
+
+.btn-export-pdf {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn-export-pdf:hover {
+    background: #c0392b;
+}
+
+.btn-export-excel i, .btn-export-pdf i {
+    margin-right: 6px;
+}
+
+/* ========== ACTIVE FILTERS ========== */
 .active-filters-section {
     background: #f8f9fa;
     border: 1px solid #dee2e6;
@@ -768,6 +793,7 @@
     max-width: 1400px;
 }
 
+/* ========== FORM ELEMENTS ========== */
 .form-group {
     margin-bottom: 16px;
 }
@@ -809,6 +835,7 @@
     opacity: 1;
 }
 
+/* ========== REFERENCE FIELDS ========== */
 .reference-field-wrapper {
     position: relative;
     width: 100%;
@@ -873,6 +900,7 @@
     margin-top: 2px;
 }
 
+/* ========== CURRENCY INPUT ========== */
 .currency-wrapper {
     position: relative;
 }
@@ -899,49 +927,9 @@
     font-style: italic;
 }
 
-.btn {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    font-weight: 600;
-    cursor: pointer;
-    font-size: 14px;
-    transition: all 0.2s ease;
-}
-
-.btn-clear-all {
-    background: #e74c3c;
-    color: white;
-}
-
-.btn-clear-all:hover {
-    background: #c0392b;
-}
-
-.btn-export-excel {
-    background: #27ae60;
-    color: white;
-}
-
-.btn-export-excel:hover {
-    background: #229954;
-}
-
-.btn-export-pdf {
-    background: #e74c3c;
-    color: white;
-}
-
-.btn-export-pdf:hover {
-    background: #c0392b;
-}
-
-.btn-export-excel i, .btn-export-pdf i {
-    margin-right: 6px;
-}
-
+/* ========== LOADING & ALERTS ========== */
 .loading-container {
-    text-align: center;
+    text-center;
     padding: 40px;
 }
 
@@ -962,6 +950,7 @@
     color: #31708f;
 }
 
+/* ========== RESULTS HEADER ========== */
 .results-container {
     margin-top: 24px;
     width: 100%;
@@ -1003,7 +992,8 @@
     color: #7f8c8d;
     font-weight: normal;
 }
-/* Disclaimer Section */
+
+/* ========== DISCLAIMER ========== */
 .disclaimer-section {
     margin: 0;
     background: #fff9e6;
@@ -1054,7 +1044,7 @@
     word-wrap: break-word;
 }
 
-/* Table Wrapper */
+/* ========== TABLE WRAPPER ========== */
 .table-scroll-wrapper {
     width: 100%;
     max-width: 1400px;
@@ -1074,13 +1064,14 @@
     position: relative;
 }
 
-/* Table Styles */
+/* ========== TABLE STYLES WITH FIXED COLUMN WIDTHS ========== */
 .limits-table {
-    width: 100%;
-    min-width: 1800px;
+    width: auto;
+    min-width: 100%;
     border-collapse: separate;
     border-spacing: 0;
     font-size: 13px;
+    table-layout: auto;
 }
 
 .limits-table thead {
@@ -1099,7 +1090,46 @@
     border-right: 1px solid #e9ecef;
     vertical-align: middle;
     line-height: 1.3;
+}
+
+/* JOB CODE - Auto-size to content */
+.col-job-code {
+    width: auto;
     min-width: 80px;
+    white-space: nowrap;
+}
+
+/* JOB TITLE - Max 2 lines wrap */
+.col-job-title {
+    width: auto;
+    min-width: 200px;
+    max-width: 400px;
+    white-space: normal;
+    line-height: 1.3;
+}
+
+/* LINE OF BUSINESS - Max 2 lines wrap */
+.col-job-function {
+    width: auto;
+    min-width: 200px;
+    max-width: 400px;
+    white-space: normal;
+    line-height: 1.3;
+}
+
+/* CURRENCY COLUMNS - Never wrap amounts */
+.col-currency {
+    width: auto;
+    min-width: 130px;
+    white-space: normal;
+    line-height: 1.2;
+}
+
+.col-currency .column-text {
+    display: block;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-height: 4.8em; /* 4 lines at 1.2 line-height */
 }
 
 .limits-table th.sortable {
@@ -1114,7 +1144,7 @@
     background: #e9ecef;
 }
 
-/* Section Headers */
+/* ========== SECTION HEADERS ========== */
 .section-header {
     padding: 16px 10px;
     font-weight: 600;
@@ -1147,7 +1177,7 @@
     font-size: 16px;
 }
 
-/* Subsection Headers */
+/* ========== SUBSECTION HEADERS ========== */
 .subsection-header {
     padding: 8px;
     font-weight: 600;
@@ -1177,6 +1207,7 @@
 .subsection-border-red-right {
     border-right: 3px solid #e74c3c !important;
 }
+
 .subsection-border-green-left {
     border-left: 3px solid #27ae60 !important;
 }
@@ -1185,7 +1216,7 @@
     border-left: 3px solid #e74c3c !important;
 }
 
-/* Column Header Styles */
+/* ========== COLUMN HEADER STYLES ========== */
 .limits-table thead tr:last-child th {
     background: #f8f9fa !important;
 }
@@ -1218,7 +1249,7 @@
     background: #fef5f6;
 }
 
-/* Text Alignment */
+/* ========== TEXT ALIGNMENT ========== */
 .text-center {
     text-align: center !important;
 }
@@ -1227,7 +1258,7 @@
     text-align: left !important;
 }
 
-/* Sticky Column */
+/* ========== STICKY COLUMN ========== */
 .sticky-col {
     position: -webkit-sticky;
     position: sticky;
@@ -1246,7 +1277,7 @@
     box-shadow: 2px 0 4px rgba(0,0,0,0.1) !important;
 }
 
-/* Column with Info Icon */
+/* ========== COLUMN WITH INFO ICON ========== */
 .column-with-info {
     position: relative;
     padding: 8px 32px 8px 8px !important;
@@ -1256,7 +1287,8 @@
     display: block;
     text-align: left;
 }
-/* Info Icon */
+
+/* ========== INFO ICON ========== */
 .limits-table th .info-icon {
     position: absolute;
     top: 4px;
@@ -1274,7 +1306,8 @@
     font-weight: normal;
     z-index: 1;
 }
-/* Sort Arrows */
+
+/* ========== SORT ARROWS ========== */
 .sort-arrows {
     position: absolute;
     bottom: 4px;
@@ -1296,7 +1329,7 @@
     font-weight: bold;
 }
 
-/* Section Border Colors */
+/* ========== SECTION BORDER COLORS ========== */
 .column-border-green-left {
     border-left: 3px solid #27ae60 !important;
 }
@@ -1313,7 +1346,7 @@
     border-right: 3px solid #e74c3c !important;
 }
 
-/* Table Body */
+/* ========== TABLE BODY CELLS ========== */
 .limits-table tbody td {
     padding: 8px;
     border-bottom: 1px solid #e9ecef;
@@ -1346,7 +1379,60 @@
     background-color: #fff3cd !important;
 }
 
-/* Apply borders to body cells */
+/* ========== JOB CODE CELL ========== */
+.job-code-cell {
+    position: -webkit-sticky;
+    position: sticky;
+    left: 0 !important;
+    z-index: 10 !important;
+    background-color: #f8f9fa !important;
+    box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+    font-weight: 600;
+    color: #2c3e50;
+    white-space: nowrap;
+}
+
+.job-code-clickable {
+    cursor: pointer;
+    color: #3498db !important;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.job-code-clickable:hover {
+    color: #2980b9 !important;
+    background-color: #e3f2fd !important;
+    transform: translateX(2px);
+}
+
+/* ========== JOB INFO CELLS ========== */
+.job-info-cell {
+    color: #6c757d;
+    font-size: 13px;
+    white-space: normal;
+    word-wrap: break-word;
+    line-height: 1.4;
+    max-height: 2.8em; /* 2 lines */
+    overflow: hidden;
+}
+
+/* ========== AMOUNT CELLS ========== */
+.amount-cell {
+    text-align: right;
+    font-size: 13px;
+    color: #2c3e50;
+    font-weight: 500;
+    white-space: nowrap !important;
+    padding-right: 12px !important;
+}
+
+.highlight-cell {
+    background-color: #ffc107 !important;
+    font-weight: 700 !important;
+    color: #000 !important;
+}
+
+/* ========== SECTION BORDERS TO BODY CELLS ========== */
 .limits-table tbody td:nth-child(4) {
     border-left: 3px solid #27ae60 !important;
 }
@@ -1367,196 +1453,7 @@
     border-right: 3px solid #e74c3c !important;
 }
 
-/* Job Code Cell */
-.job-code-cell {
-    position: -webkit-sticky;
-    position: sticky;
-    left: 0 !important;
-    z-index: 10 !important;
-    background-color: #f8f9fa !important;
-    box-shadow: 2px 0 4px rgba(0,0,0,0.1);
-    font-weight: 600;
-    color: #2c3e50;
-}
-
-.job-code-clickable {
-    cursor: pointer;
-    color: #3498db !important;
-    transition: all 0.2s ease;
-    position: relative;
-}
-
-.job-code-clickable:hover {
-    color: #2980b9 !important;
-    background-color: #e3f2fd !important;
-    transform: translateX(2px);
-}
-
-/* Cell Styles */
-.job-info-cell {
-    color: #6c757d;
-    font-size: 13px;
-    max-width: 300px;
-    min-width: 150px;
-    word-wrap: break-word;
-    white-space: normal;
-    line-height: 1.4em;
-    max-height: 2.8em;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.amount-cell {
-    text-align: right;
-    font-size: 13px;
-    color: #2c3e50;
-    font-weight: 500;
-    white-space: nowrap;
-    padding-right: 12px !important;
-}
-
-.highlight-cell {
-    background-color: #ffc107 !important;
-    font-weight: 700 !important;
-    color: #000 !important;
-}
-/* Pagination */
-.pagination-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 15px;
-    padding-top: 16px;
-}
-
-.pagination {
-    display: flex;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    gap: 5px;
-}
-
-.page-item {
-    display: inline-block;
-}
-
-.page-link {
-    display: block;
-    padding: 6px 12px;
-    color: #3498db;
-    text-decoration: none;
-    background-color: white;
-    border: 1px solid #dee2e6;
-    border-radius: 4px;
-    transition: all 0.3s;
-}
-
-.page-link:hover {
-    background-color: #e9ecef;
-    border-color: #adb5bd;
-}
-
-.page-item.active .page-link {
-    background-color: #3498db;
-    border-color: #3498db;
-    color: white;
-}
-
-.page-item.disabled .page-link {
-    color: #6c757d;
-    pointer-events: none;
-    cursor: not-allowed;
-    background-color: #fff;
-    border-color: #dee2e6;
-    opacity: 0.5;
-}
-
-.pagination-info {
-    color: #6c757d;
-    font-size: 14px;
-}
-
-.fa {
-    margin-right: 4px;
-}
-
-/* Media Queries */
-@media (max-width: 968px) {
-    .search-controls-side-nav {
-        flex-direction: column;
-    }
-    
-    .filter-nav-sidebar {
-        min-width: 100%;
-        max-width: 100%;
-        flex-direction: row;
-        overflow-x: auto;
-        white-space: nowrap;
-    }
-    
-    .filter-nav-tab {
-        flex-direction: column;
-        text-align: center;
-        gap: 6px;
-        padding: 12px 16px;
-        min-width: 100px;
-    }
-    
-    .filter-nav-icon {
-        font-size: 24px;
-    }
-    
-    .filter-nav-badge {
-        position: absolute;
-        top: 8px;
-        right: 8px;
-        margin-left: 0;
-    }
-    
-    .disclaimer-columns {
-        grid-template-columns: 1fr;
-        gap: 0;
-        min-width: auto;
-    }
-    
-    .disclaimer-left {
-        border-right: none;
-        border-bottom: 2px solid #ffc107;
-        padding-right: 0;
-        padding-bottom: 16px;
-        margin-bottom: 16px;
-    }
-    
-    .disclaimer-right {
-        padding-left: 0;
-    }
-    
-    .results-header {
-        flex-direction: column;
-    }
-    
-    .results-header-right {
-        width: 100%;
-    }
-}
-
-@media (max-width: 768px) {
-    .pagination-controls {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .pagination {
-        justify-content: center;
-    }
-    
-    .pagination-info {
-        text-align: center;
-    }
-}
-/* Pagination Footer */
+/* ========== PAGINATION ========== */
 .pagination-footer {
     border-left: 2px solid #ffc107;
     border-right: 2px solid #ffc107;
@@ -1570,7 +1467,6 @@
     max-width: 1400px;
 }
 
-/* Pagination */
 .pagination-controls {
     display: flex;
     justify-content: space-between;
@@ -1629,59 +1525,83 @@
     font-size: 14px;
     font-weight: 500;
 }
-/* Fixed widths for Job Information columns */
-/* Fixed widths for Job Information columns */
-.limits-table th:nth-child(1),
-.limits-table td:nth-child(1) {
-    width: 120px;
-    min-width: 120px;
-    max-width: 120px;
+
+.fa {
+    margin-right: 4px;
 }
 
-.limits-table th:nth-child(2),
-.limits-table td:nth-child(2) {
-    width: 250px;
-    min-width: 250px;
-    max-width: 250px;
+/* ========== MEDIA QUERIES ========== */
+@media (max-width: 968px) {
+    .search-controls-side-nav {
+        flex-direction: column;
+    }
+    
+    .filter-nav-sidebar {
+        min-width: 100%;
+        max-width: 100%;
+        flex-direction: row;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+    
+    .filter-nav-tab {
+        flex-direction: column;
+        text-align: center;
+        gap: 6px;
+        padding: 12px 16px;
+        min-width: 100px;
+    }
+    
+    .filter-nav-icon {
+        font-size: 24px;
+    }
+    
+    .filter-nav-badge {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        margin-left: 0;
+    }
+    
+    .disclaimer-columns {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+    
+    .disclaimer-left {
+        border-right: none;
+        border-bottom: 2px solid #ffc107;
+        padding-right: 0;
+        padding-bottom: 16px;
+        margin-bottom: 16px;
+    }
+    
+    .disclaimer-right {
+        padding-left: 0;
+    }
+    
+    .results-header {
+        flex-direction: column;
+    }
+    
+    .results-header-right {
+        width: 100%;
+    }
 }
 
-.limits-table th:nth-child(3),
-.limits-table td:nth-child(3) {
-    width: 250px;
-    min-width: 250px;
-    max-width: 250px;
-}
-/* Fixed widths for all authority limit columns - NON-CREDIT (columns 4-13) */
-.limits-table th:nth-child(n+4):nth-child(-n+13),
-.limits-table td:nth-child(n+4):nth-child(-n+13) {
-    width: 150px;
-    min-width: 150px;
-    max-width: 150px;
-}
-
-/* Fixed widths for all authority limit columns - CREDIT (columns 14-17) */
-.limits-table th:nth-child(n+14):nth-child(-n+17),
-.limits-table td:nth-child(n+14):nth-child(-n+17) {
-    width: 150px;
-    min-width: 150px;
-    max-width: 150px;
-}
-/* Override for sticky column to ensure it stays fixed */
-.sticky-col,
-.sticky-header {
-    width: 120px !important;
-    min-width: 120px !important;
-    max-width: 120px !important;
-}
-
-/* Ensure table uses fixed layout */
-.limits-table {
-    width: 100%;
-    min-width: 2720px;
-    border-collapse: separate;
-    border-spacing: 0;
-    font-size: 13px;
-    table-layout: fixed;
+@media (max-width: 768px) {
+    .pagination-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .pagination {
+        justify-content: center;
+    }
+    
+    .pagination-info {
+        text-align: center;
+    }
 }
 
 
@@ -1933,42 +1853,27 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
     c.loading = false;
     c.searchPerformed = false;
     c.currentFilterType = 'amount';
-
-    // Multiple filters support
     c.activeFilters = [];
-
+    
     // Sorting
     c.sortColumn = null;
     c.sortDirection = 'asc';
-
-    // Pagination - 10 items per page
+    
+    // Pagination
     c.currentPage = 1;
     c.pageSize = 10;
     c.totalPages = 1;
 
     // Reference field dropdown states
     var dropdownStates = {
-        jobCode: {
-            visible: false,
-            results: [],
-            selectedIndex: -1
-        },
-        jobTitle: {
-            visible: false,
-            results: [],
-            selectedIndex: -1
-        },
-        employee: {
-            visible: false,
-            results: [],
-            selectedIndex: -1
-        },
-        jobFunction: {
-            visible: false,
-            results: [],
-            selectedIndex: -1
-        }
+        jobCode: { visible: false, results: [], selectedIndex: -1 },
+        jobTitle: { visible: false, results: [], selectedIndex: -1 },
+        employee: { visible: false, results: [], selectedIndex: -1 },
+        jobFunction: { visible: false, results: [], selectedIndex: -1 }
     };
+
+    // Debounce timers
+    var debounceTimers = {};
 
     c.$onInit = function() {
         $timeout(function() {
@@ -1979,11 +1884,8 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
         }, 500);
     };
 
-    // NEW FUNCTION: Handle job code click and broadcast to employee widget
+    // Handle job code click - broadcast to employee widget
     c.selectJobCode = function(limit) {
-        console.log('Job code clicked:', limit.job_code_display, limit.job_code_value);
-
-        // Broadcast event to employee lookup widget
         $rootScope.$broadcast('jobCodeSelected', {
             jobCode: limit.job_code_value,
             jobCodeDisplay: limit.job_code_display,
@@ -1996,11 +1898,7 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
         c.currentFilterType = filterType;
 
         document.querySelectorAll('.filter-nav-tab').forEach(function(tab) {
-            if (tab.getAttribute('data-filter') === filterType) {
-                tab.classList.add('active');
-            } else {
-                tab.classList.remove('active');
-            }
+            tab.classList.toggle('active', tab.getAttribute('data-filter') === filterType);
         });
 
         document.querySelectorAll('.filter-content-panel').forEach(function(panel) {
@@ -2015,22 +1913,19 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
 
     // Load Line of Business options
     function loadLOBOptions() {
-        c.server.get({
-            action: 'getLOBOptions'
-        }).then(function(response) {
-            var lobOptions = response.data.lobs || [];
-            c.lobOptions = lobOptions;
-        }).catch(function(error) {
-            spUtil.addErrorMessage('Failed to load Line of Business options');
-            c.lobOptions = [];
-        });
+        c.server.get({ action: 'getLOBOptions' })
+            .then(function(response) {
+                c.lobOptions = response.data.lobs || [];
+            })
+            .catch(function() {
+                spUtil.addErrorMessage('Failed to load Line of Business options');
+                c.lobOptions = [];
+            });
     }
 
     // Sorting function
     c.sortBy = function(column) {
-        var isNumericColumn = column !== 'job_code_display' &&
-            column !== 'job_title' &&
-            column !== 'job_function';
+        var isNumericColumn = !['job_code_display', 'job_title', 'job_function'].includes(column);
 
         if (c.sortColumn === column) {
             c.sortDirection = c.sortDirection === 'asc' ? 'desc' : 'asc';
@@ -2051,12 +1946,8 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
                 bVal = (bVal || '').toString().toLowerCase();
             }
 
-            if (aVal < bVal) {
-                return c.sortDirection === 'asc' ? -1 : 1;
-            }
-            if (aVal > bVal) {
-                return c.sortDirection === 'asc' ? 1 : -1;
-            }
+            if (aVal < bVal) return c.sortDirection === 'asc' ? -1 : 1;
+            if (aVal > bVal) return c.sortDirection === 'asc' ? 1 : -1;
             return 0;
         });
 
@@ -2065,24 +1956,19 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
 
     // Format amount for display
     c.formatAmount = function(value) {
-        if (!value || value === '0' || parseFloat(value) === 0) {
-            return '-';
-        }
+        if (!value || value === '0' || parseFloat(value) === 0) return '-';
         var numValue = parseFloat(value);
-        if (isNaN(numValue)) return '-';
-        return '$' + numValue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        return isNaN(numValue) ? '-' : '$' + numValue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     };
 
     // Format currency for input
     c.formatCurrency = function(value) {
         if (!value) return '';
-        var numStr = value.toString().replace(/[^\d]/g, '');
-        return numStr.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        return value.toString().replace(/[^\d]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     };
 
     c.getCurrencyValue = function(formattedValue) {
-        if (!formattedValue) return '';
-        return formattedValue.replace(/[^\d]/g, '');
+        return formattedValue ? formattedValue.replace(/[^\d]/g, '') : '';
     };
 
     // Load all limits initially
@@ -2101,15 +1987,14 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
                 c.allLimits = response.data.limits || [];
                 c.limits = c.allLimits.slice();
                 c.currentPage = 1;
-                c.totalPages = parseInt((c.limits.length + c.pageSize - 1) / c.pageSize);
+                c.totalPages = Math.ceil(c.limits.length / c.pageSize);
                 c.loading = false;
 
                 $timeout(function() {
-                    setupColumnFilters();
                     setupExportButtons();
                 }, 100);
             });
-        }).catch(function(error) {
+        }).catch(function() {
             spUtil.addErrorMessage('Failed to load authority limits');
             c.allLimits = [];
             c.limits = [];
@@ -2126,8 +2011,7 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
 
         if (filterType === 'amount') {
             limitType = document.getElementById('limitTypeSelect').value;
-            var amountInput = document.getElementById('amountInput');
-            minAmount = c.getCurrencyValue(amountInput.value);
+            minAmount = c.getCurrencyValue(document.getElementById('amountInput').value);
 
             if (!minAmount) {
                 spUtil.addInfoMessage('Please enter an amount');
@@ -2139,11 +2023,8 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
             searchDisplay = selectedOption.text + ' >= $' + c.formatCurrency(minAmount);
             searchValue = minAmount;
 
-            var existingIndex = -1;
-            c.activeFilters.forEach(function(filter, index) {
-                if (filter.type === 'amount' && filter.limitType === limitType) {
-                    existingIndex = index;
-                }
+            var existingIndex = c.activeFilters.findIndex(function(f) {
+                return f.type === 'amount' && f.limitType === limitType;
             });
 
             if (existingIndex >= 0) {
@@ -2154,7 +2035,7 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
                     display: searchDisplay,
                     limitType: limitType
                 };
-                spUtil.addInfoMessage('Updated ' + selectedOption.text + ' filter to $' + c.formatCurrency(minAmount));
+                spUtil.addInfoMessage('Updated ' + selectedOption.text + ' filter');
             } else {
                 c.activeFilters.push({
                     type: filterType,
@@ -2168,16 +2049,17 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
         } else if (filterType === 'job_function') {
             var lobInput = document.getElementById('jobFunctionInput');
             var lobInputValue = document.getElementById('jobFunctionInputValue');
-
             searchValue = lobInputValue.value || lobInput.value.trim();
+
             if (!searchValue) {
                 spUtil.addInfoMessage('Please select a line of business');
                 return;
             }
+
             searchDisplay = lobInput.value;
 
-            var filterExists = c.activeFilters.some(function(filter) {
-                return filter.type === 'job_function' && filter.value.toLowerCase() === searchValue.toLowerCase();
+            var filterExists = c.activeFilters.some(function(f) {
+                return f.type === 'job_function' && f.value.toLowerCase() === searchValue.toLowerCase();
             });
 
             if (filterExists) {
@@ -2194,12 +2076,21 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
             });
 
         } else {
-            var inputId = filterType === 'job_code' ? 'jobCodeInput' :
-                filterType === 'job_title' ? 'jobTitleInput' : 'employeeInput';
-            var valueId = inputId + 'Value';
+            var inputMap = {
+                'job_code': 'jobCodeInput',
+                'job_title': 'jobTitleInput',
+                'employee': 'employeeInput'
+            };
+            
+            var labelMap = {
+                'job_code': 'Job Code',
+                'job_title': 'Job Title',
+                'employee': 'Employee'
+            };
 
+            var inputId = inputMap[filterType];
             var searchInput = document.getElementById(inputId);
-            var searchInputValue = document.getElementById(valueId);
+            var searchInputValue = document.getElementById(inputId + 'Value');
 
             searchValue = searchInputValue.value;
             if (!searchValue) {
@@ -2209,42 +2100,21 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
 
             searchDisplay = searchInput.value;
 
-            if (filterType === 'employee' && !searchValue) {
-                spUtil.addInfoMessage('Selected employee does not have a valid job code');
-                return;
-            }
-
-            var filterExists = c.activeFilters.some(function(filter) {
+            var filterExists = c.activeFilters.some(function(f) {
                 if (filterType === 'employee') {
-                    return filter.type === filterType && filter.display.toLowerCase() === searchDisplay.toLowerCase();
-                } else {
-                    return filter.type === filterType && filter.value === searchValue;
+                    return f.type === filterType && f.display.toLowerCase() === searchDisplay.toLowerCase();
                 }
+                return f.type === filterType && f.value === searchValue;
             });
 
             if (filterExists) {
-                var existingFilterLabel = filterType === 'employee' ? 'Employee' :
-                    filterType === 'job_code' ? 'Job Code' : 'Job Title';
-                spUtil.addInfoMessage('This ' + existingFilterLabel + ' filter is already active');
+                spUtil.addInfoMessage('This ' + labelMap[filterType] + ' filter is already active');
                 return;
-            }
-
-            var filterTypeLabel = '';
-            switch (filterType) {
-                case 'job_code':
-                    filterTypeLabel = 'Job Code';
-                    break;
-                case 'job_title':
-                    filterTypeLabel = 'Job Title';
-                    break;
-                case 'employee':
-                    filterTypeLabel = 'Employee';
-                    break;
             }
 
             c.activeFilters.push({
                 type: filterType,
-                typeLabel: filterTypeLabel,
+                typeLabel: labelMap[filterType],
                 value: searchValue,
                 display: searchDisplay,
                 limitType: ''
@@ -2259,25 +2129,19 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
 
     // Clear panel inputs
     function clearPanelInputs(filterType) {
-        if (filterType === 'amount') {
-            var amountInput = document.getElementById('amountInput');
-            if (amountInput) amountInput.value = '';
-        } else if (filterType === 'job_function') {
-            var lobInput = document.getElementById('jobFunctionInput');
-            var lobInputValue = document.getElementById('jobFunctionInputValue');
-            if (lobInput) lobInput.value = '';
-            if (lobInputValue) lobInputValue.value = '';
-        } else {
-            var inputId = filterType === 'job_code' ? 'jobCodeInput' :
-                filterType === 'job_title' ? 'jobTitleInput' : 'employeeInput';
-            var valueId = inputId + 'Value';
+        var inputIds = {
+            'amount': ['amountInput'],
+            'job_function': ['jobFunctionInput', 'jobFunctionInputValue'],
+            'job_code': ['jobCodeInput', 'jobCodeInputValue'],
+            'job_title': ['jobTitleInput', 'jobTitleInputValue'],
+            'employee': ['employeeInput', 'employeeInputValue']
+        };
 
-            var searchInput = document.getElementById(inputId);
-            var searchInputValue = document.getElementById(valueId);
-
-            if (searchInput) searchInput.value = '';
-            if (searchInputValue) searchInputValue.value = '';
-        }
+        var ids = inputIds[filterType] || [];
+        ids.forEach(function(id) {
+            var elem = document.getElementById(id);
+            if (elem) elem.value = '';
+        });
     }
 
     // Update filter badges
@@ -2290,7 +2154,7 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
         document.querySelectorAll('.filter-nav-tab').forEach(function(tab) {
             var filterType = tab.getAttribute('data-filter');
             var badge = tab.querySelector('.filter-nav-badge');
-
+            
             if (counts[filterType]) {
                 badge.textContent = counts[filterType];
                 badge.style.display = 'block';
@@ -2324,6 +2188,7 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
 
             var filteredLimits = c.allLimits.slice();
 
+            // Apply job_code filters (OR logic)
             if (filtersByCategory.job_code.length > 0) {
                 filteredLimits = filteredLimits.filter(function(limit) {
                     return filtersByCategory.job_code.some(function(filter) {
@@ -2333,6 +2198,7 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
                 });
             }
 
+            // Apply job_title filters (OR logic)
             if (filtersByCategory.job_title.length > 0) {
                 filteredLimits = filteredLimits.filter(function(limit) {
                     return filtersByCategory.job_title.some(function(filter) {
@@ -2342,6 +2208,7 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
                 });
             }
 
+            // Apply job_function filters (OR logic)
             if (filtersByCategory.job_function.length > 0) {
                 filteredLimits = filteredLimits.filter(function(limit) {
                     return filtersByCategory.job_function.some(function(filter) {
@@ -2351,6 +2218,7 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
                 });
             }
 
+            // Apply employee filters (OR logic)
             if (filtersByCategory.employee.length > 0) {
                 filteredLimits = filteredLimits.filter(function(limit) {
                     return filtersByCategory.employee.some(function(filter) {
@@ -2359,6 +2227,7 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
                 });
             }
 
+            // Apply amount filters (AND logic)
             if (filtersByCategory.amount.length > 0) {
                 filteredLimits = filteredLimits.filter(function(limit) {
                     return filtersByCategory.amount.every(function(filter) {
@@ -2368,21 +2237,21 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
                     });
                 });
 
-                var activeLimitTypes = filtersByCategory.amount.map(function(filter) {
-                    return filter.limitType;
+                var activeLimitTypes = filtersByCategory.amount.map(function(f) {
+                    return f.limitType;
                 });
 
                 filteredLimits.forEach(function(limit) {
                     limit.activeLimitTypes = activeLimitTypes;
                 });
 
-                var sortColumn = filtersByCategory.amount[0].limitType;
-                c.sortColumn = sortColumn;
+                // Auto-sort by first amount filter
+                c.sortColumn = filtersByCategory.amount[0].limitType;
                 c.sortDirection = 'desc';
 
                 filteredLimits.sort(function(a, b) {
-                    var aVal = parseFloat(a[sortColumn]) || 0;
-                    var bVal = parseFloat(b[sortColumn]) || 0;
+                    var aVal = parseFloat(a[c.sortColumn]) || 0;
+                    var bVal = parseFloat(b[c.sortColumn]) || 0;
                     return bVal - aVal;
                 });
             } else {
@@ -2395,8 +2264,7 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
         }
 
         c.currentPage = 1;
-        c.totalPages = parseInt((c.limits.length + c.pageSize - 1) / c.pageSize);
-
+        c.totalPages = Math.ceil(c.limits.length / c.pageSize);
         $scope.$apply();
     }
 
@@ -2408,86 +2276,78 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
 
         if (c.activeFilters.length === 0) {
             container.style.display = 'none';
-            if (clearAllContainer) {
-                clearAllContainer.style.display = 'none';
+            if (clearAllContainer) clearAllContainer.style.display = 'none';
+            return;
+        }
+
+        container.style.display = 'block';
+        if (clearAllContainer) clearAllContainer.style.display = 'block';
+        filtersList.innerHTML = '';
+
+        var filtersByCategory = {
+            amount: [],
+            job_code: [],
+            job_title: [],
+            job_function: [],
+            employee: []
+        };
+
+        c.activeFilters.forEach(function(filter, index) {
+            filter.originalIndex = index;
+            filtersByCategory[filter.type].push(filter);
+        });
+
+        var categoryOrder = ['employee', 'job_code', 'job_title', 'job_function', 'amount'];
+        var addedCategories = 0;
+
+        categoryOrder.forEach(function(categoryType) {
+            var categoryFilters = filtersByCategory[categoryType];
+            if (categoryFilters.length === 0) return;
+
+            if (addedCategories > 0) {
+                var andSeparator = document.createElement('span');
+                andSeparator.className = 'filter-separator';
+                andSeparator.textContent = 'AND';
+                filtersList.appendChild(andSeparator);
             }
-        } else {
-            container.style.display = 'block';
-            if (clearAllContainer) {
-                clearAllContainer.style.display = 'block';
-            }
-            filtersList.innerHTML = '';
 
-            var filtersByCategory = {
-                amount: [],
-                job_code: [],
-                job_title: [],
-                job_function: [],
-                employee: []
-            };
+            var categoryGroup = document.createElement('div');
+            categoryGroup.className = 'filter-category-group';
 
-            c.activeFilters.forEach(function(filter, index) {
-                filter.originalIndex = index;
-                filtersByCategory[filter.type].push(filter);
-            });
-
-            var categoryOrder = ['employee', 'job_code', 'job_title', 'job_function', 'amount'];
-            var addedCategories = 0;
-
-            categoryOrder.forEach(function(categoryType) {
-                var categoryFilters = filtersByCategory[categoryType];
-                if (categoryFilters.length === 0) return;
-
-                if (addedCategories > 0) {
-                    var andSeparator = document.createElement('span');
-                    andSeparator.className = 'filter-separator';
-                    andSeparator.textContent = 'AND';
-                    filtersList.appendChild(andSeparator);
+            categoryFilters.forEach(function(filter, catIndex) {
+                if (catIndex > 0) {
+                    var separator = document.createElement('span');
+                    separator.className = categoryType === 'amount' ? 'filter-and-separator' : 'filter-or-separator';
+                    separator.textContent = categoryType === 'amount' ? 'AND' : 'OR';
+                    categoryGroup.appendChild(separator);
                 }
 
-                var categoryGroup = document.createElement('div');
-                categoryGroup.className = 'filter-category-group';
+                var tag = document.createElement('div');
+                tag.className = 'filter-tag';
 
-                categoryFilters.forEach(function(filter, catIndex) {
-                    if (catIndex > 0) {
-                        var separator = document.createElement('span');
-                        if (categoryType === 'amount') {
-                            separator.className = 'filter-and-separator';
-                            separator.textContent = 'AND';
-                        } else {
-                            separator.className = 'filter-or-separator';
-                            separator.textContent = 'OR';
-                        }
-                        categoryGroup.appendChild(separator);
-                    }
+                var label = document.createElement('span');
+                label.className = 'filter-tag-label';
+                label.textContent = filter.typeLabel + ':';
+                tag.appendChild(label);
 
-                    var tag = document.createElement('div');
-                    tag.className = 'filter-tag';
+                var value = document.createElement('span');
+                value.textContent = filter.display;
+                tag.appendChild(value);
 
-                    var label = document.createElement('span');
-                    label.className = 'filter-tag-label';
-                    label.textContent = filter.typeLabel + ':';
-                    tag.appendChild(label);
+                var removeBtn = document.createElement('button');
+                removeBtn.className = 'filter-tag-remove';
+                removeBtn.innerHTML = '&times;';
+                removeBtn.onclick = function() {
+                    removeFilter(filter.originalIndex);
+                };
+                tag.appendChild(removeBtn);
 
-                    var value = document.createElement('span');
-                    value.textContent = filter.display;
-                    tag.appendChild(value);
-
-                    var removeBtn = document.createElement('button');
-                    removeBtn.className = 'filter-tag-remove';
-                    removeBtn.innerHTML = '&times;';
-                    removeBtn.onclick = function() {
-                        removeFilter(filter.originalIndex);
-                    };
-                    tag.appendChild(removeBtn);
-
-                    categoryGroup.appendChild(tag);
-                });
-
-                filtersList.appendChild(categoryGroup);
-                addedCategories++;
+                categoryGroup.appendChild(tag);
             });
-        }
+
+            filtersList.appendChild(categoryGroup);
+            addedCategories++;
+        });
     }
 
     // Remove specific filter
@@ -2503,18 +2363,14 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
         c.activeFilters = [];
         updateActiveFiltersDisplay();
         updateFilterBadges();
-
         c.limits = c.allLimits.slice();
-
         c.limits.forEach(function(limit) {
             limit.activeLimitTypes = [];
         });
-
         c.currentPage = 1;
-        c.totalPages = parseInt((c.limits.length + c.pageSize - 1) / c.pageSize);
+        c.totalPages = Math.ceil(c.limits.length / c.pageSize);
         c.sortColumn = null;
         c.sortDirection = 'asc';
-
         $scope.$apply();
     }
 
@@ -2528,11 +2384,9 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
         }
 
         var csv = buildCSVContent(limitsToExport);
-
-        var blob = new Blob([csv], {
-            type: 'text/csv;charset=utf-8;'
-        });
+        var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         var link = document.createElement('a');
+        
         if (link.download !== undefined) {
             var url = URL.createObjectURL(blob);
             link.setAttribute('href', url);
@@ -2551,28 +2405,17 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
 
     // Build CSV content
     function buildCSVContent(limits) {
-        var csv = '';
-
         var headers = [
-            'Job Code',
-            'Job Title',
-            'Line of Business',
-            'ACH',
-            'Wire Transfer Internal',
-            'Wire Transfer External',
-            'Official Checks Internal',
-            'Official Checks External',
-            'Check Cashing On-Us',
-            'Check Cashing Not On-Us',
-            'Remote Deposit',
-            'Treasury Solutions Company Wire Limits',
-            'FX Wire Limits',
-            'Overdraft Internal',
-            'Overdraft External',
-            'Unavailable Funds Internal',
-            'Unavailable Funds External'
+            'Job Code', 'Job Title', 'Line of Business',
+            'ACH', 'Wire Transfer Internal', 'Wire Transfer External',
+            'Official Checks Internal', 'Official Checks External',
+            'Check Cashing On-Us', 'Check Cashing Not On-Us',
+            'Remote Deposit', 'Treasury Solutions Company Wire Limits', 'FX Wire Limits',
+            'Overdraft Internal', 'Overdraft External',
+            'Unavailable Funds Internal', 'Unavailable Funds External'
         ];
-        csv += headers.join(',') + '\n';
+        
+        var csv = headers.join(',') + '\n';
 
         limits.forEach(function(limit) {
             var row = [
@@ -2601,15 +2444,19 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
     }
 
     function escapeCSV(value) {
-        if (value === null || value === undefined) {
-            return '""';
-        }
+        if (value === null || value === undefined) return '""';
         value = value.toString().replace(/"/g, '""');
         if (value.includes(',') || value.includes('"') || value.includes('\n')) {
             return '"' + value + '"';
         }
         return '"' + value + '"';
     }
+
+    // Export to PDF (continued below due to length...)
+    
+    c.exportPdf = function() {
+        exportToPDF();
+    };
 
     function exportToPDF() {
         var limitsToExport = c.limits.length > 0 ? c.limits : c.allLimits;
@@ -2621,141 +2468,85 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
 
         var printWindow = window.open('', '_blank');
         var filterDescription = getFilterDescription();
-
         var htmlContent = buildPrintableHTML(limitsToExport, filterDescription);
 
         printWindow.document.write(htmlContent);
         printWindow.document.close();
-
         printWindow.onload = function() {
             printWindow.print();
         };
     }
 
     function buildPrintableHTML(limits, filterDescription) {
-        var html = '<!DOCTYPE html><html><head>';
-        html += '<title>Signature Authority Limits Report</title>';
-        html += '<meta charset="UTF-8">';
-        html += '<style>';
+        var html = '';
+        html += 'Signature Authority Limits Report';
+        html += '';
+        html += '';
         html += '@page { size: landscape; margin: 0.5in; }';
         html += 'body { font-family: Arial, sans-serif; margin: 0; padding: 15px; background: white; }';
-
         html += '.report-header { margin-bottom: 20px; border-bottom: 3px solid #0066cc; padding-bottom: 10px; }';
-        html += '.report-title { color: #0066cc; font-size: 20px; font-weight: bold; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px; }';
-        html += '.report-icon { font-size: 24px; }';
+        html += '.report-title { color: #0066cc; font-size: 20px; font-weight: bold; margin: 0 0 10px 0; }';
         html += '.report-meta { background: #f4f4f4; padding: 10px; border-left: 3px solid #0066cc; margin: 10px 0; }';
         html += '.report-meta p { margin: 4px 0; font-size: 11px; color: #333; }';
-        html += '.report-meta strong { color: #000; font-weight: 600; }';
-
         html += 'table { width: 100%; border-collapse: collapse; font-size: 9px; margin-top: 15px; }';
         html += 'table, th, td { border: 1px solid #ccc; }';
-
-        html += 'th.section-header { padding: 10px 4px; text-align: center; font-weight: bold; font-size: 11px; border: 1px solid #ccc; }';
-        html += 'th.job-info-section { color: #495057; background: #e9ecef !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
-        html += 'th.non-credit-section { color: #155724; background: #d4edda !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
-        html += 'th.credit-section { color: #721c24; background: #f8d7da !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
-
-        html += 'th { padding: 6px 4px; text-align: left; font-weight: 600; font-size: 9px; color: #fff; background: #6c757d !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; white-space: normal; vertical-align: middle; line-height: 1.2; }';
-        html += 'th.non-credit-col { background: #28a745 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
-        html += 'th.credit-col { background: #dc3545 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
-
+        html += 'th { padding: 6px 4px; text-align: left; font-weight: 600; background: #6c757d !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
         html += 'td { padding: 5px 4px; font-size: 9px; }';
         html += 'tr:nth-child(even) { background: #f8f9fa !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
-        html += 'tr:nth-child(odd) { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
-
-        html += 'td.job-code-cell { font-weight: bold; color: #000; }';
-        html += 'td.job-info-cell { color: #495057; }';
-
-        html += 'td.amount-cell { text-align: right; font-weight: 500; color: #000; }';
-        html += 'td.non-credit-cell { background: #e8f5e9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
-        html += 'td.credit-cell { background: #ffebee !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
-
-        html += '@media print { ';
-        html += '  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }';
-        html += '  body { margin: 0; padding: 10px; }';
-        html += '  table { page-break-inside: auto; }';
-        html += '  tr { page-break-inside: avoid; page-break-after: auto; }';
-        html += '  thead { display: table-header-group; }';
-        html += '  th, td { border: 1px solid #999 !important; }';
-        html += '}';
-        html += '</style>';
-        html += '</head><body>';
-
-        html += '<div class="report-header">';
-        html += '<div class="report-title">Signature Authority Limits Report</div>';
-        html += '<div class="report-meta">';
-        html += '<p><strong>Generated:</strong> ' + new Date().toLocaleString() + '</p>';
-        html += '<p><strong>Total Records:</strong> ' + limits.length + '</p>';
+        html += 'td.amount-cell { text-align: right; }';
+        html += '';
+        html += '';
+        
+        html += '';
+        html += 'Signature Authority Limits Report';
+        html += '';
+        html += 'Generated: ' + new Date().toLocaleString() + '';
+        html += 'Total Records: ' + limits.length + '';
         if (filterDescription && filterDescription !== 'None (All Records)') {
-            html += '<p><strong>Filters Applied:</strong> ' + escapeHtml(filterDescription) + '</p>';
+            html += 'Filters Applied: ' + escapeHtml(filterDescription) + '';
         }
-        html += '</div>';
-        html += '</div>';
+        html += '';
 
-        html += '<table>';
-        html += '<thead>';
-        html += '<tr>';
-        html += '<th colspan="3" class="section-header job-info-section">Job Information</th>';
-        html += '<th colspan="10" class="section-header non-credit-section">Non-Credit Authority</th>';
-        html += '<th colspan="4" class="section-header credit-section">Credit Authority</th>';
-        html += '</tr>';
-        html += '<tr>';
-        html += '<th>Job Code</th>';
-        html += '<th>Job Title</th>';
-        html += '<th>Line of Business</th>';
-        html += '<th class="non-credit-col">ACH</th>';
-        html += '<th class="non-credit-col">Wire Transfer Internal</th>';
-        html += '<th class="non-credit-col">Wire Transfer External</th>';
-        html += '<th class="non-credit-col">Official Checks Internal</th>';
-        html += '<th class="non-credit-col">Official Checks External</th>';
-        html += '<th class="non-credit-col">Check Cashing On-Us</th>';
-        html += '<th class="non-credit-col">Check Cashing Not On-Us</th>';
-        html += '<th class="non-credit-col">Remote Deposit</th>';
-        html += '<th class="non-credit-col">TS Company Wire Limits</th>';
-        html += '<th class="non-credit-col">FX Wire Limits</th>';
-        html += '<th class="credit-col">Overdraft Internal</th>';
-        html += '<th class="credit-col">Overdraft External</th>';
-        html += '<th class="credit-col">Unavailable Funds Internal</th>';
-        html += '<th class="credit-col">Unavailable Funds External</th>';
-        html += '</tr>';
-        html += '</thead>';
-        html += '<tbody>';
+        html += '';
+        html += 'Job CodeJob TitleLine of Business';
+        html += 'ACHWire Transfer InternalWire Transfer External';
+        html += 'Official Checks InternalOfficial Checks External';
+        html += 'Check Cashing On-UsCheck Cashing Not On-Us';
+        html += 'Remote DepositTS Company Wire LimitsFX Wire Limits';
+        html += 'Overdraft InternalOverdraft External';
+        html += 'Unavailable Funds InternalUnavailable Funds External';
+        html += '';
 
         limits.forEach(function(limit) {
-            html += '<tr>';
-            html += '<td class="job-code-cell">' + escapeHtml(limit.job_code_display || '-') + '</td>';
-            html += '<td class="job-info-cell">' + escapeHtml(limit.job_title || '-') + '</td>';
-            html += '<td class="job-info-cell">' + escapeHtml(limit.job_function || '-') + '</td>';
-            html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.disbursement_ach) + '</td>';
-            html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.disbursement_wire_transfer_internal) + '</td>';
-            html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.disbursement_wire_transfer_external) + '</td>';
-            html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.disbursement_official_checks_internal) + '</td>';
-            html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.disbursement_official_checks_external) + '</td>';
-            html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.check_cashing_on_us) + '</td>';
-            html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.check_cashing_not_on_us) + '</td>';
-            html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.remote_deposit) + '</td>';
-            html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.treasury_solutions_company_wire_limits) + '</td>';
-            html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.fx_wire_limits) + '</td>';
-            html += '<td class="amount-cell credit-cell">' + formatAmountForPDF(limit.overdraft_internal_accounts) + '</td>';
-            html += '<td class="amount-cell credit-cell">' + formatAmountForPDF(limit.overdraft_external_accounts) + '</td>';
-            html += '<td class="amount-cell credit-cell">' + formatAmountForPDF(limit.unavailable_funds_internal_accounts) + '</td>';
-            html += '<td class="amount-cell credit-cell">' + formatAmountForPDF(limit.unavailable_funds_external_accounts) + '</td>';
-            html += '</tr>';
+            html += '';
+            html += '' + escapeHtml(limit.job_code_display || '-') + '';
+            html += '' + escapeHtml(limit.job_title || '-') + '';
+            html += '' + escapeHtml(limit.job_function || '-') + '';
+            html += '' + formatAmountForPDF(limit.disbursement_ach) + '';
+            html += '' + formatAmountForPDF(limit.disbursement_wire_transfer_internal) + '';
+            html += '' + formatAmountForPDF(limit.disbursement_wire_transfer_external) + '';
+            html += '' + formatAmountForPDF(limit.disbursement_official_checks_internal) + '';
+            html += '' + formatAmountForPDF(limit.disbursement_official_checks_external) + '';
+            html += '' + formatAmountForPDF(limit.check_cashing_on_us) + '';
+            html += '' + formatAmountForPDF(limit.check_cashing_not_on_us) + '';
+            html += '' + formatAmountForPDF(limit.remote_deposit) + '';
+            html += '' + formatAmountForPDF(limit.treasury_solutions_company_wire_limits) + '';
+            html += '' + formatAmountForPDF(limit.fx_wire_limits) + '';
+            html += '' + formatAmountForPDF(limit.overdraft_internal_accounts) + '';
+            html += '' + formatAmountForPDF(limit.overdraft_external_accounts) + '';
+            html += '' + formatAmountForPDF(limit.unavailable_funds_internal_accounts) + '';
+            html += '' + formatAmountForPDF(limit.unavailable_funds_external_accounts) + '';
+            html += '';
         });
 
-        html += '</tbody></table>';
-        html += '</body></html>';
-
+        html += '';
         return html;
     }
 
     function formatAmountForPDF(value) {
-        if (!value || value === '0' || parseFloat(value) === 0) {
-            return '-';
-        }
+        if (!value || value === '0' || parseFloat(value) === 0) return '-';
         var numValue = parseFloat(value);
-        if (isNaN(numValue)) return '-';
-        return '$' + numValue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        return isNaN(numValue) ? '-' : '$' + numValue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     }
 
     function escapeHtml(str) {
@@ -2766,16 +2557,10 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
     }
 
     function getFilterDescription() {
-        if (c.activeFilters.length === 0) {
-            return 'None (All Records)';
-        }
-
-        var descriptions = [];
-        c.activeFilters.forEach(function(filter) {
-            descriptions.push(filter.typeLabel + ': ' + filter.display);
-        });
-
-        return descriptions.join('; ');
+        if (c.activeFilters.length === 0) return 'None (All Records)';
+        return c.activeFilters.map(function(f) {
+            return f.typeLabel + ': ' + f.display;
+        }).join('; ');
     }
 
     // Reference field lookup
@@ -2840,7 +2625,7 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
             } else {
                 noResults.style.display = 'block';
             }
-        }).catch(function(error) {
+        }).catch(function() {
             loading.style.display = 'none';
             hideDropdown(inputId);
         });
@@ -2850,14 +2635,12 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
         var results = dropdownStates[stateKey].results;
         if (index >= 0 && index < results.length) {
             var result = results[index];
-
             var searchInput = document.getElementById(inputId);
             var searchInputValue = document.getElementById(inputId + 'Value');
             searchInput.value = result.display;
 
             if (inputId === 'employeeInput' && result.jobCodeSysId) {
                 searchInputValue.value = result.jobCodeSysId;
-                searchInputValue.setAttribute('data-user-name', result.display);
             } else {
                 searchInputValue.value = result.value;
             }
@@ -2869,9 +2652,8 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
     function hideDropdown(inputId) {
         var dropdownId = inputId.replace('Input', 'Dropdown');
         var dropdown = document.getElementById(dropdownId);
-        if (dropdown) {
-            dropdown.style.display = 'none';
-        }
+        if (dropdown) dropdown.style.display = 'none';
+        
         var stateKey = inputId.replace('Input', '');
         if (dropdownStates[stateKey]) {
             dropdownStates[stateKey].visible = false;
@@ -2929,51 +2711,18 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
         var results = dropdownStates.jobFunction.results;
         if (index >= 0 && index < results.length) {
             var result = results[index];
-            var lobInput = document.getElementById('jobFunctionInput');
-            var lobInputValue = document.getElementById('jobFunctionInputValue');
-
-            lobInput.value = result.display;
-            lobInputValue.value = result.value;
-
+            document.getElementById('jobFunctionInput').value = result.display;
+            document.getElementById('jobFunctionInputValue').value = result.value;
             hideLOBDropdown();
         }
     }
 
     function hideLOBDropdown() {
         var dropdown = document.getElementById('jobFunctionDropdown');
-        if (dropdown) {
-            dropdown.style.display = 'none';
-        }
+        if (dropdown) dropdown.style.display = 'none';
         if (dropdownStates.jobFunction) {
             dropdownStates.jobFunction.visible = false;
             dropdownStates.jobFunction.selectedIndex = -1;
-        }
-    }
-
-    // Setup column filter checkboxes
-    function setupColumnFilters() {
-        var showNonCreditCheckbox = document.getElementById('showNonCredit');
-        var showCreditCheckbox = document.getElementById('showCredit');
-        var tableContainer = document.querySelector('.table-container');
-
-        if (showNonCreditCheckbox && tableContainer) {
-            showNonCreditCheckbox.addEventListener('change', function() {
-                if (this.checked) {
-                    tableContainer.classList.remove('hide-non-credit');
-                } else {
-                    tableContainer.classList.add('hide-non-credit');
-                }
-            });
-        }
-
-        if (showCreditCheckbox && tableContainer) {
-            showCreditCheckbox.addEventListener('change', function() {
-                if (this.checked) {
-                    tableContainer.classList.remove('hide-credit');
-                } else {
-                    tableContainer.classList.add('hide-credit');
-                }
-            });
         }
     }
 
@@ -2983,7 +2732,6 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
         if (exportExcelBtn) {
             var newExcelBtn = exportExcelBtn.cloneNode(true);
             exportExcelBtn.parentNode.replaceChild(newExcelBtn, exportExcelBtn);
-
             newExcelBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 exportToExcel();
@@ -2991,173 +2739,94 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
         }
     }
 
-    // Initialize widget
+    // Initialize widget - setup all event listeners
     function initializeWidget() {
+        // Filter tab navigation
         document.querySelectorAll('.filter-nav-tab').forEach(function(tab) {
             tab.addEventListener('click', function() {
                 switchFilterTab(this.getAttribute('data-filter'));
             });
         });
 
-        var addAmountBtn = document.getElementById('addAmountFilter');
-        if (addAmountBtn) {
-            addAmountBtn.addEventListener('click', function() {
-                addFilterFromPanel('amount');
-            });
-        }
+        // Add filter buttons
+        var addButtons = [
+            { id: 'addAmountFilter', type: 'amount' },
+            { id: 'addJobCodeFilter', type: 'job_code' },
+            { id: 'addJobTitleFilter', type: 'job_title' },
+            { id: 'addJobFunctionFilter', type: 'job_function' },
+            { id: 'addEmployeeFilter', type: 'employee' }
+        ];
 
-        var addJobCodeBtn = document.getElementById('addJobCodeFilter');
-        if (addJobCodeBtn) {
-            addJobCodeBtn.addEventListener('click', function() {
-                addFilterFromPanel('job_code');
-            });
-        }
+        addButtons.forEach(function(btn) {
+            var elem = document.getElementById(btn.id);
+            if (elem) {
+                elem.addEventListener('click', function() {
+                    addFilterFromPanel(btn.type);
+                });
+            }
+        });
 
-        var addJobTitleBtn = document.getElementById('addJobTitleFilter');
-        if (addJobTitleBtn) {
-            addJobTitleBtn.addEventListener('click', function() {
-                addFilterFromPanel('job_title');
-            });
-        }
+        // Clear filter buttons
+        var clearButtons = [
+            { id: 'clearAmountFilter', type: 'amount' },
+            { id: 'clearJobCodeFilter', type: 'job_code' },
+            { id: 'clearJobTitleFilter', type: 'job_title' },
+            { id: 'clearJobFunctionFilter', type: 'job_function' },
+            { id: 'clearEmployeeFilter', type: 'employee' }
+        ];
 
-        var addJobFunctionBtn = document.getElementById('addJobFunctionFilter');
-        if (addJobFunctionBtn) {
-            addJobFunctionBtn.addEventListener('click', function() {
-                addFilterFromPanel('job_function');
-            });
-        }
+        clearButtons.forEach(function(btn) {
+            var elem = document.getElementById(btn.id);
+            if (elem) {
+                elem.addEventListener('click', function() {
+                    clearPanelInputs(btn.type);
+                });
+            }
+        });
 
-        var addEmployeeBtn = document.getElementById('addEmployeeFilter');
-        if (addEmployeeBtn) {
-            addEmployeeBtn.addEventListener('click', function() {
-                addFilterFromPanel('employee');
-            });
-        }
-
-        var clearAmountBtn = document.getElementById('clearAmountFilter');
-        if (clearAmountBtn) {
-            clearAmountBtn.addEventListener('click', function() {
-                clearPanelInputs('amount');
-            });
-        }
-
-        var clearJobCodeBtn = document.getElementById('clearJobCodeFilter');
-        if (clearJobCodeBtn) {
-            clearJobCodeBtn.addEventListener('click', function() {
-                clearPanelInputs('job_code');
-            });
-        }
-
-        var clearJobTitleBtn = document.getElementById('clearJobTitleFilter');
-        if (clearJobTitleBtn) {
-            clearJobTitleBtn.addEventListener('click', function() {
-                clearPanelInputs('job_title');
-            });
-        }
-
-        var clearJobFunctionBtn = document.getElementById('clearJobFunctionFilter');
-        if (clearJobFunctionBtn) {
-            clearJobFunctionBtn.addEventListener('click', function() {
-                clearPanelInputs('job_function');
-            });
-        }
-
-        var clearEmployeeBtn = document.getElementById('clearEmployeeFilter');
-        if (clearEmployeeBtn) {
-            clearEmployeeBtn.addEventListener('click', function() {
-                clearPanelInputs('employee');
-            });
-        }
-
+        // Clear all button
         var clearAllBtn = document.getElementById('clearAllButton');
         if (clearAllBtn) {
-            clearAllBtn.addEventListener('click', function() {
-                clearAllFilters();
-            });
+            clearAllBtn.addEventListener('click', clearAllFilters);
         }
 
-        var exportPdfBtn = document.getElementById('exportPdfButton');
-        if (exportPdfBtn) {
-            exportPdfBtn.addEventListener('click', function() {
-                exportToPDF();
-            });
-        }
+        // Reference field inputs with debounce
+        var referenceInputs = [
+            { id: 'jobCodeInput', type: 'job_code' },
+            { id: 'jobTitleInput', type: 'job_title' },
+            { id: 'employeeInput', type: 'employee' }
+        ];
 
-        var jobCodeInput = document.getElementById('jobCodeInput');
-        var jobCodeDebounce;
-        if (jobCodeInput) {
-            jobCodeInput.addEventListener('input', function(e) {
-                clearTimeout(jobCodeDebounce);
-                jobCodeDebounce = setTimeout(function() {
-                    if (e.target.value.length >= 2) {
-                        performReferenceLookup(e.target.value, 'job_code', 'jobCodeInput');
-                    } else {
-                        hideDropdown('jobCodeInput');
+        referenceInputs.forEach(function(input) {
+            var elem = document.getElementById(input.id);
+            if (elem) {
+                elem.addEventListener('input', function(e) {
+                    clearTimeout(debounceTimers[input.id]);
+                    debounceTimers[input.id] = setTimeout(function() {
+                        if (e.target.value.length >= 2) {
+                            performReferenceLookup(e.target.value, input.type, input.id);
+                        } else {
+                            hideDropdown(input.id);
+                        }
+                    }, 300);
+                });
+
+                elem.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        addFilterFromPanel(input.type);
+                    } else if (e.key === 'Escape') {
+                        hideDropdown(input.id);
                     }
-                }, 300);
-            });
+                });
+            }
+        });
 
-            jobCodeInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') {
-                    addFilterFromPanel('job_code');
-                } else if (e.key === 'Escape') {
-                    hideDropdown('jobCodeInput');
-                }
-            });
-        }
-
-        var jobTitleInput = document.getElementById('jobTitleInput');
-        var jobTitleDebounce;
-        if (jobTitleInput) {
-            jobTitleInput.addEventListener('input', function(e) {
-                clearTimeout(jobTitleDebounce);
-                jobTitleDebounce = setTimeout(function() {
-                    if (e.target.value.length >= 2) {
-                        performReferenceLookup(e.target.value, 'job_title', 'jobTitleInput');
-                    } else {
-                        hideDropdown('jobTitleInput');
-                    }
-                }, 300);
-            });
-
-            jobTitleInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') {
-                    addFilterFromPanel('job_title');
-                } else if (e.key === 'Escape') {
-                    hideDropdown('jobTitleInput');
-                }
-            });
-        }
-
-        var employeeInput = document.getElementById('employeeInput');
-        var employeeDebounce;
-        if (employeeInput) {
-            employeeInput.addEventListener('input', function(e) {
-                clearTimeout(employeeDebounce);
-                employeeDebounce = setTimeout(function() {
-                    if (e.target.value.length >= 2) {
-                        performReferenceLookup(e.target.value, 'employee', 'employeeInput');
-                    } else {
-                        hideDropdown('employeeInput');
-                    }
-                }, 300);
-            });
-
-            employeeInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') {
-                    addFilterFromPanel('employee');
-                } else if (e.key === 'Escape') {
-                    hideDropdown('employeeInput');
-                }
-            });
-        }
-
+        // Job Function (LOB) input
         var jobFunctionInput = document.getElementById('jobFunctionInput');
-        var jobFunctionDebounce;
         if (jobFunctionInput) {
             jobFunctionInput.addEventListener('input', function(e) {
-                clearTimeout(jobFunctionDebounce);
-                jobFunctionDebounce = setTimeout(function() {
+                clearTimeout(debounceTimers.jobFunction);
+                debounceTimers.jobFunction = setTimeout(function() {
                     performLOBLookup(e.target.value);
                 }, 200);
             });
@@ -3171,12 +2840,11 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
             });
 
             jobFunctionInput.addEventListener('focus', function(e) {
-                if (e.target.value.length >= 0) {
-                    performLOBLookup(e.target.value);
-                }
+                performLOBLookup(e.target.value);
             });
         }
 
+        // Amount input with currency formatting
         var amountInput = document.getElementById('amountInput');
         if (amountInput) {
             var isUpdating = false;
@@ -3193,8 +2861,9 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
 
                 var newLength = formattedValue.length;
                 var lengthDiff = newLength - oldLength;
-                var newCursorPosition = (cursorPosition + lengthDiff) > 0 ? (cursorPosition + lengthDiff) : 0;
-                setTimeout(() => {
+                var newCursorPosition = Math.max(0, cursorPosition + lengthDiff);
+                
+                setTimeout(function() {
                     event.target.setSelectionRange(newCursorPosition, newCursorPosition);
                 }, 0);
 
@@ -3211,6 +2880,7 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
             });
         }
 
+        // Pagination functions
         c.getCurrentPageLimits = function() {
             var start = (c.currentPage - 1) * c.pageSize;
             var end = start + c.pageSize;
@@ -3227,21 +2897,15 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
         };
 
         c.previousPage = function() {
-            if (c.currentPage > 1) {
-                c.currentPage--;
-            }
+            if (c.currentPage > 1) c.currentPage--;
         };
 
         c.nextPage = function() {
-            if (c.currentPage < c.totalPages) {
-                c.currentPage++;
-            }
+            if (c.currentPage < c.totalPages) c.currentPage++;
         };
 
         c.goToPage = function(page) {
-            if (page >= 1 && page <= c.totalPages) {
-                c.currentPage = page;
-            }
+            if (page >= 1 && page <= c.totalPages) c.currentPage = page;
         };
 
         c.getPageNumbers = function() {
@@ -3251,7 +2915,7 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
             var endPage = c.totalPages;
 
             if (c.totalPages > maxPagesToShow) {
-                var middlePage = parseInt(maxPagesToShow / 2);
+                var middlePage = Math.floor(maxPagesToShow / 2);
                 if (c.currentPage <= middlePage) {
                     endPage = maxPagesToShow;
                 } else if (c.currentPage >= c.totalPages - middlePage) {
@@ -3269,13 +2933,11 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
             return pages;
         };
 
+        // Close dropdowns when clicking outside
         document.addEventListener('click', function(e) {
-            var refWrappers = document.querySelectorAll('.reference-field-wrapper');
             var clickedInside = false;
-            refWrappers.forEach(function(wrapper) {
-                if (wrapper.contains(e.target)) {
-                    clickedInside = true;
-                }
+            document.querySelectorAll('.reference-field-wrapper').forEach(function(wrapper) {
+                if (wrapper.contains(e.target)) clickedInside = true;
             });
 
             if (!clickedInside) {
@@ -3285,13 +2947,5 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
                 hideLOBDropdown();
             }
         });
-
-        $timeout(function() {
-            setupColumnFilters();
-        }, 1000);
     }
-
-    c.exportPdf = function() {
-        exportToPDF();
-    };
 };
