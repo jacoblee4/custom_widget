@@ -1840,10 +1840,6 @@
 
 
 
-<!-- ============================================ -->
-<!-- CLIENT CONTROLLER -->
-<!-- ============================================ -->
-
 // ============================================
 // CLIENT CONTROLLER - FIXED PDF & ADDED DISCLAIMERS TO EXPORTS
 // Copy this to ServiceNow Widget "Client Controller" section
@@ -2408,25 +2404,11 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
         }
     }
 
-    // Build CSV content - WITH DISCLAIMERS
+    // Build CSV content - WITH DISCLAIMERS AT BOTTOM
     function buildCSVContent(limits) {
         var csv = '';
         
-        // Add title
-        csv += '"Signature Authority Limits Report"\n';
-        csv += '"Generated: ' + new Date().toLocaleString() + '"\n';
-        csv += '"Total Records: ' + limits.length + '"\n';
-        csv += '\n';
-        
-        // Add disclaimers
-        csv += '"**REGULATION O LIMITS"\n';
-        csv += '"No person may authorize an overdraft greater than $1,000 on a personal account belonging to a Director or Executive Officer of BankUnited (Employee/Officer/Director code of \'O\' or \'D\') or payment from uncollected funds that could result in such an overdraft, unless the account is linked through automated funds transfer to another account at the Bank with sufficient funds to cover the overdraft."\n';
-        csv += '\n';
-        csv += '"WIRE TRANSFERS"\n';
-        csv += '"Splitting of wire transactions to avoid the constraints imposed by the Signature Authorities document embedded in the wire system should only occur when the wire exceeds the Company\'s maximum limit of $500 Million. In such situations, wires may be split into two or more wires only with the approval of the individuals that are authorized to approve $500 Million transactions."\n';
-        csv += '\n';
-        
-        // Add headers
+        // Add headers first
         var headers = [
             'Job Code', 'Job Title', 'Line of Business',
             'ACH', 'Wire Transfer Internal', 'Wire Transfer External',
@@ -2439,6 +2421,7 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
         
         csv += headers.join(',') + '\n';
 
+        // Add data rows
         limits.forEach(function(limit) {
             var row = [
                 escapeCSV(limit.job_code_display || ''),
@@ -2461,6 +2444,17 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
             ];
             csv += row.join(',') + '\n';
         });
+
+        // Add 2 empty rows
+        csv += '\n';
+        csv += '\n';
+        
+        // Add disclaimers at the bottom
+        csv += '"**REGULATION O LIMITS"\n';
+        csv += '"No person may authorize an overdraft greater than $1,000 on a personal account belonging to a Director or Executive Officer of BankUnited (Employee/Officer/Director code of \'O\' or \'D\') or payment from uncollected funds that could result in such an overdraft, unless the account is linked through automated funds transfer to another account at the Bank with sufficient funds to cover the overdraft."\n';
+        csv += '\n';
+        csv += '"WIRE TRANSFERS"\n';
+        csv += '"Splitting of wire transactions to avoid the constraints imposed by the Signature Authorities document embedded in the wire system should only occur when the wire exceeds the Company\'s maximum limit of $500 Million. In such situations, wires may be split into two or more wires only with the approval of the individuals that are authorized to approve $500 Million transactions."\n';
 
         return csv;
     }
