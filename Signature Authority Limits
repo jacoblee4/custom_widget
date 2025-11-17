@@ -263,17 +263,17 @@
    <table class="limits-table">
       <thead>
          <tr>
-            <!-- Job Information - spans 3 rows -->
-            <th rowspan="3" class="sticky-col section-header job-info-header">
+            <!-- Job Information - spans 3 columns width, 2 rows height -->
+            <th colspan="3" rowspan="2" class="section-header job-info-header">
                <i class="fa fa-briefcase header-icon"></i>Job Information
             </th>
             
-            <!-- Non-Credit Authority - spans 2 columns width, 1 row height -->
+            <!-- Non-Credit Authority - spans 10 columns width, 1 row height -->
             <th colspan="10" class="section-header non-credit-header">
                <i class="fa fa-money header-icon"></i>Non-Credit Authority
             </th>
             
-            <!-- Credit Authority - spans 2 columns width, 1 row height -->
+            <!-- Credit Authority - spans 4 columns width, 1 row height -->
             <th colspan="4" class="section-header credit-header">
                <i class="fa fa-credit-card header-icon"></i>Credit Authority
             </th>
@@ -291,6 +291,29 @@
          </tr>
          
          <tr>
+            <!-- Job Info Columns -->
+            <th class="sticky-col sortable" ng-click="c.sortBy('job_code_display')">
+               Job Code 
+               <span class="sort-arrows">
+                  <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'job_code_display' && c.sortDirection === 'asc'}"></i>
+                  <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'job_code_display' && c.sortDirection === 'desc'}"></i>
+               </span>
+            </th>
+            <th class="sortable" ng-click="c.sortBy('job_title')">
+               Job Title
+               <span class="sort-arrows">
+                  <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'job_title' && c.sortDirection === 'asc'}"></i>
+                  <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'job_title' && c.sortDirection === 'desc'}"></i>
+               </span>
+            </th>
+            <th class="sortable" ng-click="c.sortBy('job_function')">
+               Line of Business
+               <span class="sort-arrows">
+                  <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'job_function' && c.sortDirection === 'asc'}"></i>
+                  <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'job_function' && c.sortDirection === 'desc'}"></i>
+               </span>
+            </th>
+            
             <!-- Non-Credit Columns - Disbursement -->
             <th class="non-credit-col sortable" ng-click="c.sortBy('disbursement_ach')">
                <span class="info-icon" title="Disbursements – This authority provides approval limits for the disbursement of ACH, Wire Transfers, and/or Official Check transaction types based on the requested and approved selections.">ⓘ</span>
@@ -416,13 +439,11 @@
       </thead>
       <tbody>
          <tr ng-repeat="limit in c.getCurrentPageLimits()" ng-class="{'highlight-row': limit.highlighted}">
-            <td class="sticky-col job-info-cell-group">
-               <div class="job-code-clickable" ng-click="c.selectJobCode(limit)">
-                  <strong>{{limit.job_code_display}}</strong>
-               </div>
-               <div class="job-title">{{limit.job_title || '-'}}</div>
-               <div class="job-function">{{limit.job_function || '-'}}</div>
+            <td class="sticky-col job-code-cell job-code-clickable" ng-click="c.selectJobCode(limit)">
+               <strong>{{limit.job_code_display}}</strong>
             </td>
+            <td class="job-info-cell">{{limit.job_title || '-'}}</td>
+            <td class="job-info-cell">{{limit.job_function || '-'}}</td>
             
             <!-- Non-Credit Values -->
             <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('disbursement_ach') >= 0}">
@@ -1030,16 +1051,19 @@
      margin-right: 8px;
      font-size: 16px;
 }
- .limits-table th {
-     background: #f8f9fa;
-     font-weight: 600;
-     color: #495057;
-     padding: 10px 8px;
-     text-align: left;
-     border-bottom: 2px solid #dee2e6;
-     white-space: nowrap;
-     font-size: 12px;
-     border-right: 1px solid #e9ecef;
+.limits-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+    padding: 10px 8px;
+    text-align: center; /* CHANGED from left */
+    border-bottom: 2px solid #dee2e6;
+    white-space: normal;
+    font-size: 12px;
+    border-right: 1px solid #e9ecef;
+    vertical-align: middle;
+    line-height: 1.3;
+    min-width: 80px;
 }
  .limits-table th.sortable:hover {
      background: #e9ecef;
@@ -1528,6 +1552,27 @@
     max-width: 200px;
     white-space: normal;
     word-wrap: break-word;
+}
+/* Subsection Headers */
+.subsection-header {
+    padding: 10px 8px;
+    font-weight: 600;
+    font-size: 12px;
+    text-align: center;
+    border-bottom: 2px solid #dee2e6;
+    border-right: 1px solid #e9ecef;
+}
+
+.subsection-header.non-credit-col {
+    background: #e8f5e9 !important;
+    color: #2e7d32;
+    border-bottom: 2px solid #27ae60;
+}
+
+.subsection-header.credit-col {
+    background: #ffebee !important;
+    color: #c62828;
+    border-bottom: 2px solid #e74c3c;
 }
 
 
