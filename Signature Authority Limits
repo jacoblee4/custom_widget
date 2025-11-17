@@ -495,28 +495,28 @@
 </div>
       
       <!-- Pagination -->
-      <div ng-if="c.totalPages > 1" class="pagination-controls">
-         <nav aria-label="Limits pagination">
-            <ul class="pagination">
-               <li class="page-item" ng-class="{disabled: c.currentPage === 1}">
-                  <a class="page-link" href="javascript:void(0)" ng-click="c.previousPage()" aria-label="Previous">
-                  <span aria-hidden="true">&laquo;</span>
-                  </a>
-               </li>
-               <li class="page-item" ng-repeat="page in c.getPageNumbers()" 
-                  ng-class="{active: page === c.currentPage}">
-                  <a class="page-link" href="javascript:void(0)" ng-click="c.goToPage(page)">{{page}}</a>
-               </li>
-               <li class="page-item" ng-class="{disabled: c.currentPage === c.totalPages}">
-                  <a class="page-link" href="javascript:void(0)" ng-click="c.nextPage()" aria-label="Next">
-                  <span aria-hidden="true">&raquo;</span>
-                  </a>
-               </li>
-            </ul>
-         </nav>
-         <div class="pagination-info">
-            Showing {{c.getStartIndex() + 1}}-{{c.getEndIndex()}} of {{c.limits.length}} records
-         </div>
+<div ng-if="c.totalPages > 1" class="pagination-footer">
+   <div class="pagination-controls">
+      <nav aria-label="Limits pagination">
+         <ul class="pagination">
+            <li class="page-item" ng-class="{disabled: c.currentPage === 1}">
+               <a class="page-link" href="javascript:void(0)" ng-click="c.previousPage()" aria-label="Previous">
+               <span aria-hidden="true">&laquo;</span>
+               </a>
+            </li>
+            <li class="page-item" ng-repeat="page in c.getPageNumbers()" 
+               ng-class="{active: page === c.currentPage}">
+               <a class="page-link" href="javascript:void(0)" ng-click="c.goToPage(page)">{{page}}</a>
+            </li>
+            <li class="page-item" ng-class="{disabled: c.currentPage === c.totalPages}">
+               <a class="page-link" href="javascript:void(0)" ng-click="c.nextPage()" aria-label="Next">
+               <span aria-hidden="true">&raquo;</span>
+               </a>
+            </li>
+         </ul>
+      </nav>
+      <div class="pagination-info">
+         Showing {{c.getStartIndex() + 1}}-{{c.getEndIndex()}} of {{c.limits.length}} records
       </div>
    </div>
 </div>
@@ -1613,7 +1613,79 @@
         text-align: center;
     }
 }
+/* Pagination Footer */
+.pagination-footer {
+    border-left: 2px solid #ffc107;
+    border-right: 2px solid #ffc107;
+    border-bottom: 2px solid #ffc107;
+    border-top: 2px solid #dee2e6;
+    border-radius: 0 0 6px 6px;
+    background: #f8f9fa;
+    margin-top: -20px;
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 1400px;
+}
 
+/* Pagination */
+.pagination-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    padding: 16px 20px;
+    margin: 0;
+}
+
+.pagination {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 5px;
+}
+
+.page-item {
+    display: inline-block;
+}
+
+.page-link {
+    display: block;
+    padding: 6px 12px;
+    color: #3498db;
+    text-decoration: none;
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    transition: all 0.3s;
+}
+
+.page-link:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+}
+
+.page-item.active .page-link {
+    background-color: #3498db;
+    border-color: #3498db;
+    color: white;
+}
+
+.page-item.disabled .page-link {
+    color: #6c757d;
+    pointer-events: none;
+    cursor: not-allowed;
+    background-color: #fff;
+    border-color: #dee2e6;
+    opacity: 0.5;
+}
+
+.pagination-info {
+    color: #6c757d;
+    font-size: 14px;
+    font-weight: 500;
+}
 
 
 <!-- ============================================ -->
