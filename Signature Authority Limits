@@ -7,7 +7,7 @@
    <div class="widget-header">
       <h2>Signature Authority Limits Lookup</h2>
    </div>
-   <!-- Search Controls -->
+   <!--  Search Controls  -->
    <div class="search-controls-side-nav">
       <div class="filter-nav-sidebar">
          <button class="filter-nav-tab" data-filter="amount">
@@ -462,7 +462,6 @@
       </div>
    </div>
 </div>
-
 
 
 
@@ -1088,7 +1087,6 @@
      color: #2c3e50;
 }
 
-/* NEW STYLES FOR CLICKABLE JOB CODES */
  .job-code-clickable {
      cursor: pointer;
      color: #3498db !important;
@@ -1322,7 +1320,7 @@
 
 
 <!-- ============================================ -->
-<!-- SERVER SCRIPT - NO CHANGES NEEDED -->
+<!-- SERVER SCRIPT -  -->
 <!-- ============================================ -->
 
 (function() {
@@ -1557,7 +1555,7 @@
 
 
 <!-- ============================================ -->
-<!-- CLIENT CONTROLLER - UPDATED WITH JOB CODE CLICK HANDLER -->
+<!-- CLIENT CONTROLLER -->
 <!-- ============================================ -->
 
 api.controller = function($scope, $timeout, $rootScope, spUtil) {
@@ -1618,7 +1616,7 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
     // NEW FUNCTION: Handle job code click and broadcast to employee widget
     c.selectJobCode = function(limit) {
         console.log('Job code clicked:', limit.job_code_display, limit.job_code_value);
-        
+
         // Broadcast event to employee lookup widget
         $rootScope.$broadcast('jobCodeSelected', {
             jobCode: limit.job_code_value,
@@ -2031,7 +2029,7 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
         }
 
         c.currentPage = 1;
-         c.totalPages = parseInt((c.limits.length + c.pageSize - 1) / c.pageSize);
+        c.totalPages = parseInt((c.limits.length + c.pageSize - 1) / c.pageSize);
 
         $scope.$apply();
     }
@@ -2053,7 +2051,7 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
                 clearAllContainer.style.display = 'block';
             }
             filtersList.innerHTML = '';
-            
+
             var filtersByCategory = {
                 amount: [],
                 job_code: [],
@@ -2847,63 +2845,63 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
             });
         }
 
-c.getCurrentPageLimits = function() {
-    var start = (c.currentPage - 1) * c.pageSize;
-    var end = start + c.pageSize;
-    return c.limits.slice(start, end);
-};
+        c.getCurrentPageLimits = function() {
+            var start = (c.currentPage - 1) * c.pageSize;
+            var end = start + c.pageSize;
+            return c.limits.slice(start, end);
+        };
 
-c.getStartIndex = function() {
-    return (c.currentPage - 1) * c.pageSize;
-};
+        c.getStartIndex = function() {
+            return (c.currentPage - 1) * c.pageSize;
+        };
 
-c.getEndIndex = function() {
-    var end = c.currentPage * c.pageSize;
-    return end > c.limits.length ? c.limits.length : end;
-};
+        c.getEndIndex = function() {
+            var end = c.currentPage * c.pageSize;
+            return end > c.limits.length ? c.limits.length : end;
+        };
 
-c.previousPage = function() {
-    if (c.currentPage > 1) {
-        c.currentPage--;
-    }
-};
+        c.previousPage = function() {
+            if (c.currentPage > 1) {
+                c.currentPage--;
+            }
+        };
 
-c.nextPage = function() {
-    if (c.currentPage < c.totalPages) {
-        c.currentPage++;
-    }
-};
+        c.nextPage = function() {
+            if (c.currentPage < c.totalPages) {
+                c.currentPage++;
+            }
+        };
 
-c.goToPage = function(page) {
-    if (page >= 1 && page <= c.totalPages) {
-        c.currentPage = page;
-    }
-};
+        c.goToPage = function(page) {
+            if (page >= 1 && page <= c.totalPages) {
+                c.currentPage = page;
+            }
+        };
 
-c.getPageNumbers = function() {
-    var pages = [];
-    var maxPagesToShow = 5;
-    var startPage = 1;
-    var endPage = c.totalPages;
-    
-    if (c.totalPages > maxPagesToShow) {
-        var middlePage = parseInt(maxPagesToShow / 2);
-        if (c.currentPage <= middlePage) {
-            endPage = maxPagesToShow;
-        } else if (c.currentPage >= c.totalPages - middlePage) {
-            startPage = c.totalPages - maxPagesToShow + 1;
-        } else {
-            startPage = c.currentPage - middlePage;
-            endPage = c.currentPage + middlePage;
-        }
-    }
-    
-    for (var i = startPage; i <= endPage; i++) {
-        pages.push(i);
-    }
-    
-    return pages;
-};
+        c.getPageNumbers = function() {
+            var pages = [];
+            var maxPagesToShow = 5;
+            var startPage = 1;
+            var endPage = c.totalPages;
+
+            if (c.totalPages > maxPagesToShow) {
+                var middlePage = parseInt(maxPagesToShow / 2);
+                if (c.currentPage <= middlePage) {
+                    endPage = maxPagesToShow;
+                } else if (c.currentPage >= c.totalPages - middlePage) {
+                    startPage = c.totalPages - maxPagesToShow + 1;
+                } else {
+                    startPage = c.currentPage - middlePage;
+                    endPage = c.currentPage + middlePage;
+                }
+            }
+
+            for (var i = startPage; i <= endPage; i++) {
+                pages.push(i);
+            }
+
+            return pages;
+        };
 
         document.addEventListener('click', function(e) {
             var refWrappers = document.querySelectorAll('.reference-field-wrapper');
