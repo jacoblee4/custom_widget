@@ -214,7 +214,7 @@
    <!-- Results Table -->
    <div ng-if="!c.loading && c.limits.length > 0" class="results-container">
       <div class="results-header">
-        <div class="results-header-left">
+  <div class="results-header-left">
    <h4>
       <i class="fa fa-list"></i>
       Authority Limits
@@ -231,22 +231,6 @@
       <span>Credit Authority</span>
       </label>
    </div>
-   
-</div>
-
-<!-- Disclaimer Section -->
-<div class="disclaimer-section">
-      <div class="disclaimer-columns">
-         <div class="disclaimer-left">
-            <h4 class="disclaimer-header">**Regulation O Limits</h4>
-            <p class="disclaimer-text">No person may authorize an overdraft greater than $1,000 on a personal account belonging to a Director or Executive Officer of BankUnited (Employee/Officer/Director code of 'O' or 'D') or payment from uncollected funds that could result in such an overdraft, unless the account is linked through automated funds transfer to another account at the Bank with sufficient funds to cover the overdraft.</p>
-         </div>
-         <div class="disclaimer-right">
-            <h4 class="disclaimer-header">Wire Transfers</h4>
-            <p class="disclaimer-text">Splitting of wire transactions to avoid the constraints imposed by the Signature Authorities document embedded in the wire system should only occur when the wire exceeds the Company's maximum limit of $500 Million. In such situations, wires may be split into two or more wires only with the approval of the individuals that are authorized to approve $500 Million transactions.</p>
-         </div>
-      </div>
-   </div>
 </div>
          <div class="results-header-right">
             <button id="exportExcelButton" class="btn btn-export-excel">
@@ -256,10 +240,26 @@
             <i class="fa fa-file-pdf-o"></i> Export PDF
             </button>
          </div>
+      </div>
+
 </div>
 
 <!-- Top Scrollbar -->
 <div class="table-scroll-wrapper">
+   <!-- Disclaimer Section - Top Header of Table -->
+   <div class="disclaimer-section">
+      <div class="disclaimer-columns">
+         <div class="disclaimer-left">
+            <h4 class="disclaimer-header">**REGULATION O LIMITS</h4>
+            <p class="disclaimer-text">No person may authorize an overdraft greater than $1,000 on a personal account belonging to a Director or Executive Officer of BankUnited (Employee/Officer/Director code of 'O' or 'D') or payment from uncollected funds that could result in such an overdraft, unless the account is linked through automated funds transfer to another account at the Bank with sufficient funds to cover the overdraft.</p>
+         </div>
+         <div class="disclaimer-right">
+            <h4 class="disclaimer-header">WIRE TRANSFERS</h4>
+            <p class="disclaimer-text">Splitting of wire transactions to avoid the constraints imposed by the Signature Authorities document embedded in the wire system should only occur when the wire exceeds the Company's maximum limit of $500 Million. In such situations, wires may be split into two or more wires only with the approval of the individuals that are authorized to approve $500 Million transactions.</p>
+         </div>
+      </div>
+   </div>
+
    <div class="table-scroll-top" id="topScrollbar">
       <div class="table-scroll-top-inner" id="topScrollbarInner"></div>
    </div>
@@ -554,14 +554,20 @@
 }
 .table-container {
      overflow-x: auto;
-     border: 2px solid #ffc107;
+     border-left: 2px solid #ffc107;
+     border-right: 2px solid #ffc107;
+     border-bottom: 2px solid #ffc107;
      border-radius: 0 0 6px 6px;
      border-top: none;
      background: white;
      margin-bottom: 20px;
      width: 100%;
-     max-width: 1400px;
      position: relative;
+}
+.table-scroll-wrapper {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0;
 }
 .limits-table {
      width: 100%;
@@ -1103,11 +1109,20 @@
      background-color: #f8f9fa !important;
      box-shadow: 2px 0 4px rgba(0,0,0,0.1);
 }
- .limits-table tbody td {
+.limits-table tbody td {
      padding: 8px;
      border-bottom: 1px solid #e9ecef;
      vertical-align: middle;
      border-right: 1px solid #f1f3f5;
+}
+
+.limits-table tbody td.sticky-col {
+     position: -webkit-sticky;
+     position: sticky;
+     left: 0 !important;
+     z-index: 5 !important;
+     background-color: white !important;
+     box-shadow: 2px 0 4px rgba(0,0,0,0.1);
 }
  .limits-table tbody tr:hover {
      background-color: #f8f9fa;
@@ -1138,8 +1153,8 @@
      background-color: #e3f2fd !important;
      transform: translateX(2px);
 }
- .limits-table tbody tr:hover .job-code-cell {
-     background-color: #f8f9fa;
+.limits-table tbody tr:hover .job-code-cell {
+     background-color: #f8f9fa !important;
 }
  .limits-table tbody tr.highlight-row .job-code-cell {
      background-color: #fff3cd !important;
@@ -1258,10 +1273,10 @@
     margin: 0;
     background: #fff9e6;
     border: 2px solid #ffc107;
+    border-bottom: none;
     border-radius: 6px 6px 0 0;
     padding: 16px 20px;
     width: 100%;
-    max-width: 1400px;
     overflow-x: auto;
 }
 .disclaimer-columns {
@@ -1440,8 +1455,10 @@
 .table-scroll-top {
     overflow-x: auto;
     overflow-y: hidden;
-    border: 2px solid #ffc107;
+    border-left: 2px solid #ffc107;
+    border-right: 2px solid #ffc107;
     border-bottom: 1px solid #dee2e6;
+    border-top: none;
     border-radius: 0;
     background: #f8f9fa;
     height: 20px;
