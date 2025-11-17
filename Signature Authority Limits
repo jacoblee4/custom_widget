@@ -1294,22 +1294,21 @@
 /* Column with Info Icon */
 .column-with-info {
     position: relative;
-    padding-top: 32px !important;
-    padding-bottom: 8px !important;
-    padding-left: 8px !important;
-    padding-right: 8px !important;
+    padding: 8px 32px 8px 8px !important;
+    display: flex;
+    align-items: center;
 }
 
 .column-with-info .column-text {
-    display: block;
+    flex: 1;
+    text-align: left;
+    padding-right: 8px;
 }
-
 /* Info Icon */
 .limits-table th .info-icon {
     position: absolute;
     top: 4px;
-    left: 50%;
-    transform: translateX(-50%);
+    right: 8px;
     display: inline-block;
     width: 16px;
     height: 16px;
@@ -1326,9 +1325,8 @@
 /* Sort Arrows */
 .sort-arrows {
     position: absolute;
-    bottom: 6px;
-    left: 50%;
-    transform: translateX(-50%);
+    bottom: 4px;
+    right: 8px;
     display: flex;
     flex-direction: column;
     gap: 0;
