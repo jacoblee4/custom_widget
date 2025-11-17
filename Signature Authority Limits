@@ -220,6 +220,19 @@
                Authority Limits
                <span class="results-count">({{c.limits.length}} total)</span>
             </h4>
+            <!-- Disclaimer Section -->
+<div class="disclaimer-section">
+   <div class="disclaimer-columns">
+      <div class="disclaimer-left">
+         <h4 class="disclaimer-header">Regulation O Limits</h4>
+         <p class="disclaimer-text">No person may authorize an overdraft greater than $1,000 on a personal account belonging to a Director or Executive Officer of BankUnited (Employee/Officer/Director code of 'O' or 'D') or payment from uncollected funds that could result in such an overdraft, unless the account is linked through automated funds transfer to another account at the Bank with sufficient funds to cover the overdraft.</p>
+      </div>
+      <div class="disclaimer-right">
+         <h4 class="disclaimer-header">Wire Transfers</h4>
+         <p class="disclaimer-text">Splitting of wire transactions to avoid the constraints imposed by the Signature Authorities document embedded in the wire system should only occur when the wire exceeds the Company's maximum limit of $500 Million. In such situations, wires may be split into two or more wires only with the approval of the individuals that are authorized to approve $500 Million transactions.</p>
+      </div>
+   </div>
+</div>
             <div class="column-filter">
                <span class="filter-label">Show Columns:</span>
                <label class="filter-checkbox">
@@ -280,70 +293,80 @@
                   </th>
                   <!-- Non-Credit Columns -->
                   <th class="non-credit-col sortable" ng-click="c.sortBy('disbursement_ach')">
-                     ACH
+   ACH
+   <span class="info-icon" title="Disbursements – This authority provides approval limits for the disbursement of ACH, Wire Transfers, and/or Official Check transaction types based on the requested and approved selections.">ⓘ</span>
                      <span class="sort-arrows">
                      <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_ach' && c.sortDirection === 'asc'}"></i>
                      <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'disbursement_ach' && c.sortDirection === 'desc'}"></i>
                      </span>
                   </th>
                   <th class="non-credit-col sortable" ng-click="c.sortBy('disbursement_wire_transfer_internal')">
-                     Wire Transfer Internal
+   Wire Transfer Internal
+   <span class="info-icon" title="Disbursements – This authority provides approval limits for the disbursement of ACH, Wire Transfers, and/or Official Check transaction types. Internal Accounts are defined as BankUnited owned and controlled accounts.">ⓘ</span>
                      <span class="sort-arrows">
                      <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_wire_transfer_internal' && c.sortDirection === 'asc'}"></i>
                      <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'disbursement_wire_transfer_internal' && c.sortDirection === 'desc'}"></i>
                      </span>
                   </th>
                   <th class="non-credit-col sortable" ng-click="c.sortBy('disbursement_wire_transfer_external')">
-                     Wire Transfer External
+   Wire Transfer External
+   <span class="info-icon" title="Disbursements – This authority provides approval limits for the disbursement of ACH, Wire Transfers, and/or Official Check transaction types. External Accounts are non-BankUnited accounts.">ⓘ</span>
                      <span class="sort-arrows">
                      <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_wire_transfer_external' && c.sortDirection === 'asc'}"></i>
                      <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'disbursement_wire_transfer_external' && c.sortDirection === 'desc'}"></i>
                      </span>
                   </th>
                   <th class="non-credit-col sortable" ng-click="c.sortBy('disbursement_official_checks_internal')">
-                     Official Checks Internal
+   Official Checks Internal
+   <span class="info-icon" title="Disbursements – Official Checks for Internal Accounts (BankUnited owned and controlled accounts).">ⓘ</span>
                      <span class="sort-arrows">
                      <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_official_checks_internal' && c.sortDirection === 'asc'}"></i>
                      <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'disbursement_official_checks_internal' && c.sortDirection === 'desc'}"></i>
                      </span>
                   </th>
                   <th class="non-credit-col sortable" ng-click="c.sortBy('disbursement_official_checks_external')">
-                     Official Checks External
+   Official Checks External
+   <span class="info-icon" title="Disbursements – Official Checks for External Accounts (non-BankUnited accounts).">ⓘ</span>
                      <span class="sort-arrows">
                      <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_official_checks_external' && c.sortDirection === 'asc'}"></i>
                      <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'disbursement_official_checks_external' && c.sortDirection === 'desc'}"></i>
                      </span>
                   </th>
-                  <th class="non-credit-col sortable" ng-click="c.sortBy('check_cashing_on_us')">
-                     Check Cashing On-Us
+                 <th class="non-credit-col sortable" ng-click="c.sortBy('check_cashing_on_us')">
+   Check Cashing On-Us
+   <span class="info-icon" title="Check Cashing – Ability to approve cash withdrawals and cashing of checks drawn on BankUnited (On-Us).">ⓘ</span>
                      <span class="sort-arrows">
                      <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'check_cashing_on_us' && c.sortDirection === 'asc'}"></i>
                      <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'check_cashing_on_us' && c.sortDirection === 'desc'}"></i>
                      </span>
                   </th>
                   <th class="non-credit-col sortable" ng-click="c.sortBy('check_cashing_not_on_us')">
-                     Check Cashing Not On-Us
+   Check Cashing Not On-Us
+   <span class="info-icon" title="Check Cashing – Ability to approve cashing of checks drawn on another institution (not On-Us).">ⓘ</span>
                      <span class="sort-arrows">
                      <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'check_cashing_not_on_us' && c.sortDirection === 'asc'}"></i>
                      <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'check_cashing_not_on_us' && c.sortDirection === 'desc'}"></i>
                      </span>
                   </th>
                   <th class="non-credit-col sortable" ng-click="c.sortBy('remote_deposit')">
-                     Remote Deposit
+   Remote Deposit
+   <span class="info-icon" title="Remote Deposit – Ability to approve external client Remote Deposit limits, utilizing the TS Daily Remote Deposit Capture Limit Approval Form.">ⓘ</span>
                      <span class="sort-arrows">
                      <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'remote_deposit' && c.sortDirection === 'asc'}"></i>
                      <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'remote_deposit' && c.sortDirection === 'desc'}"></i>
                      </span>
                   </th>
                   <th class="non-credit-col sortable" ng-click="c.sortBy('treasury_solutions_company_wire_limits')">
-                     TS Company Wire Limits
+   TS Company Wire Limits
+   <span class="info-icon" title="Treasury Solutions Company Wire Limits – Ability to approve external client wire limits, utilizing the TS Daily Wire Limit Approval Form.">ⓘ</span>
                      <span class="sort-arrows">
                      <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'treasury_solutions_company_wire_limits' && c.sortDirection === 'asc'}"></i>
                      <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'treasury_solutions_company_wire_limits' && c.sortDirection === 'desc'}"></i>
                      </span>
                   </th>
                   <th class="non-credit-col sortable" ng-click="c.sortBy('fx_wire_limits')">
-                     FX Wire Limits
+   FX Wire Limits
+   <span class="info-icon" title="FX Wire Limits – Ability to approve external client wire limits, utilizing the BankUnitedFX Wire Limit Approval Form.">ⓘ</span>
                      <span class="sort-arrows">
                      <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'fx_wire_limits' && c.sortDirection === 'asc'}"></i>
                      <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'fx_wire_limits' && c.sortDirection === 'desc'}"></i>
@@ -351,28 +374,32 @@
                   </th>
                   <!-- Credit Columns -->
                   <th class="credit-col sortable" ng-click="c.sortBy('overdraft_internal_accounts')">
-                     Overdraft Internal
+   Overdraft Internal
+   <span class="info-icon" title="Overdraft – Approval limits for Overdraft transactions. Internal Accounts are defined as BankUnited owned and controlled accounts.">ⓘ</span>
                      <span class="sort-arrows">
                      <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'overdraft_internal_accounts' && c.sortDirection === 'asc'}"></i>
                      <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'overdraft_internal_accounts' && c.sortDirection === 'desc'}"></i>
                      </span>
                   </th>
                   <th class="credit-col sortable" ng-click="c.sortBy('overdraft_external_accounts')">
-                     Overdraft External
+   Overdraft External
+   <span class="info-icon" title="Overdraft – Approval limits for Overdraft transactions. External Accounts are non-BankUnited accounts.">ⓘ</span>
                      <span class="sort-arrows">
                      <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'overdraft_external_accounts' && c.sortDirection === 'asc'}"></i>
                      <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'overdraft_external_accounts' && c.sortDirection === 'desc'}"></i>
                      </span>
                   </th>
                   <th class="credit-col sortable" ng-click="c.sortBy('unavailable_funds_internal_accounts')">
-                     Unavailable Funds Internal
+   Unavailable Funds Internal
+   <span class="info-icon" title="Unavailable Funds – Approval limits for Unavailable Funds transactions. Internal Accounts are defined as BankUnited owned and controlled accounts.">ⓘ</span>
                      <span class="sort-arrows">
                      <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'unavailable_funds_internal_accounts' && c.sortDirection === 'asc'}"></i>
                      <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'unavailable_funds_internal_accounts' && c.sortDirection === 'desc'}"></i>
                      </span>
                   </th>
                   <th class="credit-col sortable" ng-click="c.sortBy('unavailable_funds_external_accounts')">
-                     Unavailable Funds External
+   Unavailable Funds External
+   <span class="info-icon" title="Unavailable Funds – Approval limits for Unavailable Funds transactions. External Accounts are non-BankUnited accounts.">ⓘ</span>
                      <span class="sort-arrows">
                      <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'unavailable_funds_external_accounts' && c.sortDirection === 'asc'}"></i>
                      <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'unavailable_funds_external_accounts' && c.sortDirection === 'desc'}"></i>
@@ -1224,6 +1251,58 @@
  .hide-credit .section-header.credit-header, .hide-credit th.credit-col, .hide-credit td.credit-col {
      display: none !important;
 }
+/* Disclaimer Section Styles */
+.disclaimer-section {
+    margin: 16px 0 20px 0;
+    background: #fff9e6;
+    border: 2px solid #ffc107;
+    border-radius: 6px;
+    padding: 16px 20px;
+    max-width: none !important;
+}
+
+.disclaimer-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+.disclaimer-left,
+.disclaimer-right {
+    display: flex;
+    flex-direction: column;
+}
+
+.disclaimer-header {
+    color: #d9534f;
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    padding: 0;
+}
+
+.disclaimer-text {
+    color: #333;
+    font-size: 13px;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.limits-table th .info-icon {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    background-color: #17a2b8;
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 10px;
+    line-height: 14px;
+    margin-left: 4px;
+    cursor: help;
+    font-weight: normal;
+    vertical-align: middle;
+}
  @media (max-width: 768px) {
      .pagination-controls {
          flex-direction: column;
@@ -1265,6 +1344,12 @@
      display: flex;
      align-items: center;
      gap: 20px;
+}
+@media (max-width: 968px) {
+    .disclaimer-columns {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
 }
  @media (max-width: 968px) {
      .results-header {
