@@ -1319,9 +1319,6 @@
     border-bottom: 1px solid #e9ecef;
     vertical-align: middle;
     border-right: 1px solid #f1f3f5;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .limits-table tbody td.sticky-col {
