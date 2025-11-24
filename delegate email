@@ -1,0 +1,109 @@
+(function() {
+    var output = '';
+    
+    // Get approval details
+    var approvalNumber = current.getValue('number') || current.getValue('sys_id').substring(0, 8);
+    var requestedApproverName = current.approver.getDisplayValue();
+    
+    // Get delegate information
+    var updatedBySysId = current.getValue('sys_updated_by');
+    var delegateName = 'Unknown';
+    var delegateEmail = '';
+    
+    if (updatedBySysId) {
+        var userGR = new GlideRecord('sys_user');
+        if (userGR.get(updatedBySysId)) {
+            delegateName = userGR.getValue('name');
+            delegateEmail = userGR.getValue('email');
+        }
+    }
+    
+    // Build formatted message
+    output += '==============================================\n';
+    output += 'DELEGATE APPROVAL NOTIFICATION\n';
+    output += '==============================================\n\n';
+    output += 'Approval ' + approvalNumber + ' was approved by a delegate.\n\n';
+    output += 'Details:\n';
+    output += '  Requested Approver: ' + requestedApproverName + '\n';
+    output += '  Delegate Who Approved: ' + delegateName;
+    
+    if (delegateEmail) {
+        output += ' (' + delegateEmail + ')';
+    }
+    output += '\n';
+    output += '  Approved On: ' + current.sys_updated_on.getDisplayValue() + '\n\n';
+    
+    // Add source record info if available
+    if (current.sysapproval && !current.sysapproval.nil()) {
+        output += 'Related Request: ' + current.sysapproval.getDisplayValue() + '\n';
+    }
+    
+    if (current.source_table && current.document_id) {
+        output += 'Source Table: ' + current.source_table.getDisplayValue() + '\n';
+        output += 'Record Link: ' + gs.getProperty('glide.servlet.uri') + 
+                 current.getValue('source_table') + '.do?sys_id=' + 
+                 current.getValue('document_id') + '\n';
+    }
+    
+    output += '\n==============================================\n';
+    
+    template.print(output);
+})();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(function() {
+    var output = '';
+    
+    // Get the approval number
+    var approvalNumber = current.getValue('number') || 'N/A';
+    
+    // Get the requested approver name
+    var requestedApproverName = current.approver.getDisplayValue();
+    
+    // Get the delegate who actually approved using sys_updated_by
+    var updatedBySysId = current.getValue('sys_updated_by');
+    var delegateName = 'Unknown';
+    
+    if (updatedBySysId) {
+        var userGR = new GlideRecord('sys_user');
+        if (userGR.get(updatedBySysId)) {
+            delegateName = userGR.getValue('name');
+        }
+    }
+    
+    // Build the message
+    output += approvalNumber + ' was approved by a delegate\n\n';
+    output += 'Requested Approver: ' + requestedApproverName + '\n';
+    output += 'Delegate who approved: ' + delegateName + '\n\n';
+    
+    // Optional: Add source record information
+    if (current.source_table && current.document_id) {
+        var sourceRecord = current.document_id.getRefRecord();
+        if (sourceRecord.isValidRecord()) {
+            output += 'Source Record: ' + sourceRecord.getDisplayValue() + '\n';
+            output += 'Link: ' + gs.getProperty('glide.servlet.uri') + 
+                     current.getValue('source_table') + '.do?sys_id=' + 
+                     current.getValue('document_id') + '\n';
+        }
+    }
+    
+    template.print(output);
+})();
+
+
