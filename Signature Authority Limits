@@ -53,7 +53,7 @@
                      <option value="check_cashing_on_us">Check Cashing - On-Us</option>
                      <option value="check_cashing_not_on_us">Check Cashing - Not On-Us</option>
                      <option value="remote_deposit">Remote Deposit</option>
-                     <option value="treasury_solutions_company_wire_limits">TS Company Wire Limits</option>
+                     <option value="treasury_solutions_company_wire_limits">Treasury Solutions Company Wire Limits</option>
                      <option value="fx_wire_limits">FX Wire Limits</option>
                   </optgroup>
                   <optgroup label="Credit Authority">
@@ -248,11 +248,11 @@
          <div class="disclaimer-columns">
             <div class="disclaimer-left">
                <h4 class="disclaimer-header">**REGULATION O LIMITS</h4>
-               <p class="disclaimer-text">No person may authorize an overdraft greater than $1,000 on a personal account belonging to a Director or Executive Officer of BankUnited (Employee/Officer/Director code of 'O' or 'D') or payment from uncollected funds that could result in such an overdraft, unless the account is linked through automated funds transfer to another account at the Bank with sufficient funds to cover the overdraft.</p>
+               <p class="disclaimer-text">{{::data.sig_disclaimer_regulation}}</p>
             </div>
             <div class="disclaimer-right">
                <h4 class="disclaimer-header">WIRE TRANSFERS</h4>
-               <p class="disclaimer-text">Splitting of wire transactions to avoid the constraints imposed by the Signature Authorities document embedded in the wire system should only occur when the wire exceeds the Company's maximum limit of $500 Million. In such situations, wires may be split into two or more wires only with the approval of the individuals that are authorized to approve $500 Million transactions.</p>
+               <p class="disclaimer-text">{{::data.sig_disclaimer_wire_transfer}}</p>
             </div>
          </div>
       </div>
@@ -305,7 +305,7 @@
                   
                   <!-- Non-Credit Columns -->
                   <th class="non-credit-col sortable text-center column-with-info column-border-green-left col-currency" ng-click="c.sortBy('disbursement_ach')">
-                     <span class="info-icon" title="Disbursements – This authority provides approval limits for the disbursement of ACH, Wire Transfers, and/or Official Check transaction types based on the requested and approved selections.">ⓘ</span>
+                     <span class="info-icon" title="{{::data.sig_info_disbursements}}">ⓘ</span>
                      <span class="column-text">ACH</span>
                      <span class="sort-arrows">
                         <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_ach' && c.sortDirection === 'asc'}"></i>
@@ -313,7 +313,7 @@
                      </span>
                   </th>
                   <th class="non-credit-col sortable text-center column-with-info col-currency" ng-click="c.sortBy('disbursement_wire_transfer_internal')">
-                     <span class="info-icon" title="Disbursements – Wire Transfers for Internal Accounts (BankUnited owned and controlled accounts).">ⓘ</span>
+                     <span class="info-icon" title="{{::data.sig_info_disbursements}}">ⓘ</span>
                      <span class="column-text">Wire Transfer Internal</span>
                      <span class="sort-arrows">
                         <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_wire_transfer_internal' && c.sortDirection === 'asc'}"></i>
@@ -321,7 +321,7 @@
                      </span>
                   </th>
                   <th class="non-credit-col sortable text-center column-with-info col-currency" ng-click="c.sortBy('disbursement_wire_transfer_external')">
-                     <span class="info-icon" title="Disbursements – Wire Transfers for External Accounts (non-BankUnited accounts).">ⓘ</span>
+                     <span class="info-icon" title="{{::data.sig_info_disbursements}}">ⓘ</span>
                      <span class="column-text">Wire Transfer External</span>
                      <span class="sort-arrows">
                         <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_wire_transfer_external' && c.sortDirection === 'asc'}"></i>
@@ -329,7 +329,7 @@
                      </span>
                   </th>
                   <th class="non-credit-col sortable text-center column-with-info col-currency" ng-click="c.sortBy('disbursement_official_checks_internal')">
-                     <span class="info-icon" title="Disbursements – Official Checks for Internal Accounts.">ⓘ</span>
+                     <span class="info-icon" title="{{::data.sig_info_disbursements}}">ⓘ</span>
                      <span class="column-text">Official Checks Internal</span>
                      <span class="sort-arrows">
                         <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_official_checks_internal' && c.sortDirection === 'asc'}"></i>
@@ -337,7 +337,7 @@
                      </span>
                   </th>
                   <th class="non-credit-col sortable text-center column-with-info column-border-green-right col-currency" ng-click="c.sortBy('disbursement_official_checks_external')">
-                     <span class="info-icon" title="Disbursements – Official Checks for External Accounts.">ⓘ</span>
+                     <span class="info-icon" title="{{::data.sig_info_disbursements}}">ⓘ</span>
                      <span class="column-text">Official Checks External</span>
                      <span class="sort-arrows">
                         <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_official_checks_external' && c.sortDirection === 'asc'}"></i>
@@ -345,7 +345,7 @@
                      </span>
                   </th>
                   <th class="non-credit-col sortable text-center column-with-info col-currency" ng-click="c.sortBy('check_cashing_on_us')">
-                     <span class="info-icon" title="Check Cashing – Ability to approve cash withdrawals and cashing of checks drawn on BankUnited (On-Us).">ⓘ</span>
+                     <span class="info-icon" title="{{::data.sig_info_check_cashing}}">ⓘ</span>
                      <span class="column-text">Check Cashing On-Us</span>
                      <span class="sort-arrows">
                         <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'check_cashing_on_us' && c.sortDirection === 'asc'}"></i>
@@ -353,7 +353,7 @@
                      </span>
                   </th>
                   <th class="non-credit-col sortable text-center column-with-info column-border-green-right col-currency" ng-click="c.sortBy('check_cashing_not_on_us')">
-                     <span class="info-icon" title="Check Cashing – Ability to approve cashing of checks drawn on another institution (not On-Us).">ⓘ</span>
+                     <span class="info-icon" title="{{::data.sig_info_check_cashing}}">ⓘ</span>
                      <span class="column-text">Check Cashing Not On-Us</span>
                      <span class="sort-arrows">
                         <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'check_cashing_not_on_us' && c.sortDirection === 'asc'}"></i>
@@ -361,7 +361,7 @@
                      </span>
                   </th>
                   <th class="non-credit-col sortable text-center column-with-info col-currency" ng-click="c.sortBy('remote_deposit')">
-                     <span class="info-icon" title="Remote Deposit – Ability to approve external client Remote Deposit limits.">ⓘ</span>
+                     <span class="info-icon" title="{{::data.sig_info_remote_deposit}}">ⓘ</span>
                      <span class="column-text">Remote Deposit</span>
                      <span class="sort-arrows">
                         <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'remote_deposit' && c.sortDirection === 'asc'}"></i>
@@ -369,7 +369,7 @@
                      </span>
                   </th>
                   <th class="non-credit-col sortable text-center column-with-info col-currency" ng-click="c.sortBy('treasury_solutions_company_wire_limits')">
-                     <span class="info-icon" title="Treasury Solutions Company Wire Limits – Ability to approve external client wire limits.">ⓘ</span>
+                     <span class="info-icon" title="{{::data.sig_info_treasury_solutions}}">ⓘ</span>
                      <span class="column-text">Treasury Solutions Company Wire Limits</span>
                      <span class="sort-arrows">
                         <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'treasury_solutions_company_wire_limits' && c.sortDirection === 'asc'}"></i>
@@ -377,7 +377,7 @@
                      </span>
                   </th>
                   <th class="non-credit-col sortable text-center column-with-info col-currency" ng-click="c.sortBy('fx_wire_limits')">
-                     <span class="info-icon" title="FX Wire Limits – Ability to approve external client wire limits.">ⓘ</span>
+                     <span class="info-icon" title="{{::data.sig_info_fx_wire_limits}}">ⓘ</span>
                      <span class="column-text">FX Wire Limits</span>
                      <span class="sort-arrows">
                         <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'fx_wire_limits' && c.sortDirection === 'asc'}"></i>
@@ -387,7 +387,7 @@
                   
                   <!-- Credit Columns -->
                   <th class="credit-col sortable text-center column-with-info column-border-red-left col-currency" ng-click="c.sortBy('overdraft_internal_accounts')">
-                     <span class="info-icon" title="Overdraft – Approval limits for Overdraft transactions (Internal Accounts).">ⓘ</span>
+                     <span class="info-icon" title="{{::data.sig_info_overdraft}}">ⓘ</span>
                      <span class="column-text">Overdraft Internal</span>
                      <span class="sort-arrows">
                         <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'overdraft_internal_accounts' && c.sortDirection === 'asc'}"></i>
@@ -395,7 +395,7 @@
                      </span>
                   </th>
                   <th class="credit-col sortable text-center column-with-info column-border-red-right col-currency" ng-click="c.sortBy('overdraft_external_accounts')">
-                     <span class="info-icon" title="Overdraft – Approval limits for Overdraft transactions (External Accounts).">ⓘ</span>
+                     <span class="info-icon" title="{{::data.sig_info_overdraft}}">ⓘ</span>
                      <span class="column-text">Overdraft External</span>
                      <span class="sort-arrows">
                         <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'overdraft_external_accounts' && c.sortDirection === 'asc'}"></i>
@@ -403,7 +403,7 @@
                      </span>
                   </th>
                   <th class="credit-col sortable text-center column-with-info col-currency" ng-click="c.sortBy('unavailable_funds_internal_accounts')">
-                     <span class="info-icon" title="Unavailable Funds – Approval limits for Unavailable Funds transactions (Internal Accounts).">ⓘ</span>
+                     <span class="info-icon" title="{{::data.sig_info_unavailable_funds}}">ⓘ</span>
                      <span class="column-text">Unavailable Funds Internal</span>
                      <span class="sort-arrows">
                         <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'unavailable_funds_internal_accounts' && c.sortDirection === 'asc'}"></i>
@@ -411,7 +411,7 @@
                      </span>
                   </th>
                   <th class="credit-col sortable text-center column-with-info col-currency" ng-click="c.sortBy('unavailable_funds_external_accounts')">
-                     <span class="info-icon" title="Unavailable Funds – Approval limits for Unavailable Funds transactions (External Accounts).">ⓘ</span>
+                     <span class="info-icon" title="{{::data.sig_info_unavailable_funds}}">ⓘ</span>
                      <span class="column-text">Unavailable Funds External</span>
                      <span class="sort-arrows">
                         <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'unavailable_funds_external_accounts' && c.sortDirection === 'asc'}"></i>
@@ -506,9 +506,8 @@
 </div>
 
 
-
 /* ============================================ */
-/* CSS STYLES - Copy this to ServiceNow Widget CSS section */
+/* CSS STYLES */
 /* ============================================ */
 
 .authority-lookup-widget {
@@ -532,7 +531,6 @@
     margin: 0;
 }
 
-/* ========== SEARCH CONTROLS ========== */
 .search-controls-side-nav {
     display: flex;
     gap: 20px;
@@ -634,7 +632,6 @@
     margin-top: 20px;
 }
 
-/* ========== BUTTONS ========== */
 .btn {
     padding: 10px 20px;
     border: none;
@@ -694,7 +691,6 @@
     margin-right: 6px;
 }
 
-/* ========== ACTIVE FILTERS ========== */
 .active-filters-section {
     background: #f8f9fa;
     border: 1px solid #dee2e6;
@@ -793,7 +789,6 @@
     max-width: 1400px;
 }
 
-/* ========== FORM ELEMENTS ========== */
 .form-group {
     margin-bottom: 16px;
 }
@@ -835,7 +830,6 @@
     opacity: 1;
 }
 
-/* ========== REFERENCE FIELDS ========== */
 .reference-field-wrapper {
     position: relative;
     width: 100%;
@@ -900,7 +894,6 @@
     margin-top: 2px;
 }
 
-/* ========== CURRENCY INPUT ========== */
 .currency-wrapper {
     position: relative;
 }
@@ -927,7 +920,6 @@
     font-style: italic;
 }
 
-/* ========== LOADING & ALERTS ========== */
 .loading-container {
     text-center;
     padding: 40px;
@@ -950,7 +942,6 @@
     color: #31708f;
 }
 
-/* ========== RESULTS HEADER ========== */
 .results-container {
     margin-top: 24px;
     width: 100%;
@@ -993,7 +984,6 @@
     font-weight: normal;
 }
 
-/* ========== DISCLAIMER ========== */
 .disclaimer-section {
     margin: 0;
     background: #fff9e6;
@@ -1044,7 +1034,6 @@
     word-wrap: break-word;
 }
 
-/* ========== TABLE WRAPPER ========== */
 .table-scroll-wrapper {
     width: 100%;
     max-width: 1400px;
@@ -1064,7 +1053,6 @@
     position: relative;
 }
 
-/* ========== TABLE STYLES WITH FIXED COLUMN WIDTHS ========== */
 .limits-table {
     width: auto;
     min-width: 100%;
@@ -1092,35 +1080,31 @@
     line-height: 1.3;
 }
 
-/* JOB CODE - Auto-size to content */
 .col-job-code {
     width: auto;
     min-width: 80px;
     white-space: nowrap;
 }
 
-/* JOB TITLE - Max 2 lines wrap */
 .col-job-title {
     width: auto;
-    min-width: 200px;
+    min-width: 175px;
     max-width: 400px;
     white-space: normal;
     line-height: 1.3;
 }
 
-/* LINE OF BUSINESS - Max 2 lines wrap */
 .col-job-function {
     width: auto;
-    min-width: 200px;
+    min-width: 175px;
     max-width: 400px;
     white-space: normal;
     line-height: 1.3;
 }
 
-/* CURRENCY COLUMNS - Never wrap amounts */
 .col-currency {
     width: auto;
-    min-width: 130px;
+    min-width: 100px;
     white-space: normal;
     line-height: 1.2;
 }
@@ -1129,7 +1113,7 @@
     display: block;
     word-wrap: break-word;
     overflow-wrap: break-word;
-    max-height: 4.8em; /* 4 lines at 1.2 line-height */
+    max-height: 4.8em;
 }
 
 .limits-table th.sortable {
@@ -1144,7 +1128,6 @@
     background: #e9ecef;
 }
 
-/* ========== SECTION HEADERS ========== */
 .section-header {
     padding: 16px 10px;
     font-weight: 600;
@@ -1177,7 +1160,6 @@
     font-size: 16px;
 }
 
-/* ========== SUBSECTION HEADERS ========== */
 .subsection-header {
     padding: 8px;
     font-weight: 600;
@@ -1216,7 +1198,6 @@
     border-left: 3px solid #e74c3c !important;
 }
 
-/* ========== COLUMN HEADER STYLES ========== */
 .limits-table thead tr:last-child th {
     background: #f8f9fa !important;
 }
@@ -1249,7 +1230,6 @@
     background: #fef5f6;
 }
 
-/* ========== TEXT ALIGNMENT ========== */
 .text-center {
     text-align: center !important;
 }
@@ -1258,7 +1238,6 @@
     text-align: left !important;
 }
 
-/* ========== STICKY COLUMN ========== */
 .sticky-col {
     position: -webkit-sticky;
     position: sticky;
@@ -1277,7 +1256,6 @@
     box-shadow: 2px 0 4px rgba(0,0,0,0.1) !important;
 }
 
-/* ========== COLUMN WITH INFO ICON ========== */
 .column-with-info {
     position: relative;
     padding: 8px 32px 8px 8px !important;
@@ -1288,7 +1266,6 @@
     text-align: left;
 }
 
-/* ========== INFO ICON ========== */
 .limits-table th .info-icon {
     position: absolute;
     top: 4px;
@@ -1307,7 +1284,6 @@
     z-index: 1;
 }
 
-/* ========== SORT ARROWS ========== */
 .sort-arrows {
     position: absolute;
     bottom: 4px;
@@ -1329,7 +1305,6 @@
     font-weight: bold;
 }
 
-/* ========== SECTION BORDER COLORS ========== */
 .column-border-green-left {
     border-left: 3px solid #27ae60 !important;
 }
@@ -1346,7 +1321,6 @@
     border-right: 3px solid #e74c3c !important;
 }
 
-/* ========== TABLE BODY CELLS ========== */
 .limits-table tbody td {
     padding: 8px;
     border-bottom: 1px solid #e9ecef;
@@ -1379,7 +1353,6 @@
     background-color: #fff3cd !important;
 }
 
-/* ========== JOB CODE CELL ========== */
 .job-code-cell {
     position: -webkit-sticky;
     position: sticky;
@@ -1405,18 +1378,16 @@
     transform: translateX(2px);
 }
 
-/* ========== JOB INFO CELLS ========== */
 .job-info-cell {
     color: #6c757d;
     font-size: 13px;
     white-space: normal;
     word-wrap: break-word;
     line-height: 1.4;
-    max-height: 2.8em; /* 2 lines */
+    max-height: 2.8em;
     overflow: hidden;
 }
 
-/* ========== AMOUNT CELLS ========== */
 .amount-cell {
     text-align: right;
     font-size: 13px;
@@ -1432,7 +1403,6 @@
     color: #000 !important;
 }
 
-/* ========== SECTION BORDERS TO BODY CELLS ========== */
 .limits-table tbody td:nth-child(4) {
     border-left: 3px solid #27ae60 !important;
 }
@@ -1453,7 +1423,6 @@
     border-right: 3px solid #e74c3c !important;
 }
 
-/* ========== PAGINATION ========== */
 .pagination-footer {
     border-left: 2px solid #ffc107;
     border-right: 2px solid #ffc107;
@@ -1530,7 +1499,6 @@
     margin-right: 4px;
 }
 
-/* ========== MEDIA QUERIES ========== */
 @media (max-width: 968px) {
     .search-controls-side-nav {
         flex-direction: column;
@@ -1611,6 +1579,18 @@
 
 (function() {
     'use strict';
+
+    // Set all system property text
+    data.sig_disclaimer_regulation = gs.getProperty('x_banun_bunow_si_0.sig_disclaimer_regulation');
+    data.sig_disclaimer_wire_transfer = gs.getProperty('x_banun_bunow_si_0.sig_disclaimer_wire_transfer');
+    data.sig_info_disbursements = gs.getProperty('x_banun_bunow_si_0.sig_info_disbursements');
+    data.sig_info_check_cashing = gs.getProperty('x_banun_bunow_si_0.sig_info_check_cashing');
+    data.sig_info_remote_deposit = gs.getProperty('x_banun_bunow_si_0.sig_info_remote_deposit');
+    data.sig_info_treasury_solutions = gs.getProperty('x_banun_bunow_si_0.sig_info_treasury_solutions');
+    data.sig_info_fx_wire_limits = gs.getProperty('x_banun_bunow_si_0.sig_info_fx_wire_limits');
+    data.sig_info_overdraft = gs.getProperty('x_banun_bunow_si_0.sig_info_overdraft');
+    data.sig_info_unavailable_funds = gs.getProperty('x_banun_bunow_si_0.sig_info_unavailable_funds');
+
 
     // Handle reference field lookups
     if (input && input.action === 'lookupReference') {
@@ -1841,8 +1821,7 @@
 
 
 // ============================================
-// CLIENT CONTROLLER - FIXED PDF & ADDED DISCLAIMERS TO EXPORTS
-// Copy this to ServiceNow Widget "Client Controller" section
+// CLIENT CONTROLLER 
 // ============================================
 
 api.controller = function($scope, $timeout, $rootScope, spUtil) {
@@ -2451,10 +2430,10 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
         
         // Add disclaimers at the bottom
         csv += '"**REGULATION O LIMITS"\n';
-        csv += '"No person may authorize an overdraft greater than $1,000 on a personal account belonging to a Director or Executive Officer of BankUnited (Employee/Officer/Director code of \'O\' or \'D\') or payment from uncollected funds that could result in such an overdraft, unless the account is linked through automated funds transfer to another account at the Bank with sufficient funds to cover the overdraft."\n';
+		csv += '"' + c.data.sig_disclaimer_regulation + '"\n';
         csv += '\n';
         csv += '"WIRE TRANSFERS"\n';
-        csv += '"Splitting of wire transactions to avoid the constraints imposed by the Signature Authorities document embedded in the wire system should only occur when the wire exceeds the Company\'s maximum limit of $500 Million. In such situations, wires may be split into two or more wires only with the approval of the individuals that are authorized to approve $500 Million transactions."\n';
+        csv += '"' + c.data.sig_disclaimer_wire_transfer + '"\n';
 
         return csv;
     }
@@ -2561,11 +2540,11 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
         html += '<div class="disclaimer-columns">';
         html += '<div class="disclaimer-left">';
         html += '<h4 class="disclaimer-header">**REGULATION O LIMITS</h4>';
-        html += '<p class="disclaimer-text">No person may authorize an overdraft greater than $1,000 on a personal account belonging to a Director or Executive Officer of BankUnited (Employee/Officer/Director code of \'O\' or \'D\') or payment from uncollected funds that could result in such an overdraft, unless the account is linked through automated funds transfer to another account at the Bank with sufficient funds to cover the overdraft.</p>';
+		html += '<p class="disclaimer-text">' + c.data.sig_disclaimer_regulation + '</p>';
         html += '</div>';
         html += '<div class="disclaimer-right">';
         html += '<h4 class="disclaimer-header">WIRE TRANSFERS</h4>';
-        html += '<p class="disclaimer-text">Splitting of wire transactions to avoid the constraints imposed by the Signature Authorities document embedded in the wire system should only occur when the wire exceeds the Company\'s maximum limit of $500 Million. In such situations, wires may be split into two or more wires only with the approval of the individuals that are authorized to approve $500 Million transactions.</p>';
+		html += '<p class="disclaimer-text">' + c.data.sig_disclaimer_wire_transfer + '</p>';
         html += '</div>';
         html += '</div>';
         html += '</div>';
@@ -2589,7 +2568,7 @@ api.controller = function($scope, $timeout, $rootScope, spUtil) {
         html += '<th class="non-credit-col">Check Cashing On-Us</th>';
         html += '<th class="non-credit-col">Check Cashing Not On-Us</th>';
         html += '<th class="non-credit-col">Remote Deposit</th>';
-        html += '<th class="non-credit-col">TS Company Wire Limits</th>';
+        html += '<th class="non-credit-col">Treasury Solutions Company Wire Limits</th>';
         html += '<th class="non-credit-col">FX Wire Limits</th>';
         html += '<th class="credit-col">Overdraft Internal</th>';
         html += '<th class="credit-col">Overdraft External</th>';
