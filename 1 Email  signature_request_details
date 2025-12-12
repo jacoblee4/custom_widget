@@ -1,11 +1,12 @@
 (function runMailScript(current, template, email, email_action, event) {
 
-    var documentRecord, parent, isChildApproval = false, childRecord = null;
+    var parent, isChildApproval = false, childRecord = null;
+    var currentTableName = current.getTableName();
     
-    // Determine context: approval notification (current = sysapproval_approver), child state change (current = child record), or parent notification (current = parent)
-    if (current.getTableName() == 'sysapproval_approver') {
+    // Determine context: approval notification, child state change, or parent notification
+    if (currentTableName == 'sysapproval_approver') {
         // This is an approval email - current is sysapproval_approver
-        documentRecord = current.document_id.getRefRecord();
+        var documentRecord = current.document_id.getRefRecord();
         
         // Validation check for document record
         if (!documentRecord || !documentRecord.isValidRecord()) {
@@ -13,7 +14,6 @@
             return;
         }
         
-        // Determine if the document is a parent or child record and get parent reference
         var documentTableName = documentRecord.getTableName();
         
         if (documentTableName == 'x_banun_bunow_si_0_credit_authority_limits' || 
@@ -26,59 +26,39 @@
             // Document is the parent record itself
             parent = documentRecord;
         }
-    } else if (current.getTableName() == 'x_banun_bunow_si_0_credit_authority_limits' || 
-               current.getTableName() == 'x_banun_bunow_si_0_non_credit_authority_limits') {
-        // This is a child state change notification (e.g., rejection) - current is the child record
+    } else if (currentTableName == 'x_banun_bunow_si_0_credit_authority_limits' || 
+               currentTableName == 'x_banun_bunow_si_0_non_credit_authority_limits') {
+        // This is a child state change notification - current is the child record
         childRecord = current;
         isChildApproval = true;
-        
-        // Validation check for child record
-        if (!childRecord || !childRecord.isValidRecord()) {
-            gs.error('Email Script Error: Unable to retrieve child record');
-            return;
-        }
-        
-        // Get the parent record
         parent = childRecord.parent.getRefRecord();
-    } else if (current.getTableName() == 'x_banun_bunow_si_0_signature_request') {
+    } else if (currentTableName == 'x_banun_bunow_si_0_signature_request') {
         // This is a parent table notification - current is the parent record
         parent = current;
-        
-        // Validation check for parent
-        if (!parent || !parent.isValidRecord()) {
-            gs.error('Email Script Error: Unable to retrieve parent record');
-            return;
-        }
     } else {
         // Unknown table context
-        gs.error('Email Script Error: Unexpected table context - ' + current.getTableName());
+        gs.error('Email Script Error: Unexpected table context - ' + currentTableName);
         return;
     }
     
-    // Final validation check for parent
+    // Validation check for parent
     if (!parent || !parent.isValidRecord()) {
         gs.error('Email Script Error: Unable to retrieve parent Signature Authority Request record');
         return;
     }
     
-    var content = '';
-
-    content += '<div style="font-family: Arial, sans-serif; color: #000000; max-width: 800px;">';
-
+    var content = '<div style="font-family: Arial, sans-serif; color: #000000; max-width: 800px;">';
     var instanceURL = gs.getProperty('glide.servlet.uri');
     
     // Determine which record URL and number to display
     var recordURL, displayNumber;
     if (isChildApproval && childRecord) {
         // Show child record details
-        var childSysId = childRecord.sys_id.toString();
-        var childTableName = childRecord.getTableName();
-        recordURL = instanceURL + 'x/banun/signature-authority-workspace/record/' + childTableName + '/' + childSysId;
+        recordURL = instanceURL + 'x/banun/signature-authority-workspace/record/' + childRecord.getTableName() + '/' + childRecord.sys_id;
         displayNumber = childRecord.getValue('number') || parent.number + ' (Child Record)';
     } else {
         // Show parent record details
-        var parentSysId = parent.sys_id.toString();
-        recordURL = instanceURL + 'x/banun/signature-authority-workspace/record/x_banun_bunow_si_0_signature_request/' + parentSysId;
+        recordURL = instanceURL + 'x/banun/signature-authority-workspace/record/x_banun_bunow_si_0_signature_request/' + parent.sys_id;
         displayNumber = parent.number;
     }
 
@@ -89,16 +69,9 @@
     
     // If this is a child approval/notification, show which type
     if (isChildApproval && childRecord) {
-        var limitType = '';
-        var childTableName = childRecord.getTableName();
-        if (childTableName == 'x_banun_bunow_si_0_credit_authority_limits') {
-            limitType = 'Credit Authority Limits';
-        } else if (childTableName == 'x_banun_bunow_si_0_non_credit_authority_limits') {
-            limitType = 'Non-Credit Authority Limits';
-        }
-        if (limitType) {
-            content += '<tr><td style="padding: 8px; font-weight: bold;">Limit Type:</td><td style="padding: 8px;">' + limitType + '</td></tr>';
-        }
+        var limitType = childRecord.getTableName() == 'x_banun_bunow_si_0_credit_authority_limits' ? 
+                        'Credit Authority Limits' : 'Non-Credit Authority Limits';
+        content += '<tr><td style="padding: 8px; font-weight: bold;">Limit Type:</td><td style="padding: 8px;">' + limitType + '</td></tr>';
     }
     
     content += '<tr><td style="padding: 8px; font-weight: bold;">Request Type:</td><td style="padding: 8px;">' + parent.request_type.getDisplayValue() + '</td></tr>';
