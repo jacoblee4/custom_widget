@@ -1,34 +1,18 @@
 (function runMailScript(current, template, email, email_action, event) {
     
     var parent;
+    var currentTableName = current.getTableName();
     
-    // Determine context: approval notification (current = sysapproval_approver), child state change (current = child record), or parent notification (current = parent)
-    if (current.getTableName() == 'sysapproval_approver') {
-        // This is an approval email - current is sysapproval_approver
+    // Determine context: approval notification, child state change, or parent notification
+    if (currentTableName == 'sysapproval_approver') {
         parent = current.sysapproval.getRefRecord();
-    } else if (current.getTableName() == 'x_banun_bunow_si_0_credit_authority_limits' || 
-               current.getTableName() == 'x_banun_bunow_si_0_non_credit_authority_limits') {
-        // This is a child state change notification - current is the child record
-        // Validation check for child record
-        if (!current || !current.isValidRecord()) {
-            gs.error('Email Script Error: Unable to retrieve child record');
-            return;
-        }
-        
-        // Get the parent record
+    } else if (currentTableName == 'x_banun_bunow_si_0_credit_authority_limits' || 
+               currentTableName == 'x_banun_bunow_si_0_non_credit_authority_limits') {
         parent = current.parent.getRefRecord();
-    } else if (current.getTableName() == 'x_banun_bunow_si_0_signature_request') {
-        // This is a parent table notification - current is the parent record
+    } else if (currentTableName == 'x_banun_bunow_si_0_signature_request') {
         parent = current;
-        
-        // Validation check for parent
-        if (!parent || !parent.isValidRecord()) {
-            gs.error('Email Script Error: Unable to retrieve parent record');
-            return;
-        }
     } else {
-        // Unknown table context
-        gs.error('Email Script Error: Unexpected table context - ' + current.getTableName());
+        gs.error('Email Script Error: Unexpected table context - ' + currentTableName);
         return;
     }
     
@@ -85,8 +69,6 @@
     }
     
     var content = '';
-    
-    // Get impacted employees
     var impactedEmployees = getImpactedEmployees(parent.getValue('job_code'));
     
     // Add Impacted Employees section if there are any
@@ -122,7 +104,6 @@
         content += '</table>';
         content += '</div>';
     } else {
-        // No employees found - show a message
         content += '<div style="margin: 30px 0; padding: 20px; background-color: #fff3cd; border-radius: 5px; border: 1px solid #ffc107;">';
         content += '<p style="color: #856404; margin: 0;"><strong>Note:</strong> No existing employees found with job code <strong>' + parent.job_code.getDisplayValue() + '</strong>.</p>';
         content += '</div>';
