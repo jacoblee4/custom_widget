@@ -1,4 +1,20 @@
-var stateToCheck = childRecord ? childRecord.state : parent.state;
-if (stateToCheck != 4) {
-    return;
+// Only trigger based on context
+if (current.getTableName() == 'sysapproval_approver') {
+    // From approval record - check if it's rejected
+    if (current.state != 'rejected') {
+        return;
+    }
+} else {
+    // From child record state change - check if state is 4 (Closed Incomplete)
+    if (childRecord && childRecord.state != 4) {
+        return;
+    }
 }
+
+// Determine limit type if we have a child record
+var limitType = '';
+This checks:
+
+If triggered from sysapproval_approver: Only proceed if the approval state is "rejected"
+If triggered from child record directly: Only proceed if the child state is 4 (Closed Incomplete)
+Claude is AI and can make mistakes. Please double-check responses.
