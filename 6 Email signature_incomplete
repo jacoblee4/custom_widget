@@ -5,120 +5,107 @@
     // Determine context: approval notification or child state change
     if (currentTableName == 'sysapproval_approver') {
         // This is an approval/rejection email - current is sysapproval_approver
-        var documentRecord = current.document_id.getRefRecord();
+        // In this email script, the approval is always on a child record
+        childRecord = current.document_id.getRefRecord();
         
-        // Validation check for document record
-        if (!documentRecord || !documentRecord.isValidRecord()) {
-            gs.error('Email Script Error: Unable to retrieve document record from sysapproval_approver');
+        // Validation check for child record
+        if (!childRecord || !childRecord.isValidRecord()) {
+            gs.error('Email Script Error: Unable to retrieve child record from sysapproval_approver');
             return;
         }
         
-        var documentTableName = documentRecord.getTableName();
-        if (documentTableName == 'x_banun_bunow_si_0_credit_authority_limits' ||
-            documentTableName == 'x_banun_bunow_si_0_non_credit_authority_limits') {
-            childRecord = documentRecord;
-            parent = documentRecord.parent.getRefRecord();
-        } else {
-            parent = documentRecord;
-        }
+        parent = childRecord.parent.getRefRecord();
     } else if (currentTableName == 'x_banun_bunow_si_0_credit_authority_limits' || 
                currentTableName == 'x_banun_bunow_si_0_non_credit_authority_limits') {
         // This is a child state change notification - current is the child record
         childRecord = current;
         parent = childRecord.parent.getRefRecord();
-    } else if (currentTableName == 'x_banun_bunow_si_0_signature_request') {
-        // This is a parent table notification - current is the parent record
-        parent = current;
     } else {
+        // Unknown or unsupported table context
         gs.error('Email Script Error: Unexpected table context - ' + currentTableName);
         return;
     }
 
-    // Validation check for parent
-    if (!parent || !parent.isValidRecord()) {
-        gs.error('Email Script Error: Unable to retrieve parent Signature Authority Request record');
+    // Validation check for parent and child
+    if (!parent || !parent.isValidRecord() || !childRecord || !childRecord.isValidRecord()) {
+        gs.error('Email Script Error: Unable to retrieve parent or child record');
         return;
     }
 
-    // Only send email if parent state is "Closed Incomplete" (4)
-    if (parent.state != 4) {
+    // Only send email if child state is "Closed Incomplete" (4)
+    if (childRecord.state != 4) {
         return;
     }
 
-    // Determine limit type if we have a child record
-    var limitType = '';
-    if (childRecord) {
-        limitType = childRecord.getTableName() == 'x_banun_bunow_si_0_credit_authority_limits' ? 
+    // Determine limit type
+    var limitType = childRecord.getTableName() == 'x_banun_bunow_si_0_credit_authority_limits' ? 
                     'Credit Authority Limits' : 'Non-Credit Authority Limits';
-    }
 
     var content = '';
     var instanceURL = gs.getProperty('glide.servlet.uri');
-    var recordURL = instanceURL + 'x/banun/signature-authority-workspace/record/x_banun_bunow_si_0_signature_request/' + parent.sys_id;
+    var recordURL = instanceURL + 'x/banun/signature-authority-workspace/record/' + childRecord.getTableName() + '/' + childRecord.sys_id;
 
     content += '<div style="font-family: Arial, sans-serif; color: #000000; max-width: 800px;">';
 
     // Rejection Details Section
     content += '<div style="background-color: #fff3cd; padding: 15px; margin: 20px 0; border-left: 4px solid #ffc107;">';
-    content += '<h3 style="color: #856404; margin: 0 0 15px 0; padding-bottom: 10px; border-bottom: 2px solid #ffc107;">Rejection Details</h3>';
+    content += '<h3 style="color: #856404; margin: 0 0 15px 0; padding-bottom: 10px; border-bottom: 2px solid #ffc107;">Rejection Details - ' + limitType + '</h3>';
 
     var hasRejections = false;
 
     // --- CHILD rejections (newest first) ---
-    if (childRecord) {
-        var childApprovalGr = new GlideRecord('sysapproval_approver');
+    var childApprovalGr = new GlideRecord('sysapproval_approver');
+    childApprovalGr.addQuery('sysapproval', childRecord.sys_id);
+    childApprovalGr.addQuery('state', 'rejected');
+    childApprovalGr.orderByDesc('sys_updated_on');
+    childApprovalGr.query();
+
+    if (childApprovalGr.hasNext()) {
+        hasRejections = true;
+        content += '<div style="margin-bottom: 20px;">';
+        content += '<table style="width: 100%; border-collapse: collapse;">';
+
+        // Reset query to iterate
+        childApprovalGr = new GlideRecord('sysapproval_approver');
         childApprovalGr.addQuery('sysapproval', childRecord.sys_id);
         childApprovalGr.addQuery('state', 'rejected');
         childApprovalGr.orderByDesc('sys_updated_on');
         childApprovalGr.query();
 
-        if (childApprovalGr.hasNext()) {
-            hasRejections = true;
-            content += '<div style="margin-bottom: 20px;">';
-            content += '<table style="width: 100%; border-collapse: collapse;">';
+        while (childApprovalGr.next()) {
+            var rejector = childApprovalGr.approver.getDisplayValue();
+            var rejectionDate = childApprovalGr.sys_updated_on.getDisplayValue();
 
-            // Reset query to iterate
-            childApprovalGr = new GlideRecord('sysapproval_approver');
-            childApprovalGr.addQuery('sysapproval', childRecord.sys_id);
-            childApprovalGr.addQuery('state', 'rejected');
-            childApprovalGr.orderByDesc('sys_updated_on');
-            childApprovalGr.query();
+            content += '<tr>';
+            content += '<td style="padding: 12px; vertical-align: top; border-bottom: 1px solid #e0e0e0;">';
+            content += '<div style="font-weight: bold; color: #000000; margin-bottom: 5px;">Rejected by: ' + rejector + '</div>';
+            content += '<div style="color: #6c757d; font-size: 12px; margin-bottom: 8px;">' + rejectionDate + '</div>';
 
-            while (childApprovalGr.next()) {
-                var rejector = childApprovalGr.approver.getDisplayValue();
-                var rejectionDate = childApprovalGr.sys_updated_on.getDisplayValue();
+            // Latest journal comment for this approver record
+            var journalGr = new GlideRecord('sys_journal_field');
+            journalGr.addQuery('element_id', childApprovalGr.sys_id);
+            journalGr.addQuery('element', 'comments');
+            journalGr.orderByDesc('sys_created_on');
+            journalGr.setLimit(1);
+            journalGr.query();
 
-                content += '<tr>';
-                content += '<td style="padding: 12px; vertical-align: top; border-bottom: 1px solid #e0e0e0;">';
-                content += '<div style="font-weight: bold; color: #000000; margin-bottom: 5px;">Rejected by: ' + rejector + '</div>';
-                content += '<div style="color: #6c757d; font-size: 12px; margin-bottom: 8px;">' + rejectionDate + '</div>';
+            var comments = journalGr.next() ? (journalGr.getValue('value') || '') : '';
 
-                // Latest journal comment for this approver record
-                var journalGr = new GlideRecord('sys_journal_field');
-                journalGr.addQuery('element_id', childApprovalGr.sys_id);
-                journalGr.addQuery('element', 'comments');
-                journalGr.orderByDesc('sys_created_on');
-                journalGr.setLimit(1);
-                journalGr.query();
-
-                var comments = journalGr.next() ? (journalGr.getValue('value') || '') : '';
-
-                if (comments.trim() !== '') {
-                    content += '<div style="background-color: #ffffff; padding: 10px; border-radius: 4px; border: 1px solid #dee2e6;">';
-                    content += '<div style="font-weight: bold; color: #495057; font-size: 12px; margin-bottom: 5px;">Comments:</div>';
-                    content += '<div style="color: #000000; line-height: 1.5;">' + comments.replace(/\n/g, '<br/>') + '</div>';
-                    content += '</div>';
-                } else {
-                    content += '<div style="color: #6c757d; font-style: italic;">No comments provided</div>';
-                }
-
-                content += '</td>';
-                content += '</tr>';
+            if (comments.trim() !== '') {
+                content += '<div style="background-color: #ffffff; padding: 10px; border-radius: 4px; border: 1px solid #dee2e6;">';
+                content += '<div style="font-weight: bold; color: #495057; font-size: 12px; margin-bottom: 5px;">Comments:</div>';
+                content += '<div style="color: #000000; line-height: 1.5;">' + comments.replace(/\n/g, '<br/>') + '</div>';
+                content += '</div>';
+            } else {
+                content += '<div style="color: #6c757d; font-style: italic;">No comments provided</div>';
             }
 
-            content += '</table>';
-            content += '</div>';
+            content += '</td>';
+            content += '</tr>';
         }
+
+        content += '</table>';
+        content += '</div>';
     }
 
     // --- PARENT rejections (newest first) ---
@@ -132,18 +119,19 @@
         hasRejections = true;
 
         // Add separator if we showed child rejections
-        if (childRecord) {
-            var tempChildCheck = new GlideRecord('sysapproval_approver');
-            tempChildCheck.addQuery('sysapproval', childRecord.sys_id);
-            tempChildCheck.addQuery('state', 'rejected');
-            tempChildCheck.query();
-            if (tempChildCheck.hasNext()) {
-                content += '<div style="border-top: 2px solid #ffc107; margin: 15px 0;"></div>';
-            }
+        var childHadRejections = false;
+        var tempCheck = new GlideRecord('sysapproval_approver');
+        tempCheck.addQuery('sysapproval', childRecord.sys_id);
+        tempCheck.addQuery('state', 'rejected');
+        tempCheck.query();
+        childHadRejections = tempCheck.hasNext();
+
+        if (childHadRejections) {
+            content += '<div style="border-top: 2px solid #ffc107; margin: 15px 0;"></div>';
         }
 
         content += '<div style="margin-bottom: 20px;">';
-        content += '<h4 style="color: #856404; margin: 0 0 10px 0; font-size: 14px;">Rejected at Parent Request Level:</h4>';
+        content += '<h4 style="color: #856404; margin: 0 0 10px 0; font-size: 14px;">Parent Request Level Rejections:</h4>';
         content += '<table style="width: 100%; border-collapse: collapse;">';
 
         // Reset query to iterate
