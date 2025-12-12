@@ -49,12 +49,6 @@
     
     var content = '';
 
-    // Introduction text with dynamic request type
-    var requestTypeDisplay = parent.request_type.getDisplayValue();
-    var introText = '<p style="margin: 20px 0; line-height: 1.6;">A ' + requestTypeDisplay + ' Signature Request has been submitted and requires your approval. Please review the details below.</p>';
-
-    content += introText;
-
     content += '<div style="font-family: Arial, sans-serif; color: #000000; max-width: 800px;">';
 
     var instanceURL = gs.getProperty('glide.servlet.uri');
@@ -65,12 +59,12 @@
         // Show child record details
         var childSysId = childRecord.sys_id.toString();
         var childTableName = childRecord.getTableName();
-        recordURL = instanceURL + childTableName + '.do?sys_id=' + childSysId;
+        recordURL = instanceURL + 'x/banun/signature-authority-workspace/record/' + childTableName + '/' + childSysId;
         displayNumber = childRecord.getValue('number') || parent.number + ' (Child Record)';
     } else {
         // Show parent record details
         var parentSysId = parent.sys_id.toString();
-        recordURL = instanceURL + 'now/workspace/signature-authority-workspace/record/x_banun_bunow_si_0_signature_authority_request/' + parentSysId;
+        recordURL = instanceURL + 'x/banun/signature-authority-workspace/record/x_banun_bunow_si_0_signature_request/' + parentSysId;
         displayNumber = parent.number;
     }
 
