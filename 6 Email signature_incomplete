@@ -1,7 +1,7 @@
 (function runMailScript(current, template, email, email_action, event) {
     var documentRecord, parent, childRecord = null;
 
-    // Determine context: approval notification (current = sysapproval_approver) or child state change (current = child record)
+    // Determine if this is from approval or child state change
     if (current.getTableName() == 'sysapproval_approver') {
         // This is an approval/rejection email - current is sysapproval_approver
         documentRecord = current.document_id.getRefRecord();
@@ -10,19 +10,19 @@
             gs.error('Email Script Error: Unable to retrieve document record from sysapproval_approver');
             return;
         }
-        // Determine if the document is a parent or child record and get parent reference
+        // Determine if this is a parent or child record and get parent reference
         var documentTableName = documentRecord.getTableName();
         if (documentTableName == 'x_banun_bunow_si_0_credit_authority_limits' ||
             documentTableName == 'x_banun_bunow_si_0_non_credit_authority_limits') {
-            // Document is a child record - get parent from the parent field
+            // THis is a child record - get parent from the parent field
             childRecord = documentRecord;
             parent = documentRecord.parent.getRefRecord();
         } else {
-            // Document is the parent record itself
+            // THis is the parent record itself
             parent = documentRecord;
         }
     } else {
-        // This is a child state change notification (e.g., rejection from state change) - current is the child record
+        // This is a child state change notification (e.g., rejection from state change)
         childRecord = current;
         // Validation check for child record
         if (!childRecord || !childRecord.isValidRecord()) {
@@ -37,6 +37,19 @@
     if (!parent || !parent.isValidRecord()) {
         gs.error('Email Script Error: Unable to retrieve parent Signature Authority Request record');
         return;
+    }
+
+    // Only trigger based on context
+    if (current.getTableName() == 'sysapproval_approver') {
+        // From approval record - check if it's rejected
+        if (current.state != 'rejected') {
+            return;
+        }
+    } else {
+        // From child record state change - check if state is 4 (Closed Incomplete)
+        if (childRecord && childRecord.state != 4) {
+            return;
+        }
     }
 
     // Determine limit type if we have a child record
