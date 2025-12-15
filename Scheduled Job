@@ -1,14 +1,80 @@
-// Define threshold: 3 days ago
-var threshold = new GlideDateTime();
-threshold.addDaysUTC(-3); // older than 3 days
+// Get current date/time
+var now = new GlideDateTime();
 
-// Query pending approvals
+// Only run on business days
+if (!isBusinessDay(now)) {
+    gs.info('SIGNATURE REMINDER: Skipping - today is not a business day');
+    return;
+}
+
+// Query all pending approvals
 var gr = new GlideRecord('sysapproval_approver');
 gr.addQuery('state', 'requested');
-gr.addQuery('sys_created_on', '<=', threshold);
-gr.addEncodedQuery('source_tableSTARTSWITHx_banun_bunow_si_0_signature_request^ORsource_tableSTARTSWITHx_banun_bunow_si_0_credit_authority_limits^ORsource_tableSTARTSWITHx_banun_bunow_si_0_non_credit_authority_limits'); // make sure it's 1 of the 3 signature authority tables
+gr.addEncodedQuery('source_tableSTARTSWITHx_banun_bunow_si_0_signature_request^ORsource_tableSTARTSWITHx_banun_bunow_si_0_credit_authority_limits^ORsource_tableSTARTSWITHx_banun_bunow_si_0_non_credit_authority_limits');
 gr.query();
 
+gs.info('SIGNATURE REMINDER: Processing ' + gr.getRowCount() + ' pending approvals');
+
 while (gr.next()) {
-	gs.eventQueue("x_banun_bunow_si_0.signature.reminder.em", gr, gs.getUserID(), gs.getUserName());
+    var createdOn = new GlideDateTime(gr.getValue('sys_created_on'));
+    var businessDaysElapsed = calculateBusinessDays(createdOn, now);
+    
+    gs.info('SIGNATURE REMINDER: Approval ' + gr.sys_id + ' - ' + businessDaysElapsed + ' business days elapsed');
+    
+    // Send reminder if exactly divisible by 3 business days (3, 6, 9, 12, etc.)
+    if (businessDaysElapsed >= 3 && businessDaysElapsed % 3 === 0) {
+        // Check if we haven't already sent a reminder today for this approval
+        if (!reminderSentToday(gr.sys_id)) {
+            gs.info('SIGNATURE REMINDER: Sending reminder for approval ' + gr.sys_id);
+            gs.eventQueue("x_banun_bunow_si_0.signature.reminder.em", gr, gs.getUserID(), gs.getUserName());
+            logReminderSent(gr.sys_id);
+        } else {
+            gs.info('SIGNATURE REMINDER: Reminder already sent today for approval ' + gr.sys_id);
+        }
+    }
+}
+
+function isBusinessDay(dateTime) {
+    var dayOfWeek = dateTime.getDayOfWeekLocalTime();
+    return dayOfWeek >= 1 && dayOfWeek <= 5; // Monday-Friday
+}
+
+function calculateBusinessDays(startDate, endDate) {
+    var start = new GlideDateTime(startDate);
+    var end = new GlideDateTime(endDate);
+    var businessDays = 0;
+    
+    // Set to start of day for accurate counting
+    start.setDisplayValue(start.getDisplayValue().split(' ')[0] + ' 00:00:00');
+    end.setDisplayValue(end.getDisplayValue().split(' ')[0] + ' 00:00:00');
+    
+    while (start.before(end)) {
+        if (isBusinessDay(start)) {
+            businessDays++;
+        }
+        start.addDaysUTC(1);
+    }
+    
+    return businessDays;
+}
+
+function reminderSentToday(approvalSysId) {
+    // Check if reminder was already logged today
+    var today = new GlideDateTime();
+    today.setDisplayValue(today.getDisplayValue().split(' ')[0] + ' 00:00:00');
+    
+    var log = new GlideRecord('x_banun_bunow_si_0_reminder_log');
+    log.addQuery('approval_sys_id', approvalSysId);
+    log.addQuery('reminder_sent_on', '>=', today);
+    log.query();
+    
+    return log.hasNext();
+}
+
+function logReminderSent(approvalSysId) {
+    var log = new GlideRecord('x_banun_bunow_si_0_reminder_log');
+    log.initialize();
+    log.approval_sys_id = approvalSysId;
+    log.reminder_sent_on = new GlideDateTime();
+    log.insert();
 }
