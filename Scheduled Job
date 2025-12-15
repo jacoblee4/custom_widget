@@ -1,0 +1,14 @@
+// Define threshold: 3 days ago
+var threshold = new GlideDateTime();
+threshold.addDaysUTC(-3); // older than 3 days
+
+// Query pending approvals
+var gr = new GlideRecord('sysapproval_approver');
+gr.addQuery('state', 'requested');
+gr.addQuery('sys_created_on', '<=', threshold);
+gr.addEncodedQuery('source_tableSTARTSWITHx_banun_bunow_si_0_signature_request^ORsource_tableSTARTSWITHx_banun_bunow_si_0_credit_authority_limits^ORsource_tableSTARTSWITHx_banun_bunow_si_0_non_credit_authority_limits'); // make sure it's 1 of the 3 signature authority tables
+gr.query();
+
+while (gr.next()) {
+	gs.eventQueue("x_banun_bunow_si_0.signature.reminder.em", gr, gs.getUserID(), gs.getUserName());
+}
