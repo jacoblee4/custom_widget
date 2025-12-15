@@ -1,10 +1,8 @@
-// Only trigger based on context
-if (current.getTableName() == 'sysapproval_approver') {
-    gs.info('SIGNATURE TESTING - Approval State: ' + current.state);
-    gs.info('SIGNATURE TESTING - Document Table: ' + documentTableName);
-    gs.info('SIGNATURE TESTING - Has Child Record: ' + (childRecord != null));
-    
-    // From approval record - check if it's rejected
-    if (current.state != 'rejected') {
-        return;
-    }
+12-15-2025 08:28:14
+Information	x_banun_bunow_si_0	SIGNATURE TESTING - Has Child Record: true
+
+12-15-2025 08:28:14
+Information	x_banun_bunow_si_0	SIGNATURE TESTING - Document Table: x_banun_bunow_si_0_non_credit_authority_limits
+
+12-15-2025 08:28:14
+Information	x_banun_bunow_si_0	SIGNATURE TESTING - Approval State: rejected
