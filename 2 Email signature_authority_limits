@@ -1,188 +1,3023 @@
-(function runMailScript(current, template, email, email_action, event) {
+// HTML
+
+<div class="authority-lookup-widget">
+   <div class="widget-header">
+      <h2>Signature Authority Limits Lookup</h2>
+   </div>
+   
+   <!--  Search Controls  -->
+   <div class="search-controls-side-nav">
+      <div class="filter-nav-sidebar">
+         <button class="filter-nav-tab" data-filter="amount">
+         <span class="filter-nav-icon">💵</span>
+         <span class="filter-nav-label">Limit Amount</span>
+         <span class="filter-nav-badge" style="display: none;">0</span>
+         </button>
+         <button class="filter-nav-tab" data-filter="job_code">
+         <span class="filter-nav-icon">🔢</span>
+         <span class="filter-nav-label">Job Code</span>
+         <span class="filter-nav-badge" style="display: none;">0</span>
+         </button>
+         <button class="filter-nav-tab" data-filter="job_title">
+         <span class="filter-nav-icon">💼</span>
+         <span class="filter-nav-label">Job Title</span>
+         <span class="filter-nav-badge" style="display: none;">0</span>
+         </button>
+         <button class="filter-nav-tab" data-filter="job_function">
+         <span class="filter-nav-icon">🏢</span>
+         <span class="filter-nav-label">Line of Business</span>
+         <span class="filter-nav-badge" style="display: none;">0</span>
+         </button>
+         <button class="filter-nav-tab" data-filter="employee">
+         <span class="filter-nav-icon">👤</span>
+         <span class="filter-nav-label">Employee</span>
+         <span class="filter-nav-badge" style="display: none;">0</span>
+         </button>
+      </div>
+      
+      <div class="filter-content-area">
+         <!-- Limit Amount Content -->
+         <div class="filter-content-panel" id="filterPanel-amount">
+            <h3 class="filter-content-title">Limit Amount Filter</h3>
+            <div class="form-group">
+               <label for="limitTypeSelect">Limit Type</label>
+               <select id="limitTypeSelect" class="form-control">
+                  <optgroup label="Non-Credit Authority">
+                     <option value="disbursement_ach">ACH</option>
+                     <option value="disbursement_wire_transfer_internal">Wire Transfer Internal</option>
+                     <option value="disbursement_wire_transfer_external">Wire Transfer External</option>
+                     <option value="disbursement_official_checks_internal">Official Checks Internal</option>
+                     <option value="disbursement_official_checks_external">Official Checks External</option>
+                     <option value="check_cashing_on_us">Check Cashing - On-Us</option>
+                     <option value="check_cashing_not_on_us">Check Cashing - Not On-Us</option>
+                     <option value="remote_deposit">Remote Deposit</option>
+                     <option value="treasury_solutions_company_wire_limits">Treasury Solutions Company Wire Limits</option>
+                     <option value="fx_wire_limits">FX Wire Limits</option>
+                  </optgroup>
+                  <optgroup label="Credit Authority">
+                     <option value="overdraft_internal_accounts">Overdraft Internal</option>
+                     <option value="overdraft_external_accounts">Overdraft External</option>
+                     <option value="unavailable_funds_internal_accounts">Unavailable Funds Internal</option>
+                     <option value="unavailable_funds_external_accounts">Unavailable Funds External</option>
+                  </optgroup>
+               </select>
+            </div>
+            <div class="form-group">
+               <label for="amountInput">Minimum Amount</label>
+               <div class="currency-wrapper">
+                  <span class="currency-symbol">$</span>
+                  <input type="text" id="amountInput" class="form-control" placeholder="Enter amount (e.g., 50,000)">
+               </div>
+               <small class="help-text">Shows all limits from entered amount and above</small>
+            </div>
+            <div class="filter-actions">
+               <button class="btn btn-add-filter" id="addAmountFilter">Apply Filter</button>
+               <button class="btn btn-clear-filter" id="clearAmountFilter">Clear</button>
+            </div>
+         </div>
+         
+         <!-- Job Code Content -->
+         <div class="filter-content-panel" id="filterPanel-job_code">
+            <h3 class="filter-content-title">Job Code Filter</h3>
+            <div class="form-group">
+               <label for="jobCodeInput">Search Job Code</label>
+               <div class="reference-field-wrapper">
+                  <input type="text" 
+                     id="jobCodeInput" 
+                     class="form-control reference-input" 
+                     placeholder="Start typing to search..."
+                     autocomplete="off">
+                  <input type="hidden" id="jobCodeInputValue">
+                  <div id="jobCodeDropdown" class="reference-dropdown" style="display: none;">
+                     <div class="dropdown-loading" style="display: none;">
+                        <i class="fa fa-spinner fa-spin"></i> Loading...
+                     </div>
+                     <div class="dropdown-results"></div>
+                     <div class="dropdown-no-results" style="display: none;">
+                        No results found
+                     </div>
+                  </div>
+               </div>
+            </div>
+            <div class="filter-actions">
+               <button class="btn btn-add-filter" id="addJobCodeFilter">Apply Filter</button>
+               <button class="btn btn-clear-filter" id="clearJobCodeFilter">Clear</button>
+            </div>
+         </div>
+         
+         <!-- Job Title Content -->
+         <div class="filter-content-panel" id="filterPanel-job_title">
+            <h3 class="filter-content-title">Job Title Filter</h3>
+            <div class="form-group">
+               <label for="jobTitleInput">Search Job Title</label>
+               <div class="reference-field-wrapper">
+                  <input type="text" 
+                     id="jobTitleInput" 
+                     class="form-control reference-input" 
+                     placeholder="Start typing to search..."
+                     autocomplete="off">
+                  <input type="hidden" id="jobTitleInputValue">
+                  <div id="jobTitleDropdown" class="reference-dropdown" style="display: none;">
+                     <div class="dropdown-loading" style="display: none;">
+                        <i class="fa fa-spinner fa-spin"></i> Loading...
+                     </div>
+                     <div class="dropdown-results"></div>
+                     <div class="dropdown-no-results" style="display: none;">
+                        No results found
+                     </div>
+                  </div>
+               </div>
+            </div>
+            <div class="filter-actions">
+               <button class="btn btn-add-filter" id="addJobTitleFilter">Apply Filter</button>
+               <button class="btn btn-clear-filter" id="clearJobTitleFilter">Clear</button>
+            </div>
+         </div>
+         
+         <!-- Line of Business Content -->
+         <div class="filter-content-panel" id="filterPanel-job_function">
+            <h3 class="filter-content-title">Line of Business Filter</h3>
+            <div class="form-group">
+               <label for="jobFunctionInput">Search Line of Business</label>
+               <div class="reference-field-wrapper">
+                  <input type="text" 
+                     id="jobFunctionInput" 
+                     class="form-control reference-input" 
+                     placeholder="Start typing to search..."
+                     autocomplete="off">
+                  <input type="hidden" id="jobFunctionInputValue">
+                  <div id="jobFunctionDropdown" class="reference-dropdown" style="display: none;">
+                     <div class="dropdown-loading" style="display: none;">
+                        <i class="fa fa-spinner fa-spin"></i> Loading...
+                     </div>
+                     <div class="dropdown-results"></div>
+                     <div class="dropdown-no-results" style="display: none;">
+                        No results found
+                     </div>
+                  </div>
+               </div>
+            </div>
+            <div class="filter-actions">
+               <button class="btn btn-add-filter" id="addJobFunctionFilter">Apply Filter</button>
+               <button class="btn btn-clear-filter" id="clearJobFunctionFilter">Clear</button>
+            </div>
+         </div>
+         
+         <!-- Employee Content -->
+         <div class="filter-content-panel" id="filterPanel-employee">
+            <h3 class="filter-content-title">Employee Filter</h3>
+            <div class="form-group">
+               <label for="employeeInput">Search Employee Name</label>
+               <div class="reference-field-wrapper">
+                  <input type="text" 
+                     id="employeeInput" 
+                     class="form-control reference-input" 
+                     placeholder="Start typing to search..."
+                     autocomplete="off">
+                  <input type="hidden" id="employeeInputValue">
+                  <div id="employeeDropdown" class="reference-dropdown" style="display: none;">
+                     <div class="dropdown-loading" style="display: none;">
+                        <i class="fa fa-spinner fa-spin"></i> Loading...
+                     </div>
+                     <div class="dropdown-results"></div>
+                     <div class="dropdown-no-results" style="display: none;">
+                        No results found
+                     </div>
+                  </div>
+               </div>
+            </div>
+            <div class="filter-actions">
+               <button class="btn btn-add-filter" id="addEmployeeFilter">Apply Filter</button>
+               <button class="btn btn-clear-filter" id="clearEmployeeFilter">Clear</button>
+            </div>
+         </div>
+      </div>
+   </div>
+   
+   <!-- Active Filters Display -->
+   <div id="activeFiltersContainer" style="display: none;" class="active-filters-section">
+      <div class="active-filters-header">Active Filters:</div>
+      <div id="activeFilters" class="active-filters-list"></div>
+   </div>
+   
+   <!-- Clear All Button -->
+   <div id="clearAllContainer" style="display: none;" class="clear-all-container">
+      <button id="clearAllButton" class="btn btn-clear-all">
+      <i class="fa fa-times-circle"></i> Clear All Filters
+      </button>
+   </div>
+   
+   <!-- Loading Indicator -->
+   <div ng-if="c.loading" class="text-center loading-container">
+      <i class="fa fa-spinner fa-spin fa-2x"></i>
+      <p>Loading authority limits...</p>
+   </div>
+   
+   <!-- No Results Message -->
+   <div ng-if="!c.loading && c.searchPerformed && c.limits.length === 0" class="alert alert-info">
+      <i class="fa fa-info-circle"></i>
+      No authority limits found matching your search criteria.
+   </div>
+   
+   <!-- Results Table -->
+   <div ng-if="!c.loading && c.limits.length > 0" class="results-container">
+      <div class="results-header">
+         <div class="results-header-left">
+            <h4>
+               <i class="fa fa-list"></i>
+               Authority Limits
+               <span class="results-count">({{c.limits.length}} total)</span>
+            </h4>
+         </div>
+         <div class="results-header-right">
+            <button id="exportExcelButton" class="btn btn-export-excel">
+            <i class="fa fa-file-excel-o"></i> Export Excel
+            </button>
+            <button ng-click="c.exportPdf()" class="btn btn-export-pdf">
+            <i class="fa fa-file-pdf-o"></i> Export PDF
+            </button>
+         </div>
+      </div>
+   </div>
+
+   <!-- Disclaimer Section -->
+   <div class="table-scroll-wrapper" ng-if="!c.loading && c.limits.length > 0">
+      <div class="disclaimer-section">
+         <div class="disclaimer-columns">
+            <div class="disclaimer-left">
+               <h4 class="disclaimer-header">**REGULATION O LIMITS</h4>
+               <p class="disclaimer-text">{{::data.sig_disclaimer_regulation}}</p>
+            </div>
+            <div class="disclaimer-right">
+               <h4 class="disclaimer-header">WIRE TRANSFERS</h4>
+               <p class="disclaimer-text">{{::data.sig_disclaimer_wire_transfer}}</p>
+            </div>
+         </div>
+      </div>
+
+      <div class="table-container" id="tableContainer">
+         <table class="limits-table">
+            <thead>
+               <tr>
+                  <th colspan="3" rowspan="2" class="section-header job-info-header text-center">      
+                     <i class="fa fa-briefcase header-icon"></i>Job Information
+                  </th>
+                  <th colspan="10" class="section-header non-credit-header text-left">
+                     <i class="fa fa-money header-icon"></i>Non-Credit Authority
+                  </th>
+                  <th colspan="4" class="section-header credit-header text-left">
+                     <i class="fa fa-credit-card header-icon"></i>Credit Authority
+                  </th>
+               </tr>
+               
+               <tr>
+                  <th colspan="5" class="subsection-header non-credit-col text-center subsection-border-green-left subsection-border-green-right">Disbursement</th>
+                  <th colspan="2" class="subsection-header non-credit-col text-center subsection-border-green-right">Check Cashing & Cash Withdrawal</th>
+                  <th colspan="3" class="subsection-header non-credit-col text-center">Product Limits</th>
+                  <th colspan="2" class="subsection-header credit-col text-center subsection-border-red-left subsection-border-red-right">Overdraft</th>
+                  <th colspan="2" class="subsection-header credit-col text-center">Unavailable Funds</th>
+               </tr>
+               
+               <tr>
+                  <th class="sticky-col sticky-header sortable text-center col-job-code" ng-click="c.sortBy('job_code_display')">
+                     Job Code 
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'job_code_display' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'job_code_display' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  <th class="sortable text-center col-job-title" ng-click="c.sortBy('job_title')">
+                     Job Title
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'job_title' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'job_title' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  <th class="sortable text-center col-job-function" ng-click="c.sortBy('job_function')">
+                     Line of Business
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'job_function' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'job_function' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  
+                  <!-- Non-Credit Columns -->
+                  <th class="non-credit-col sortable text-center column-with-info column-border-green-left col-currency" ng-click="c.sortBy('disbursement_ach')">
+                     <span class="info-icon" title="{{::data.sig_info_disbursements}}">ⓘ</span>
+                     <span class="column-text">ACH</span>
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_ach' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'disbursement_ach' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  <th class="non-credit-col sortable text-center column-with-info col-currency" ng-click="c.sortBy('disbursement_wire_transfer_internal')">
+                     <span class="info-icon" title="{{::data.sig_info_disbursements}}">ⓘ</span>
+                     <span class="column-text">Wire Transfer Internal</span>
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_wire_transfer_internal' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'disbursement_wire_transfer_internal' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  <th class="non-credit-col sortable text-center column-with-info col-currency" ng-click="c.sortBy('disbursement_wire_transfer_external')">
+                     <span class="info-icon" title="{{::data.sig_info_disbursements}}">ⓘ</span>
+                     <span class="column-text">Wire Transfer External</span>
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_wire_transfer_external' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'disbursement_wire_transfer_external' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  <th class="non-credit-col sortable text-center column-with-info col-currency" ng-click="c.sortBy('disbursement_official_checks_internal')">
+                     <span class="info-icon" title="{{::data.sig_info_disbursements}}">ⓘ</span>
+                     <span class="column-text">Official Checks Internal</span>
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_official_checks_internal' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'disbursement_official_checks_internal' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  <th class="non-credit-col sortable text-center column-with-info column-border-green-right col-currency" ng-click="c.sortBy('disbursement_official_checks_external')">
+                     <span class="info-icon" title="{{::data.sig_info_disbursements}}">ⓘ</span>
+                     <span class="column-text">Official Checks External</span>
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'disbursement_official_checks_external' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'disbursement_official_checks_external' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  <th class="non-credit-col sortable text-center column-with-info col-currency" ng-click="c.sortBy('check_cashing_on_us')">
+                     <span class="info-icon" title="{{::data.sig_info_check_cashing}}">ⓘ</span>
+                     <span class="column-text">Check Cashing On-Us</span>
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'check_cashing_on_us' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'check_cashing_on_us' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  <th class="non-credit-col sortable text-center column-with-info column-border-green-right col-currency" ng-click="c.sortBy('check_cashing_not_on_us')">
+                     <span class="info-icon" title="{{::data.sig_info_check_cashing}}">ⓘ</span>
+                     <span class="column-text">Check Cashing Not On-Us</span>
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'check_cashing_not_on_us' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'check_cashing_not_on_us' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  <th class="non-credit-col sortable text-center column-with-info col-currency" ng-click="c.sortBy('remote_deposit')">
+                     <span class="info-icon" title="{{::data.sig_info_remote_deposit}}">ⓘ</span>
+                     <span class="column-text">Remote Deposit</span>
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'remote_deposit' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'remote_deposit' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  <th class="non-credit-col sortable text-center column-with-info col-currency" ng-click="c.sortBy('treasury_solutions_company_wire_limits')">
+                     <span class="info-icon" title="{{::data.sig_info_treasury_solutions}}">ⓘ</span>
+                     <span class="column-text">Treasury Solutions Company Wire Limits</span>
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'treasury_solutions_company_wire_limits' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'treasury_solutions_company_wire_limits' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  <th class="non-credit-col sortable text-center column-with-info col-currency" ng-click="c.sortBy('fx_wire_limits')">
+                     <span class="info-icon" title="{{::data.sig_info_fx_wire_limits}}">ⓘ</span>
+                     <span class="column-text">FX Wire Limits</span>
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'fx_wire_limits' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'fx_wire_limits' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  
+                  <!-- Credit Columns -->
+                  <th class="credit-col sortable text-center column-with-info column-border-red-left col-currency" ng-click="c.sortBy('overdraft_internal_accounts')">
+                     <span class="info-icon" title="{{::data.sig_info_overdraft}}">ⓘ</span>
+                     <span class="column-text">Overdraft Internal</span>
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'overdraft_internal_accounts' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'overdraft_internal_accounts' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  <th class="credit-col sortable text-center column-with-info column-border-red-right col-currency" ng-click="c.sortBy('overdraft_external_accounts')">
+                     <span class="info-icon" title="{{::data.sig_info_overdraft}}">ⓘ</span>
+                     <span class="column-text">Overdraft External</span>
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'overdraft_external_accounts' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'overdraft_external_accounts' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  <th class="credit-col sortable text-center column-with-info col-currency" ng-click="c.sortBy('unavailable_funds_internal_accounts')">
+                     <span class="info-icon" title="{{::data.sig_info_unavailable_funds}}">ⓘ</span>
+                     <span class="column-text">Unavailable Funds Internal</span>
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'unavailable_funds_internal_accounts' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'unavailable_funds_internal_accounts' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+                  <th class="credit-col sortable text-center column-with-info col-currency" ng-click="c.sortBy('unavailable_funds_external_accounts')">
+                     <span class="info-icon" title="{{::data.sig_info_unavailable_funds}}">ⓘ</span>
+                     <span class="column-text">Unavailable Funds External</span>
+                     <span class="sort-arrows">
+                        <i class="fa fa-sort-asc" ng-class="{'active-sort': c.sortColumn === 'unavailable_funds_external_accounts' && c.sortDirection === 'asc'}"></i>
+                        <i class="fa fa-sort-desc" ng-class="{'active-sort': c.sortColumn === 'unavailable_funds_external_accounts' && c.sortDirection === 'desc'}"></i>
+                     </span>
+                  </th>
+               </tr>
+            </thead>
+            <tbody>
+               <tr ng-repeat="limit in c.getCurrentPageLimits()" ng-class="{'highlight-row': limit.highlighted}">
+                  <td class="sticky-col job-code-cell job-code-clickable" ng-click="c.selectJobCode(limit)">
+                     <strong>{{limit.job_code_display}}</strong>
+                  </td>
+                  <td class="job-info-cell">{{limit.job_title || '-'}}</td>
+                  <td class="job-info-cell">{{limit.job_function || '-'}}</td>
+                  
+                  <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('disbursement_ach') >= 0}">
+                     {{c.formatAmount(limit.disbursement_ach)}}
+                  </td>
+                  <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('disbursement_wire_transfer_internal') >= 0}">
+                     {{c.formatAmount(limit.disbursement_wire_transfer_internal)}}
+                  </td>
+                  <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('disbursement_wire_transfer_external') >= 0}">
+                     {{c.formatAmount(limit.disbursement_wire_transfer_external)}}
+                  </td>
+                  <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('disbursement_official_checks_internal') >= 0}">
+                     {{c.formatAmount(limit.disbursement_official_checks_internal)}}
+                  </td>
+                  <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('disbursement_official_checks_external') >= 0}">
+                     {{c.formatAmount(limit.disbursement_official_checks_external)}}
+                  </td>
+                  <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('check_cashing_on_us') >= 0}">
+                     {{c.formatAmount(limit.check_cashing_on_us)}}
+                  </td>
+                  <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('check_cashing_not_on_us') >= 0}">
+                     {{c.formatAmount(limit.check_cashing_not_on_us)}}
+                  </td>
+                  <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('remote_deposit') >= 0}">
+                     {{c.formatAmount(limit.remote_deposit)}}
+                  </td>
+                  <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('treasury_solutions_company_wire_limits') >= 0}">
+                     {{c.formatAmount(limit.treasury_solutions_company_wire_limits)}}
+                  </td>
+                  <td class="amount-cell non-credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('fx_wire_limits') >= 0}">
+                     {{c.formatAmount(limit.fx_wire_limits)}}
+                  </td>
+                  
+                  <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('overdraft_internal_accounts') >= 0}">
+                     {{c.formatAmount(limit.overdraft_internal_accounts)}}
+                  </td>
+                  <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('overdraft_external_accounts') >= 0}">
+                     {{c.formatAmount(limit.overdraft_external_accounts)}}
+                  </td>
+                  <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('unavailable_funds_internal_accounts') >= 0}">
+                     {{c.formatAmount(limit.unavailable_funds_internal_accounts)}}
+                  </td>
+                  <td class="amount-cell credit-col" ng-class="{'highlight-cell': limit.activeLimitTypes && limit.activeLimitTypes.indexOf('unavailable_funds_external_accounts') >= 0}">
+                     {{c.formatAmount(limit.unavailable_funds_external_accounts)}}
+                  </td>
+               </tr>
+            </tbody>
+         </table>
+      </div>
+      
+      <!-- Pagination -->
+      <div ng-if="c.totalPages > 1" class="pagination-footer">
+         <div class="pagination-controls">
+            <nav aria-label="Limits pagination">
+               <ul class="pagination">
+                  <li class="page-item" ng-class="{disabled: c.currentPage === 1}">
+                     <a class="page-link" href="javascript:void(0)" ng-click="c.previousPage()" aria-label="Previous">
+                     <span aria-hidden="true">&laquo;</span>
+                     </a>
+                  </li>
+                  <li class="page-item" ng-repeat="page in c.getPageNumbers()" 
+                     ng-class="{active: page === c.currentPage}">
+                     <a class="page-link" href="javascript:void(0)" ng-click="c.goToPage(page)">{{page}}</a>
+                  </li>
+                  <li class="page-item" ng-class="{disabled: c.currentPage === c.totalPages}">
+                     <a class="page-link" href="javascript:void(0)" ng-click="c.nextPage()" aria-label="Next">
+                     <span aria-hidden="true">&raquo;</span>
+                     </a>
+                  </li>
+               </ul>
+            </nav>
+            <div class="pagination-info">
+               Showing {{c.getStartIndex() + 1}}-{{c.getEndIndex()}} of {{c.limits.length}} records
+            </div>
+         </div>
+      </div>
+   </div>
+</div>
+
+
+// CSS
+
+.authority-lookup-widget {
+    padding: 20px;
+    font-family: 'Source Sans Pro', Arial, sans-serif;
+    width: 100%;
+    margin: 0;
+}
+
+.widget-header {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #e8e8e8;
+    max-width: 1400px;
+}
+
+.widget-header h2 {
+    color: #333;
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.search-controls-side-nav {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 24px;
+    max-width: 1400px;
+}
+
+.filter-nav-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 220px;
+    max-width: 220px;
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.filter-nav-tab {
+    padding: 14px 16px;
+    background: transparent;
+    border: none;
+    border-left: 3px solid transparent;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 14px;
+    color: #6c757d;
+    transition: all 0.2s ease;
+    text-align: left;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+}
+
+.filter-nav-tab:hover {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.filter-nav-tab.active {
+    background: white;
+    color: #3498db;
+    border-left-color: #3498db;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    font-weight: 600;
+}
+
+.filter-nav-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.filter-nav-label {
+    flex: 1;
+}
+
+.filter-nav-badge {
+    background: #e74c3c;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: auto;
+}
+
+.filter-content-area {
+    flex: 1;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 24px;
+    min-height: 300px;
+}
+
+.filter-content-panel {
+    display: none;
+}
+
+.filter-content-panel.active {
+    display: block;
+}
+
+.filter-content-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0 0 20px 0;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.filter-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.btn-add-filter {
+    background: #3498db;
+    color: white;
+}
+
+.btn-add-filter:hover {
+    background: #2980b9;
+}
+
+.btn-clear-filter {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.btn-clear-filter:hover {
+    background: #dee2e6;
+}
+
+.btn-clear-all {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn-clear-all:hover {
+    background: #c0392b;
+}
+
+.btn-export-excel {
+    background: #27ae60;
+    color: white;
+}
+
+.btn-export-excel:hover {
+    background: #229954;
+}
+
+.btn-export-pdf {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn-export-pdf:hover {
+    background: #c0392b;
+}
+
+.btn-export-excel i, .btn-export-pdf i {
+    margin-right: 6px;
+}
+
+.active-filters-section {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 16px;
+    max-width: 1400px;
+}
+
+.active-filters-header {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+
+.active-filters-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.filter-category-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    padding: 4px 8px;
+    background: rgba(52, 152, 219, 0.05);
+    border-radius: 8px;
+    border: 1px dashed rgba(52, 152, 219, 0.3);
+}
+
+.filter-separator {
+    font-weight: 700;
+    color: #e74c3c;
+    font-size: 12px;
+    padding: 4px 12px;
+    background: rgba(231, 76, 60, 0.1);
+    border-radius: 4px;
+    border: 1px solid rgba(231, 76, 60, 0.3);
+}
+
+.filter-or-separator {
+    font-weight: 600;
+    color: #27ae60;
+    font-size: 11px;
+    padding: 2px 8px;
+}
+
+.filter-and-separator {
+    font-weight: 600;
+    color: #e67e22;
+    font-size: 11px;
+    padding: 2px 8px;
+}
+
+.filter-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #3498db;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.filter-tag-label {
+    font-weight: 600;
+    margin-right: 4px;
+}
+
+.filter-tag-remove {
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0;
+    margin-left: 4px;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.filter-tag-remove:hover {
+    opacity: 1;
+}
+
+.clear-all-container {
+    margin-bottom: 16px;
+    text-align: left;
+    max-width: 1400px;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group:last-of-type {
+    margin-bottom: 0;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 14px;
+    background: white;
+    transition: border-color 0.15s ease-in-out;
+    line-height: 1.5;
+    height: auto;
+    min-height: 40px;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+}
+
+.form-control::placeholder {
+    color: #adb5bd;
+    font-style: italic;
+    opacity: 1;
+}
+
+.reference-field-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.reference-input {
+    width: 100%;
+    cursor: text;
+}
+
+.reference-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ced4da;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.dropdown-loading, .dropdown-no-results {
+    padding: 12px;
+    text-align: center;
+    color: #6c757d;
+    font-size: 13px;
+}
+
+.dropdown-results {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.dropdown-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.15s;
+}
+
+.dropdown-item:hover, .dropdown-item.active {
+    background-color: #e7f3ff;
+}
+
+.dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.dropdown-item-primary {
+    color: #2c3e50;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.dropdown-item-secondary {
+    color: #6c757d;
+    font-size: 12px;
+    margin-top: 2px;
+}
+
+.currency-wrapper {
+    position: relative;
+}
+
+.currency-symbol {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    font-weight: 500;
+    z-index: 1;
+}
+
+.currency-wrapper .form-control {
+    padding-left: 28px;
+}
+
+.help-text {
+    display: block;
+    color: #6c757d;
+    font-size: 12px;
+    margin-top: 4px;
+    font-style: italic;
+}
+
+.loading-container {
+    text-center;
+    padding: 40px;
+}
+
+.fa-spinner {
+    color: #3498db;
+}
+
+.alert {
+    padding: 12px 15px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    border: 1px solid transparent;
+}
+
+.alert-info {
+    background-color: #d9edf7;
+    border-color: #bce8f1;
+    color: #31708f;
+}
+
+.results-container {
+    margin-top: 24px;
+    width: 100%;
+    max-width: 1400px;
+}
+
+.results-header {
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    width: 100%;
+    max-width: 1400px;
+}
+
+.results-header-left {
+    flex: 1;
+}
+
+.results-header-right {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.results-header h4 {
+    color: #2c3e50;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.results-count {
+    font-size: 14px;
+    color: #7f8c8d;
+    font-weight: normal;
+}
+
+.disclaimer-section {
+    margin: 0;
+    background: #fff9e6;
+    border: 2px solid #ffc107;
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    padding: 16px 20px;
+    width: 100%;
+    max-width: 1400px;
+}
+
+.disclaimer-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+}
+
+.disclaimer-left {
+    display: flex;
+    flex-direction: column;
+    padding-right: 20px;
+    border-right: 2px solid #ffc107;
+}
+
+.disclaimer-right {
+    display: flex;
+    flex-direction: column;
+    padding-left: 20px;
+}
+
+.disclaimer-header {
+    color: #ff0000 !important;
+    font-size: 14px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    padding: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center !important;
+}
+
+.disclaimer-text {
+    color: #000;
+    font-size: 12px;
+    line-height: 1.6;
+    margin: 0;
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+.table-scroll-wrapper {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0;
+}
+
+.table-container {
+    overflow-x: auto;
+    border-left: 2px solid #ffc107;
+    border-right: 2px solid #ffc107;
+    border-bottom: 2px solid #ffc107;
+    border-radius: 0 0 6px 6px;
+    border-top: none;
+    background: white;
+    margin-bottom: 20px;
+    width: 100%;
+    position: relative;
+}
+
+.limits-table {
+    width: auto;
+    min-width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+    table-layout: auto;
+}
+
+.limits-table thead {
+    background: white;
+}
+
+.limits-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+    padding: 8px;
+    text-align: center;
+    border-bottom: 2px solid #dee2e6;
+    white-space: normal;
+    font-size: 12px;
+    border-right: 1px solid #e9ecef;
+    vertical-align: middle;
+    line-height: 1.3;
+    height: auto;
+    min-height: 60px; /* Add this line */
+}
+
+.col-job-code {
+    width: auto;
+    min-width: 80px;
+    white-space: nowrap;
+}
+
+.col-job-title {
+    width: auto;
+    min-width: 175px;
+    max-width: 400px;
+    white-space: normal;
+    line-height: 1.3;
+}
+
+.col-job-function {
+    width: auto;
+    min-width: 175px;
+    max-width: 400px;
+    white-space: normal;
+    line-height: 1.3;
+}
+
+.col-currency {
+    width: auto;
+    min-width: 100px;
+    white-space: normal;
+    line-height: 1.2;
+    height: auto; /* Add this line */
+}
+
+.col-currency .column-text {
+    display: block;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-height: none; /* Change from 4.8em to none */
+}
+
+.limits-table th.sortable {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    padding-right: 24px;
+    padding-top: 28px;
+}
+
+.limits-table th.sortable:hover {
+    background: #e9ecef;
+}
+
+.section-header {
+    padding: 16px 10px;
+    font-weight: 600;
+    font-size: 13px;
+    text-align: center;
+    border-bottom: 3px solid #dee2e6;
+    position: relative;
+}
+
+.limits-table .section-header.job-info-header {
+    background: #e9ecef !important;
+    color: #495057;
+}
+
+.limits-table .section-header.non-credit-header {
+    background: #d4edda !important;
+    color: #155724;
+    border-left: 4px solid #27ae60;
+}
+
+.limits-table .section-header.credit-header {
+    background: #f8d7da !important;
+    color: #721c24;
+    border-left: 4px solid #e74c3c;
+}
+
+.header-icon {
+    display: inline-block;
+    margin-right: 8px;
+    font-size: 16px;
+}
+
+.subsection-header {
+    padding: 8px;
+    font-weight: 600;
+    font-size: 12px;
+    text-align: center;
+    border-bottom: 2px solid #dee2e6;
+    border-right: 1px solid #e9ecef;
+    position: relative;
+}
+
+.subsection-header.non-credit-col {
+    background: #e8f5e9 !important;
+    color: #2e7d32;
+    border-bottom: 2px solid #27ae60;
+}
+
+.subsection-header.credit-col {
+    background: #ffebee !important;
+    color: #c62828;
+    border-bottom: 2px solid #e74c3c;
+}
+
+.subsection-border-green-right {
+    border-right: 3px solid #27ae60 !important;
+}
+
+.subsection-border-red-right {
+    border-right: 3px solid #e74c3c !important;
+}
+
+.subsection-border-green-left {
+    border-left: 3px solid #27ae60 !important;
+}
+
+.subsection-border-red-left {
+    border-left: 3px solid #e74c3c !important;
+}
+
+.limits-table thead tr:last-child th {
+    background: #f8f9fa !important;
+}
+
+.limits-table thead tr:last-child th.non-credit-col {
+    background: #f1f9f4 !important;
+}
+
+.limits-table thead tr:last-child th.credit-col {
+    background: #fef5f6 !important;
+}
+
+.limits-table thead tr:last-child th.sortable:hover {
+    background: #e9ecef !important;
+}
+
+.limits-table thead tr:last-child th.non-credit-col.sortable:hover {
+    background: #e3f3e9 !important;
+}
+
+.limits-table thead tr:last-child th.credit-col.sortable:hover {
+    background: #fce8ea !important;
+}
+
+.non-credit-col {
+    background: #f1f9f4;
+}
+
+.credit-col {
+    background: #fef5f6;
+}
+
+.text-center {
+    text-align: center !important;
+}
+
+.text-left {
+    text-align: left !important;
+}
+
+.sticky-col {
+    position: -webkit-sticky;
+    position: sticky;
+    left: 0 !important;
+    z-index: 10 !important;
+    background-color: #f8f9fa !important;
+    box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+}
+
+.sticky-header {
+    position: -webkit-sticky !important;
+    position: sticky !important;
+    left: 0 !important;
+    z-index: 12 !important;
+    background-color: #f8f9fa !important;
+    box-shadow: 2px 0 4px rgba(0,0,0,0.1) !important;
+}
+
+.column-with-info {
+    position: relative;
+    padding: 8px 32px 8px 8px !important;
+}
+
+.column-with-info .column-text {
+    display: block;
+    text-align: left;
+}
+
+.limits-table th .info-icon {
+    position: absolute;
+    top: 4px;
+    right: 8px;
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background-color: #17a2b8;
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 11px;
+    line-height: 16px;
+    cursor: help;
+    font-weight: normal;
+    z-index: 1;
+}
+
+.sort-arrows {
+    position: absolute;
+    bottom: 4px;
+    right: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    line-height: 0.6;
+}
+
+.sort-arrows i {
+    font-size: 10px;
+    color: #cbd5e0;
+    transition: color 0.2s;
+}
+
+.sort-arrows i.active-sort {
+    color: #3498db;
+    font-weight: bold;
+}
+
+.column-border-green-left {
+    border-left: 3px solid #27ae60 !important;
+}
+
+.column-border-green-right {
+    border-right: 3px solid #27ae60 !important;
+}
+
+.column-border-red-left {
+    border-left: 3px solid #e74c3c !important;
+}
+
+.column-border-red-right {
+    border-right: 3px solid #e74c3c !important;
+}
+
+.limits-table tbody td {
+    padding: 8px;
+    border-bottom: 1px solid #e9ecef;
+    vertical-align: middle;
+    border-right: 1px solid #f1f3f5;
+}
+
+.limits-table tbody td.sticky-col {
+    position: -webkit-sticky;
+    position: sticky;
+    left: 0 !important;
+    z-index: 5 !important;
+    background-color: white !important;
+    box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+}
+
+.limits-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.limits-table tbody tr.highlight-row {
+    background-color: #fff3cd !important;
+}
+
+.limits-table tbody tr:hover .job-code-cell {
+    background-color: #f8f9fa !important;
+}
+
+.limits-table tbody tr.highlight-row .job-code-cell {
+    background-color: #fff3cd !important;
+}
+
+.job-code-cell {
+    position: -webkit-sticky;
+    position: sticky;
+    left: 0 !important;
+    z-index: 10 !important;
+    background-color: #f8f9fa !important;
+    box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+    font-weight: 600;
+    color: #2c3e50;
+    white-space: nowrap;
+}
+
+.job-code-clickable {
+    cursor: pointer;
+    color: #3498db !important;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.job-code-clickable:hover {
+    color: #2980b9 !important;
+    background-color: #e3f2fd !important;
+    transform: translateX(2px);
+}
+
+.job-info-cell {
+    color: #6c757d;
+    font-size: 13px;
+    white-space: normal;
+    word-wrap: break-word;
+    line-height: 1.4;
+    max-height: 2.8em;
+    overflow: hidden;
+}
+
+.amount-cell {
+    text-align: right;
+    font-size: 13px;
+    color: #2c3e50;
+    font-weight: 500;
+    white-space: nowrap !important;
+    padding-right: 12px !important;
+}
+
+.highlight-cell {
+    background-color: #ffc107 !important;
+    font-weight: 700 !important;
+    color: #000 !important;
+}
+
+.limits-table tbody td:nth-child(4) {
+    border-left: 3px solid #27ae60 !important;
+}
+
+.limits-table tbody td:nth-child(8) {
+    border-right: 3px solid #27ae60 !important;
+}
+
+.limits-table tbody td:nth-child(10) {
+    border-right: 3px solid #27ae60 !important;
+}
+
+.limits-table tbody td:nth-child(14) {
+    border-left: 3px solid #e74c3c !important;
+}
+
+.limits-table tbody td:nth-child(15) {
+    border-right: 3px solid #e74c3c !important;
+}
+
+.pagination-footer {
+    border-left: 2px solid #ffc107;
+    border-right: 2px solid #ffc107;
+    border-bottom: 2px solid #ffc107;
+    border-top: 2px solid #dee2e6;
+    border-radius: 0 0 6px 6px;
+    background: #f8f9fa;
+    margin-top: -20px;
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 1400px;
+}
+
+.pagination-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    padding: 16px 20px;
+    margin: 0;
+}
+
+.pagination {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 5px;
+}
+
+.page-item {
+    display: inline-block;
+}
+
+.page-link {
+    display: block;
+    padding: 6px 12px;
+    color: #3498db;
+    text-decoration: none;
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    transition: all 0.3s;
+}
+
+.page-link:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+}
+
+.page-item.active .page-link {
+    background-color: #3498db;
+    border-color: #3498db;
+    color: white;
+}
+
+.page-item.disabled .page-link {
+    color: #6c757d;
+    pointer-events: none;
+    cursor: not-allowed;
+    background-color: #fff;
+    border-color: #dee2e6;
+    opacity: 0.5;
+}
+
+.pagination-info {
+    color: #6c757d;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.fa {
+    margin-right: 4px;
+}
+
+@media (max-width: 968px) {
+    .search-controls-side-nav {
+        flex-direction: column;
+    }
     
-    var parent;
-    var showOnlyCredit = false;
-    var showOnlyNonCredit = false;
-    var currentTableName = current.getTableName();
+    .filter-nav-sidebar {
+        min-width: 100%;
+        max-width: 100%;
+        flex-direction: row;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
     
-    // Determine context: approval notification, child state change, or parent notification
-    if (currentTableName == 'sysapproval_approver') {
-        // This is an approval email - current is sysapproval_approver
-        var documentRecord = current.document_id.getRefRecord();
-        
-        // Validation check for document record
-        if (!documentRecord || !documentRecord.isValidRecord()) {
-            gs.error('Email Script Error: Unable to retrieve document record from sysapproval_approver');
+    .filter-nav-tab {
+        flex-direction: column;
+        text-align: center;
+        gap: 6px;
+        padding: 12px 16px;
+        min-width: 100px;
+    }
+    
+    .filter-nav-icon {
+        font-size: 24px;
+    }
+    
+    .filter-nav-badge {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        margin-left: 0;
+    }
+    
+    .disclaimer-columns {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+    
+    .disclaimer-left {
+        border-right: none;
+        border-bottom: 2px solid #ffc107;
+        padding-right: 0;
+        padding-bottom: 16px;
+        margin-bottom: 16px;
+    }
+    
+    .disclaimer-right {
+        padding-left: 0;
+    }
+    
+    .results-header {
+        flex-direction: column;
+    }
+    
+    .results-header-right {
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .pagination-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .pagination {
+        justify-content: center;
+    }
+    
+    .pagination-info {
+        text-align: center;
+    }
+}
+
+
+// Server Script
+
+(function() {
+    'use strict';
+
+    // Set all system property text
+    data.sig_disclaimer_regulation = gs.getProperty('x_banun_bunow_si_0.sig_disclaimer_regulation');
+    data.sig_disclaimer_wire_transfer = gs.getProperty('x_banun_bunow_si_0.sig_disclaimer_wire_transfer');
+    data.sig_info_disbursements = gs.getProperty('x_banun_bunow_si_0.sig_info_disbursements');
+    data.sig_info_check_cashing = gs.getProperty('x_banun_bunow_si_0.sig_info_check_cashing');
+    data.sig_info_remote_deposit = gs.getProperty('x_banun_bunow_si_0.sig_info_remote_deposit');
+    data.sig_info_treasury_solutions = gs.getProperty('x_banun_bunow_si_0.sig_info_treasury_solutions');
+    data.sig_info_fx_wire_limits = gs.getProperty('x_banun_bunow_si_0.sig_info_fx_wire_limits');
+    data.sig_info_overdraft = gs.getProperty('x_banun_bunow_si_0.sig_info_overdraft');
+    data.sig_info_unavailable_funds = gs.getProperty('x_banun_bunow_si_0.sig_info_unavailable_funds');
+
+
+    // Handle reference field lookups
+    if (input && input.action === 'lookupReference') {
+        var searchType = input.search_type;
+        var searchValue = input.search_value;
+        var results = [];
+
+        if (searchType === 'job_code') {
+            var gr = new GlideRecord('x_banun_rbac_job_code');
+            gr.addQuery('job_code', 'CONTAINS', searchValue);
+            gr.orderBy('job_code');
+            gr.query();
+
+            while (gr.next()) {
+                results.push({
+                    value: gr.getUniqueValue(),
+                    display: gr.getValue('job_code'),
+                    secondary: gr.getValue('job_description')
+                });
+            }
+
+        } else if (searchType === 'job_title') {
+            var titleGr = new GlideRecord('x_banun_rbac_job_code');
+            titleGr.addQuery('job_description', 'CONTAINS', searchValue);
+            titleGr.orderBy('job_description');
+            titleGr.query();
+
+            while (titleGr.next()) {
+                results.push({
+                    value: titleGr.getValue('job_description'),
+                    display: titleGr.getValue('job_description'),
+                    secondary: titleGr.getValue('job_code')
+                });
+            }
+
+        } else if (searchType === 'employee') {
+            var userGr = new GlideRecord('sys_user');
+            userGr.addQuery('name', 'CONTAINS', searchValue);
+            userGr.addQuery('active', true);
+            userGr.orderBy('name');
+            userGr.query();
+
+            while (userGr.next()) {
+                var userJobCode = userGr.getValue('u_job_code') || '';
+                var jobTitle = userGr.getValue('title') || '';
+
+                var jobCodeSysId = '';
+                if (userJobCode) {
+                    var jobCodeGr = new GlideRecord('x_banun_rbac_job_code');
+                    jobCodeGr.addQuery('job_code', userJobCode);
+                    jobCodeGr.query();
+                    if (jobCodeGr.next()) {
+                        jobCodeSysId = jobCodeGr.getUniqueValue();
+                    }
+                }
+
+                var secondaryText = '';
+                if (jobTitle && userJobCode) {
+                    secondaryText = jobTitle + ' - Job Code: ' + userJobCode;
+                } else if (jobTitle) {
+                    secondaryText = jobTitle;
+                } else if (userJobCode) {
+                    secondaryText = 'Job Code: ' + userJobCode;
+                }
+
+                results.push({
+                    value: userGr.getUniqueValue(),
+                    display: userGr.getValue('name'),
+                    secondary: secondaryText,
+                    jobCodeSysId: jobCodeSysId
+                });
+            }
+        }
+
+        data.results = results;
+        return;
+    }
+
+    // Handle LOB options loading
+    if (input && input.action === 'getLOBOptions') {
+        var lobs = [];
+        var seen = {};
+
+        var gr = new GlideRecord('x_banun_rbac_job_code');
+        gr.addQuery('job_function_description', '!=', '');
+        gr.orderBy('job_function_description');
+        gr.query();
+
+        while (gr.next()) {
+            var lobValue = gr.getValue('job_function_description');
+            if (lobValue && !seen[lobValue]) {
+                seen[lobValue] = true;
+                lobs.push({
+                    value: lobValue,
+                    display: lobValue
+                });
+            }
+        }
+
+        data.lobs = lobs;
+        return;
+    }
+
+    if (input && input.action === 'searchLimits') {
+        var searchType = input.search_type;
+        var searchValue = input.search_value;
+        var limitType = input.limit_type;
+        var minAmount = input.min_amount;
+
+        var limits = [];
+
+        var gr = new GlideRecord('x_banun_bunow_si_0_authority_limits');
+        gr.addQuery('active', true);
+
+        if (searchType === 'job_code' && searchValue) {
+            gr.addQuery('job_code', searchValue);
+
+        } else if (searchType === 'job_title' && searchValue) {
+            gr.addQuery('job_code.job_description', searchValue);
+
+        } else if (searchType === 'job_function' && searchValue) {
+            gr.addQuery('job_code.job_function_description', searchValue);
+
+        } else if (searchType === 'employee' && searchValue) {
+            var userGr = new GlideRecord('sys_user');
+            if (userGr.get(searchValue)) {
+                var userJobCode = userGr.getValue('u_job_code');
+                if (userJobCode) {
+                    var jobCodeGr = new GlideRecord('x_banun_rbac_job_code');
+                    jobCodeGr.addQuery('job_code', userJobCode);
+                    jobCodeGr.query();
+
+                    if (jobCodeGr.next()) {
+                        gr.addQuery('job_code', jobCodeGr.getUniqueValue());
+                    } else {
+                        data.limits = [];
+                        return;
+                    }
+                } else {
+                    data.limits = [];
+                    return;
+                }
+            } else {
+                data.limits = [];
+                return;
+            }
+
+        } else if (searchType === 'amount' && limitType && minAmount) {
+            var minAmountNum = parseFloat(minAmount);
+            if (!isNaN(minAmountNum) && minAmountNum >= 0) {
+                gr.addQuery(limitType, '>=', minAmountNum);
+            }
+        }
+
+        gr.orderBy('job_code.job_code');
+        gr.query();
+
+        while (gr.next()) {
+            var jobCodeSysId = gr.getValue('job_code');
+            var jobCodeDisplay = '';
+            var jobTitle = '';
+            var jobFunction = '';
+            var jobCodeValue = '';
+
+            var jobCodeGr = new GlideRecord('x_banun_rbac_job_code');
+            if (jobCodeGr.get(jobCodeSysId)) {
+                jobCodeDisplay = jobCodeGr.getValue('job_code') || '';
+                jobTitle = jobCodeGr.getValue('job_description') || '';
+                jobFunction = jobCodeGr.getValue('job_function_description') || '';
+                jobCodeValue = jobCodeGr.getValue('job_code') || '';
+            }
+
+            var limit = {
+                sys_id: gr.getUniqueValue(),
+                job_code_sys_id: jobCodeSysId,
+                job_code_display: jobCodeDisplay,
+                job_code_value: jobCodeValue,
+                job_title: jobTitle,
+                job_function: jobFunction,
+
+                disbursement_ach: gr.getValue('disbursement_ach') || '0',
+                disbursement_wire_transfer_external: gr.getValue('disbursement_wire_transfer_external') || '0',
+                disbursement_wire_transfer_internal: gr.getValue('disbursement_wire_transfer_internal') || '0',
+                disbursement_official_checks_external: gr.getValue('disbursement_official_checks_external') || '0',
+                disbursement_official_checks_internal: gr.getValue('disbursement_official_checks_internal') || '0',
+                check_cashing_on_us: gr.getValue('check_cashing_on_us') || '0',
+                check_cashing_not_on_us: gr.getValue('check_cashing_not_on_us') || '0',
+                remote_deposit: gr.getValue('remote_deposit') || '0',
+                treasury_solutions_company_wire_limits: gr.getValue('treasury_solutions_company_wire_limits') || '0',
+                fx_wire_limits: gr.getValue('fx_wire_limits') || '0',
+
+                overdraft_external_accounts: gr.getValue('overdraft_external_accounts') || '0',
+                overdraft_internal_accounts: gr.getValue('overdraft_internal_accounts') || '0',
+                unavailable_funds_external_accounts: gr.getValue('unavailable_funds_external_accounts') || '0',
+                unavailable_funds_internal_accounts: gr.getValue('unavailable_funds_internal_accounts') || '0',
+
+                highlightField: (searchType === 'amount') ? limitType : '',
+                highlighted: false
+            };
+
+            limits.push(limit);
+        }
+
+        data.limits = limits;
+    }
+
+    function formatAmount(value) {
+        if (!value || value === '0' || parseFloat(value) === 0) {
+            return '-';
+        }
+        var numValue = parseFloat(value);
+        if (isNaN(numValue)) return '-';
+        return '$' + numValue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.toString()
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+})();
+
+
+
+// Client Controller
+
+api.controller = function($scope, $timeout, $rootScope, spUtil) {
+    var c = this;
+
+    // Initialize variables
+    c.limits = [];
+    c.allLimits = [];
+    c.loading = false;
+    c.searchPerformed = false;
+    c.currentFilterType = 'amount';
+    c.activeFilters = [];
+    
+    // Sorting
+    c.sortColumn = null;
+    c.sortDirection = 'asc';
+    
+    // Pagination
+    c.currentPage = 1;
+    c.pageSize = 10;
+    c.totalPages = 1;
+
+    // Reference field dropdown states
+    var dropdownStates = {
+        jobCode: { visible: false, results: [], selectedIndex: -1 },
+        jobTitle: { visible: false, results: [], selectedIndex: -1 },
+        employee: { visible: false, results: [], selectedIndex: -1 },
+        jobFunction: { visible: false, results: [], selectedIndex: -1 }
+    };
+
+    // Debounce timers
+    var debounceTimers = {};
+
+    c.$onInit = function() {
+        $timeout(function() {
+            initializeWidget();
+            loadAllLimits();
+            loadLOBOptions();
+            switchFilterTab('amount');
+        }, 500);
+    };
+
+    // Handle job code click - broadcast to employee widget
+    c.selectJobCode = function(limit) {
+        $rootScope.$broadcast('jobCodeSelected', {
+            jobCode: limit.job_code_value,
+            jobCodeDisplay: limit.job_code_display,
+            jobCodeSysId: limit.job_code_sys_id
+        });
+    };
+
+    // Switch between filter tabs
+    function switchFilterTab(filterType) {
+        c.currentFilterType = filterType;
+
+        document.querySelectorAll('.filter-nav-tab').forEach(function(tab) {
+            tab.classList.toggle('active', tab.getAttribute('data-filter') === filterType);
+        });
+
+        document.querySelectorAll('.filter-content-panel').forEach(function(panel) {
+            panel.classList.remove('active');
+        });
+
+        var activePanel = document.getElementById('filterPanel-' + filterType);
+        if (activePanel) {
+            activePanel.classList.add('active');
+        }
+    }
+
+    // Load Line of Business options
+    function loadLOBOptions() {
+        c.server.get({ action: 'getLOBOptions' })
+            .then(function(response) {
+                c.lobOptions = response.data.lobs || [];
+            })
+            .catch(function() {
+                spUtil.addErrorMessage('Failed to load Line of Business options');
+                c.lobOptions = [];
+            });
+    }
+
+    // Sorting function
+    c.sortBy = function(column) {
+        var isNumericColumn = !['job_code_display', 'job_title', 'job_function'].includes(column);
+
+        if (c.sortColumn === column) {
+            c.sortDirection = c.sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            c.sortColumn = column;
+            c.sortDirection = isNumericColumn ? 'desc' : 'asc';
+        }
+
+        c.limits.sort(function(a, b) {
+            var aVal = a[column];
+            var bVal = b[column];
+
+            if (isNumericColumn) {
+                aVal = parseFloat(aVal) || 0;
+                bVal = parseFloat(bVal) || 0;
+            } else {
+                aVal = (aVal || '').toString().toLowerCase();
+                bVal = (bVal || '').toString().toLowerCase();
+            }
+
+            if (aVal < bVal) return c.sortDirection === 'asc' ? -1 : 1;
+            if (aVal > bVal) return c.sortDirection === 'asc' ? 1 : -1;
+            return 0;
+        });
+
+        c.currentPage = 1;
+    };
+
+    // Format amount for display
+    c.formatAmount = function(value) {
+        if (!value || value === '0' || parseFloat(value) === 0) return '-';
+        var numValue = parseFloat(value);
+        return isNaN(numValue) ? '-' : '$' + numValue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    };
+
+    // Format currency for input
+    c.formatCurrency = function(value) {
+        if (!value) return '';
+        return value.toString().replace(/[^\d]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    };
+
+    c.getCurrencyValue = function(formattedValue) {
+        return formattedValue ? formattedValue.replace(/[^\d]/g, '') : '';
+    };
+
+    // Load all limits initially
+    function loadAllLimits() {
+        c.loading = true;
+        c.searchPerformed = true;
+
+        c.server.get({
+            action: 'searchLimits',
+            search_type: 'all',
+            search_value: '',
+            limit_type: '',
+            min_amount: ''
+        }).then(function(response) {
+            $timeout(function() {
+                c.allLimits = response.data.limits || [];
+                c.limits = c.allLimits.slice();
+                c.currentPage = 1;
+                c.totalPages = Math.ceil(c.limits.length / c.pageSize);
+                c.loading = false;
+
+                $timeout(function() {
+                    setupExportButtons();
+                }, 100);
+            });
+        }).catch(function() {
+            spUtil.addErrorMessage('Failed to load authority limits');
+            c.allLimits = [];
+            c.limits = [];
+            c.loading = false;
+        });
+    }
+
+    // Add filter from current panel
+    function addFilterFromPanel(filterType) {
+        var searchValue = '';
+        var searchDisplay = '';
+        var limitType = '';
+        var minAmount = '';
+
+        if (filterType === 'amount') {
+            limitType = document.getElementById('limitTypeSelect').value;
+            minAmount = c.getCurrencyValue(document.getElementById('amountInput').value);
+
+            if (!minAmount) {
+                spUtil.addInfoMessage('Please enter an amount');
+                return;
+            }
+
+            var limitTypeSelect = document.getElementById('limitTypeSelect');
+            var selectedOption = limitTypeSelect.options[limitTypeSelect.selectedIndex];
+            searchDisplay = selectedOption.text + ' >= $' + c.formatCurrency(minAmount);
+            searchValue = minAmount;
+
+            var existingIndex = c.activeFilters.findIndex(function(f) {
+                return f.type === 'amount' && f.limitType === limitType;
+            });
+
+            if (existingIndex >= 0) {
+                c.activeFilters[existingIndex] = {
+                    type: filterType,
+                    typeLabel: 'Amount',
+                    value: searchValue,
+                    display: searchDisplay,
+                    limitType: limitType
+                };
+                spUtil.addInfoMessage('Updated ' + selectedOption.text + ' filter');
+            } else {
+                c.activeFilters.push({
+                    type: filterType,
+                    typeLabel: 'Amount',
+                    value: searchValue,
+                    display: searchDisplay,
+                    limitType: limitType
+                });
+            }
+
+        } else if (filterType === 'job_function') {
+            var lobInput = document.getElementById('jobFunctionInput');
+            var lobInputValue = document.getElementById('jobFunctionInputValue');
+            searchValue = lobInputValue.value || lobInput.value.trim();
+
+            if (!searchValue) {
+                spUtil.addInfoMessage('Please select a line of business');
+                return;
+            }
+
+            searchDisplay = lobInput.value;
+
+            var filterExists = c.activeFilters.some(function(f) {
+                return f.type === 'job_function' && f.value.toLowerCase() === searchValue.toLowerCase();
+            });
+
+            if (filterExists) {
+                spUtil.addInfoMessage('This Line of Business filter is already active');
+                return;
+            }
+
+            c.activeFilters.push({
+                type: filterType,
+                typeLabel: 'Line of Business',
+                value: searchValue,
+                display: searchDisplay,
+                limitType: ''
+            });
+
+        } else {
+            var inputMap = {
+                'job_code': 'jobCodeInput',
+                'job_title': 'jobTitleInput',
+                'employee': 'employeeInput'
+            };
+            
+            var labelMap = {
+                'job_code': 'Job Code',
+                'job_title': 'Job Title',
+                'employee': 'Employee'
+            };
+
+            var inputId = inputMap[filterType];
+            var searchInput = document.getElementById(inputId);
+            var searchInputValue = document.getElementById(inputId + 'Value');
+
+            searchValue = searchInputValue.value;
+            if (!searchValue) {
+                spUtil.addInfoMessage('Please enter a search value');
+                return;
+            }
+
+            searchDisplay = searchInput.value;
+
+            var filterExists = c.activeFilters.some(function(f) {
+                if (filterType === 'employee') {
+                    return f.type === filterType && f.display.toLowerCase() === searchDisplay.toLowerCase();
+                }
+                return f.type === filterType && f.value === searchValue;
+            });
+
+            if (filterExists) {
+                spUtil.addInfoMessage('This ' + labelMap[filterType] + ' filter is already active');
+                return;
+            }
+
+            c.activeFilters.push({
+                type: filterType,
+                typeLabel: labelMap[filterType],
+                value: searchValue,
+                display: searchDisplay,
+                limitType: ''
+            });
+        }
+
+        clearPanelInputs(filterType);
+        updateActiveFiltersDisplay();
+        updateFilterBadges();
+        applyFilters();
+    }
+
+    // Clear panel inputs
+    function clearPanelInputs(filterType) {
+        var inputIds = {
+            'amount': ['amountInput'],
+            'job_function': ['jobFunctionInput', 'jobFunctionInputValue'],
+            'job_code': ['jobCodeInput', 'jobCodeInputValue'],
+            'job_title': ['jobTitleInput', 'jobTitleInputValue'],
+            'employee': ['employeeInput', 'employeeInputValue']
+        };
+
+        var ids = inputIds[filterType] || [];
+        ids.forEach(function(id) {
+            var elem = document.getElementById(id);
+            if (elem) elem.value = '';
+        });
+    }
+
+    // Update filter badges
+    function updateFilterBadges() {
+        var counts = {};
+        c.activeFilters.forEach(function(filter) {
+            counts[filter.type] = (counts[filter.type] || 0) + 1;
+        });
+
+        document.querySelectorAll('.filter-nav-tab').forEach(function(tab) {
+            var filterType = tab.getAttribute('data-filter');
+            var badge = tab.querySelector('.filter-nav-badge');
+            
+            if (counts[filterType]) {
+                badge.textContent = counts[filterType];
+                badge.style.display = 'block';
+            } else {
+                badge.style.display = 'none';
+            }
+        });
+    }
+
+    // Apply all active filters
+    function applyFilters() {
+        if (c.activeFilters.length === 0) {
+            c.limits = c.allLimits.slice();
+            c.limits.forEach(function(limit) {
+                limit.activeLimitTypes = [];
+            });
+            c.sortColumn = null;
+            c.sortDirection = 'asc';
+        } else {
+            var filtersByCategory = {
+                job_code: [],
+                job_title: [],
+                job_function: [],
+                employee: [],
+                amount: []
+            };
+
+            c.activeFilters.forEach(function(filter) {
+                filtersByCategory[filter.type].push(filter);
+            });
+
+            var filteredLimits = c.allLimits.slice();
+
+            // Apply job_code filters (OR logic)
+            if (filtersByCategory.job_code.length > 0) {
+                filteredLimits = filteredLimits.filter(function(limit) {
+                    return filtersByCategory.job_code.some(function(filter) {
+                        return limit.job_code_sys_id === filter.value ||
+                            limit.job_code_display.toLowerCase().indexOf(filter.value.toLowerCase()) >= 0;
+                    });
+                });
+            }
+
+            // Apply job_title filters (OR logic)
+            if (filtersByCategory.job_title.length > 0) {
+                filteredLimits = filteredLimits.filter(function(limit) {
+                    return filtersByCategory.job_title.some(function(filter) {
+                        return limit.job_title &&
+                            limit.job_title.toLowerCase().indexOf(filter.value.toLowerCase()) >= 0;
+                    });
+                });
+            }
+
+            // Apply job_function filters (OR logic)
+            if (filtersByCategory.job_function.length > 0) {
+                filteredLimits = filteredLimits.filter(function(limit) {
+                    return filtersByCategory.job_function.some(function(filter) {
+                        return limit.job_function &&
+                            limit.job_function.toLowerCase().indexOf(filter.value.toLowerCase()) >= 0;
+                    });
+                });
+            }
+
+            // Apply employee filters (OR logic)
+            if (filtersByCategory.employee.length > 0) {
+                filteredLimits = filteredLimits.filter(function(limit) {
+                    return filtersByCategory.employee.some(function(filter) {
+                        return limit.job_code_sys_id === filter.value;
+                    });
+                });
+            }
+
+            // Apply amount filters (AND logic)
+            if (filtersByCategory.amount.length > 0) {
+                filteredLimits = filteredLimits.filter(function(limit) {
+                    return filtersByCategory.amount.every(function(filter) {
+                        var limitValue = parseFloat(limit[filter.limitType]) || 0;
+                        var minValue = parseFloat(filter.value) || 0;
+                        return limitValue >= minValue;
+                    });
+                });
+
+                var activeLimitTypes = filtersByCategory.amount.map(function(f) {
+                    return f.limitType;
+                });
+
+                filteredLimits.forEach(function(limit) {
+                    limit.activeLimitTypes = activeLimitTypes;
+                });
+
+                // Auto-sort by first amount filter
+                c.sortColumn = filtersByCategory.amount[0].limitType;
+                c.sortDirection = 'desc';
+
+                filteredLimits.sort(function(a, b) {
+                    var aVal = parseFloat(a[c.sortColumn]) || 0;
+                    var bVal = parseFloat(b[c.sortColumn]) || 0;
+                    return bVal - aVal;
+                });
+            } else {
+                filteredLimits.forEach(function(limit) {
+                    limit.activeLimitTypes = [];
+                });
+            }
+
+            c.limits = filteredLimits;
+        }
+
+        c.currentPage = 1;
+        c.totalPages = Math.ceil(c.limits.length / c.pageSize);
+        $scope.$apply();
+    }
+
+    // Update active filters display
+    function updateActiveFiltersDisplay() {
+        var container = document.getElementById('activeFiltersContainer');
+        var filtersList = document.getElementById('activeFilters');
+        var clearAllContainer = document.getElementById('clearAllContainer');
+
+        if (c.activeFilters.length === 0) {
+            container.style.display = 'none';
+            if (clearAllContainer) clearAllContainer.style.display = 'none';
             return;
         }
-        
-        var documentTableName = documentRecord.getTableName();
-        
-        if (documentTableName == 'x_banun_bunow_si_0_credit_authority_limits') {
-            parent = documentRecord.parent.getRefRecord();
-            showOnlyCredit = true;
-        } else if (documentTableName == 'x_banun_bunow_si_0_non_credit_authority_limits') {
-            parent = documentRecord.parent.getRefRecord();
-            showOnlyNonCredit = true;
-        } else {
-            parent = documentRecord;
-        }
-    } else if (currentTableName == 'x_banun_bunow_si_0_credit_authority_limits') {
-        showOnlyCredit = true;
-        parent = current.parent.getRefRecord();
-    } else if (currentTableName == 'x_banun_bunow_si_0_non_credit_authority_limits') {
-        showOnlyNonCredit = true;
-        parent = current.parent.getRefRecord();
-    } else if (currentTableName == 'x_banun_bunow_si_0_signature_request') {
-        parent = current;
-    } else {
-        gs.error('Email Script Error: Unexpected table context - ' + currentTableName);
-        return;
-    }
-    
-    // Validation check for parent
-    if (!parent || !parent.isValidRecord()) {
-        gs.error('Email Script Error: Unable to retrieve parent Signature Authority Request record');
-        return;
-    }
-    
-    var isChange = parent.request_type == 'change_to_existing_authority';
-    
-    function formatCurrency(value) {
-        if (!value) return '0';
-        var intValue = parseInt(parseFloat(value));
-        return intValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    }
-    
-    function buildLimitRow(label, newValue, originalValue, showOriginal, indented) {
-        var row = '<div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #ecf0f1;';
-        if (indented) {
-            row += ' padding-left: 15px;';
-        }
-        row += '">';
-        
-        row += '<span style="font-size: 13px; color: #5a6c7d; flex: 1;">' + label + '</span>';
-        row += '<div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">';
-        
-        if (showOriginal) {
-            var newVal = parseFloat(newValue) || 0;
-            var origVal = parseFloat(originalValue) || 0;
-            var difference = newVal - origVal;
-            var hasChanged = (origVal === 0 && newVal !== 0) || (newVal !== 0 && origVal !== 0 && difference !== 0);
-            
-            if (hasChanged) {
-                var arrowDisplay = '';
-                if (origVal === 0 && newVal !== 0) {
-                    arrowDisplay = '<span style="color: #27ae60; font-weight: 600; font-size: 14px; margin-left: 8px;">&#9650;</span>';
-                } else if (difference > 0) {
-                    arrowDisplay = '<span style="color: #27ae60; font-weight: 600; font-size: 14px; margin-left: 8px;">&#9650;</span>';
-                } else if (difference < 0) {
-                    arrowDisplay = '<span style="color: #e74c3c; font-weight: 600; font-size: 14px; margin-left: 8px;">&#9660;</span>';
-                }
-                
-                row += '<span style="color: #000000; font-weight: 600; font-size: 15px;">$' + formatCurrency(newValue) + arrowDisplay + '</span>';
-                row += '<span style="color: #999999; font-weight: 400; font-size: 11px;">Original: $' + formatCurrency(originalValue) + '</span>';
-            } else {
-                row += '<span style="font-weight: 600; color: #000000; font-size: 15px;">$' + formatCurrency(newValue) + '</span>';
+
+        container.style.display = 'block';
+        if (clearAllContainer) clearAllContainer.style.display = 'block';
+        filtersList.innerHTML = '';
+
+        var filtersByCategory = {
+            amount: [],
+            job_code: [],
+            job_title: [],
+            job_function: [],
+            employee: []
+        };
+
+        c.activeFilters.forEach(function(filter, index) {
+            filter.originalIndex = index;
+            filtersByCategory[filter.type].push(filter);
+        });
+
+        var categoryOrder = ['employee', 'job_code', 'job_title', 'job_function', 'amount'];
+        var addedCategories = 0;
+
+        categoryOrder.forEach(function(categoryType) {
+            var categoryFilters = filtersByCategory[categoryType];
+            if (categoryFilters.length === 0) return;
+
+            if (addedCategories > 0) {
+                var andSeparator = document.createElement('span');
+                andSeparator.className = 'filter-separator';
+                andSeparator.textContent = 'AND';
+                filtersList.appendChild(andSeparator);
             }
+
+            var categoryGroup = document.createElement('div');
+            categoryGroup.className = 'filter-category-group';
+
+            categoryFilters.forEach(function(filter, catIndex) {
+                if (catIndex > 0) {
+                    var separator = document.createElement('span');
+                    separator.className = categoryType === 'amount' ? 'filter-and-separator' : 'filter-or-separator';
+                    separator.textContent = categoryType === 'amount' ? 'AND' : 'OR';
+                    categoryGroup.appendChild(separator);
+                }
+
+                var tag = document.createElement('div');
+                tag.className = 'filter-tag';
+
+                var label = document.createElement('span');
+                label.className = 'filter-tag-label';
+                label.textContent = filter.typeLabel + ':';
+                tag.appendChild(label);
+
+                var value = document.createElement('span');
+                value.textContent = filter.display;
+                tag.appendChild(value);
+
+                var removeBtn = document.createElement('button');
+                removeBtn.className = 'filter-tag-remove';
+                removeBtn.innerHTML = '&times;';
+                removeBtn.onclick = function() {
+                    removeFilter(filter.originalIndex);
+                };
+                tag.appendChild(removeBtn);
+
+                categoryGroup.appendChild(tag);
+            });
+
+            filtersList.appendChild(categoryGroup);
+            addedCategories++;
+        });
+    }
+
+    // Remove specific filter
+    function removeFilter(index) {
+        c.activeFilters.splice(index, 1);
+        updateActiveFiltersDisplay();
+        updateFilterBadges();
+        applyFilters();
+    }
+
+    // Clear all filters
+    function clearAllFilters() {
+        c.activeFilters = [];
+        updateActiveFiltersDisplay();
+        updateFilterBadges();
+        c.limits = c.allLimits.slice();
+        c.limits.forEach(function(limit) {
+            limit.activeLimitTypes = [];
+        });
+        c.currentPage = 1;
+        c.totalPages = Math.ceil(c.limits.length / c.pageSize);
+        c.sortColumn = null;
+        c.sortDirection = 'asc';
+        $scope.$apply();
+    }
+
+    // Export to Excel - WITH DISCLAIMERS
+    function exportToExcel() {
+        var limitsToExport = c.limits.length > 0 ? c.limits : c.allLimits;
+
+        if (limitsToExport.length === 0) {
+            spUtil.addInfoMessage('No data to export');
+            return;
+        }
+
+        var csv = buildCSVContent(limitsToExport);
+        var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        var link = document.createElement('a');
+        
+        if (link.download !== undefined) {
+            var url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            var today = new Date();
+            var dateStr = today.getFullYear() +
+                ('0' + (today.getMonth() + 1)).slice(-2) +
+                ('0' + today.getDate()).slice(-2);
+            link.setAttribute('download', 'Signature_Authority_Limits_Export_' + dateStr + '.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            spUtil.addInfoMessage('Excel export completed successfully');
+        }
+    }
+
+    // Build CSV content - WITH DISCLAIMERS AT BOTTOM
+    function buildCSVContent(limits) {
+        var csv = '';
+        
+        // Add headers first
+        var headers = [
+            'Job Code', 'Job Title', 'Line of Business',
+            'ACH', 'Wire Transfer Internal', 'Wire Transfer External',
+            'Official Checks Internal', 'Official Checks External',
+            'Check Cashing On-Us', 'Check Cashing Not On-Us',
+            'Remote Deposit', 'Treasury Solutions Company Wire Limits', 'FX Wire Limits',
+            'Overdraft Internal', 'Overdraft External',
+            'Unavailable Funds Internal', 'Unavailable Funds External'
+        ];
+        
+        csv += headers.join(',') + '\n';
+
+        // Add data rows
+        limits.forEach(function(limit) {
+            var row = [
+                escapeCSV(limit.job_code_display || ''),
+                escapeCSV(limit.job_title || ''),
+                escapeCSV(limit.job_function || ''),
+                limit.disbursement_ach || '0',
+                limit.disbursement_wire_transfer_internal || '0',
+                limit.disbursement_wire_transfer_external || '0',
+                limit.disbursement_official_checks_internal || '0',
+                limit.disbursement_official_checks_external || '0',
+                limit.check_cashing_on_us || '0',
+                limit.check_cashing_not_on_us || '0',
+                limit.remote_deposit || '0',
+                limit.treasury_solutions_company_wire_limits || '0',
+                limit.fx_wire_limits || '0',
+                limit.overdraft_internal_accounts || '0',
+                limit.overdraft_external_accounts || '0',
+                limit.unavailable_funds_internal_accounts || '0',
+                limit.unavailable_funds_external_accounts || '0'
+            ];
+            csv += row.join(',') + '\n';
+        });
+
+        // Add 2 empty rows
+        csv += '\n';
+        csv += '\n';
+        
+        // Add disclaimers at the bottom
+        csv += '"**REGULATION O LIMITS"\n';
+		csv += '"' + c.data.sig_disclaimer_regulation + '"\n';
+        csv += '\n';
+        csv += '"WIRE TRANSFERS"\n';
+        csv += '"' + c.data.sig_disclaimer_wire_transfer + '"\n';
+
+        return csv;
+    }
+
+    function escapeCSV(value) {
+        if (value === null || value === undefined) return '""';
+        value = value.toString().replace(/"/g, '""');
+        if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+            return '"' + value + '"';
+        }
+        return '"' + value + '"';
+    }
+
+    // FIXED PDF Export using original working code - WITH DISCLAIMERS
+    c.exportPdf = function() {
+        var limitsToExport = c.limits.length > 0 ? c.limits : c.allLimits;
+
+        if (limitsToExport.length === 0) {
+            spUtil.addInfoMessage('No data to export');
+            return;
+        }
+
+        var printWindow = window.open('', '_blank');
+        var filterDescription = getFilterDescription();
+        var htmlContent = buildPrintableHTML(limitsToExport, filterDescription);
+
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+
+        printWindow.onload = function() {
+            printWindow.print();
+        };
+    };
+
+    function buildPrintableHTML(limits, filterDescription) {
+    var html = '<!DOCTYPE html><html><head>';
+    html += '<title>Signature Authority Limits Report</title>';
+    html += '<meta charset="UTF-8">';
+    html += '<style>';
+    html += '@page { size: landscape; margin: 0.5in; }';
+    html += 'body { font-family: Arial, sans-serif; margin: 0; padding: 15px; background: white; }';
+    
+    html += '.report-header { margin-bottom: 20px; border-bottom: 3px solid #0066cc; padding-bottom: 10px; }';
+    html += '.report-title { color: #0066cc; font-size: 20px; font-weight: bold; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px; }';
+    html += '.report-meta { background: #f4f4f4; padding: 10px; border-left: 3px solid #0066cc; margin: 10px 0; }';
+    html += '.report-meta p { margin: 4px 0; font-size: 11px; color: #333; }';
+    html += '.report-meta strong { color: #000; font-weight: 600; }';
+    
+    html += '.disclaimer-section { margin: 15px 0; background: #fff9e6; border: 2px solid #ffc107; border-radius: 6px; padding: 12px 16px; }';
+    html += '.disclaimer-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }';
+    html += '.disclaimer-header { color: #ff0000; font-size: 12px; font-weight: 700; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }';
+    html += '.disclaimer-text { color: #000; font-size: 10px; line-height: 1.5; margin: 0; }';
+    html += '.disclaimer-left { padding-right: 10px; border-right: 2px solid #ffc107; }';
+    html += '.disclaimer-right { padding-left: 10px; }';
+    
+    html += 'table { width: 100%; border-collapse: collapse; font-size: 9px; margin-top: 15px; }';
+    html += 'table, th, td { border: 1px solid #ccc; }';
+    
+    html += 'th.section-header { padding: 10px 4px; text-align: center; font-weight: bold; font-size: 11px; border: 1px solid #ccc; }';
+    html += 'th.job-info-section { color: #495057; background: #e9ecef !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
+    html += 'th.non-credit-section { color: #155724; background: #d4edda !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
+    html += 'th.credit-section { color: #721c24; background: #f8d7da !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
+    
+    html += 'th.subsection-header { padding: 8px 4px; text-align: center; font-weight: 600; font-size: 10px; border: 1px solid #ccc; }';
+    html += 'th.subsection-non-credit { background: #e8f5e9 !important; color: #2e7d32 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
+    html += 'th.subsection-credit { background: #ffebee !important; color: #c62828 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
+    
+    html += 'th { padding: 6px 4px; text-align: center; font-weight: 600; font-size: 8px; color: #fff; background: #6c757d !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; white-space: normal; vertical-align: middle; line-height: 1.2; }';
+    html += 'th.non-credit-col { background: #28a745 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
+    html += 'th.credit-col { background: #dc3545 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
+    
+    html += 'td { padding: 5px 4px; font-size: 9px; }';
+    html += 'tr:nth-child(even) { background: #f8f9fa !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
+    html += 'tr:nth-child(odd) { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
+    
+    html += 'td.job-code-cell { font-weight: bold; color: #000; }';
+    html += 'td.job-info-cell { color: #495057; }';
+    
+    html += 'td.amount-cell { text-align: right; font-weight: 500; color: #000; }';
+    html += 'td.non-credit-cell { background: #e8f5e9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
+    html += 'td.credit-cell { background: #ffebee !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }';
+    
+    html += '@media print { ';
+    html += '  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }';
+    html += '  body { margin: 0; padding: 10px; }';
+    html += '  table { page-break-inside: auto; }';
+    html += '  tr { page-break-inside: avoid; page-break-after: auto; }';
+    html += '  thead { display: table-header-group; }';
+    html += '  th, td { border: 1px solid #999 !important; }';
+    html += '}';
+    html += '</style>';
+    html += '</head><body>';
+    
+    html += '<div class="report-header">';
+    html += '<div class="report-title">Signature Authority Limits Report</div>';
+    html += '<div class="report-meta">';
+    html += '<p><strong>Generated:</strong> ' + new Date().toLocaleString() + '</p>';
+    html += '<p><strong>Total Records:</strong> ' + limits.length + '</p>';
+    if (filterDescription && filterDescription !== 'None (All Records)') {
+        html += '<p><strong>Filters Applied:</strong> ' + escapeHtml(filterDescription) + '</p>';
+    }
+    html += '</div>';
+    html += '</div>';
+    
+    html += '<div class="disclaimer-section">';
+    html += '<div class="disclaimer-columns">';
+    html += '<div class="disclaimer-left">';
+    html += '<h4 class="disclaimer-header">**REGULATION O LIMITS</h4>';
+    html += '<p class="disclaimer-text">' + c.data.sig_disclaimer_regulation + '</p>';
+    html += '</div>';
+    html += '<div class="disclaimer-right">';
+    html += '<h4 class="disclaimer-header">WIRE TRANSFERS</h4>';
+    html += '<p class="disclaimer-text">' + c.data.sig_disclaimer_wire_transfer + '</p>';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+    
+    html += '<table>';
+    html += '<thead>';
+    
+    // Row 1: Main section headers
+    html += '<tr>';
+    html += '<th colspan="3" rowspan="2" class="section-header job-info-section">Job Information</th>';
+    html += '<th colspan="10" class="section-header non-credit-section">Non-Credit Authority</th>';
+    html += '<th colspan="4" class="section-header credit-section">Credit Authority</th>';
+    html += '</tr>';
+    
+    // Row 2: Subsection headers
+    html += '<tr>';
+    html += '<th colspan="5" class="subsection-header subsection-non-credit">Disbursement</th>';
+    html += '<th colspan="2" class="subsection-header subsection-non-credit">Check Cashing & Cash Withdrawal</th>';
+    html += '<th colspan="3" class="subsection-header subsection-non-credit">Product Limits</th>';
+    html += '<th colspan="2" class="subsection-header subsection-credit">Overdraft</th>';
+    html += '<th colspan="2" class="subsection-header subsection-credit">Unavailable Funds</th>';
+    html += '</tr>';
+    
+    // Row 3: Column headers
+    html += '<tr>';
+    html += '<th>Job Code</th>';
+    html += '<th>Job Title</th>';
+    html += '<th>Line of Business</th>';
+    html += '<th class="non-credit-col">ACH</th>';
+    html += '<th class="non-credit-col">Wire Transfer<br>Internal</th>';
+    html += '<th class="non-credit-col">Wire Transfer<br>External</th>';
+    html += '<th class="non-credit-col">Official Checks<br>Internal</th>';
+    html += '<th class="non-credit-col">Official Checks<br>External</th>';
+    html += '<th class="non-credit-col">Check Cashing<br>On-Us</th>';
+    html += '<th class="non-credit-col">Check Cashing<br>Not On-Us</th>';
+    html += '<th class="non-credit-col">Remote<br>Deposit</th>';
+    html += '<th class="non-credit-col">Treasury Solutions<br>Company Wire Limits</th>';
+    html += '<th class="non-credit-col">FX Wire<br>Limits</th>';
+    html += '<th class="credit-col">Overdraft<br>Internal</th>';
+    html += '<th class="credit-col">Overdraft<br>External</th>';
+    html += '<th class="credit-col">Unavailable Funds<br>Internal</th>';
+    html += '<th class="credit-col">Unavailable Funds<br>External</th>';
+    html += '</tr>';
+    html += '</thead>';
+    html += '<tbody>';
+
+    limits.forEach(function(limit) {
+        html += '<tr>';
+        html += '<td class="job-code-cell">' + escapeHtml(limit.job_code_display || '-') + '</td>';
+        html += '<td class="job-info-cell">' + escapeHtml(limit.job_title || '-') + '</td>';
+        html += '<td class="job-info-cell">' + escapeHtml(limit.job_function || '-') + '</td>';
+        html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.disbursement_ach) + '</td>';
+        html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.disbursement_wire_transfer_internal) + '</td>';
+        html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.disbursement_wire_transfer_external) + '</td>';
+        html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.disbursement_official_checks_internal) + '</td>';
+        html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.disbursement_official_checks_external) + '</td>';
+        html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.check_cashing_on_us) + '</td>';
+        html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.check_cashing_not_on_us) + '</td>';
+        html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.remote_deposit) + '</td>';
+        html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.treasury_solutions_company_wire_limits) + '</td>';
+        html += '<td class="amount-cell non-credit-cell">' + formatAmountForPDF(limit.fx_wire_limits) + '</td>';
+        html += '<td class="amount-cell credit-cell">' + formatAmountForPDF(limit.overdraft_internal_accounts) + '</td>';
+        html += '<td class="amount-cell credit-cell">' + formatAmountForPDF(limit.overdraft_external_accounts) + '</td>';
+        html += '<td class="amount-cell credit-cell">' + formatAmountForPDF(limit.unavailable_funds_internal_accounts) + '</td>';
+        html += '<td class="amount-cell credit-cell">' + formatAmountForPDF(limit.unavailable_funds_external_accounts) + '</td>';
+        html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+    html += '</body></html>';
+
+    return html;
+}
+
+    function formatAmountForPDF(value) {
+        if (!value || value === '0' || parseFloat(value) === 0) return '-';
+        var numValue = parseFloat(value);
+        return isNaN(numValue) ? '-' : '$' + numValue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        var div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    function getFilterDescription() {
+        if (c.activeFilters.length === 0) return 'None (All Records)';
+        return c.activeFilters.map(function(f) {
+            return f.typeLabel + ': ' + f.display;
+        }).join('; ');
+    }
+
+    // Reference field lookup
+    function performReferenceLookup(searchValue, filterType, inputId) {
+        if (!searchValue || searchValue.length < 2) {
+            hideDropdown(inputId);
+            return;
+        }
+
+        var dropdownId = inputId.replace('Input', 'Dropdown');
+        var dropdown = document.getElementById(dropdownId);
+        if (!dropdown) return;
+
+        var loading = dropdown.querySelector('.dropdown-loading');
+        var results = dropdown.querySelector('.dropdown-results');
+        var noResults = dropdown.querySelector('.dropdown-no-results');
+
+        loading.style.display = 'block';
+        results.innerHTML = '';
+        noResults.style.display = 'none';
+        dropdown.style.display = 'block';
+
+        var stateKey = inputId.replace('Input', '');
+        dropdownStates[stateKey].visible = true;
+
+        c.server.get({
+            action: 'lookupReference',
+            search_type: filterType,
+            search_value: searchValue || ''
+        }).then(function(response) {
+            loading.style.display = 'none';
+            var currentResults = response.data.results || [];
+            dropdownStates[stateKey].results = currentResults;
+            dropdownStates[stateKey].selectedIndex = -1;
+
+            if (currentResults.length > 0) {
+                results.innerHTML = '';
+                currentResults.forEach(function(result, index) {
+                    var item = document.createElement('div');
+                    item.className = 'dropdown-item';
+                    item.dataset.index = index;
+
+                    var primary = document.createElement('div');
+                    primary.className = 'dropdown-item-primary';
+                    primary.textContent = result.display;
+                    item.appendChild(primary);
+
+                    if (result.secondary) {
+                        var secondary = document.createElement('div');
+                        secondary.className = 'dropdown-item-secondary';
+                        secondary.textContent = result.secondary;
+                        item.appendChild(secondary);
+                    }
+
+                    item.addEventListener('click', function() {
+                        selectDropdownItem(index, inputId, stateKey);
+                    });
+
+                    results.appendChild(item);
+                });
+                noResults.style.display = 'none';
+            } else {
+                noResults.style.display = 'block';
+            }
+        }).catch(function() {
+            loading.style.display = 'none';
+            hideDropdown(inputId);
+        });
+    }
+
+    function selectDropdownItem(index, inputId, stateKey) {
+        var results = dropdownStates[stateKey].results;
+        if (index >= 0 && index < results.length) {
+            var result = results[index];
+            var searchInput = document.getElementById(inputId);
+            var searchInputValue = document.getElementById(inputId + 'Value');
+            searchInput.value = result.display;
+
+            if (inputId === 'employeeInput' && result.jobCodeSysId) {
+                searchInputValue.value = result.jobCodeSysId;
+            } else {
+                searchInputValue.value = result.value;
+            }
+
+            hideDropdown(inputId);
+        }
+    }
+
+    function hideDropdown(inputId) {
+        var dropdownId = inputId.replace('Input', 'Dropdown');
+        var dropdown = document.getElementById(dropdownId);
+        if (dropdown) dropdown.style.display = 'none';
+        
+        var stateKey = inputId.replace('Input', '');
+        if (dropdownStates[stateKey]) {
+            dropdownStates[stateKey].visible = false;
+            dropdownStates[stateKey].selectedIndex = -1;
+        }
+    }
+
+    // LOB field lookup
+    function performLOBLookup(searchValue) {
+        var dropdown = document.getElementById('jobFunctionDropdown');
+        if (!dropdown) return;
+
+        var loading = dropdown.querySelector('.dropdown-loading');
+        var results = dropdown.querySelector('.dropdown-results');
+        var noResults = dropdown.querySelector('.dropdown-no-results');
+
+        var searchLower = searchValue.toLowerCase();
+        var filteredOptions = (c.lobOptions || []).filter(function(lob) {
+            return lob.display.toLowerCase().indexOf(searchLower) >= 0;
+        });
+
+        dropdownStates.jobFunction.visible = true;
+        dropdownStates.jobFunction.results = filteredOptions;
+        dropdownStates.jobFunction.selectedIndex = -1;
+
+        loading.style.display = 'none';
+        results.innerHTML = '';
+
+        if (filteredOptions.length > 0) {
+            filteredOptions.forEach(function(lob, index) {
+                var item = document.createElement('div');
+                item.className = 'dropdown-item';
+                item.dataset.index = index;
+
+                var primary = document.createElement('div');
+                primary.className = 'dropdown-item-primary';
+                primary.textContent = lob.display;
+                item.appendChild(primary);
+
+                item.addEventListener('click', function() {
+                    selectLOBItem(index);
+                });
+
+                results.appendChild(item);
+            });
+            noResults.style.display = 'none';
+            dropdown.style.display = 'block';
         } else {
-            row += '<span style="font-weight: 600; color: #000000; font-size: 15px;">$' + formatCurrency(newValue) + '</span>';
-        }
-        
-        row += '</div></div>';
-        return row;
-    }
-    
-    var content = '';
-    
-    // Only query credit limits if needed
-    var creditLimits = null;
-    var creditGr = null;
-    if (!showOnlyNonCredit) {
-        creditGr = new GlideRecord('x_banun_bunow_si_0_credit_authority_limits');
-        creditGr.addQuery('parent', parent.sys_id);
-        creditGr.query();
-        if (creditGr.hasNext()) {
-            creditLimits = creditGr;
-            creditGr.next();
+            noResults.style.display = 'block';
+            dropdown.style.display = 'block';
         }
     }
-    
-    // Only query non-credit limits if needed
-    var nonCreditLimits = null;
-    var nonCreditGr = null;
-    if (!showOnlyCredit) {
-        nonCreditGr = new GlideRecord('x_banun_bunow_si_0_non_credit_authority_limits');
-        nonCreditGr.addQuery('parent', parent.sys_id);
-        nonCreditGr.query();
-        if (nonCreditGr.hasNext()) {
-            nonCreditLimits = nonCreditGr;
-            nonCreditGr.next();
+
+    function selectLOBItem(index) {
+        var results = dropdownStates.jobFunction.results;
+        if (index >= 0 && index < results.length) {
+            var result = results[index];
+            document.getElementById('jobFunctionInput').value = result.display;
+            document.getElementById('jobFunctionInputValue').value = result.value;
+            hideLOBDropdown();
         }
     }
-    
-    content += '<div style="background-color: #f5f5f5; padding: 15px; margin: 20px 0; border-left: 4px solid #00aae3;">';
-    content += '<h3 style="color: #00aae3; margin: 0 0 15px 0; padding-bottom: 10px; border-bottom: 2px solid #00aae3;">' + parent.request_type.getDisplayValue() + ' Limits</h3>';
-    
-    if (creditLimits || nonCreditLimits) {
-        content += '<div style="display: table; width: 100%; border-collapse: collapse;">';
-        content += '<div style="display: table-row;">';
-        
-        if (nonCreditLimits) {
-            content += '<div style="display: table-cell; width: 48%; vertical-align: top; padding-right: 2%;">';
-            content += '<div style="background: #ffffff; border-left: 4px solid #27ae60; border-radius: 4px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
-            content += '<h4 style="color: #27ae60; margin: 0 0 15px 0; font-size: 14px; text-transform: uppercase;"><span style="margin-right: 6px; font-size: 16px;">💵</span>Non-Credit Authority</h4>';
-            
-            content += '<div style="margin-bottom: 15px;">';
-            content += '<div style="font-weight: 600; color: #000000; font-size: 13px; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #dee2e6;">Disbursement</div>';
-            content += buildLimitRow('ACH:', nonCreditGr.disbursement_ach, nonCreditGr.original_disbursement_ach, isChange, true);
-            content += buildLimitRow('Wire Transfer Internal:', nonCreditGr.disbursement_wire_transfer_internal, nonCreditGr.original_disbursement_wire_transfer_internal, isChange, true);
-            content += buildLimitRow('Wire Transfer External:', nonCreditGr.disbursement_wire_transfer_external, nonCreditGr.original_disbursement_wire_transfer_external, isChange, true);
-            content += buildLimitRow('Official Checks Internal:', nonCreditGr.disbursement_official_checks_internal, nonCreditGr.original_disbursement_official_checks_internal, isChange, true);
-            content += buildLimitRow('Official Checks External:', nonCreditGr.disbursement_official_checks_external, nonCreditGr.original_disbursement_official_checks_external, isChange, true);
-            content += '</div>';
-            
-            content += '<div style="margin-bottom: 15px;">';
-            content += '<div style="font-weight: 600; color: #000000; font-size: 13px; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #dee2e6;">Check Cashing & Cash Withdrawal</div>';
-            content += buildLimitRow('On-Us (Checks & Cash Withdrawals):', nonCreditGr.check_cashing_on_us, nonCreditGr.original_check_cashing_on_us, isChange, true);
-            content += buildLimitRow('Not On-Us (Checks):', nonCreditGr.check_cashing_not_on_us, nonCreditGr.original_check_cashing_not_on_us, isChange, true);
-            content += '</div>';
-            
-            content += buildLimitRow('Remote Deposit:', nonCreditGr.remote_deposit, nonCreditGr.original_remote_deposit, isChange, false);
-            content += buildLimitRow('Treasury Solutions Company Wire Limits:', nonCreditGr.treasury_solutions_company_wire_limits, nonCreditGr.original_treasury_solutions_company_wire_limits, isChange, false);
-            content += buildLimitRow('FX Wire Limits:', nonCreditGr.fx_wire_limits, nonCreditGr.original_fx_wire_limits, isChange, false);
-            
-            content += '</div>';
-            content += '</div>';
+
+    function hideLOBDropdown() {
+        var dropdown = document.getElementById('jobFunctionDropdown');
+        if (dropdown) dropdown.style.display = 'none';
+        if (dropdownStates.jobFunction) {
+            dropdownStates.jobFunction.visible = false;
+            dropdownStates.jobFunction.selectedIndex = -1;
         }
-        
-        if (creditLimits) {
-            content += '<div style="display: table-cell; width: 48%; vertical-align: top; padding-left: 2%;">';
-            content += '<div style="background: #ffffff; border-left: 4px solid #e74c3c; border-radius: 4px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
-            content += '<h4 style="color: #e74c3c; margin: 0 0 15px 0; font-size: 14px; text-transform: uppercase;"><span style="margin-right: 6px; font-size: 16px;">💳</span>Credit Authority</h4>';
-            
-            content += '<div style="margin-bottom: 15px;">';
-            content += '<div style="font-weight: 600; color: #000000; font-size: 13px; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #dee2e6;">Overdraft</div>';
-            content += buildLimitRow('Internal Accounts:', creditGr.overdraft_internal_accounts, creditGr.original_overdraft_internal_accounts, isChange, true);
-            content += buildLimitRow('External Accounts:', creditGr.overdraft_external_accounts, creditGr.original_overdraft_external_accounts, isChange, true);
-            content += '</div>';
-            
-            content += '<div style="margin-bottom: 15px;">';
-            content += '<div style="font-weight: 600; color: #000000; font-size: 13px; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #dee2e6;">Unavailable Funds</div>';
-            content += buildLimitRow('Internal Accounts:', creditGr.unavailable_funds_internal_accounts, creditGr.original_unavailable_funds_internal_accounts, isChange, true);
-            content += buildLimitRow('External Accounts:', creditGr.unavailable_funds_external_accounts, creditGr.original_unavailable_funds_external_accounts, isChange, true);
-            content += '</div>';
-            
-            content += '</div>';
-            content += '</div>';
-        }
-        
-        content += '</div>';
-        content += '</div>';
     }
-    
-    content += '</div>';
-    
-    template.print(content);
-    
-})(current, template, email, email_action, event);
+
+    // Setup export button handlers
+    function setupExportButtons() {
+        var exportExcelBtn = document.getElementById('exportExcelButton');
+        if (exportExcelBtn) {
+            var newExcelBtn = exportExcelBtn.cloneNode(true);
+            exportExcelBtn.parentNode.replaceChild(newExcelBtn, exportExcelBtn);
+            newExcelBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                exportToExcel();
+            });
+        }
+    }
+
+    // Initialize widget - setup all event listeners
+    function initializeWidget() {
+        // Filter tab navigation
+        document.querySelectorAll('.filter-nav-tab').forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                switchFilterTab(this.getAttribute('data-filter'));
+            });
+        });
+
+        // Add filter buttons
+        var addButtons = [
+            { id: 'addAmountFilter', type: 'amount' },
+            { id: 'addJobCodeFilter', type: 'job_code' },
+            { id: 'addJobTitleFilter', type: 'job_title' },
+            { id: 'addJobFunctionFilter', type: 'job_function' },
+            { id: 'addEmployeeFilter', type: 'employee' }
+        ];
+
+        addButtons.forEach(function(btn) {
+            var elem = document.getElementById(btn.id);
+            if (elem) {
+                elem.addEventListener('click', function() {
+                    addFilterFromPanel(btn.type);
+                });
+            }
+        });
+
+        // Clear filter buttons
+        var clearButtons = [
+            { id: 'clearAmountFilter', type: 'amount' },
+            { id: 'clearJobCodeFilter', type: 'job_code' },
+            { id: 'clearJobTitleFilter', type: 'job_title' },
+            { id: 'clearJobFunctionFilter', type: 'job_function' },
+            { id: 'clearEmployeeFilter', type: 'employee' }
+        ];
+
+        clearButtons.forEach(function(btn) {
+            var elem = document.getElementById(btn.id);
+            if (elem) {
+                elem.addEventListener('click', function() {
+                    clearPanelInputs(btn.type);
+                });
+            }
+        });
+
+        // Clear all button
+        var clearAllBtn = document.getElementById('clearAllButton');
+        if (clearAllBtn) {
+            clearAllBtn.addEventListener('click', clearAllFilters);
+        }
+
+        // Reference field inputs with debounce
+        var referenceInputs = [
+            { id: 'jobCodeInput', type: 'job_code' },
+            { id: 'jobTitleInput', type: 'job_title' },
+            { id: 'employeeInput', type: 'employee' }
+        ];
+
+        referenceInputs.forEach(function(input) {
+            var elem = document.getElementById(input.id);
+            if (elem) {
+                elem.addEventListener('input', function(e) {
+                    clearTimeout(debounceTimers[input.id]);
+                    debounceTimers[input.id] = setTimeout(function() {
+                        if (e.target.value.length >= 2) {
+                            performReferenceLookup(e.target.value, input.type, input.id);
+                        } else {
+                            hideDropdown(input.id);
+                        }
+                    }, 300);
+                });
+
+                elem.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        addFilterFromPanel(input.type);
+                    } else if (e.key === 'Escape') {
+                        hideDropdown(input.id);
+                    }
+                });
+            }
+        });
+
+        // Job Function (LOB) input
+        var jobFunctionInput = document.getElementById('jobFunctionInput');
+        if (jobFunctionInput) {
+            jobFunctionInput.addEventListener('input', function(e) {
+                clearTimeout(debounceTimers.jobFunction);
+                debounceTimers.jobFunction = setTimeout(function() {
+                    performLOBLookup(e.target.value);
+                }, 200);
+            });
+
+            jobFunctionInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    addFilterFromPanel('job_function');
+                } else if (e.key === 'Escape') {
+                    hideLOBDropdown();
+                }
+            });
+
+            jobFunctionInput.addEventListener('focus', function(e) {
+                performLOBLookup(e.target.value);
+            });
+        }
+
+        // Amount input with currency formatting
+        var amountInput = document.getElementById('amountInput');
+        if (amountInput) {
+            var isUpdating = false;
+            amountInput.addEventListener('input', function(event) {
+                if (isUpdating) return;
+                isUpdating = true;
+
+                var cursorPosition = event.target.selectionStart;
+                var oldValue = event.target.value;
+                var oldLength = oldValue.length;
+                var formattedValue = c.formatCurrency(oldValue);
+
+                event.target.value = formattedValue;
+
+                var newLength = formattedValue.length;
+                var lengthDiff = newLength - oldLength;
+                var newCursorPosition = Math.max(0, cursorPosition + lengthDiff);
+                
+                setTimeout(function() {
+                    event.target.setSelectionRange(newCursorPosition, newCursorPosition);
+                }, 0);
+
+                isUpdating = false;
+            });
+
+            amountInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addFilterFromPanel('amount');
+                }
+                if (e.key === '.' || e.key === ',') {
+                    e.preventDefault();
+                }
+            });
+        }
+
+        // Pagination functions
+        c.getCurrentPageLimits = function() {
+            var start = (c.currentPage - 1) * c.pageSize;
+            var end = start + c.pageSize;
+            return c.limits.slice(start, end);
+        };
+
+        c.getStartIndex = function() {
+            return (c.currentPage - 1) * c.pageSize;
+        };
+
+        c.getEndIndex = function() {
+            var end = c.currentPage * c.pageSize;
+            return end > c.limits.length ? c.limits.length : end;
+        };
+
+        c.previousPage = function() {
+            if (c.currentPage > 1) c.currentPage--;
+        };
+
+        c.nextPage = function() {
+            if (c.currentPage < c.totalPages) c.currentPage++;
+        };
+
+        c.goToPage = function(page) {
+            if (page >= 1 && page <= c.totalPages) c.currentPage = page;
+        };
+
+        c.getPageNumbers = function() {
+            var pages = [];
+            var maxPagesToShow = 5;
+            var startPage = 1;
+            var endPage = c.totalPages;
+
+            if (c.totalPages > maxPagesToShow) {
+                var middlePage = Math.floor(maxPagesToShow / 2);
+                if (c.currentPage <= middlePage) {
+                    endPage = maxPagesToShow;
+                } else if (c.currentPage >= c.totalPages - middlePage) {
+                    startPage = c.totalPages - maxPagesToShow + 1;
+                } else {
+                    startPage = c.currentPage - middlePage;
+                    endPage = c.currentPage + middlePage;
+                }
+            }
+
+            for (var i = startPage; i <= endPage; i++) {
+                pages.push(i);
+            }
+
+            return pages;
+        };
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(e) {
+            var clickedInside = false;
+            document.querySelectorAll('.reference-field-wrapper').forEach(function(wrapper) {
+                if (wrapper.contains(e.target)) clickedInside = true;
+            });
+
+            if (!clickedInside) {
+                hideDropdown('jobCodeInput');
+                hideDropdown('jobTitleInput');
+                hideDropdown('employeeInput');
+                hideLOBDropdown();
+            }
+        });
+    }
+};
